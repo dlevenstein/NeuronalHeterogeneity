@@ -24,7 +24,7 @@ numstates = length(statenames);
 
 
 [ ISIstats ] = bz_ISIStats( spikes,'states',SleepState.ints,...
-    'cellclass',CellClass.label,'showfig',false);
+    'cellclass',CellClass.label,'figfolder',figfolder);
 
 
 %%
@@ -175,17 +175,7 @@ end
 
 NiceSave(['CV2jitter_Cell',num2str(cellnum)],figfolder,baseName);
 
-    %%
-    [X Y] = meshgrid(ISIstats.ISIhist.logbins,ISIstats.ISIhist.logbins);
-    CV2test = 2.*abs(10.^(X)-10.^(Y))./(10.^(X)+10.^(Y));
-    
-    figure
-    imagesc(ISIstats.ISIhist.logbins,ISIstats.ISIhist.logbins,CV2test')
-    axis xy
-    colorbar
-    title('CV2')
-    xlabel('ISI_n');ylabel('ISI_n_+_1')
-    LogScale('xy',10)
+
 %%
 twin
 figure

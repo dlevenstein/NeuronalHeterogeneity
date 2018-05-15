@@ -9,11 +9,14 @@ function [ ISIstats ] = bz_ISIStats( spikes,varargin )
 %       'states'        A structure with intervals.
 %                       states.statename = [start stop]
 %                       Will calculate ISIsstats separately for each state
-%       'cellclass'     Cell array of strings - label for each cell
+%                       (Can also 'load' from SleepState.states.mat)
+%       'cellclass'     Cell array of strings - label for each cell. 
+%                       (Can also 'load' from CellClass.cellinfo.mat)
 %       'savecellinfo'
 %       'basePath'
-%       'figfolder'
-%       'showfig'
+%       'figfolder'     a folder to save the figure in
+%       'showfig'       logical (default: false) show the figure?
+%       'forceRedetect' logical (default: false) to re-compute even if saved
 %
 %   OUTPUTS
 %       ISIstats        cellinfo structure with ISI statistics
@@ -34,6 +37,7 @@ addParameter(p,'basePath',pwd,@isstr)
 addParameter(p,'figfolder',false)
 addParameter(p,'showfig',false,@islogical);
 addParameter(p,'cellclass',[]);
+addParameter(p,'forceRedetect',false,@islogical);
 
 
 parse(p,varargin{:})
@@ -41,10 +45,30 @@ states = p.Results.states;
 cellclass = p.Results.cellclass;
 basePath = p.Results.basePath;
 SAVECELLINFO = p.Results.savecellinfo;
-SAVEFIG = p.Results.figfolder;
+figfolder = p.Results.figfolder;
 SHOWFIG = p.Results.showfig;
+forceRedetect = p.Results.forceRedetect;
+
 
 %%
+baseName = bz_BasenameFromBasepath(basePath);
+cellinfofilename = [basePath,baseName,'.ISIStats.cellinfo.mat'];
+
+if exist(cellinfofilename,'file') && ~forceRedetect
+    ISIstats = bz_LoadCellinfo(basePath,'ISIStats');
+    return
+end
+    
+if strcmp(cellclass,'load')
+    cellclass = bz_LoadCellinfo(basePath,'CellClass');
+    cellclass = cellclass.label;
+end
+
+if strcmp(states,'load')
+    states = bz_LoadStates(basePath,'SleepState');
+    states = states.ints;
+end
+%% Get the States
 statenames = fieldnames(states);
 numstates = length(statenames);
 
@@ -117,10 +141,12 @@ for cc = 1:numcells
     %Calculate ISI histograms
     ISIhist.(statenames{ss}).lin(cc,:) = hist(ISIs{cc},ISIhist.linbins);
     ISIhist.(statenames{ss}).log(cc,:) = hist(log10(ISIs{cc}),ISIhist.logbins);
+    ISIhist.(statenames{ss}).loginv(cc,:) = hist(log10(1./ISIs{cc}),ISIhist.logbins);
     
     %Normalize histograms to number of spikes
     ISIhist.(statenames{ss}).lin(cc,:) = ISIhist.(statenames{ss}).lin(cc,:)./numspks(cc);
     ISIhist.(statenames{ss}).log(cc,:) = ISIhist.(statenames{ss}).log(cc,:)./numspks(cc);
+    ISIhist.(statenames{ss}).loginv(cc,:) = ISIhist.(statenames{ss}).loginv(cc,:)./numspks(cc);
     
     %Calculate Return maps
     if numspks(cc)>1
@@ -138,12 +164,13 @@ end
 %Make the cell-type specific sortings
 if ~isempty(cellclass)
     classnames = unique(cellclass);
-    for cl = 1:length(classnames)
-        inclasscells = strcmp(classnames{cl},cellclass);
+    numclasses = length(classnames);
+    for cl = 1:numclasses
+        inclasscells{cl} = strcmp(classnames{cl},cellclass);
         sorttypes = {'rate','ISICV','CV2'};
         for tt = 1:length(sorttypes)
         sorts.(statenames{ss}).([sorttypes{tt},classnames{cl}]) = ...
-            intersect(sorts.(statenames{ss}).(sorttypes{tt}),find(inclasscells),'stable');
+            intersect(sorts.(statenames{ss}).(sorttypes{tt}),find(inclasscells{cl}),'stable');
         
         if cl==1
             sorts.(statenames{ss}).([sorttypes{tt},'byclass'])=[];
@@ -153,6 +180,11 @@ if ~isempty(cellclass)
         end
             
     end  
+else
+    numclasses = 1; 
+    inclasscells{1} = true(1,numcells);
+    sorts.(statenames{ss}).ratebyclass = sorts.(statenames{ss}).rate;
+    sorts.(statenames{ss}).ratebyclass = sorts.(statenames{ss}).rate;
 end
 
 
@@ -161,26 +193,27 @@ end
 %[ccg,t] = CCG(statespiketimes,[],<options>)
 
 %%
-if SHOWFIG || SAVEFIG
+if SHOWFIG | figfolder
 figure
     subplot(2,2,1)
-        plot(log10(summstats.(statenames{ss}).meanrate(CellClass.pE)),...
-            log2(summstats.(statenames{ss}).ISICV(CellClass.pE)),'k.')
-        hold on
-        plot(log10(summstats.(statenames{ss}).meanrate(CellClass.pI)),...
-            log2(summstats.(statenames{ss}).ISICV(CellClass.pI)),'r.')
+        for cl = 1:numclasses
+            plot(log10(summstats.(statenames{ss}).meanrate(inclasscells{cl})),...
+                log2(summstats.(statenames{ss}).ISICV(inclasscells{cl})),'.')
+            hold on
+        end
+        plot(get(gca,'xlim'),log2([1 1]),'k')
         LogScale('x',10);LogScale('y',2);
         xlabel('Mean Rate (Hz)');ylabel('ISI CV')
         title(statenames{ss})
         box off
         
     subplot(2,2,3)
-        plot(log10(summstats.(statenames{ss}).meanrate(CellClass.pE)),...
-            (summstats.(statenames{ss}).meanCV2(CellClass.pE)),'k.')
+    for cl = 1:numclasses
+        plot(log10(summstats.(statenames{ss}).meanrate(inclasscells{cl})),...
+            (summstats.(statenames{ss}).meanCV2(inclasscells{cl})),'.')
         hold on
-        plot(log10(summstats.(statenames{ss}).meanrate(CellClass.pI)),...
-            (summstats.(statenames{ss}).meanCV2(CellClass.pI)),'r.')
-        plot(get(gca,'xlim'),[1 1])
+    end
+        plot(get(gca,'xlim'),[1 1],'k')
         LogScale('x',10);
         xlabel('Mean Rate (Hz)');ylabel('ISI <CV2>')
         title(statenames{ss})
@@ -188,10 +221,10 @@ figure
         
     subplot(2,2,2)
         imagesc((ISIhist.logbins),[1 numcells],...
-            ISIhist.(statenames{ss}).log(sorts.(statenames{ss}).rateEI,:))
+            ISIhist.(statenames{ss}).log(sorts.(statenames{ss}).ratebyclass,:))
         hold on
-        plot(log10(1./(summstats.(statenames{ss}).meanrate(sorts.(statenames{ss}).rateEI))),[1:numcells],'k.','LineWidth',2)
-        plot(ISIhist.logbins([1 end]),sum(CellClass.pE).*[1 1]+0.5,'r')
+        plot(log10(1./(summstats.(statenames{ss}).meanrate(sorts.(statenames{ss}).ratebyclass))),[1:numcells],'k.','LineWidth',2)
+        plot(ISIhist.logbins([1 end]),sum(inclasscells{1}).*[1 1]+0.5,'r')
         LogScale('x',10)
         xlabel('ISI (s)')
         xlim(ISIhist.logbins([1 end]))
@@ -204,10 +237,10 @@ figure
         
     subplot(2,2,4)
         imagesc((ISIhist.logbins),[1 numcells],...
-            ISIhist.(statenames{ss}).log(sorts.(statenames{ss}).ISICVEI,:))
+            ISIhist.(statenames{ss}).log(sorts.(statenames{ss}).CV2byclass,:))
         hold on
        % plot(log10(1./(summstats.(statenames{ss}).meanrate(sorts.(statenames{ss}).rateEI))),[1:numcells],'k.','LineWidth',2)
-        plot(ISIhist.logbins([1 end]),sum(CellClass.pE).*[1 1]+0.5,'r')
+        plot(ISIhist.logbins([1 end]),sum(inclasscells{1}).*[1 1]+0.5,'r')
         LogScale('x',10)
         xlabel('ISI (s)')
         xlim(ISIhist.logbins([1 end]))
@@ -230,7 +263,7 @@ figure
 %         box off
 
 
-if SAVEFIG
+if figfolder
     NiceSave(['ISIstats_',(statenames{ss})],figfolder,baseName);
 end
 
@@ -256,7 +289,7 @@ ISIstats.UID = spikes.UID;
 ISIstats.allspikes = allspikes;
 
 if SAVECELLINFO
-    save
+    save(cellinfofilename,'ISIstats')
 end
     
 end

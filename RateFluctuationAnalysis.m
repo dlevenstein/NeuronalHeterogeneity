@@ -36,6 +36,12 @@ covmat = cov(instatespikemat);
 E = eig(covmat);
 dimensionalty.(statenames{ss})(tt) = sum(E).^2./sum(E.^2);
 %Coresponds to ~80% of variability (Gau et al 2017)
+%Should really look at E only..... (E/I different, see Bittner et al 2017.)
+%Non-negative?
+
+%Do the dimensions at faster time scales fit in the dimensions at longer
+%time scales? Heirarchy? ... (subspace etc). 
+%Consistent between sleep and wake?
 
 spikecountmean.(statenames{ss})(tt,:) = mean(instatespikemat);
 spikecountCV.(statenames{ss})(tt,:) = std(instatespikemat)./mean(instatespikemat);
