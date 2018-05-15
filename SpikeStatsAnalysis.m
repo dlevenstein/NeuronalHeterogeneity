@@ -115,8 +115,9 @@ for dd = 1:length(exdt)
 end
 
 %%
-cellnum = 46;
-twin = [100 120];
+cellnum = 10;
+[ twin ] = bz_RandomWindowInIntervals( SleepState.ints.NREMstate,20 );
+
 figure
 subplot(2,2,1)
     hold on
