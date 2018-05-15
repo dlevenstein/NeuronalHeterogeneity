@@ -1,21 +1,9 @@
 function [ISIbins,ISIhist,summstats,...
-    ISIreturn,sorts] = SpikeStatsA(basePath,figfolder)
+    ISIreturn,sorts] = SpikeStatsAnalysis(basePath,figfolder)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 %
-%   INPUTS
-%       spikes
-%
-%       (options)
-%       'states'
-%       'savecellinfo'
-%       'basePath'
-%       'figfolder'
-%
-%   OUTPUTS
-%       
-%
-%DLevenstein
+
 %% DEV
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 figfolder = '/Users/dlevenstein/Dropbox/Research/Current Projects/FRHetAndDynamics/AnalysisScripts/AnalysisFigs';
@@ -31,200 +19,179 @@ lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanI
 
 %%
 statenames = {'NREMstate','REMstate','WAKEstate'};
+statecolors = {'b','r','k'};
 numstates = length(statenames);
-%% ISI and CV2 statistics
-numcells = length(spikes.UID);
 
-%Calculate ISI and CV2 for allspikes
-spikes.ISIs = cellfun(@diff,spikes.times,'UniformOutput',false);
-spikes.CV2 = cellfun(@(X) 2.*abs(X(2:end)-X(1:end-1))./(X(2:end)+X(1:end-1)),spikes.ISIs ,'UniformOutput',false);
-%spikes.estrate = cellfun(@(X) 2./(X(2:end)+X(1:end-1)),spikes.ISIs ,'UniformOutput',false);
+
+[ ISIstats ] = bz_ISIStats( spikes,'states',SleepState.ints,...
+    'cellclass',CellClass.label,'showfig',false);
+
+
 %%
-%Which state to look at?
+numtimewins = 30;
+numjits = 10;
 for ss = 1:numstates
-%ss=1;
-%ss = 1;
-
-%Find which spikes are during state of interest
-[statespiketimes,statespikes] = cellfun(@(X) RestrictInts(X,SleepState.ints.(statenames{ss})),...
-    spikes.times,'UniformOutput',false);
-CV2 = cellfun(@(X,Y) X(Y(2:end-1)),spikes.CV2,statespikes,'Uniformoutput',false);
-ISIs = cellfun(@(X,Y) X(Y(2:end-1)),spikes.ISIs,statespikes,'Uniformoutput',false);
-
-%Summary Statistics
-summstats.(statenames{ss}).meanISI = cellfun(@(X) mean(X),ISIs);
-summstats.(statenames{ss}).meanrate = 1./summstats.(statenames{ss}).meanISI;
-summstats.(statenames{ss}).ISICV = cellfun(@(X) std(X)./mean(X),ISIs);
-summstats.(statenames{ss}).meanCV2 = cellfun(@(X) mean(X),CV2);
-
-
-%% CV2 for shuffle (shows that CV2 is not much meaningful?)
-% numshuffle = 100;
-% for sh = 1:numshuffle
-%     ISIs_shuffle = cellfun(@(X) shuffle(X),ISIs,'UniformOutput',false);
-%     CV2_shuffle = cellfun(@(X) 2.*abs(X(2:end)-X(1:end-1))./(X(2:end)+X(1:end-1)),...
-%         ISIs_shuffle ,'UniformOutput',false);
-%     meanshuffle(sh,:) = cellfun(@(X) mean(X),CV2_shuffle);
-% end
-% shufflemean = mean(meanshuffle);
-% shufflestd = std(meanshuffle);
-% 
-% %CV2_reltoshuff = (summstats.(statenames{ss}).meanCV2-shufflemean)./shufflestd;
-% 
-% figure
-% subplot(2,2,1)
-% plot([log10(summstats.(statenames{ss}).meanrate);log10(summstats.(statenames{ss}).meanrate)],...
-%     [shufflemean;summstats.(statenames{ss}).meanCV2],'color',0.7.*[1 1 1],'linewidth',0.5)
-% hold on
-% plot([log10(summstats.(statenames{ss}).meanrate);log10(summstats.(statenames{ss}).meanrate)],...
-%     [shufflemean-shufflestd;shufflemean+shufflestd],'color',0.7.*[1 1 1],'linewidth',3)
-% plot(log10(summstats.(statenames{ss}).meanrate),summstats.(statenames{ss}).meanCV2,'.r','markersize',10)
-% xlabel('FR (Hz)');ylabel('<CV2>')
-% NiceSave(['CV2_',(statenames{ss})],figfolder,baseName);
-
-%%
-%Set up all the bins and matrices
-numbins = 60;
-ISIbins.lin = linspace(0,10,numbins);
-ISIbins.log = linspace(log10(0.001),log10(200),numbins);
-ISIhist.(statenames{ss}).lin = zeros(numcells,numbins);
-ISIhist.(statenames{ss}).log = zeros(numcells,numbins);
-normcv2hist = zeros(numcells,numbins);
-
-ISIreturn.(statenames{ss}).log = zeros(numcells,numbins,numbins);
-
-%Calculate all the histograms: ISI, log(ISI), 1/ISI, log(1/ISI)
-for cc = 1:numcells
-    numspks(cc) = length(ISIs{cc});
-    
-    %Calculate ISI histograms
-    ISIhist.(statenames{ss}).lin(cc,:) = hist(ISIs{cc},ISIbins.lin);
-    ISIhist.(statenames{ss}).log(cc,:) = hist(log10(ISIs{cc}),ISIbins.log);
-    
-    %Normalize histograms to number of spikes
-    ISIhist.(statenames{ss}).lin(cc,:) = ISIhist.(statenames{ss}).lin(cc,:)./numspks(cc);
-    ISIhist.(statenames{ss}).log(cc,:) = ISIhist.(statenames{ss}).log(cc,:)./numspks(cc);
-    
-    %Calculate Return maps
-    if numspks(cc)>1
-    ISIreturn.(statenames{ss}).log(cc,:,:) = hist3(log10([ISIs{cc}(1:end-1) ISIs{cc}(2:end)]),{ISIbins.log,ISIbins.log});
-    end
-    ISIreturn.(statenames{ss}).log(cc,:,:) = ISIreturn.(statenames{ss}).log(cc,:,:)./numspks(cc);
-  
+    CV2_jitt.(statenames{ss}) = zeros(length(spikes.times),numtimewins,numjits);
 end
+timebins = logspace(-3,1.75,numtimewins);
+for tt = 1:numtimewins
+    tt
+    for jj = 1:numjits
+    [spiketimes_jitt] = JitterSpiketimes(spikes.times,timebins(tt));
+    jitspikes = spikes;
+    jitspikes.times = spiketimes_jitt;
+    [ ISIstats_jitt(tt) ] = bz_ISIStats( jitspikes,'states',SleepState.ints,'showfig',false );
+    for ss = 1:numstates
+        CV2_jitt.(statenames{ss})(:,tt,jj) = ISIstats_jitt(tt).summstats.(statenames{ss}).meanCV2;
+    end
+    end
+end
+%%
+    for ss = 1:numstates
+        meanCV2_jitt.(statenames{ss}) = mean(CV2_jitt.(statenames{ss}),3);
+        stdCV2_jitt.(statenames{ss}) = std(CV2_jitt.(statenames{ss}),[],3);
+        difffrom1 = abs(meanCV2_jitt.(statenames{ss})-1);
+        sigCV2_jitt.(statenames{ss}) = difffrom1>2.*stdCV2_jitt.(statenames{ss});
+        
+        meanCV2_jitt.pE.(statenames{ss}) = mean(meanCV2_jitt.(statenames{ss})(CellClass.pE,:),1);
+        meanCV2_jitt.pI.(statenames{ss}) = mean(meanCV2_jitt.(statenames{ss})(CellClass.pI,:),1);
+        
+        stdCV2_jitt.pE.(statenames{ss}) = std(meanCV2_jitt.(statenames{ss})(CellClass.pE,:),[],1);
+        stdCV2_jitt.pI.(statenames{ss}) = std(meanCV2_jitt.(statenames{ss})(CellClass.pI,:),[],1);
+    end
 
-%Sortings
-[~,sorts.(statenames{ss}).rate]=sort(summstats.(statenames{ss}).meanrate);
-[~,sorts.(statenames{ss}).ISICV]=sort(summstats.(statenames{ss}).ISICV);
-[~,sorts.(statenames{ss}).CV2]=sort(summstats.(statenames{ss}).meanCV2);
+    
 
-sorts.(statenames{ss}).rateE = intersect(sorts.(statenames{ss}).rate,...
-                                    find(CellClass.pE),'stable');
-sorts.(statenames{ss}).rateI = intersect(sorts.(statenames{ss}).rate,...
-                                    find(CellClass.pI),'stable');
-sorts.(statenames{ss}).rateEI = [sorts.(statenames{ss}).rateE sorts.(statenames{ss}).rateI];
-
-sorts.(statenames{ss}).ISICVE = intersect(sorts.(statenames{ss}).ISICV,...
-                                    find(CellClass.pE),'stable');
-sorts.(statenames{ss}).ISICVI = intersect(sorts.(statenames{ss}).ISICV,...
-                                    find(CellClass.pI),'stable');
-sorts.(statenames{ss}).ISICVEI = [sorts.(statenames{ss}).ISICVE sorts.(statenames{ss}).ISICVI];
-
-sorts.(statenames{ss}).CV2E = intersect(sorts.(statenames{ss}).CV2,...
-                                    find(CellClass.pE),'stable');
-sorts.(statenames{ss}).CV2I = intersect(sorts.(statenames{ss}).CV2,...
-                                    find(CellClass.pI),'stable');
-sorts.(statenames{ss}).CV2EI = [sorts.(statenames{ss}).CV2E sorts.(statenames{ss}).CV2I];
-
-
-%% ACG
-%[ccg,t] = CCG(statespiketimes,[],<options>)
 
 %%
 figure
-    subplot(2,2,1)
-        plot(log10(summstats.(statenames{ss}).meanrate(CellClass.pE)),...
-            log2(summstats.(statenames{ss}).ISICV(CellClass.pE)),'k.')
-        hold on
-        plot(log10(summstats.(statenames{ss}).meanrate(CellClass.pI)),...
-            log2(summstats.(statenames{ss}).ISICV(CellClass.pI)),'r.')
-        LogScale('x',10);LogScale('y',2);
-        xlabel('Mean Rate (Hz)');ylabel('ISI CV')
-        title(statenames{ss})
-        box off
-        
-    subplot(2,2,3)
-        plot(log10(summstats.(statenames{ss}).meanrate(CellClass.pE)),...
-            (summstats.(statenames{ss}).meanCV2(CellClass.pE)),'k.')
-        hold on
-        plot(log10(summstats.(statenames{ss}).meanrate(CellClass.pI)),...
-            (summstats.(statenames{ss}).meanCV2(CellClass.pI)),'r.')
-        plot(get(gca,'xlim'),[1 1])
-        LogScale('x',10);
-        xlabel('Mean Rate (Hz)');ylabel('ISI <CV2>')
-        title(statenames{ss})
-        box off
-        
-    subplot(2,2,2)
-        imagesc((ISIbins.log),[1 numcells],...
-            ISIhist.(statenames{ss}).log(sorts.(statenames{ss}).rateEI,:))
-        hold on
-        plot(log10(1./(summstats.(statenames{ss}).meanrate(sorts.(statenames{ss}).rateEI))),[1:numcells],'k.','LineWidth',2)
-        plot(ISIbins.log([1 end]),sum(CellClass.pE).*[1 1]+0.5,'r')
-        LogScale('x',10)
-        xlabel('ISI (s)')
-        xlim(ISIbins.log([1 end]))
-        colorbar
-      %  legend('1/Mean Firing Rate (s)','location','southeast')
-        ylabel('Cell (Sorted by FR, Type)')
-        %legend('1/Mean Firing Rate (s)','location','southeast')
-        caxis([0 0.1])
-        title('ISI Distribution (Log Scale)')
-        
-    subplot(2,2,4)
-        imagesc((ISIbins.log),[1 numcells],...
-            ISIhist.(statenames{ss}).log(sorts.(statenames{ss}).ISICVEI,:))
-        hold on
-       % plot(log10(1./(summstats.(statenames{ss}).meanrate(sorts.(statenames{ss}).rateEI))),[1:numcells],'k.','LineWidth',2)
-        plot(ISIbins.log([1 end]),sum(CellClass.pE).*[1 1]+0.5,'r')
-        LogScale('x',10)
-        xlabel('ISI (s)')
-        xlim(ISIbins.log([1 end]))
-        colorbar
-      %  legend('1/Mean Firing Rate (s)','location','southeast')
-        ylabel('Cell (Sorted by CV2, Type)')
-        %legend('1/Mean Firing Rate (s)','location','southeast')
-        caxis([0 0.1])
-        title('ISI Distribution (Log Scale)')
-        
-%     subplot(2,2,3)
-%         plot(log2(summstats.(statenames{ss}).meanrate(CellClass.pE)),...
-%             log2(summstats.(statenames{ss}).meanCV2(CellClass.pE)),'k.')
-%         hold on
-%         plot(log2(summstats.(statenames{ss}).meanrate(CellClass.pI)),...
-%             log2(summstats.(statenames{ss}).meanCV2(CellClass.pI)),'r.')
-%         LogScale('xy',2)
-%         xlabel('Mean Rate (Hz)');ylabel('Mean CV2')
-%         title(statenames{ss})
-%         box off
-
-
-NiceSave(['ISIstats_',(statenames{ss})],figfolder,baseName);
-
-
-%exneurons %top/bottom 25 %ile rate/ISICV
-%%
-% exwindur = 4; %s
-% STATEtimepoints = Restrict(lfp.timestamps,double(SleepState.ints.(statenames{ss})));
-% samplewin = STATEtimepoints(randi(length(STATEtimepoints))) + [0 exwindur];
-% %%
-% figure
-% bz_MultiLFPPlot( lfp,'spikes',spikes,'timewin',samplewin,...
-%     'sortmetric',summstats.(statenames{ss}).meanCV2,...
-%     'cellgroups',{CellClass.pI,CellClass.pE})
-
-
+subplot(2,2,1)
+hold on
+for ss=1:numstates
+    %errorshade(log10(timebins),meanCV2_jitt.pE.(statenames{ss}),...
+    %    stdCV2_jitt.pE.(statenames{ss}),...
+    %    stdCV2_jitt.pE.(statenames{ss}),statecolors{ss},'scalar')
+    plot(log10(timebins),meanCV2_jitt.pE.(statenames{ss}),statecolors{ss},'linewidth',2)
+    xlabel('Jitter Window (s)');ylabel('<CV2>')
+    title('pE Cells')
 end
+LogScale('x',10)
+
+subplot(2,2,2)
+hold on
+for ss=1:numstates
+    %errorshade(log10(timebins),meanCV2_jitt.pE.(statenames{ss}),...
+    %    stdCV2_jitt.pE.(statenames{ss}),...
+    %    stdCV2_jitt.pE.(statenames{ss}),statecolors{ss},'scalar')
+    plot(log10(timebins),meanCV2_jitt.pI.(statenames{ss}),statecolors{ss},'linewidth',2)
+    xlabel('Jitter Window (s)');ylabel('<CV2>')
+    title('pI Cells')
+end
+LogScale('x',10)
+
+
+bwcolormap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
+
+for ss=1:numstates
+    subplot(2,3,ss+3)
+        imagesc(log10(timebins),[0 1],meanCV2_jitt.(statenames{ss})(ISIstats.sorts.(statenames{ss}).CV2byclass,:))
+        colorbar
+        colormap(bwcolormap)
+        caxis([0.5 1.5])
+        LogScale('x',10)
+        title((statenames{ss}))
+        xlabel('Jitter Window (s)');ylabel('Cell, Sorted By Rate/Type')
+end
+
+NiceSave(['CV2jitter'],figfolder,baseName);
+%%
+exdt = [0.1,1,10];
+exjit = [13,19,26]; %find this instead of hard code
+for dd = 1:length(exdt)
+    dt = exdt(dd);
+    [spkmat(dd).spkmat, spkmat(dd).timestamps] = SpktToSpkmat(spikes.times,...
+        [],dt);
+    spkmat(dd).ratemat = spkmat(dd).spkmat./dt;
+end
+
+%%
+cellnum = 46;
+twin = [100 120];
+figure
+subplot(2,2,1)
+    hold on
+    for ss=1:numstates
+        errorshade(log10(timebins),meanCV2_jitt.(statenames{ss})(cellnum,:),...
+            stdCV2_jitt.(statenames{ss})(cellnum,:),...
+            stdCV2_jitt.(statenames{ss})(cellnum,:),statecolors{ss},'scalar')
+        plot(log10(timebins),meanCV2_jitt.(statenames{ss})(cellnum,:),statecolors{ss})
+        plot([log10(timebins(1)) log10(1./ISIstats.summstats.(statenames{ss}).meanrate(cellnum))],...
+            ISIstats.summstats.(statenames{ss}).meanCV2(cellnum).*[1 1],'--','color',statecolors{ss})
+        plot(log10(timebins(~sigCV2_jitt.(statenames{ss})(cellnum,:))),~sigCV2_jitt.(statenames{ss})(cellnum,~sigCV2_jitt.(statenames{ss})(cellnum,:)),'ko')
+        xlabel('Time Window (s)');ylabel('<CV2>')
+    end
+    title(['Cell ',num2str(cellnum)])
+    LogScale('x',10)
+    
+subplot(2,1,2)
+    %bar(spkmat(3).timestamps,spkmat(3).ratemat(:,cellnum))
+    
+    bar(spkmat(2).timestamps,spkmat(2).spkmat(:,cellnum),'facecolor','w','edgecolor','k')
+    hold on
+   % bar(spkmat(1).timestamps,spkmat(1).spkmat(:,cellnum))
+    plot(twin,[1 1]-2,'k--')
+    plot(twin,[2 2]-2,'k-')
+    plot(spikes.times{cellnum},10.*ones(size(spikes.times{cellnum})),'k.')
+    plot(ISIstats_jitt(exjit(1)).allspikes.times{cellnum},...
+        9.*ones(size(ISIstats_jitt(exjit(1)).allspikes.times{cellnum})),'r.')
+    plot(ISIstats_jitt(exjit(2)).allspikes.times{cellnum},...
+        8.*ones(size(ISIstats_jitt(exjit(2)).allspikes.times{cellnum})),'g.')
+    plot(ISIstats_jitt(exjit(3)).allspikes.times{cellnum},...
+        7*ones(size(ISIstats_jitt(exjit(3)).allspikes.times{cellnum})),'b.')
+    %plot(spikes.times{cellnum},10.*ones(size(spikes.times{cellnum})),'k.')
+    %plot(spikes.times{cellnum},10.*ones(size(spikes.times{cellnum})),'k.')
+    plot(ISIstats.allspikes.times{cellnum},ISIstats.allspikes.CV2{cellnum}-2,'k.-')
+    %plot(ISIstats_jitt(exjit(1)).allspikes.times{cellnum},ISIstats_jitt(exjit(1)).allspikes.CV2{cellnum}-2,'r.-')
+    %plot(ISIstats_jitt(exjit(2)).allspikes.times{cellnum},ISIstats_jitt(exjit(2)).allspikes.CV2{cellnum}-2,'g.-')
+    %plot(ISIstats_jitt(exjit(3)).allspikes.times{cellnum},ISIstats_jitt(exjit(3)).allspikes.CV2{cellnum}-2,'b.-')
+    xlim(twin);ylim([-2 11])
+    
+subplot(4,6,4)
+    imagesc(ISIstats.ISIhist.logbins,ISIstats.ISIhist.logbins,...
+        ISIstats.ISIhist.NREMstate.return(:,:,cellnum)')
+    LogScale('xy',10)
+    axis xy
+    xlabel('ISI_n');ylabel('ISI_n_+_1')
+    
+for dd = 1:length(exdt)
+    subplot(4,6,9+dd)
+        imagesc(ISIstats_jitt(exjit(dd)).ISIhist.logbins,ISIstats_jitt(exjit(dd)).ISIhist.logbins,...
+            ISIstats_jitt(exjit(dd)).ISIhist.NREMstate.return(:,:,cellnum)')
+        LogScale('xy',10)
+        axis xy
+        set(gca,'ytick',[]);set(gca,'xtick',[])
+end
+
+NiceSave(['CV2jitter_Cell',num2str(cellnum)],figfolder,baseName);
+
+    %%
+    [X Y] = meshgrid(ISIstats.ISIhist.logbins,ISIstats.ISIhist.logbins);
+    CV2test = 2.*abs(10.^(X)-10.^(Y))./(10.^(X)+10.^(Y));
+    
+    figure
+    imagesc(ISIstats.ISIhist.logbins,ISIstats.ISIhist.logbins,CV2test')
+    axis xy
+    colorbar
+    title('CV2')
+    xlabel('ISI_n');ylabel('ISI_n_+_1')
+    LogScale('xy',10)
+%%
+twin
+figure
+plot(spikes.times{1},ones(size(spikes.times{1})),'.')
+hold on
+plot(spiketimes_jitt{1},ones(size(spiketimes_jitt{1})),'.')
+
 %%
 figure
 for ss=1:numstates
