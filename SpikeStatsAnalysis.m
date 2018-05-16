@@ -90,7 +90,7 @@ end
 LogScale('x',10)
 
 
-bwcolormap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
+bwcolormap = [makeColorMap([0 0 0.2],[0 0 0.9],[1 1 1]);makeColorMap([1 1 1],[0.9 0 0],[0.2 0 0])];
 
 for ss=1:numstates
     subplot(2,3,ss+3)
@@ -100,7 +100,7 @@ for ss=1:numstates
         caxis([0.5 1.5])
         LogScale('x',10)
         title((statenames{ss}))
-        xlabel('Jitter Window (s)');ylabel('Cell, Sorted By Rate/Type')
+        xlabel('Jitter Window (s)');ylabel('Cell, Sorted By <CV2>/Type')
 end
 
 NiceSave(['CV2jitter'],figfolder,baseName);
@@ -114,8 +114,9 @@ for dd = 1:length(exdt)
     spkmat(dd).ratemat = spkmat(dd).spkmat./dt;
 end
 
+
 %%
-cellnum = 10;
+cellnum = 48;
 [ twin ] = bz_RandomWindowInIntervals( SleepState.ints.NREMstate,20 );
 
 figure
@@ -134,7 +135,7 @@ subplot(2,2,1)
     title(['Cell ',num2str(cellnum)])
     LogScale('x',10)
     
-subplot(2,1,2)
+subplot(3,1,3)
     %bar(spkmat(3).timestamps,spkmat(3).ratemat(:,cellnum))
     
     bar(spkmat(2).timestamps,spkmat(2).spkmat(:,cellnum),'facecolor','w','edgecolor','k')
@@ -157,12 +158,18 @@ subplot(2,1,2)
     %plot(ISIstats_jitt(exjit(3)).allspikes.times{cellnum},ISIstats_jitt(exjit(3)).allspikes.CV2{cellnum}-2,'b.-')
     xlim(twin);ylim([-2 11])
     
-subplot(4,6,4)
-    imagesc(ISIstats.ISIhist.logbins,ISIstats.ISIhist.logbins,...
-        ISIstats.ISIhist.NREMstate.return(:,:,cellnum)')
-    LogScale('xy',10)
-    axis xy
-    xlabel('ISI_n');ylabel('ISI_n_+_1')
+    for ss=1:numstates
+        subplot(4,6,3+ss)
+            imagesc(ISIstats.ISIhist.logbins,ISIstats.ISIhist.logbins,...
+                ISIstats.ISIhist.(statenames{ss}).return(:,:,cellnum)')
+            hold on
+            plot(log10(1./ISIstats.summstats.(statenames{ss}).meanrate(cellnum)),...
+                log10(1./ISIstats.summstats.(statenames{ss}).meanrate(cellnum)),'r+')
+            LogScale('xy',10)
+            axis xy
+            xlabel('ISI_n');ylabel('ISI_n_+_1')
+            title({(statenames{ss}),['<CV2> = ',num2str(ISIstats.summstats.(statenames{ss}).meanCV2(cellnum))]})
+    end
     
 for dd = 1:length(exdt)
     subplot(4,6,9+dd)

@@ -50,7 +50,7 @@ SHOWFIG = p.Results.showfig;
 forceRedetect = p.Results.forceRedetect;
 
 
-%%
+%% Load the stuff
 baseName = bz_BasenameFromBasepath(basePath);
 cellinfofilename = [basePath,baseName,'.ISIStats.cellinfo.mat'];
 
@@ -99,7 +99,7 @@ summstats.(statenames{ss}).ISICV = cellfun(@(X) std(X)./mean(X),ISIs);
 summstats.(statenames{ss}).meanCV2 = cellfun(@(X) mean(X),CV2);
 
 
-%% CV2 for shuffle (shows that CV2 is not much meaningful?)
+%% CV2 for shuffled ISIs (shows that CV2 is not much meaningful?)
 % numshuffle = 100;
 % for sh = 1:numshuffle
 %     ISIs_shuffle = cellfun(@(X) shuffle(X),ISIs,'UniformOutput',false);
@@ -189,7 +189,7 @@ end
 
 
 
-%% ACG
+%% ACG - get its own analysis
 %[ccg,t] = CCG(statespiketimes,[],<options>)
 
 %%
