@@ -6,8 +6,8 @@ function [ ISIstats ] = bz_ISIStats( spikes,varargin )
 %       spikes
 %
 %       (options)
-%       'states'        A structure with intervals.
-%                       states.statename = [start stop]
+%       'ints'        A structure with intervals in which to calculate ISIs.
+%                       states.stateNAME = [start stop]
 %                       Will calculate ISIsstats separately for each state
 %                       (Can also 'load' from SleepState.states.mat)
 %       'cellclass'     Cell array of strings - label for each cell. 
@@ -17,6 +17,7 @@ function [ ISIstats ] = bz_ISIStats( spikes,varargin )
 %       'figfolder'     a folder to save the figure in
 %       'showfig'       logical (default: false) show the figure?
 %       'forceRedetect' logical (default: false) to re-compute even if saved
+%       'shuffleCV2'    logical (devault: false)
 %
 %   OUTPUTS
 %       ISIstats        cellinfo structure with ISI statistics
@@ -31,23 +32,25 @@ defaultstates.ALLtime = [-Inf Inf];
 
 % parse args
 p = inputParser;
-addParameter(p,'states',defaultstates)
+addParameter(p,'ints',defaultstates)
 addParameter(p,'savecellinfo',false,@islogical)
 addParameter(p,'basePath',pwd,@isstr)
 addParameter(p,'figfolder',false)
 addParameter(p,'showfig',false,@islogical);
 addParameter(p,'cellclass',[]);
 addParameter(p,'forceRedetect',false,@islogical);
+addParameter(p,'shuffleCV2',false,@islogical);
 
 
 parse(p,varargin{:})
-states = p.Results.states;
+ints = p.Results.ints;
 cellclass = p.Results.cellclass;
 basePath = p.Results.basePath;
 SAVECELLINFO = p.Results.savecellinfo;
 figfolder = p.Results.figfolder;
 SHOWFIG = p.Results.showfig;
 forceRedetect = p.Results.forceRedetect;
+SHUFFLECV2 = p.Results.shuffleCV2;
 
 
 %% Load the stuff
@@ -64,12 +67,12 @@ if strcmp(cellclass,'load')
     cellclass = cellclass.label;
 end
 
-if strcmp(states,'load')
-    states = bz_LoadStates(basePath,'SleepState');
-    states = states.ints;
+if strcmp(ints,'load')
+    ints = bz_LoadStates(basePath,'SleepState');
+    ints = ints.ints;
 end
 %% Get the States
-statenames = fieldnames(states);
+statenames = fieldnames(ints);
 numstates = length(statenames);
 
 
@@ -87,7 +90,7 @@ for ss = 1:numstates
 %ss=1;
 
 %Find which spikes are during state of interest
-[statespiketimes,statespikes] = cellfun(@(X) RestrictInts(X,states.(statenames{ss})),...
+[statespiketimes,statespikes] = cellfun(@(X) RestrictInts(X,ints.(statenames{ss})),...
     allspikes.times,'UniformOutput',false);
 CV2 = cellfun(@(X,Y) X(Y(2:end-1)),allspikes.CV2,statespikes,'Uniformoutput',false);
 ISIs = cellfun(@(X,Y) X(Y(2:end-1)),allspikes.ISIs,statespikes,'Uniformoutput',false);
@@ -98,31 +101,19 @@ summstats.(statenames{ss}).meanrate = 1./summstats.(statenames{ss}).meanISI;
 summstats.(statenames{ss}).ISICV = cellfun(@(X) std(X)./mean(X),ISIs);
 summstats.(statenames{ss}).meanCV2 = cellfun(@(X) mean(X),CV2);
 
+if SHUFFLECV2
+    % CV2 for shuffled ISIs
+    numshuffle = 100;
+    for sh = 1:numshuffle
+        ISIs_shuffle = cellfun(@(X) shuffle(X),ISIs,'UniformOutput',false);
+        CV2_shuffle = cellfun(@(X) 2.*abs(X(2:end)-X(1:end-1))./(X(2:end)+X(1:end-1)),...
+            ISIs_shuffle ,'UniformOutput',false);
+        meanshuffle(sh,:) = cellfun(@(X) mean(X),CV2_shuffle);
+    end
+    summstats.(statenames{ss}).shufflemeanCV2 = mean(meanshuffle);
+    summstats.(statenames{ss}).shufflestdCV2 = std(meanshuffle);
 
-%% CV2 for shuffled ISIs (shows that CV2 is not much meaningful?)
-% numshuffle = 100;
-% for sh = 1:numshuffle
-%     ISIs_shuffle = cellfun(@(X) shuffle(X),ISIs,'UniformOutput',false);
-%     CV2_shuffle = cellfun(@(X) 2.*abs(X(2:end)-X(1:end-1))./(X(2:end)+X(1:end-1)),...
-%         ISIs_shuffle ,'UniformOutput',false);
-%     meanshuffle(sh,:) = cellfun(@(X) mean(X),CV2_shuffle);
-% end
-% shufflemean = mean(meanshuffle);
-% shufflestd = std(meanshuffle);
-% 
-% %CV2_reltoshuff = (summstats.(statenames{ss}).meanCV2-shufflemean)./shufflestd;
-% 
-% figure
-% subplot(2,2,1)
-% plot([log10(summstats.(statenames{ss}).meanrate);log10(summstats.(statenames{ss}).meanrate)],...
-%     [shufflemean;summstats.(statenames{ss}).meanCV2],'color',0.7.*[1 1 1],'linewidth',0.5)
-% hold on
-% plot([log10(summstats.(statenames{ss}).meanrate);log10(summstats.(statenames{ss}).meanrate)],...
-%     [shufflemean-shufflestd;shufflemean+shufflestd],'color',0.7.*[1 1 1],'linewidth',3)
-% plot(log10(summstats.(statenames{ss}).meanrate),summstats.(statenames{ss}).meanCV2,'.r','markersize',10)
-% xlabel('FR (Hz)');ylabel('<CV2>')
-% NiceSave(['CV2_',(statenames{ss})],figfolder,baseName);
-
+end
 %%
 %Set up all the bins and matrices
 numbins = 60;
@@ -198,7 +189,7 @@ figure
     subplot(2,2,1)
         for cl = 1:numclasses
             plot(log10(summstats.(statenames{ss}).meanrate(inclasscells{cl})),...
-                log2(summstats.(statenames{ss}).ISICV(inclasscells{cl})),'.')
+                log2(summstats.(statenames{ss}).ISICV(inclasscells{cl})),'.','markersize',11)
             hold on
         end
         plot(get(gca,'xlim'),log2([1 1]),'k')
@@ -207,19 +198,38 @@ figure
         title(statenames{ss})
         box off
         
-    subplot(2,2,3)
+    subplot(2,2,2)
     for cl = 1:numclasses
+        
+        if SHUFFLECV2
+            plot([log10(summstats.(statenames{ss}).meanrate(inclasscells{cl}));...
+                log10(summstats.(statenames{ss}).meanrate(inclasscells{cl}))],...
+                [summstats.(statenames{ss}).shufflemeanCV2(inclasscells{cl});...
+                summstats.(statenames{ss}).meanCV2(inclasscells{cl})],...
+                'color',0.8.*[1 1 1],'linewidth',0.25)
+            hold on
+            plot([log10(summstats.(statenames{ss}).meanrate(inclasscells{cl}));...
+                log10(summstats.(statenames{ss}).meanrate(inclasscells{cl}))],...
+                [summstats.(statenames{ss}).shufflemeanCV2(inclasscells{cl})-summstats.(statenames{ss}).shufflestdCV2(inclasscells{cl});...
+                summstats.(statenames{ss}).shufflemeanCV2(inclasscells{cl})+summstats.(statenames{ss}).shufflestdCV2(inclasscells{cl})],...
+                'color',0.8.*[1 1 1],'linewidth',2.5)
+        end
+        
         plot(log10(summstats.(statenames{ss}).meanrate(inclasscells{cl})),...
-            (summstats.(statenames{ss}).meanCV2(inclasscells{cl})),'.')
+            (summstats.(statenames{ss}).meanCV2(inclasscells{cl})),'.','markersize',11)
         hold on
+        
+        
+
+        
     end
         plot(get(gca,'xlim'),[1 1],'k')
         LogScale('x',10);
         xlabel('Mean Rate (Hz)');ylabel('ISI <CV2>')
         title(statenames{ss})
         box off
-        
-    subplot(2,2,2)
+
+    subplot(2,3,4)
         imagesc((ISIhist.logbins),[1 numcells],...
             ISIhist.(statenames{ss}).log(sorts.(statenames{ss}).ratebyclass,:))
         hold on
@@ -228,23 +238,39 @@ figure
         LogScale('x',10)
         xlabel('ISI (s)')
         xlim(ISIhist.logbins([1 end]))
-        colorbar
+        %colorbar
       %  legend('1/Mean Firing Rate (s)','location','southeast')
         ylabel('Cell (Sorted by FR, Type)')
         %legend('1/Mean Firing Rate (s)','location','southeast')
         caxis([0 0.1])
         title('ISI Distribution (Log Scale)')
         
-    subplot(2,2,4)
+    subplot(2,3,5)
         imagesc((ISIhist.logbins),[1 numcells],...
-            ISIhist.(statenames{ss}).log(sorts.(statenames{ss}).CV2byclass,:))
+            ISIhist.(statenames{ss}).log(sorts.(statenames{ss}).ISICVbyclass,:))
         hold on
-       % plot(log10(1./(summstats.(statenames{ss}).meanrate(sorts.(statenames{ss}).rateEI))),[1:numcells],'k.','LineWidth',2)
+        plot(log10(1./(summstats.(statenames{ss}).meanrate(sorts.(statenames{ss}).ISICVbyclass))),[1:numcells],'k.','LineWidth',2)
         plot(ISIhist.logbins([1 end]),sum(inclasscells{1}).*[1 1]+0.5,'r')
         LogScale('x',10)
         xlabel('ISI (s)')
         xlim(ISIhist.logbins([1 end]))
-        colorbar
+        %colorbar
+      %  legend('1/Mean Firing Rate (s)','location','southeast')
+        ylabel('Cell (Sorted by CV, Type)')
+        %legend('1/Mean Firing Rate (s)','location','southeast')
+        caxis([0 0.1])
+        title('ISI Distribution (Log Scale)')
+        
+    subplot(2,3,6)
+        imagesc((ISIhist.logbins),[1 numcells],...
+            ISIhist.(statenames{ss}).log(sorts.(statenames{ss}).CV2byclass,:))
+        hold on
+        plot(log10(1./(summstats.(statenames{ss}).meanrate(sorts.(statenames{ss}).CV2byclass))),[1:numcells],'k.','LineWidth',2)
+        plot(ISIhist.logbins([1 end]),sum(inclasscells{1}).*[1 1]+0.5,'r')
+        LogScale('x',10)
+        xlabel('ISI (s)')
+        xlim(ISIhist.logbins([1 end]))
+        %colorbar
       %  legend('1/Mean Firing Rate (s)','location','southeast')
         ylabel('Cell (Sorted by CV2, Type)')
         %legend('1/Mean Firing Rate (s)','location','southeast')
