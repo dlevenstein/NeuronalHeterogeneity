@@ -18,7 +18,7 @@ intervals(diff(intervals,1,2)<=0,:)=[];
 maxt = max(intervals(:));
 
 possiblestarttimes = 1:1:maxt;
-possiblestarttimes = Restrict(possiblestarttimes,intervals);
+possiblestarttimes = Restrict(double(possiblestarttimes),double(intervals));
 
 starttime = randsample(possiblestarttimes,1);
 

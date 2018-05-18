@@ -1,21 +1,22 @@
-function [ISIbins,ISIhist,summstats,...
-    ISIreturn,sorts] = SpikeStatsAnalysis(basePath,figfolder)
+function [ jitterCV2 ] = SpikeStatsAnalysis(basePath,figfolder)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 %
 
 %% DEV
-basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-figfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs';
+%basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
+%figfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs';
 baseName = bz_BasenameFromBasepath(basePath);
 
-spikes = bz_GetSpikes('basePath',basePath);
+spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
 SleepState = bz_LoadStates(basePath,'SleepState');
+% for reformatting SleepState
+SleepState = SleepScoreMaster(basePath,'noPrompts',true);
 
 %LFP for plot
 lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
-    'basepath',basePath);
+    'basepath',basePath,'noPrompts',true);
 
 %%
 statenames = {'NREMstate','WAKEstate','REMstate'};
@@ -185,11 +186,11 @@ numjits = 20;
 for ss = 1:numstates
     CV2_jitt.(statenames{ss}) = zeros(length(spikes.times),numtimewins,numjits);
 end
-timebins = logspace(-3,1.75,numtimewins);
+jitterCV2.timebins = logspace(-3,1.75,numtimewins);
 for tt = 1:numtimewins
     tt
     for jj = 1:numjits
-    [spiketimes_jitt] = JitterSpiketimes(spikes.times,timebins(tt));
+    [spiketimes_jitt] = JitterSpiketimes(spikes.times,jitterCV2.timebins(tt));
     jitspikes = spikes;
     jitspikes.times = spiketimes_jitt;
     [ ISIstats_jitt(tt) ] = bz_ISIStats( jitspikes,'ints',SleepState.ints,'showfig',false );
@@ -200,16 +201,16 @@ for tt = 1:numtimewins
 end
 %%
     for ss = 1:numstates
-        meanCV2_jitt.(statenames{ss}) = mean(CV2_jitt.(statenames{ss}),3);
-        stdCV2_jitt.(statenames{ss}) = std(CV2_jitt.(statenames{ss}),[],3);
-        difffrom1 = abs(meanCV2_jitt.(statenames{ss})-1);
-        sigCV2_jitt.(statenames{ss}) = difffrom1>2.*stdCV2_jitt.(statenames{ss});
+        jitterCV2.mean.(statenames{ss}) = mean(CV2_jitt.(statenames{ss}),3);
+        jitterCV2.std.(statenames{ss}) = std(CV2_jitt.(statenames{ss}),[],3);
+        difffrom1 = abs(jitterCV2.mean.(statenames{ss})-1);
+        sigCV2_jitt.(statenames{ss}) = difffrom1>2.*jitterCV2.std.(statenames{ss});
         
-        meanCV2_jitt.pE.(statenames{ss}) = mean(meanCV2_jitt.(statenames{ss})(CellClass.pE,:),1);
-        meanCV2_jitt.pI.(statenames{ss}) = mean(meanCV2_jitt.(statenames{ss})(CellClass.pI,:),1);
+        jitterCV2.mean.pE.(statenames{ss}) = mean(jitterCV2.mean.(statenames{ss})(CellClass.pE,:),1);
+        jitterCV2.mean.pI.(statenames{ss}) = mean(jitterCV2.mean.(statenames{ss})(CellClass.pI,:),1);
         
-        stdCV2_jitt.pE.(statenames{ss}) = std(meanCV2_jitt.(statenames{ss})(CellClass.pE,:),[],1);
-        stdCV2_jitt.pI.(statenames{ss}) = std(meanCV2_jitt.(statenames{ss})(CellClass.pI,:),[],1);
+        jitterCV2.std.pE.(statenames{ss}) = std(jitterCV2.mean.(statenames{ss})(CellClass.pE,:),[],1);
+        jitterCV2.std.pI.(statenames{ss}) = std(jitterCV2.mean.(statenames{ss})(CellClass.pI,:),[],1);
     end
 
     
@@ -223,7 +224,7 @@ for ss=1:numstates
     %errorshade(log10(timebins),meanCV2_jitt.pE.(statenames{ss}),...
     %    stdCV2_jitt.pE.(statenames{ss}),...
     %    stdCV2_jitt.pE.(statenames{ss}),statecolors{ss},'scalar')
-    plot(log10(timebins),meanCV2_jitt.pE.(statenames{ss}),statecolors{ss},'linewidth',2)
+    plot(log10(jitterCV2.timebins),jitterCV2.mean.pE.(statenames{ss}),statecolors{ss},'linewidth',2)
     xlabel('Jitter Window (s)');ylabel('<CV2>')
     title('pE Cells')
 end
@@ -235,7 +236,7 @@ for ss=1:numstates
     %errorshade(log10(timebins),meanCV2_jitt.pE.(statenames{ss}),...
     %    stdCV2_jitt.pE.(statenames{ss}),...
     %    stdCV2_jitt.pE.(statenames{ss}),statecolors{ss},'scalar')
-    plot(log10(timebins),meanCV2_jitt.pI.(statenames{ss}),statecolors{ss},'linewidth',2)
+    plot(log10(jitterCV2.timebins),jitterCV2.mean.pI.(statenames{ss}),statecolors{ss},'linewidth',2)
     xlabel('Jitter Window (s)');ylabel('<CV2>')
     title('pI Cells')
 end
@@ -246,7 +247,7 @@ bwcolormap = [makeColorMap([0 0 0.2],[0 0 0.9],[1 1 1]);makeColorMap([1 1 1],[0.
 
 for ss=1:numstates
     subplot(2,3,ss+3)
-        imagesc(log10(timebins),[0 1],meanCV2_jitt.(statenames{ss})(ISIstats.sorts.(statenames{ss}).CV2byclass,:))
+        imagesc(log10(jitterCV2.timebins),[0 1],jitterCV2.mean.(statenames{ss})(ISIstats.sorts.(statenames{ss}).CV2byclass,:))
         colorbar
         colormap(bwcolormap)
         caxis([0.5 1.5])
