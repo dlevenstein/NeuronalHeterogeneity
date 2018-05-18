@@ -75,7 +75,7 @@ NiceSave(['StateComparison'],figfolder,baseName);
 %%
 %histcolors = [makeColorMap([1 1 1],[0.8 0.2 0.2],[0.8 0 0]);makeColorMap([0.8 0 0],[0.3 0 0])];
 histcolors = flipud(gray);
-cellnos = ISIstats.sorts.NREMstate.CV2([1,end/2,end]);
+cellnos = ISIstats.sorts.NREMstate.CV2([1,round(end/2),end]);
 sortmetric = nan(size(ISIstats.summstats.NREMstate.meanCV2));
 sortmetric(cellnos) = [1 2 3];
 
