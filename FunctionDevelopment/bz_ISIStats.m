@@ -12,7 +12,7 @@ function [ ISIstats ] = bz_ISIStats( spikes,varargin )
 %                       (Can also 'load' from SleepState.states.mat)
 %       'cellclass'     Cell array of strings - label for each cell. 
 %                       (Can also 'load' from CellClass.cellinfo.mat)
-%       'savecellinfo'
+%       'savecellinfo'  logical (default: false) save a cellinfo file?
 %       'basePath'
 %       'figfolder'     a folder to save the figure in
 %       'showfig'       logical (default: false) show the figure?
@@ -55,7 +55,7 @@ SHUFFLECV2 = p.Results.shuffleCV2;
 
 %% Load the stuff
 baseName = bz_BasenameFromBasepath(basePath);
-cellinfofilename = [basePath,baseName,'.ISIStats.cellinfo.mat'];
+cellinfofilename = fullfile(basePath,[baseName,'.ISIStats.cellinfo.mat']);
 
 if exist(cellinfofilename,'file') && ~forceRedetect
     ISIstats = bz_LoadCellinfo(basePath,'ISIStats');

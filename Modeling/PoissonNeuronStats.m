@@ -108,7 +108,7 @@ n = 0:20;
 pN = ((r.*dt).^n .* exp(-r.*dt))./factorial(n);
 
 meanN = (1./sum(pN)) .* sum(n.*pN);
-varN = 
+%varN = 
 CV = mean
 
 

@@ -6,7 +6,7 @@ function [ISIbins,ISIhist,summstats,...
 
 %% DEV
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-figfolder = '/Users/dlevenstein/Dropbox/Research/Current Projects/FRHetAndDynamics/AnalysisScripts/AnalysisFigs';
+figfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs';
 baseName = bz_BasenameFromBasepath(basePath);
 
 spikes = bz_GetSpikes('basePath',basePath);
@@ -18,13 +18,14 @@ lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanI
     'basepath',basePath);
 
 %%
-statenames = {'NREMstate','REMstate','WAKEstate'};
+statenames = {'NREMstate','WAKEstate','REMstate'};
 statecolors = {'b','r','k'};
 numstates = length(statenames);
 
 
 [ ISIstats ] = bz_ISIStats( spikes,'ints',SleepState.ints,...
-    'cellclass',CellClass.label,'figfolder',figfolder,'shuffleCV2',true);
+    'cellclass',CellClass.label,'figfolder',figfolder,'shuffleCV2',true,...
+    'savecellinfo',true,'basePath',basePath);
 
 
 
@@ -71,32 +72,68 @@ NiceSave(['StateComparison'],figfolder,baseName);
 
 
 %%
-cellnos = [9,48,10];
+%histcolors = [makeColorMap([1 1 1],[0.8 0.2 0.2],[0.8 0 0]);makeColorMap([0.8 0 0],[0.3 0 0])];
+histcolors = flipud(gray);
+cellnos = ISIstats.sorts.NREMstate.CV2([1,end/2,end]);
 sortmetric = nan(size(ISIstats.summstats.NREMstate.meanCV2));
 sortmetric(cellnos) = [1 2 3];
 
 figure
+colormap(histcolors)
+%Return Map Samples
 for ss = 1:numstates
-subplot(4,1,ss+1)
-[ twin ] = bz_RandomWindowInIntervals( SleepState.ints.(statenames{ss}),5 );
-bz_MultiLFPPlot(lfp,'timewin',twin,'spikes',spikes,'plotcells',cellnos,...
-    'sortmetric',sortmetric)
+subplot(5,2,2.*(ss-1)+2)
+
+    [ twin ] = bz_RandomWindowInIntervals( SleepState.ints.(statenames{ss}),6 );
+    bz_MultiLFPPlot(lfp,'timewin',twin,'spikes',spikes,'plotcells',cellnos,...
+        'sortmetric',sortmetric)
+    ylabel(statenames{ss})
 end
 
-
-%THIS NEEDS TO BE DONE
+%Time series samples
+for cc = 1:length(cellnos)
     for ss=1:numstates
-        subplot(4,6,3+ss)
+        subplot(5,6,(ss-1).*6+cc)
             imagesc(ISIstats.ISIhist.logbins,ISIstats.ISIhist.logbins,...
-                ISIstats.ISIhist.(statenames{ss}).return(:,:,cellnum)')
+                ISIstats.ISIhist.(statenames{ss}).return(:,:,cellnos(cc))')
             hold on
-            plot(log10(1./ISIstats.summstats.(statenames{ss}).meanrate(cellnum)),...
-                log10(1./ISIstats.summstats.(statenames{ss}).meanrate(cellnum)),'r+')
+            plot(log10(1./ISIstats.summstats.(statenames{ss}).meanrate(cellnos(cc))),...
+                log10(1./ISIstats.summstats.(statenames{ss}).meanrate(cellnos(cc))),'r+')
             LogScale('xy',10)
+            set(gca,'Ytick',[]);set(gca,'Xtick',[])
             axis xy
-            xlabel('ISI_n');ylabel('ISI_n_+_1')
-            title({(statenames{ss}),['<CV2> = ',num2str(ISIstats.summstats.(statenames{ss}).meanCV2(cellnum))]})
+            %xlabel('ISI_n');ylabel('ISI_n_+_1')
+            title(['CV2: ',num2str(round(ISIstats.summstats.(statenames{ss}).meanCV2(cellnos(cc)),2))])
     end
+end
+NiceSave(['CV2Examples'],figfolder,baseName);
+
+%% All the return Maps
+
+figure
+colormap(histcolors)
+ff=0;
+for cc = 1:spikes.numcells
+    cellnum = ISIstats.sorts.NREMstate.CV2byclass(cc);   %%sortrate.NREMstate(cc);
+    subplot(6,7,mod(cc-1,42)+1)
+    imagesc((ISIstats.ISIhist.logbins),(ISIstats.ISIhist.logbins),(ISIstats.ISIhist.NREMstate.return(:,:,cellnum)))
+    hold on
+    plot(log10(1./ISIstats.summstats.NREMstate.meanrate(cellnum)),log10(1./ISIstats.summstats.NREMstate.meanrate(cellnum)),'k+')
+    axis xy
+    LogScale('xy',10)
+    set(gca,'ytick',[]);set(gca,'xtick',[]);
+    caxis([0 0.003])
+    xlim(ISIstats.ISIhist.logbins([1 end]));ylim(ISIstats.ISIhist.logbins([1 end]))
+    %xlabel(['FR: ',num2str(round(ISIstats.summstats.NREMstate.meanrate(cellnum),2)),'Hz'])
+    xlabel(['CV2: ',num2str(round(ISIstats.summstats.NREMstate.meanCV2(cellnum),2))])
+    if mod(cc,42) == 0 || cc ==spikes.numcells
+        ff= ff+1;
+        NiceSave(['ISIreturnmap',num2str(ff)],figfolder,baseName);
+        figure
+        colormap(histcolors)
+    end
+end
+close
 %% Measuring Similarity between ISI maps (same cell different state)
 %Need to run PCA denoise on all maps
 %     linearizedreturn1 = reshape(ISIstats.ISIhist.NREMstate.return,[],spikes.numcells);
@@ -220,90 +257,85 @@ end
 
 NiceSave(['CV2jitter'],figfolder,baseName);
 %%
-exdt = [0.1,1,10];
-exjit = [13,19,26]; %find this instead of hard code
-for dd = 1:length(exdt)
-    dt = exdt(dd);
-    [spkmat(dd).spkmat, spkmat(dd).timestamps] = SpktToSpkmat(spikes.times,...
-        [],dt);
-    spkmat(dd).ratemat = spkmat(dd).spkmat./dt;
-end
+% exdt = [0.1,1,10];
+% exjit = [13,19,26]; %find this instead of hard code
+% for dd = 1:length(exdt)
+%     dt = exdt(dd);
+%     [spkmat(dd).spkmat, spkmat(dd).timestamps] = SpktToSpkmat(spikes.times,...
+%         [],dt);
+%     spkmat(dd).ratemat = spkmat(dd).spkmat./dt;
+% end
+% 
+% 
+% %%
+% cellnum = 48;
+% [ twin ] = bz_RandomWindowInIntervals( SleepState.ints.NREMstate,20 );
+% 
+% figure
+% subplot(2,2,1)
+%     hold on
+%     for ss=1:numstates
+%         errorshade(log10(timebins),meanCV2_jitt.(statenames{ss})(cellnum,:),...
+%             stdCV2_jitt.(statenames{ss})(cellnum,:),...
+%             stdCV2_jitt.(statenames{ss})(cellnum,:),statecolors{ss},'scalar')
+%         plot(log10(timebins),meanCV2_jitt.(statenames{ss})(cellnum,:),statecolors{ss})
+%         plot([log10(timebins(1)) log10(1./ISIstats.summstats.(statenames{ss}).meanrate(cellnum))],...
+%             ISIstats.summstats.(statenames{ss}).meanCV2(cellnum).*[1 1],'--','color',statecolors{ss})
+%         plot(log10(timebins(~sigCV2_jitt.(statenames{ss})(cellnum,:))),~sigCV2_jitt.(statenames{ss})(cellnum,~sigCV2_jitt.(statenames{ss})(cellnum,:)),'ko')
+%         xlabel('Time Window (s)');ylabel('<CV2>')
+%     end
+%     title(['Cell ',num2str(cellnum)])
+%     LogScale('x',10)
+%     
+% subplot(3,1,3)
+%     %bar(spkmat(3).timestamps,spkmat(3).ratemat(:,cellnum))
+%     
+%     bar(spkmat(2).timestamps,spkmat(2).spkmat(:,cellnum),'facecolor','w','edgecolor','k')
+%     hold on
+%    % bar(spkmat(1).timestamps,spkmat(1).spkmat(:,cellnum))
+%     plot(twin,[1 1]-2,'k--')
+%     plot(twin,[2 2]-2,'k-')
+%     plot(spikes.times{cellnum},10.*ones(size(spikes.times{cellnum})),'k.')
+%     plot(ISIstats_jitt(exjit(1)).allspikes.times{cellnum},...
+%         9.*ones(size(ISIstats_jitt(exjit(1)).allspikes.times{cellnum})),'r.')
+%     plot(ISIstats_jitt(exjit(2)).allspikes.times{cellnum},...
+%         8.*ones(size(ISIstats_jitt(exjit(2)).allspikes.times{cellnum})),'g.')
+%     plot(ISIstats_jitt(exjit(3)).allspikes.times{cellnum},...
+%         7*ones(size(ISIstats_jitt(exjit(3)).allspikes.times{cellnum})),'b.')
+%     %plot(spikes.times{cellnum},10.*ones(size(spikes.times{cellnum})),'k.')
+%     %plot(spikes.times{cellnum},10.*ones(size(spikes.times{cellnum})),'k.')
+%     plot(ISIstats.allspikes.times{cellnum},ISIstats.allspikes.CV2{cellnum}-2,'k.-')
+%     %plot(ISIstats_jitt(exjit(1)).allspikes.times{cellnum},ISIstats_jitt(exjit(1)).allspikes.CV2{cellnum}-2,'r.-')
+%     %plot(ISIstats_jitt(exjit(2)).allspikes.times{cellnum},ISIstats_jitt(exjit(2)).allspikes.CV2{cellnum}-2,'g.-')
+%     %plot(ISIstats_jitt(exjit(3)).allspikes.times{cellnum},ISIstats_jitt(exjit(3)).allspikes.CV2{cellnum}-2,'b.-')
+%     xlim(twin);ylim([-2 11])
+%     
+%     for ss=1:numstates
+%         subplot(4,6,3+ss)
+%             imagesc(ISIstats.ISIhist.logbins,ISIstats.ISIhist.logbins,...
+%                 ISIstats.ISIhist.(statenames{ss}).return(:,:,cellnum)')
+%             hold on
+%             plot(log10(1./ISIstats.summstats.(statenames{ss}).meanrate(cellnum)),...
+%                 log10(1./ISIstats.summstats.(statenames{ss}).meanrate(cellnum)),'r+')
+%             LogScale('xy',10)
+%             axis xy
+%             xlabel('ISI_n');ylabel('ISI_n_+_1')
+%             title({(statenames{ss}),['<CV2> = ',num2str(ISIstats.summstats.(statenames{ss}).meanCV2(cellnum))]})
+%     end
+%     
+% for dd = 1:length(exdt)
+%     subplot(4,6,9+dd)
+%         imagesc(ISIstats_jitt(exjit(dd)).ISIhist.logbins,ISIstats_jitt(exjit(dd)).ISIhist.logbins,...
+%             ISIstats_jitt(exjit(dd)).ISIhist.NREMstate.return(:,:,cellnum)')
+%         LogScale('xy',10)
+%         axis xy
+%         set(gca,'ytick',[]);set(gca,'xtick',[])
+% end
+% 
+% NiceSave(['CV2jitter_Cell',num2str(cellnum)],figfolder,baseName);
 
 
-%%
-cellnum = 48;
-[ twin ] = bz_RandomWindowInIntervals( SleepState.ints.NREMstate,20 );
 
-figure
-subplot(2,2,1)
-    hold on
-    for ss=1:numstates
-        errorshade(log10(timebins),meanCV2_jitt.(statenames{ss})(cellnum,:),...
-            stdCV2_jitt.(statenames{ss})(cellnum,:),...
-            stdCV2_jitt.(statenames{ss})(cellnum,:),statecolors{ss},'scalar')
-        plot(log10(timebins),meanCV2_jitt.(statenames{ss})(cellnum,:),statecolors{ss})
-        plot([log10(timebins(1)) log10(1./ISIstats.summstats.(statenames{ss}).meanrate(cellnum))],...
-            ISIstats.summstats.(statenames{ss}).meanCV2(cellnum).*[1 1],'--','color',statecolors{ss})
-        plot(log10(timebins(~sigCV2_jitt.(statenames{ss})(cellnum,:))),~sigCV2_jitt.(statenames{ss})(cellnum,~sigCV2_jitt.(statenames{ss})(cellnum,:)),'ko')
-        xlabel('Time Window (s)');ylabel('<CV2>')
-    end
-    title(['Cell ',num2str(cellnum)])
-    LogScale('x',10)
-    
-subplot(3,1,3)
-    %bar(spkmat(3).timestamps,spkmat(3).ratemat(:,cellnum))
-    
-    bar(spkmat(2).timestamps,spkmat(2).spkmat(:,cellnum),'facecolor','w','edgecolor','k')
-    hold on
-   % bar(spkmat(1).timestamps,spkmat(1).spkmat(:,cellnum))
-    plot(twin,[1 1]-2,'k--')
-    plot(twin,[2 2]-2,'k-')
-    plot(spikes.times{cellnum},10.*ones(size(spikes.times{cellnum})),'k.')
-    plot(ISIstats_jitt(exjit(1)).allspikes.times{cellnum},...
-        9.*ones(size(ISIstats_jitt(exjit(1)).allspikes.times{cellnum})),'r.')
-    plot(ISIstats_jitt(exjit(2)).allspikes.times{cellnum},...
-        8.*ones(size(ISIstats_jitt(exjit(2)).allspikes.times{cellnum})),'g.')
-    plot(ISIstats_jitt(exjit(3)).allspikes.times{cellnum},...
-        7*ones(size(ISIstats_jitt(exjit(3)).allspikes.times{cellnum})),'b.')
-    %plot(spikes.times{cellnum},10.*ones(size(spikes.times{cellnum})),'k.')
-    %plot(spikes.times{cellnum},10.*ones(size(spikes.times{cellnum})),'k.')
-    plot(ISIstats.allspikes.times{cellnum},ISIstats.allspikes.CV2{cellnum}-2,'k.-')
-    %plot(ISIstats_jitt(exjit(1)).allspikes.times{cellnum},ISIstats_jitt(exjit(1)).allspikes.CV2{cellnum}-2,'r.-')
-    %plot(ISIstats_jitt(exjit(2)).allspikes.times{cellnum},ISIstats_jitt(exjit(2)).allspikes.CV2{cellnum}-2,'g.-')
-    %plot(ISIstats_jitt(exjit(3)).allspikes.times{cellnum},ISIstats_jitt(exjit(3)).allspikes.CV2{cellnum}-2,'b.-')
-    xlim(twin);ylim([-2 11])
-    
-    for ss=1:numstates
-        subplot(4,6,3+ss)
-            imagesc(ISIstats.ISIhist.logbins,ISIstats.ISIhist.logbins,...
-                ISIstats.ISIhist.(statenames{ss}).return(:,:,cellnum)')
-            hold on
-            plot(log10(1./ISIstats.summstats.(statenames{ss}).meanrate(cellnum)),...
-                log10(1./ISIstats.summstats.(statenames{ss}).meanrate(cellnum)),'r+')
-            LogScale('xy',10)
-            axis xy
-            xlabel('ISI_n');ylabel('ISI_n_+_1')
-            title({(statenames{ss}),['<CV2> = ',num2str(ISIstats.summstats.(statenames{ss}).meanCV2(cellnum))]})
-    end
-    
-for dd = 1:length(exdt)
-    subplot(4,6,9+dd)
-        imagesc(ISIstats_jitt(exjit(dd)).ISIhist.logbins,ISIstats_jitt(exjit(dd)).ISIhist.logbins,...
-            ISIstats_jitt(exjit(dd)).ISIhist.NREMstate.return(:,:,cellnum)')
-        LogScale('xy',10)
-        axis xy
-        set(gca,'ytick',[]);set(gca,'xtick',[])
-end
-
-NiceSave(['CV2jitter_Cell',num2str(cellnum)],figfolder,baseName);
-
-
-%%
-twin
-figure
-plot(spikes.times{1},ones(size(spikes.times{1})),'.')
-hold on
-plot(spiketimes_jitt{1},ones(size(spiketimes_jitt{1})),'.')
 
 
 
@@ -349,39 +381,14 @@ plot(spiketimes_jitt{1},ones(size(spiketimes_jitt{1})),'.')
 %     
 % NiceSave('FRDist_all',figfolder,baseName);
 
-%%
 
-figure
-%colormap(histcolors)
-ff=0;
-for cc = 1:spikes.numcells
-    cellnum = ISIstats.sorts.NREMstate.CV2byclass(cc);   %%sortrate.NREMstate(cc);
-    subplot(6,7,mod(cc-1,42)+1)
-    imagesc((ISIstats.ISIhist.logbins),(ISIstats.ISIhist.logbins),(ISIstats.ISIhist.NREMstate.return(:,:,cellnum)))
-    hold on
-    plot(log10(1./ISIstats.summstats.NREMstate.meanrate(cellnum)),log10(1./ISIstats.summstats.NREMstate.meanrate(cellnum)),'k+')
-    axis xy
-    LogScale('xy',10)
-    set(gca,'ytick',[]);set(gca,'xtick',[]);
-    caxis([0 0.003])
-    xlim(ISIstats.ISIhist.logbins([1 end]));ylim(ISIstats.ISIhist.logbins([1 end]))
-    %xlabel(['FR: ',num2str(round(ISIstats.summstats.NREMstate.meanrate(cellnum),2)),'Hz'])
-    xlabel(['CV2: ',num2str(round(ISIstats.summstats.NREMstate.meanCV2(cellnum),2))])
-    if mod(cc,42) == 0 || cc ==spikes.numcells
-        ff= ff+1;
-        NiceSave(['ISIreturnmap',num2str(ff)],figfolder,baseName);
-        figure
-       % colormap(histcolors)
-    end
-end
-close
 %%
-ISICVdiff = (summstats.NREMstate.ISICV)-(summstats.WAKEstate.ISICV);
-figure
-plot(log10(summstats.NREMstate.meanrate(CellClass.pE)),ISICVdiff(CellClass.pE),'.')
-hold on
-plot(log10(summstats.NREMstate.meanrate(CellClass.pI)),ISICVdiff(CellClass.pI),'r.')
-plot(get(gca,'xlim'),[0 0],'k')
+% ISICVdiff = (summstats.NREMstate.ISICV)-(summstats.WAKEstate.ISICV);
+% figure
+% plot(log10(summstats.NREMstate.meanrate(CellClass.pE)),ISICVdiff(CellClass.pE),'.')
+% hold on
+% plot(log10(summstats.NREMstate.meanrate(CellClass.pI)),ISICVdiff(CellClass.pI),'r.')
+% plot(get(gca,'xlim'),[0 0],'k')
 %%
 % figure
 % colormap(histcolors)
