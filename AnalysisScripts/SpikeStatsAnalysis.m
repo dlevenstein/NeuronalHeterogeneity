@@ -20,7 +20,7 @@ lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanI
 
 %%
 statenames = {'NREMstate','WAKEstate','REMstate'};
-statecolors = {'b','r','k'};
+statecolors = {'b','k','r'};
 numstates = length(statenames);
 
 
