@@ -18,8 +18,8 @@ savefolder = [repopath,'Modeling/Simulation_Data'];
 %Neuron Parameters
 cellparams.v_r = -55;
 cellparams.v_th = -45;
-cellparams.g_L = 182/18;
-cellparams.C = 182;
+cellparams.g_L = 182/18; %(nS)
+cellparams.C = 182; %pF
 
 cellparams.E_e = 0;
 cellparams.E_i = -70;
@@ -27,13 +27,13 @@ cellparams.E_L = -65;
 cellparams.E_h = 0;
 
 %Input Parameters
-synparams.w_e =100; %synaptic weight (pS?)
+synparams.w_e =1; %synaptic weight (nS)
 %Set w_i such that IPSC~EPSC
 w_i = synparams.w_e .* -(cellparams.v_r-cellparams.E_e)./(cellparams.v_r-cellparams.E_i);
 
-synparams.w_i = w_i; %synaptic weight (pS?)
-synparams.tau_se = 0.005;
-synparams.tau_si = 0.005;
+synparams.w_i = w_i; %synaptic weight (nS)
+synparams.tau_se = 5; %mS
+synparams.tau_si = 5; %mS
 synparams.K_e = 1;
 synparams.K_i = 1;
 
@@ -65,8 +65,8 @@ end
 %%
 numspks = arrayfun(@(X) sum(~isnan(X.ISIs)),spikestats);
 
-%% Calculate sub-superthrehsold
-v_inf = -60:15:-30;
+%% Calculate V_inf and Gamma
+v_inf = -65:10:-35;
 %v_inf = cellparams.v_th;
 
 [R,V] = meshgrid(R_es,v_inf);
@@ -84,16 +84,42 @@ g_e = synparams.w_e.*synparams.tau_se.*synparams.K_e.*R;
 Ri_Vinf = -(g_e.*D_e+cellparams.g_L.*D_L)./(D_i.*synparams.w_i.*synparams.tau_si);
 
 
+g_e = synparams.w_e.*synparams.tau_se.*synparams.K_e.*R_es./1000;
+g_i = synparams.w_i.*synparams.tau_si.*synparams.K_i.*R_is./1000;
+[G_e,G_i] = meshgrid(g_e,g_i);
+gamma = 1+(1/cellparams.g_L).*(G_e+G_i);
+
+%%
+figure
+subplot(2,2,1)
+imagesc(log10(R_es),log10(R_is),log10(gamma)')
+hold on
+        plot(log10(R_es),log10(Ri_Vinf),'k--','linewidth',0.5)
+        plot(log10(R_es),log10(Ri_Vinf(3,:)),'k','linewidth',1)
+LogScale('xy',10)
+axis xy
+colorbar
+xlabel('K_eR_e (Hz)');ylabel('K_iR_i (Hz)')
+
+NiceSave('VinfGamma',figfolder,'CondLIF')
+
 %% examples
 
 %Vinf = -50;
 %Gammma = 2;
 %g = 1;
-subthreshex.R_e = 1500;
+subthreshex_lowG.R_e = 500;
+subthreshex_lowG.R_i = 300;
+rates.R_e = subthreshex_lowG.R_e;
+rates.R_i = subthreshex_lowG.R_i;
+[subthreshex_lowG.spikestats,subthreshex_lowG.fig] = NoisyInputSims( cellparams,synparams,rates,...
+    'showfig',true,'figfolder',figfolder ); 
+%%
+subthreshex_highG.R_e = 1500;
 subthreshex.R_i = 800;
-rates.R_e = subthreshex.R_e;
-rates.R_i = subthreshex.R_i;
-[subthreshex.spikestats,subthreshex.fig] = NoisyInputSims( cellparams,synparams,rates,...
+rates.R_e = subthreshex_highG.R_e;
+rates.R_i = subthreshex_highG.R_i;
+[subthreshex_highG.spikestats,subthreshex_highG.fig] = NoisyInputSims( cellparams,synparams,rates,...
     'showfig',true,'figfolder',figfolder ); 
 
 %%
@@ -103,6 +129,15 @@ rates.R_e = supthreshex.R_e;
 rates.R_i = supthreshex.R_i;
 [supthreshex.spikestats,supthreshex.fig] = NoisyInputSims( cellparams,synparams,rates,...
     'showfig',true,'figfolder',figfolder );
+
+
+%% test
+test.R_e = 10000;
+test.R_i = 5000;
+rates.R_e = test.R_e;
+rates.R_i = test.R_i;
+[test.spikestats,test.fig] = NoisyInputSims( cellparams,synparams,rates,...
+    'showfig',true);
 
 %%
 logISIbins = linspace(-1.5,1,25);
@@ -138,7 +173,7 @@ subplot(4,4,15)
 %subthreshex.ISIs
 %ISI return map (log scale)
 %%
-spklim = 1;
+spklim = 100;
 figure
     subplot(2,2,1)
         h = imagesc(log10(R_es),log10(R_is),log10(spkrate'));
@@ -152,7 +187,6 @@ figure
         axis xy
         LogScale('xy',10)
         title('Mean Rate');
-        xlabel('R_e');ylabel('R_i')
         xlabel('K_eR_e (Hz)');ylabel('K_iR_i (Hz)')
     subplot(2,2,2)
         h = imagesc(log10(R_es),log10(R_is),ISICV');
@@ -170,6 +204,9 @@ figure
         
 
 NiceSave('ISIbyInputRates',figfolder,'CondLIF')
+
+
+
 %% FI curve
 R_es = logspace(2,3,20);
 rates.R_i = 500;

@@ -14,39 +14,39 @@ ntrials = p.Results.ntrials; %number of "neurons" or trials
 
 %%
 
-onsettransient = 0.1; %for conductance
+onsettransient = 100; %for conductance (ms)
 
 %Parameters: DEV
-% w_e = 200; %synaptic weight (pS?)
-% w_i = 100; %synaptic weight (pS?)
-% tau_se = 0.01;
-% tau_si = 0.01;
-% R_e = 1;
-% R_i = 4;
+% w_e = 200; %synaptic weight (nS)
+% w_i = 100; %synaptic weight (nS)
+% tau_se = 0.01; (ms)
+% tau_si = 0.01; (ms)
+% R_e = 1; (Hz, SPK/s)
+% R_i = 4; (Hz, SPK/s)
 % K_e = 500;
 % K_i = 500;
 % 
-% v_r = -55;
-% v_th = -45;
-% g_L = 182/18;
-% C = 182;
-% g_h = 0;
+% v_r = -55; (mV)
+% v_th = -45; (mV)
+% g_L = 182/18; (nS)
+% C = 182; % (pF)
+% g_h = 0; (nS)
 % 
 % E_e = 0;
 % E_i = -70;
 % E_L = -65;
 % E_h = 0;
 
-w_e = synparams.w_e; %synaptic weight (pS?)
-w_i = synparams.w_i; %synaptic weight (pS?)
+w_e = synparams.w_e; %synaptic weight (nS)
+w_i = synparams.w_i; %synaptic weight (nS)
 tau_se = synparams.tau_se;
 tau_si = synparams.tau_si;
 K_e = synparams.K_e;
 K_i = synparams.K_i;
 
-R_e = rates.R_e;
-R_i = rates.R_i;
-g_h = rates.g_h;
+R_e = rates.R_e; %Hz (spks/s)
+R_i = rates.R_i; %Hz (spks/s)
+g_h = rates.g_h; %Hz (spks/s)
 
 v_r = cellparams.v_r;
 v_th = cellparams.v_th;
@@ -59,14 +59,14 @@ E_L = cellparams.E_L;
 E_h = cellparams.E_h;
 
 %Calculate poisson spike times
-T = 25;% max simulation time, s
+T = 10000;% max simulation time, ms
 %dt = T./max([(R_e.*K_e),(R_i.*K_i)])./20;
-dt = 0.0005;
+dt = 0.5; %(ms)
 
 %RK_e = repmat(R_e.*K_e,ntrials,1);
 %RK_i = repmat(R_i.*K_i,ntrials,1);
-RK_e = R_e.*K_e;
-RK_i = R_i.*K_i;
+RK_e = R_e.*K_e./1000; %Convert to spks/ms
+RK_i = R_i.*K_i./1000; %Convert to spks/ms
 %% Simulate
 TimeStamps = [-onsettransient:dt:T]';
 
@@ -92,13 +92,18 @@ for tt = 2:length(TimeStamps)
         v(tt-1,:)=v_r.*ones(size(v(tt-1,:)));
     end
     %Conductance state and Driving potential
-    gamma = g_e(tt-1,:) + g_i(tt-1,:) + g_L + g_h;
-    H = (g_e(tt-1,:).*E_e + g_i(tt-1,:).*E_i + g_L.*E_L + g_h.*E_h)./gamma;
+    %gamma = g_e(tt-1,:) + g_i(tt-1,:) + g_L + g_h;
+    %H = (g_e(tt-1,:).*E_e + g_i(tt-1,:).*E_i + g_L.*E_L + g_h.*E_h)./gamma;
     
     %Dynamical equations
     dg_edt = -g_e(tt-1,:)./tau_se;
     dg_idt = -g_i(tt-1,:)./tau_si;
-    dvdt = (-v(tt-1,:) + H)./(C./gamma);
+    %dvdt = (-v(tt-1,:) + H)./(C./gamma);
+    
+        %V - Voltage Equation
+    dvdt =  (- g_L.*(v(tt-1,:)-E_L) ...                      %Leak
+             - g_e(tt-1,:).*(v(tt-1,:)-E_e) - g_i(tt-1,:).*(v(tt-1,:)-E_i) ...       %Synapses
+             - g_h.*(v(tt-1,:)-E_h))./C;           %External input
     
     dg_e = dg_edt.*dt + w_e.*s_e(tt,:);
     dg_i = dg_idt.*dt + w_i.*s_i(tt,:);
@@ -161,14 +166,14 @@ if SHOWFIG
     subplot(4,1,3)
     plot(TimeStamps,g_e(:,1),'g')
     xlabel('t (s)')
-    ylabel('g_e')
+    ylabel('g_e (nS)')
     box off
     xlim(timewin)
 
     subplot(4,1,4)
     plot(TimeStamps,g_i(:,1),'r')
     xlabel('t (s)')
-    ylabel('g_i')
+    ylabel('g_i (nS)')
     box off
     xlim(timewin)
     
