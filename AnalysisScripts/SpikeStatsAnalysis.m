@@ -12,7 +12,7 @@ spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
 SleepState = bz_LoadStates(basePath,'SleepState');
 % for reformatting SleepState
-SleepState = SleepScoreMaster(basePath,'noPrompts',true);
+%SleepState = SleepScoreMaster(basePath,'noPrompts',true);
 
 %LFP for plot
 lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...

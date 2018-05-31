@@ -144,10 +144,10 @@ spikestats.rate = 1./nanmean(ISIs);
 spikestats.ISI_CV = nanstd(ISIs)./nanmean(ISIs);
 %%
 timewin = TimeStamps([1 end]);
-%timewin = [0 3];
+timewin = [0 1500];
 if SHOWFIG
-    isifig = figure;
-    subplot(2,1,1)
+    figure;
+    isifig = subplot(2,1,1);
     plot(TimeStamps,v,'color',0.5.*[1 1 1])
     hold on
     plot(TimeStamps,v(:,1),'color',0.2.*[1 1 1])
@@ -159,7 +159,7 @@ if SHOWFIG
         'BaseValue',v_th,'facecolor','k');
     %b(1).BaseValue = v_th;
     box off
-    xlabel('t (s)')
+    xlabel('t (ms)')
     ylabel('V')
     xlim(timewin)
 

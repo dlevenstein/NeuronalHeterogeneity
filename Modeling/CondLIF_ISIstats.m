@@ -10,8 +10,8 @@ repopath = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity';
 %repopath = '/Users/jonathangornet/Documents/GitHub/SOSpikingModel'; 
 addpath(genpath(repopath))
 
-figfolder = [repopath,'Modeling/Figures/EIBalance'];
-savefolder = [repopath,'Modeling/Simulation_Data'];
+figfolder = [repopath,'/Modeling/Figures/EIBalance'];
+savefolder = [repopath,'/Modeling/Simulation_Data'];
 
 
 %%
@@ -42,8 +42,8 @@ rates.R_i = 1;
 rates.g_h = 0;
 
 
-R_es = logspace(1,5,25);
-R_is = logspace(1,5,25);
+R_es = logspace(2,5.5,40);
+R_is = logspace(2,5.5,40);
 %%
 for ee = 1:length(R_es)
     ee
@@ -69,7 +69,7 @@ numspks = arrayfun(@(X) sum(~isnan(X.ISIs)),spikestats);
 v_inf = -65:10:-35;
 %v_inf = cellparams.v_th;
 
-[R,V] = meshgrid(R_es,v_inf);
+[R,V] = meshgrid(R_es./1000,v_inf);
 
 D_e = cellparams.E_e - V;
 D_i = cellparams.E_i - V;
@@ -82,7 +82,8 @@ g_e = synparams.w_e.*synparams.tau_se.*synparams.K_e.*R;
 %g_i = synparams.w_i.*synparams.tau_si.*synparams.K_i.*R_is;
 
 Ri_Vinf = -(g_e.*D_e+cellparams.g_L.*D_L)./(D_i.*synparams.w_i.*synparams.tau_si);
-
+Ri_Vinf = Ri_Vinf.*1000;
+Ri_Vinf(Ri_Vinf<0) = nan;
 
 g_e = synparams.w_e.*synparams.tau_se.*synparams.K_e.*R_es./1000;
 g_i = synparams.w_i.*synparams.tau_si.*synparams.K_i.*R_is./1000;
@@ -97,34 +98,44 @@ hold on
         plot(log10(R_es),log10(Ri_Vinf),'k--','linewidth',0.5)
         plot(log10(R_es),log10(Ri_Vinf(3,:)),'k','linewidth',1)
 LogScale('xy',10)
+xlim([2 5]);ylim([2 5])
 axis xy
 colorbar
+caxis([0 2.5])
 xlabel('K_eR_e (Hz)');ylabel('K_iR_i (Hz)')
 
 NiceSave('VinfGamma',figfolder,'CondLIF')
 
 %% examples
 
-%Vinf = -50;
-%Gammma = 2;
-%g = 1;
-subthreshex_lowG.R_e = 500;
-subthreshex_lowG.R_i = 300;
+Vinf = -50;
+Gammma = 5;
+[ subthreshex_lowG.R_e,subthreshex_lowG.R_i ] = CondLIFReparm( Vinf,Gammma,cellparams,synparams );
+subthreshex_lowG.R_e = 1100;
+subthreshex_lowG.R_i = 400;
 rates.R_e = subthreshex_lowG.R_e;
 rates.R_i = subthreshex_lowG.R_i;
 [subthreshex_lowG.spikestats,subthreshex_lowG.fig] = NoisyInputSims( cellparams,synparams,rates,...
     'showfig',true,'figfolder',figfolder ); 
 %%
-subthreshex_highG.R_e = 1500;
-subthreshex.R_i = 800;
+subthreshex_highG.R_e = 11000;
+subthreshex_highG.R_i = 6500;
 rates.R_e = subthreshex_highG.R_e;
 rates.R_i = subthreshex_highG.R_i;
 [subthreshex_highG.spikestats,subthreshex_highG.fig] = NoisyInputSims( cellparams,synparams,rates,...
     'showfig',true,'figfolder',figfolder ); 
+%%
+%Predicted V_inf
+getest = rates.R_e./1000.*synparams.w_e.*synparams.tau_se;
+gitest = rates.R_i./1000.*synparams.w_i.*synparams.tau_si;
+Vinftest = (getest.*cellparams.E_e + gitest.*cellparams.E_i + cellparams.g_L.*cellparams.E_L)./ ...
+    (getest + gitest + cellparams.g_L)
+Gammatest = (getest + gitest + cellparams.g_L).*(1./cellparams.g_L)
+[ Recalc,Ricalc ] = CondLIFReparm( Vinftest,Gammatest,cellparams,synparams )
 
 %%
-supthreshex.R_e = 1500;
-supthreshex.R_i = 500;
+supthreshex.R_e = 3000;
+supthreshex.R_i = 800;
 rates.R_e = supthreshex.R_e;
 rates.R_i = supthreshex.R_i;
 [supthreshex.spikestats,supthreshex.fig] = NoisyInputSims( cellparams,synparams,rates,...
@@ -132,70 +143,97 @@ rates.R_i = supthreshex.R_i;
 
 
 %% test
-test.R_e = 10000;
-test.R_i = 5000;
-rates.R_e = test.R_e;
-rates.R_i = test.R_i;
-[test.spikestats,test.fig] = NoisyInputSims( cellparams,synparams,rates,...
-    'showfig',true);
+% test.R_e = 10000;
+% test.R_i = 5000;
+% rates.R_e = test.R_e;
+% rates.R_i = test.R_i;
+% [test.spikestats,test.fig] = NoisyInputSims( cellparams,synparams,rates,...
+%     'showfig',true);
 
 %%
-logISIbins = linspace(-1.5,1,25);
+logISIbins = linspace(0,3.5,25);
 supthreshex.ISIhist = hist(log10(supthreshex.spikestats.ISIs),logISIbins);
-subthreshex.ISIhist = hist(log10(subthreshex.spikestats.ISIs),logISIbins);
+subthreshex_highG.ISIhist = hist(log10(subthreshex_highG.spikestats.ISIs),logISIbins);
+subthreshex_lowG.ISIhist = hist(log10(subthreshex_lowG.spikestats.ISIs),logISIbins);
 
 supthreshex.returnISIhist = hist3([log10(supthreshex.spikestats.ISIs(1:end-1))',...
     log10(supthreshex.spikestats.ISIs(2:end))'],...
     {logISIbins,logISIbins});
-subthreshex.returnISIhist = hist3([log10(subthreshex.spikestats.ISIs(1:end-1))',...
-    log10(subthreshex.spikestats.ISIs(2:end))'],...
+subthreshex_highG.returnISIhist = hist3([log10(subthreshex_highG.spikestats.ISIs(1:end-1))',...
+    log10(subthreshex_highG.spikestats.ISIs(2:end))'],...
+    {logISIbins,logISIbins});
+subthreshex_lowG.returnISIhist = hist3([log10(subthreshex_lowG.spikestats.ISIs(1:end-1))',...
+    log10(subthreshex_lowG.spikestats.ISIs(2:end))'],...
     {logISIbins,logISIbins});
 %%
 figure
-subplot(4,3,7)
+subplot(4,3,4)
     bar(logISIbins,supthreshex.ISIhist)
     LogScale('x',10)
     box off
     xlim(logISIbins([1 end]))
-subplot(4,4,11)
+    xlabel('ISI (ms)')
+subplot(4,4,7)
     imagesc(logISIbins,logISIbins,supthreshex.returnISIhist)
     axis xy
-subplot(4,3,10)
-    bar(logISIbins,subthreshex.ISIhist)
+    LogScale('xy',10)
+    xlabel('ISI_n');ylabel('ISI_n+1')
+    
+subplot(4,3,7)
+    bar(logISIbins,subthreshex_highG.ISIhist)
     LogScale('x',10)
     box off
     xlim(logISIbins([1 end]))
-subplot(4,4,15)
-    imagesc(logISIbins,logISIbins,subthreshex.returnISIhist)
+    xlabel('ISI (ms)')
+subplot(4,4,11)
+    imagesc(logISIbins,logISIbins,subthreshex_highG.returnISIhist)
     axis xy
-%NEED:
-%ISI hist (log scale)
-%subthreshex.ISIs
-%ISI return map (log scale)
+    LogScale('xy',10)
+    xlabel('ISI_n');ylabel('ISI_n+1')
+    
+subplot(4,3,10)
+    bar(logISIbins,subthreshex_lowG.ISIhist)
+    LogScale('x',10)
+    box off
+    xlim(logISIbins([1 end]))
+    xlabel('ISI (ms)')
+subplot(4,4,15)
+    imagesc(logISIbins,logISIbins,subthreshex_lowG.returnISIhist)
+    axis xy
+    LogScale('xy',10)
+    xlabel('ISI_n');ylabel('ISI_n+1')
+
+NiceSave('ExSpikeStats',figfolder,'CondLIF')
 %%
 spklim = 100;
 figure
     subplot(2,2,1)
-        h = imagesc(log10(R_es),log10(R_is),log10(spkrate'));
+        h = imagesc(log10(R_es),log10(R_is),log10(spkrate'.*1000));
         hold on
         set(h, 'AlphaData', (numspks>spklim)') 
         plot(log10(R_es),log10(Ri_Vinf),'k--','linewidth',0.5)
-        plot(log10(R_es),log10(Ri_Vinf(2,:)),'k','linewidth',1)
-        plot(log10(subthreshex.R_e),log10(subthreshex.R_i),'r*')
+        plot(log10(R_es),log10(Ri_Vinf(3,:)),'k','linewidth',1)
+        plot(log10(subthreshex_highG.R_e),log10(subthreshex_highG.R_i),'r*')
+        plot(log10(subthreshex_lowG.R_e),log10(subthreshex_lowG.R_i),'r*')
         plot(log10(supthreshex.R_e),log10(supthreshex.R_i),'r*')
         colorbar
         axis xy
         LogScale('xy',10)
         title('Mean Rate');
+        xlim([2 5]);ylim([2 5])
         xlabel('K_eR_e (Hz)');ylabel('K_iR_i (Hz)')
     subplot(2,2,2)
         h = imagesc(log10(R_es),log10(R_is),ISICV');
         hold on
         set(h, 'AlphaData', (numspks>spklim)') 
         plot(log10(R_es),log10(Ri_Vinf),'k--','linewidth',0.5)
-        plot(log10(R_es),log10(Ri_Vinf(2,:)),'k','linewidth',1)
+        plot(log10(R_es),log10(Ri_Vinf(3,:)),'k','linewidth',1)
+        plot(log10(subthreshex_highG.R_e),log10(subthreshex_highG.R_i),'r*')
+        plot(log10(subthreshex_lowG.R_e),log10(subthreshex_lowG.R_i),'r*')
+        plot(log10(supthreshex.R_e),log10(supthreshex.R_i),'r*')
         colorbar
-        caxis([0 1])
+        caxis([0 1.2])
+        xlim([2 5]);ylim([2 5])
         axis xy
         LogScale('xy',10)
         title('CV_I_S_I');
