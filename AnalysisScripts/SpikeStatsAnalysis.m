@@ -1,4 +1,4 @@
-function [ jitterCV2 ] = SpikeStatsAnalysis(basePath,figfolder)
+function [ jitterCV2,ISIstats ] = SpikeStatsAnalysis(basePath,figfolder)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 %
@@ -6,13 +6,15 @@ function [ jitterCV2 ] = SpikeStatsAnalysis(basePath,figfolder)
 %% DEV
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %figfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs';
+%figfolder = '/mnt/data1/Dropbox/research/Current Projects/FRHET_temp/SpikeStatsAnalysis';
+%REMOVE THIS SOON, JUST TO GET STUFF TO DP
 baseName = bz_BasenameFromBasepath(basePath);
 
 spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
 SleepState = bz_LoadStates(basePath,'SleepState');
 % for reformatting SleepState
-SleepState = SleepScoreMaster(basePath,'noPrompts',true);
+%SleepState = SleepScoreMaster(basePath,'noPrompts',true);
 
 %LFP for plot
 lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
@@ -26,7 +28,7 @@ numstates = length(statenames);
 
 [ ISIstats ] = bz_ISIStats( spikes,'ints',SleepState.ints,...
     'cellclass',CellClass.label,'figfolder',figfolder,'shuffleCV2',true,...
-    'savecellinfo',true,'basePath',basePath);
+    'savecellinfo',true,'basePath',basePath,'forceRedetect',true);
 
 
 
