@@ -1,6 +1,12 @@
 
 
 %TO DO: set DT, calculate probability of number of spikes
+%% FOr Figure
+R = 0.3;
+[ S ] = PoissonRateSpikeBins(R,0.1,1000);
+figure
+stem(S,'k','linewidth',1)
+
 
 
 %% Add the approprate folders to the path
