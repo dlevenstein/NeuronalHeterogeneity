@@ -44,9 +44,15 @@ tau_si = synparams.tau_si;
 K_e = synparams.K_e;
 K_i = synparams.K_i;
 
+if isstruct(rates)
 R_e = rates.R_e; %Hz (spks/s)
 R_i = rates.R_i; %Hz (spks/s)
 g_h = rates.g_h; %Hz (spks/s)
+else
+    R_e = rates(1);
+    R_i = rates(2);
+    g_h = rates(3);
+end
 
 v_r = cellparams.v_r;
 v_th = cellparams.v_th;
@@ -165,15 +171,17 @@ if SHOWFIG
 
     subplot(4,1,3)
     plot(TimeStamps,g_e(:,1),'g')
+    hold on
+    plot(TimeStamps,g_i(:,1),'r')
     xlabel('t (s)')
-    ylabel('g_e (nS)')
+    ylabel('g (nS)')
     box off
     xlim(timewin)
 
     subplot(4,1,4)
-    plot(TimeStamps,g_i(:,1),'r')
+    plot(TimeStamps,(g_i(:,1)+g_e(:,1)+g_e(:,1)+cellparams.g_L)./cellparams.g_L,'k')
     xlabel('t (s)')
-    ylabel('g_i (nS)')
+    ylabel('GAMMA (g_L^-^1)')
     box off
     xlim(timewin)
     

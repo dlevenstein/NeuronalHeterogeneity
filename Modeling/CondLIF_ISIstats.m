@@ -42,9 +42,10 @@ rates.R_i = 1;
 rates.g_h = 0;
 
 
+%% Simulations in Rate space
 R_es = logspace(2,5.5,40);
 R_is = logspace(2,5.5,40);
-%%
+
 for ee = 1:length(R_es)
     ee
     rates.R_e = R_es(ee);
@@ -106,36 +107,48 @@ xlabel('K_eR_e (Hz)');ylabel('K_iR_i (Hz)')
 
 NiceSave('VinfGamma',figfolder,'CondLIF')
 
+
+%% Simulations in Vinf/Gamma space
+
+Vinfs = linspace(-55,-43,10);
+Gammas = linspace(1,20,10);
+
+[V,G] = meshgrid(Vinfs,Gammas);
+[ erate,irate ] = CondLIFReparm( V,G,cellparams,synparams );
+for vv = 1:length(Vinfs)
+    vv
+    parfor gg = 1:length(Gammas)
+        %gg
+    [ spikestats_VG(vv,gg) ] = NoisyInputSims( cellparams,synparams,...
+        [erate(vv,gg) irate(vv,gg) 0],'showfig',false );
+    
+    spkrate_VG(vv,gg) = spikestats_VG(vv,gg).rate;
+    ISICV_VG(vv,gg) = spikestats_VG(vv,gg).ISI_CV;
+    end
+end
+    
 %% examples
 
 Vinf = -50;
-Gammma = 5;
+Gammma = 3;
 [ subthreshex_lowG.R_e,subthreshex_lowG.R_i ] = CondLIFReparm( Vinf,Gammma,cellparams,synparams );
-subthreshex_lowG.R_e = 1100;
-subthreshex_lowG.R_i = 400;
 rates.R_e = subthreshex_lowG.R_e;
 rates.R_i = subthreshex_lowG.R_i;
 [subthreshex_lowG.spikestats,subthreshex_lowG.fig] = NoisyInputSims( cellparams,synparams,rates,...
     'showfig',true,'figfolder',figfolder ); 
 %%
-subthreshex_highG.R_e = 11000;
-subthreshex_highG.R_i = 6500;
+Vinf = -50;
+Gammma = 20;
+[ subthreshex_highG.R_e,subthreshex_highG.R_i ] = CondLIFReparm( Vinf,Gammma,cellparams,synparams );
 rates.R_e = subthreshex_highG.R_e;
 rates.R_i = subthreshex_highG.R_i;
 [subthreshex_highG.spikestats,subthreshex_highG.fig] = NoisyInputSims( cellparams,synparams,rates,...
     'showfig',true,'figfolder',figfolder ); 
-%%
-%Predicted V_inf
-getest = rates.R_e./1000.*synparams.w_e.*synparams.tau_se;
-gitest = rates.R_i./1000.*synparams.w_i.*synparams.tau_si;
-Vinftest = (getest.*cellparams.E_e + gitest.*cellparams.E_i + cellparams.g_L.*cellparams.E_L)./ ...
-    (getest + gitest + cellparams.g_L)
-Gammatest = (getest + gitest + cellparams.g_L).*(1./cellparams.g_L)
-[ Recalc,Ricalc ] = CondLIFReparm( Vinftest,Gammatest,cellparams,synparams )
 
 %%
-supthreshex.R_e = 3000;
-supthreshex.R_i = 800;
+Vinf = -44;
+Gammma = 10;
+[ supthreshex.R_e,supthreshex.R_i ] = CondLIFReparm( Vinf,Gammma,cellparams,synparams );
 rates.R_e = supthreshex.R_e;
 rates.R_i = supthreshex.R_i;
 [supthreshex.spikestats,supthreshex.fig] = NoisyInputSims( cellparams,synparams,rates,...
