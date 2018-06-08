@@ -6,8 +6,8 @@
 %% Add the approprate folders to the path
 %Path of the SOSpikingModel repository
 
-repopath = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity'; 
-%repopath = '/Users/jonathangornet/Documents/GitHub/SOSpikingModel'; 
+%repopath = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity'; 
+repopath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity'; 
 addpath(genpath(repopath))
 
 figfolder = [repopath,'/Modeling/Figures/EIBalance'];
@@ -110,8 +110,8 @@ NiceSave('VinfGamma',figfolder,'CondLIF')
 
 %% Simulations in Vinf/Gamma space
 
-Vinfs = linspace(-55,-35,20);
-Gammas = logspace(0,2.5,20);
+Vinfs = linspace(-55,-35,25);
+Gammas = logspace(0,2.5,25);
 
 [V,G] = meshgrid(Vinfs,Gammas);
 [ erate,irate ] = CondLIFReparm( V,G,cellparams,synparams );
@@ -127,20 +127,27 @@ for vv = 1:length(Vinfs)
     end
 end
 %%
+if SAVESIM
+    save([savefolder,'/isistats.mat']);
+end
+%%
 numspks_VG = arrayfun(@(X) sum(~isnan(X.ISIs)),spikestats_VG);
 %%
-spklim = 100;
+spklim = 50;
 figure
 subplot(2,2,1)
-    h = imagesc(Vinfs,Gammas,log10(spkrate_VG'.*1000));
+    h = imagesc(Vinfs,log10(Gammas),log10(spkrate_VG'.*1000));
     set(h, 'AlphaData', (numspks_VG>spklim)') 
     axis xy
     colorbar
+    LogScale('y',10)
 subplot(2,2,2)
-    h = imagesc(Vinfs,Gammas,(ISICV_VG'));
+    h = imagesc(Vinfs,log10(Gammas),(ISICV_VG'));
     set(h, 'AlphaData', (numspks_VG>spklim)') 
     axis xy
     colorbar
+    caxis([0 1.25])
+    LogScale('y',10)
 %% examples
 
 Vinf = -50;
