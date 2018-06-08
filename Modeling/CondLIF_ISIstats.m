@@ -110,8 +110,8 @@ NiceSave('VinfGamma',figfolder,'CondLIF')
 
 %% Simulations in Vinf/Gamma space
 
-Vinfs = linspace(-55,-35,25);
-Gammas = logspace(0,2.5,25);
+Vinfs = linspace(-55,-35,30);
+Gammas = logspace(0,2.5,30);
 
 [V,G] = meshgrid(Vinfs,Gammas);
 [ erate,irate ] = CondLIFReparm( V,G,cellparams,synparams );

@@ -65,7 +65,7 @@ E_L = cellparams.E_L;
 E_h = cellparams.E_h;
 
 %Calculate poisson spike times
-T = 20000;% max simulation time, ms
+T = 25000;% max simulation time, ms
 %dt = T./max([(R_e.*K_e),(R_i.*K_i)])./20;
 dt = 0.2; %(ms)
 
