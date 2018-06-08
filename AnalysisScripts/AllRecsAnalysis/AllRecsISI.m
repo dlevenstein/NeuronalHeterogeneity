@@ -50,7 +50,7 @@ end
 %%
 %excells = 981, 869 559 613 513 585
 excells = [552 281 356 932];
-%histcolors = flipud(gray);
+histcolors = flipud(gray);
 figure
 for ss = 1:length(statenames)
 subplot(3,3,ss)
@@ -198,6 +198,9 @@ for cc = 1:numcells
     end
 end
 close
+
+%% Manually Classify ISI Types
+
 
 %% %% Measuring Similarity between ISI maps (same cell different state)
 % %Need to run PCA denoise on all maps
