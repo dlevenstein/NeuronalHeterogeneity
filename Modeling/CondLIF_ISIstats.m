@@ -110,8 +110,8 @@ NiceSave('VinfGamma',figfolder,'CondLIF')
 
 %% Simulations in Vinf/Gamma space
 
-Vinfs = linspace(-55,-43,10);
-Gammas = linspace(1,20,10);
+Vinfs = linspace(-55,-35,20);
+Gammas = logspace(0,2.5,20);
 
 [V,G] = meshgrid(Vinfs,Gammas);
 [ erate,irate ] = CondLIFReparm( V,G,cellparams,synparams );
@@ -126,7 +126,21 @@ for vv = 1:length(Vinfs)
     ISICV_VG(vv,gg) = spikestats_VG(vv,gg).ISI_CV;
     end
 end
-    
+%%
+numspks_VG = arrayfun(@(X) sum(~isnan(X.ISIs)),spikestats_VG);
+%%
+spklim = 100;
+figure
+subplot(2,2,1)
+    h = imagesc(Vinfs,Gammas,log10(spkrate_VG'.*1000));
+    set(h, 'AlphaData', (numspks_VG>spklim)') 
+    axis xy
+    colorbar
+subplot(2,2,2)
+    h = imagesc(Vinfs,Gammas,(ISICV_VG'));
+    set(h, 'AlphaData', (numspks_VG>spklim)') 
+    axis xy
+    colorbar
 %% examples
 
 Vinf = -50;
@@ -153,15 +167,6 @@ rates.R_e = supthreshex.R_e;
 rates.R_i = supthreshex.R_i;
 [supthreshex.spikestats,supthreshex.fig] = NoisyInputSims( cellparams,synparams,rates,...
     'showfig',true,'figfolder',figfolder );
-
-
-%% test
-% test.R_e = 10000;
-% test.R_i = 5000;
-% rates.R_e = test.R_e;
-% rates.R_i = test.R_i;
-% [test.spikestats,test.fig] = NoisyInputSims( cellparams,synparams,rates,...
-%     'showfig',true);
 
 %%
 logISIbins = linspace(0,3.5,25);
