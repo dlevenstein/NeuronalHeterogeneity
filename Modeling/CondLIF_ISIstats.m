@@ -220,7 +220,7 @@ figure
         axis xy
         LogScale('xy',10)
         title('Mean Rate');
-        xlim([2 5]);ylim([2 5])
+        %xlim([2 5]);ylim([2 5])
         xlabel('K_eR_e (Hz)');ylabel('K_iR_i (Hz)')
     subplot(2,2,2)
         h = imagesc(log10(R_es),log10(R_is),ISICV');
@@ -233,7 +233,7 @@ figure
         plot(log10(supthreshex.R_e),log10(supthreshex.R_i),'r*')
         colorbar
         caxis([0 1.2])
-        xlim([2 5]);ylim([2 5])
+        %xlim([2 5]);ylim([2 5])
         axis xy
         LogScale('xy',10)
         title('CV_I_S_I');
