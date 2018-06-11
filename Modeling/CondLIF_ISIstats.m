@@ -2,23 +2,24 @@
 
 %TO DO: set DT, calculate probability of number of spikes
 %% FOr Figure
-R = 0.3;
-[ S ] = PoissonRateSpikeBins(R,0.1,1000);
-figure
-stem(S,'k','linewidth',1)
+% R = 0.3;
+% [ S ] = PoissonRateSpikeBins(R,0.1,1000);
+% figure
+% stem(S,'k','linewidth',1)
 
 
 
 %% Add the approprate folders to the path
 %Path of the SOSpikingModel repository
 
-%repopath = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity'; 
-repopath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity'; 
+repopath = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity'; 
+%repopath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity'; 
 addpath(genpath(repopath))
 
 figfolder = [repopath,'/Modeling/Figures/EIBalance'];
 savefolder = [repopath,'/Modeling/Simulation_Data'];
 
+SAVESIM = false;
 
 %%
 %Neuron Parameters
@@ -38,8 +39,8 @@ synparams.w_e =1; %synaptic weight (nS)
 w_i = synparams.w_e .* -(cellparams.v_r-cellparams.E_e)./(cellparams.v_r-cellparams.E_i);
 
 synparams.w_i = w_i; %synaptic weight (nS)
-synparams.tau_se = 5; %mS
-synparams.tau_si = 5; %mS
+synparams.tau_se = 5; %ms
+synparams.tau_si = 5; %ms
 synparams.K_e = 1;
 synparams.K_i = 1;
 
@@ -134,48 +135,37 @@ for vv = 1:length(Vinfs)
 end
 %%
 if SAVESIM
-    save([savefolder,'/isistats.mat']);
+    save([savefolder,'/isistats4.mat']);
 end
 %%
 numspks_VG = arrayfun(@(X) sum(~isnan(X.ISIs)),spikestats_VG);
-%%
-spklim = 50;
-figure
-subplot(2,2,1)
-    h = imagesc(Vinfs,log10(Gammas),log10(spkrate_VG'.*1000));
-    set(h, 'AlphaData', (numspks_VG>spklim)') 
-    axis xy
-    colorbar
-    LogScale('y',10)
-subplot(2,2,2)
-    h = imagesc(Vinfs,log10(Gammas),(ISICV_VG'));
-    set(h, 'AlphaData', (numspks_VG>spklim)') 
-    axis xy
-    colorbar
-    caxis([0 1.25])
-    LogScale('y',10)
+
 %% examples
 
-Vinf = -50;
-Gammma = 3;
-[ subthreshex_lowG.R_e,subthreshex_lowG.R_i ] = CondLIFReparm( Vinf,Gammma,cellparams,synparams );
+subthreshex_lowG.Vinf = -50;
+subthreshex_lowG.Gammma = 3;
+[ subthreshex_lowG.R_e,subthreshex_lowG.R_i ] = ...
+    CondLIFReparm( subthreshex_lowG.Vinf,subthreshex_lowG.Gammma,cellparams,synparams );
 rates.R_e = subthreshex_lowG.R_e;
 rates.R_i = subthreshex_lowG.R_i;
 [subthreshex_lowG.spikestats,subthreshex_lowG.fig] = NoisyInputSims( cellparams,synparams,rates,...
     'showfig',true,'figfolder',figfolder ); 
 %%
-Vinf = -50;
-Gammma = 20;
-[ subthreshex_highG.R_e,subthreshex_highG.R_i ] = CondLIFReparm( Vinf,Gammma,cellparams,synparams );
+subthreshex_highG.Vinf = -50;
+subthreshex_highG.Gammma = 30;
+subthreshex_highG.Gammma = 100;
+[ subthreshex_highG.R_e,subthreshex_highG.R_i ] = ...
+    CondLIFReparm( subthreshex_highG.Vinf,subthreshex_highG.Gammma,cellparams,synparams );
 rates.R_e = subthreshex_highG.R_e;
 rates.R_i = subthreshex_highG.R_i;
 [subthreshex_highG.spikestats,subthreshex_highG.fig] = NoisyInputSims( cellparams,synparams,rates,...
     'showfig',true,'figfolder',figfolder ); 
 
 %%
-Vinf = -44;
-Gammma = 10;
-[ supthreshex.R_e,supthreshex.R_i ] = CondLIFReparm( Vinf,Gammma,cellparams,synparams );
+supthreshex.Vinf = -42;
+supthreshex.Gammma = 10;
+[ supthreshex.R_e,supthreshex.R_i ] = ...
+    CondLIFReparm( supthreshex.Vinf,supthreshex.Gammma,cellparams,synparams );
 rates.R_e = supthreshex.R_e;
 rates.R_i = supthreshex.R_i;
 [supthreshex.spikestats,supthreshex.fig] = NoisyInputSims( cellparams,synparams,rates,...
@@ -234,7 +224,7 @@ subplot(4,4,15)
     LogScale('xy',10)
     xlabel('ISI_n');ylabel('ISI_n+1')
 
-NiceSave('ExSpikeStats',figfolder,'CondLIF')
+%NiceSave('ExSpikeStats',figfolder,'CondLIF')
 %%
 spklim = 100;
 figure
@@ -270,9 +260,32 @@ figure
         title('CV_I_S_I');
         xlabel('K_eR_e (Hz)');ylabel('K_iR_i (Hz)')
         
-        
 
-NiceSave('ISIbyInputRates',figfolder,'CondLIF')
+    subplot(2,2,3)
+        h = imagesc(Vinfs,log10(Gammas),log10(spkrate_VG'.*1000));
+        set(h, 'AlphaData', (numspks_VG>spklim)') 
+        hold on
+        plot(cellparams.v_th.*[1 1],log10(Gammas([1 end])),'k','linewidth',1)
+        plot((subthreshex_highG.Vinf),log10(subthreshex_highG.Gammma),'r*')
+        plot((subthreshex_lowG.Vinf),log10(subthreshex_lowG.Gammma),'r*')
+        plot((supthreshex.Vinf),log10(supthreshex.Gammma),'r*')
+        axis xy
+        colorbar
+        LogScale('y',10)
+    subplot(2,2,4)
+        h = imagesc(Vinfs,log10(Gammas),(ISICV_VG'));
+        set(h, 'AlphaData', (numspks_VG>spklim)') 
+        hold on
+        plot(cellparams.v_th.*[1 1],log10(Gammas([1 end])),'k','linewidth',1)
+        plot((subthreshex_highG.Vinf),log10(subthreshex_highG.Gammma),'r*')
+        plot((subthreshex_lowG.Vinf),log10(subthreshex_lowG.Gammma),'r*')
+        plot((supthreshex.Vinf),log10(supthreshex.Gammma),'r*')
+        axis xy
+        colorbar
+        caxis([0 1.25])
+        LogScale('y',10)
+
+%NiceSave('ISIbyInputRates',figfolder,'CondLIF')
 
 
 

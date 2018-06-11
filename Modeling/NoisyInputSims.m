@@ -76,6 +76,7 @@ RK_i = R_i.*K_i./1000; %Convert to spks/ms
 %% Simulate
 TimeStamps = [-onsettransient:dt:T]';
 
+
 %[ s_e ] = PoissonRateSpikeBins(RK_e,dt,length(TimeStamps));
 %[ s_i ] = PoissonRateSpikeBins(RK_i,dt,length(TimeStamps));
 lambda_e = RK_e.*dt;
@@ -126,6 +127,7 @@ for tt = 2:length(TimeStamps)
     
     if (all(isnan(v(tt,:))) | all(v(tt,:)<(v_r))) && TimeStamps(tt)>0
         %Can put a check - if no spikes by certain time?
+        T = TimeStamps(tt);
        break
     end
     
@@ -135,7 +137,7 @@ end
 
 %% Outputs
 %put in bins.... (input?)
-[ISIdist.counts,ISIdist.bins] = hist(ISIs,30);
+[ISIdist.counts,ISIdist.bins] = hist(ISIs,40);
 meanV = nanmean(v,2);
 stdV = nanstd(v,[],2);
 
@@ -150,7 +152,8 @@ spikestats.rate = 1./nanmean(ISIs);
 spikestats.ISI_CV = nanstd(ISIs)./nanmean(ISIs);
 %%
 timewin = TimeStamps([1 end]);
-timewin = [0 1500];
+%timewin = [0 1500];
+timewin = [0 T];
 if SHOWFIG
     figure;
     isifig = subplot(2,1,1);
@@ -161,6 +164,7 @@ if SHOWFIG
     plot(TimeStamps,meanV+stdV,'k--')
     plot(TimeStamps,meanV-stdV,'k--')
     plot(TimeStamps([1 end]),v_th.*[1 1],'r--')
+    plot(1./spikestats.rate,-40,'r+')
     bar(ISIdist.bins,ISIdist.counts./(0.2.*max(ISIdist.counts))+v_th,...
         'BaseValue',v_th,'facecolor','k');
     %b(1).BaseValue = v_th;
@@ -179,14 +183,14 @@ if SHOWFIG
     xlim(timewin)
 
     subplot(4,1,4)
-    plot(TimeStamps,(g_i(:,1)+g_e(:,1)+g_e(:,1)+cellparams.g_L)./cellparams.g_L,'k')
+    plot(TimeStamps,(g_i(:,1)+g_e(:,1)+cellparams.g_L)./cellparams.g_L,'k')
     xlabel('t (s)')
     ylabel('GAMMA (g_L^-^1)')
     box off
     xlim(timewin)
     
     if figfolder
-        NiceSave('SimISI',figfolder,'CondLIF')
+       % NiceSave('SimISI',figfolder,'CondLIF')
     end
 end
 
