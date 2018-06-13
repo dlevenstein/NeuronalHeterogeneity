@@ -1,8 +1,10 @@
+function [ jitterCV2,ISIstats ] = SpikeStatsbyLFPAnalysis(basePath,figfolder)
+
 %% DEV
-reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/'
+reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-basePath = pwd;
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs'];
+%basePath = pwd;
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyLFPAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
@@ -20,7 +22,7 @@ ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 %%
 downsamplefactor = 5;
  [ lfpdown ] = bz_DownsampleLFP( lfp, downsamplefactor );
-[wavespec] = bz_WaveSpec(lfpdown,'showprogress',true);
+[wavespec] = bz_WaveSpec(lfpdown,'showprogress',true,'ncyc',4);
 
 %% Interpolate power at each spike
 wavespec.power = log10(abs(wavespec.data));
@@ -71,3 +73,4 @@ subplot(2,2,1)
 
 %%
 
+end
