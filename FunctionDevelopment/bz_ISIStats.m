@@ -72,7 +72,10 @@ if strcmp(ints,'load')
     ints = bz_LoadStates(basePath,'SleepState');
     ints = ints.ints;
 end
+
+
 %% Get the States
+ints.ALL = [-Inf Inf];  %Add ALL to the options
 statenames = fieldnames(ints);
 numstates = length(statenames);
 
