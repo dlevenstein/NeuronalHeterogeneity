@@ -117,6 +117,7 @@ state = statenames{2};
         colorbar('northoutside')
         LogScale('x',2)
         caxis([-0.15 0.15])
+        ylabel('Cell - sorted by <CV2>, rate')
     subplot(2,2,2)
         h = imagesc(log2(wavespec.freqs),[1 spikes.numcells],npCV2freqcorr((ISIStats.sorts.NREMstate.ratebyclass),:));
         %set(h,'AlphaData',(npCV2freqcorr_pval<0.05))
@@ -134,9 +135,9 @@ state = statenames{2};
                 '.','color',cellcolor{tt})
             
             LogScale('x',2)
-            xlabel('f (Hz)')
         end
         xlabel('f (Hz)')
+        ylabel('Pop CV2-power corr.')
         subplot(4,2,6)
         plot(log2(wavespec.freqs([1 end])),[0 0],'k--')
         hold on
@@ -148,6 +149,7 @@ state = statenames{2};
             LogScale('x',2)
         end
         xlabel('f (Hz)')
+        
 
         NiceSave('LFPandCV2',figfolder,baseName)
 %%
