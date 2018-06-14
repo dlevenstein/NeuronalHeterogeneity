@@ -24,7 +24,8 @@ function [ ISIstats ] = bz_ISIStats( spikes,varargin )
 %           .summstats  summary statistics
 %           .ISIhist    histograms of ISIs etc
 %           .sorts      sorting indices
-%           .allspikes  ISI/CV2 value for each spike (ISI is PRECEDING interval)
+%           .allspikes  ISI/CV2 value for each spike 
+%                       (ISI is PRECEDING interval for the spike at allspikes.times)
 %
 %DLevenstein 2018
 %% Parse the inputs
