@@ -3,7 +3,9 @@ function [ output_args ] = PSSCorticalStateAnalysis( basePath,figfolder )
 %   Detailed explanation goes here
 %% DEV
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
+basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 figfolder = '/Users/dlevenstein/Dropbox/Research/Current Projects/FRHetAndDynamics/AnalysisScripts/AnalysisFigs';
+figfolder = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs';
 %%
 baseName = bz_BasenameFromBasepath(basePath);
 
