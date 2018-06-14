@@ -13,7 +13,9 @@ CellClass = bz_LoadCellinfo(basePath,'CellClass');
 SleepState = bz_LoadStates(basePath,'SleepState');
 lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
     'basepath',basePath);
-
+%%
+downsamplefactor = 5;
+lfp_down = bz_DownsampleLFP(lfp,downsamplefactor);
 %%
 dt = 0.5;
 
@@ -21,7 +23,7 @@ numwins = 10;
 winsizes = logspace(-0.301,1.5,numwins);
 for ww = numwins:-1:1
     ww
-    [specslope_temp] = bz_PowerSpectrumSlope(lfp,winsizes(ww),dt,'showfig',false);
+    [specslope_temp] = bz_PowerSpectrumSlope(lfp_down,winsizes(ww),dt,'showfig',false);
     if ww == 1
         specslope=specslope_temp;
         specslope.winsizes = winsizes;
