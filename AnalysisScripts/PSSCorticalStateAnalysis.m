@@ -3,9 +3,9 @@ function [ output_args ] = PSSCorticalStateAnalysis( basePath,figfolder )
 %   Detailed explanation goes here
 %% DEV
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-%basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
+basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 figfolder = '/Users/dlevenstein/Dropbox/Research/Current Projects/FRHetAndDynamics/AnalysisScripts/AnalysisFigs';
-%figfolder = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs';
+figfolder = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs';
 %%
 baseName = bz_BasenameFromBasepath(basePath);
 
@@ -22,19 +22,98 @@ lfp_down = bz_DownsampleLFP(lfp,downsamplefactor);
 %%
 dt = 0.5;
 
-numwins = 10;
-winsizes = logspace(-0.301,1.5,numwins);
-for ww = numwins:-1:1
+numwins = 20;
+winsizes = logspace(1,1.5,numwins);
+for ww = 1:numwins
     ww
     [specslope_temp] = bz_PowerSpectrumSlope(lfp_down,winsizes(ww),dt,'showfig',false);
-    if ww == numwins
-        specslope=specslope_temp;
-        specslope.winsizes = winsizes;
+    if ww == 1
+        specslope_wins=specslope_temp;
+        specslope_wins.winsizes = winsizes;
     else
-        specslope.data(:,ww)= interp1(specslope_temp.timestamps,specslope_temp.data,specslope.timestamps,'nearest');
-        specslope.rsq(:,ww) = interp1(specslope_temp.timestamps,specslope_temp.rsq,specslope.timestamps,'nearest');
-        specslope.intercept(:,ww) = interp1(specslope_temp.timestamps,specslope_temp.intercept,specslope.timestamps,'nearest');
+        specslope_wins.data(:,ww)= interp1(specslope_temp.timestamps,specslope_temp.data,specslope_wins.timestamps);
+        specslope_wins.rsq(:,ww) = interp1(specslope_temp.timestamps,specslope_temp.rsq,specslope_wins.timestamps);
+        specslope_wins.intercept(:,ww) = interp1(specslope_temp.timestamps,specslope_temp.intercept,specslope_wins.timestamps);
     end
+end
+
+%% Compare different windows
+maxlag = 200;
+clear PSSautocorr
+clear PSSwincorr
+for ss = 1:length(states)
+    specslope.timeidx.(states{ss}) = InIntervals(specslope.timestamps,SleepState.ints.(states{ss}));
+    
+    PSSwincorr.(states{ss}) = corr(specslope.data(specslope.timeidx.(states{ss}),:),'type','spearman');
+    
+    [PSSxcorr,lags] = xcov(specslope.data(specslope.timeidx.(states{ss}),:),maxlag./dt,'coeff');
+    PSSxcorr_mat = reshape(PSSxcorr,length(lags),numwins,numwins);
+    for ll = 1:numwins
+        PSSautocorr.(states{ss})(:,ll) = PSSxcorr_mat(:,ll,ll);
+    end
+end
+
+
+
+%%
+figure
+plot((lags).*dt,PSSautocorr)
+%LogScale('x',10)
+%%
+colororder = makeColorMap([0 0.5 0],[0.8 0.5 0],numwins/2);
+exwinsize = 1000;
+exwin = bz_RandomWindowInIntervals(specslope.timestamps([1 end])',exwinsize);
+
+
+figure
+% subplot(4,1,1)
+%     set(gca,'colororder',colororder)
+%     hold all
+%     plot(specslope.timestamps,specslope.data(:,1:2:end),'linewidth',1)
+%     xlim(exwin);ylim([-2 0])
+%     legend(num2str(winsizes(1:2:end)'))
+
+    
+for ss = 1:length(states)
+    
+exwinsize = 40;
+sexwin.(states{ss}) = bz_RandomWindowInIntervals(SleepState.ints.(states{ss}),exwinsize);
+    
+subplot(4,3,ss)
+bz_MultiLFPPlot(lfp,'timewin',sexwin.(states{ss}))
+
+subplot(4,3,ss+3)
+    set(gca,'colororder',colororder)
+    hold all
+    plot(specslope.timestamps,specslope.data(:,1:2:end),'linewidth',1)
+    xlim(sexwin.(states{ss}));ylim([-2 0])
+    legend(num2str(winsizes(1:2:end)'))
+
+% 
+%     subplot(3,3,ss+3)
+%         imagesc(log10(winsizes),log10(winsizes),PSSwincorr.(states{ss}))
+%         LogScale('xy',10)
+%         colorbar
+%         caxis([0.5 1])
+    subplot(6,3,ss+12)
+    set(gca,'colororder',colororder)
+    hold all
+        plot((lags).*dt,PSSautocorr.(states{ss})(:,1:2:end))
+        
+        plot(maxlag.*[-1 1],[0 0],'k')
+        ylim([-0.2 1])
+        xlim(150*[-1 1])
+        title(states{ss})
+        
+    subplot(6,3,ss+15)
+    set(gca,'colororder',colororder)
+    hold all
+        plot((lags).*dt,PSSautocorr.(states{ss})(:,1:2:end))
+        
+        plot(maxlag.*[-1 1],[0 0],'k')
+        ylim([-0.2 1])
+        xlim(20*[-1 1])
+        title(states{ss})
 end
 
 %%
