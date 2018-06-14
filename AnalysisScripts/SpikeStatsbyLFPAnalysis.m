@@ -112,16 +112,16 @@ state = statenames{2};
     figure
     colormap(rwbcolormap)
     subplot(2,2,1)
-        h = imagesc(log10(wavespec.freqs),[1 spikes.numcells],CV2freqcorr((ISIStats.sorts.NREMstate.ratebyclass),:));
+        h = imagesc(log2(wavespec.freqs),[1 spikes.numcells],CV2freqcorr((ISIStats.sorts.NREMstate.ratebyclass),:));
         %set(h,'AlphaData',(CV2freqcorr_pval<0.05))
-        colorbar
-        LogScale('x',10)
+        colorbar('northoutside')
+        LogScale('x',2)
         caxis([-0.15 0.15])
     subplot(2,2,2)
-        h = imagesc(log10(wavespec.freqs),[1 spikes.numcells],npCV2freqcorr((ISIStats.sorts.NREMstate.ratebyclass),:));
+        h = imagesc(log2(wavespec.freqs),[1 spikes.numcells],npCV2freqcorr((ISIStats.sorts.NREMstate.ratebyclass),:));
         %set(h,'AlphaData',(npCV2freqcorr_pval<0.05))
-        colorbar
-        LogScale('x',10)
+        colorbar('northoutside')
+        LogScale('x',2)
         caxis([-0.15 0.15])
         
         subplot(4,2,5)
@@ -134,7 +134,9 @@ state = statenames{2};
                 '.','color',cellcolor{tt})
             
             LogScale('x',2)
+            xlabel('f (Hz)')
         end
+        xlabel('f (Hz)')
         subplot(4,2,6)
         plot(log2(wavespec.freqs([1 end])),[0 0],'k--')
         hold on
@@ -145,6 +147,7 @@ state = statenames{2};
                 '.','color',cellcolor{tt})
             LogScale('x',2)
         end
+        xlabel('f (Hz)')
 
         NiceSave('LFPandCV2',figfolder,baseName)
 %%
