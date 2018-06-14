@@ -26,13 +26,13 @@ winsizes = logspace(-0.301,1.5,numwins);
 for ww = numwins:-1:1
     ww
     [specslope_temp] = bz_PowerSpectrumSlope(lfp_down,winsizes(ww),dt,'showfig',false);
-    if ww == 1
+    if ww == numwins
         specslope=specslope_temp;
         specslope.winsizes = winsizes;
     else
-        specslope.data(:,ww)= interp(specslope_temp.timestamps,specslope_temp.data,specslope.timestamps,'nearest');
-        specslope.rsq(:,ww) = interp(specslope_temp.timestamps,specslope_temp.rsq,specslope.timestamps,'nearest');
-        specslope.intercept(:,ww) = interp(specslope_temp.timestamps,specslope_temp.intercept,specslope.timestamps,'nearest');
+        specslope.data(:,ww)= interp1(specslope_temp.timestamps,specslope_temp.data,specslope.timestamps,'nearest');
+        specslope.rsq(:,ww) = interp1(specslope_temp.timestamps,specslope_temp.rsq,specslope.timestamps,'nearest');
+        specslope.intercept(:,ww) = interp1(specslope_temp.timestamps,specslope_temp.intercept,specslope.timestamps,'nearest');
     end
 end
 
