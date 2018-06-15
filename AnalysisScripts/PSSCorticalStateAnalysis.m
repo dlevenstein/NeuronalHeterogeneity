@@ -202,7 +202,7 @@ NiceSave('PSSbyState',figfolder,baseName)
 %% Relate PSS and Spiking
 
 ISIStats.allspikes.PSS = cellfun(@(X) interp1(specslope.timestamps,specslope.data,X,'nearest'),ISIStats.allspikes.times,'UniformOutput',false);
-
+spkwinsize = 1;
 overlap = winsize./dt;
 spikemat = bz_SpktToSpkmat(spikes,'binsize',winsize,'overlap',overlap);
 spikemat.PSS = interp1(specslope.timestamps,specslope.data,spikemat.timestamps);
@@ -215,54 +215,111 @@ end
 %%
 ratePSScorr.ALL = corr(spikemat.PSS,spikemat.data,'type','spearman','rows','complete');
 CV2PSScorr.ALL = cellfun(@(X,Y) corr(X,Y,'type','spearman','rows','complete'),ISIStats.allspikes.PSS,ISIStats.allspikes.CV2);
+%% Mean binned CV2...
+clear CV2mat
+CV2mat.winsize = 1;
+CV2mat.timestamps = spikemat.timestamps;
+CV2mat.binedges = bsxfun(@(X,Y) X+Y,spikemat.timestamps,[-0.5 0.5].*CV2mat.winsize);
+for tt = 1:length(cellclasses)
+    allspikes.CV2.(cellclasses{tt}) = cat(1,ISIStats.allspikes.CV2{CellClass.(cellclasses{tt})});
+    allspikes.times.(cellclasses{tt}) = cat(1,ISIStats.allspikes.times{CellClass.(cellclasses{tt})});
+    [CV2mat.timestamps,CV2mat.(cellclasses{tt})] = ...
+        BinDataTimes(allspikes.CV2.(cellclasses{tt}),allspikes.times.(cellclasses{tt}),CV2mat.binedges);
+    CV2mat.rate.(cellclasses{tt}) = interp1(spikemat.timestamps,spikemat.poprate.(cellclasses{tt}),CV2mat.timestamps);
+end
+CV2mat.PSS = interp1(specslope.timestamps,specslope.data,CV2mat.timestamps);
+
 %%
-%ADD: ALL
+figure
+subplot(2,2,1)
+plot(CV2mat.PSS,CV2mat.pI,'r.')
+subplot(2,2,2)
+plot(CV2mat.PSS,CV2mat.pE,'k.')
+
+subplot(2,2,3)
+plot(log10(CV2mat.rate.pI),CV2mat.pI,'r.')
+subplot(2,2,4)
+plot(log10(CV2mat.rate.pE),(CV2mat.pE),'k.')
+
+%%
+exwinsize = 100;
+exwin = bz_RandomWindowInIntervals(specslope.timestamps([1 end])',exwinsize);
+figure
+for tt = 1:length(cellclasses)
+    subplot(4,1,tt)
+    plot(allspikes.times.(cellclasses{tt}),allspikes.CV2.(cellclasses{tt}),'.','color',classcolors{tt})
+    hold on
+    plot(CV2mat.timestamps,CV2mat.(cellclasses{tt}),'color',classcolors{tt})
+    xlim(exwin)
+end
+
+%%
+PSScorrhist.bins = linspace(-1,1,40);
 for ss = 1:length(states)
 %ss = 1;
     spikemat.timeidx.(states{ss}) = InIntervals(spikemat.timestamps,SleepState.ints.(states{ss}));
+    CV2mat.timeidx.(states{ss}) = InIntervals(CV2mat.timestamps,SleepState.ints.(states{ss}));
     instatespikes = cellfun(@(X) InIntervals(X,SleepState.ints.(states{ss})),ISIStats.allspikes.times,'UniformOutput',false);
 
     ratePSScorr.(states{ss}) = corr(spikemat.PSS(spikemat.timeidx.(states{ss})),...
         spikemat.data(spikemat.timeidx.(states{ss}),:),'type','spearman','rows','complete');
     CV2PSScorr.(states{ss}) = cellfun(@(X,Y,Z) corr(X(Z),Y(Z),'type','spearman','rows','complete'),...
         ISIStats.allspikes.PSS,ISIStats.allspikes.CV2,instatespikes);
+    
+    for tt = 1:length(cellclasses)
+        PSScorrhist.rate.(states{ss}).(cellclasses{tt}) = ...
+            hist(ratePSScorr.(states{ss})(CellClass.(cellclasses{tt})),PSScorrhist.bins);
+        PSScorrhist.CV2.(states{ss}).(cellclasses{tt}) = ...
+            hist(CV2PSScorr.(states{ss})(CellClass.(cellclasses{tt})),PSScorrhist.bins);
+    end
  
 end    
-%%
+%% Figure: PSS and Spiking
     figure
 for ss = 1:length(states)
-    subplot(4,3,ss)
+    subplot(4,4,ss)
     for tt = 1:length(cellclasses)
     	plot(ISIStats.summstats.(states{ss}).meanCV2(CellClass.(cellclasses{tt})),ratePSScorr.(states{ss})(CellClass.(cellclasses{tt})),'.','color',classcolors{tt})
         hold on
     end
+    plot(get(gca,'xlim'),[0 0],'k')
+    title(states{ss})
+    ylim([-0.3 0.3])
     xlabel('<CV2>');ylabel('Rate-PSS Corr')
     
 
-    subplot(4,3,ss+3)
+    subplot(4,4,ss+4)
     for tt = 1:length(cellclasses)
     	plot(ISIStats.summstats.(states{ss}).meanCV2(CellClass.(cellclasses{tt})),CV2PSScorr.(states{ss})(CellClass.(cellclasses{tt})),'.','color',classcolors{tt})
         hold on
     end
+    ylim([-0.3 0.3])
+    plot(get(gca,'xlim'),[0 0],'k')
     xlabel('<CV2>');ylabel('CV2-PSS Corr')
     
 
-    subplot(4,3,ss+6)
+    subplot(4,4,ss+8)
     for tt = 1:length(cellclasses)
     	plot(log10(ISIStats.summstats.(states{ss}).meanrate(CellClass.(cellclasses{tt}))),ratePSScorr.(states{ss})(CellClass.(cellclasses{tt})),'.','color',classcolors{tt})
         hold on
     end
+    ylim([-0.3 0.3])
+    plot(get(gca,'xlim'),[0 0],'k')
     xlabel('Mean Rate');ylabel('Rate-PSS Corr')
     
-    subplot(4,3,ss+9)
+    subplot(4,4,ss+12)
     for tt = 1:length(cellclasses)
     	plot(log10(ISIStats.summstats.(states{ss}).meanrate(CellClass.(cellclasses{tt}))),CV2PSScorr.(states{ss})(CellClass.(cellclasses{tt})),'.','color',classcolors{tt})
         hold on
     end
+    ylim([-0.3 0.3])
+    plot(get(gca,'xlim'),[0 0],'k')
     xlabel('Mean Rate');ylabel('CV2-PSS Corr')
 end
-    %%
-    cc = 15;
+
+NiceSave('PSSandCells',figfolder,baseName)
+    %% Example Cell
+    cc = randsample(spikes.numcells,1);
     figure
     subplot(2,2,1)
         plot(ISIStats.allspikes.PSS{cc},log10(ISIStats.allspikes.ISIs{cc}),'.')
@@ -274,22 +331,77 @@ end
         plot(spikemat.PSS,log10(spikemat.data(:,cc)),'.')
     
     
-    %%
-    figure
-    subplot(2,2,1)
-        plot(spikemat.PSS(spikemat.timeidx.(states{ss})),...
-            log10(spikemat.poprate.pE(spikemat.timeidx.(states{ss}))),'k.')
-    
-    subplot(2,2,2)
-        plot(spikemat.PSS(spikemat.timeidx.(states{ss})),...
-            log10(spikemat.poprate.pI(spikemat.timeidx.(states{ss}))),'r.')
-        
-    subplot(2,2,3)
+
+%%
+figure
+subplot(3,3,1)
+ for ss = 1:length(states)  
         ScatterWithLinFit(spikemat.PSS(spikemat.timeidx.(states{ss})),...
-            log10(spikemat.poprate.pE(spikemat.timeidx.(states{ss}))./spikemat.poprate.pI(spikemat.timeidx.(states{ss}))),'r')
-%end
+            log2(spikemat.poprate.pE(spikemat.timeidx.(states{ss}))),statecolors{ss})
+        hold on
+ end
+        xlabel('PSS');ylabel('pE Rate (spk/cell/s)')
+       xlim([-1.8 -0.2])
+        LogScale('y',2)
+        
+subplot(3,3,2)
+ for ss = 1:length(states)  
+        ScatterWithLinFit(spikemat.PSS(spikemat.timeidx.(states{ss})),...
+            log2(spikemat.poprate.pI(spikemat.timeidx.(states{ss}))),statecolors{ss})
+        hold on
+ end
+        xlabel('PSS');ylabel('pI Rate (spk/cell/s)')
+        xlim([-1.8 -0.2])
+        LogScale('y',2)
+        
+subplot(3,3,3)
+ for ss = 1:length(states)  
+        ScatterWithLinFit(spikemat.PSS(spikemat.timeidx.(states{ss})),...
+            log10(spikemat.poprate.pE(spikemat.timeidx.(states{ss}))./spikemat.poprate.pI(spikemat.timeidx.(states{ss}))),statecolors{ss})
+        hold on
+ end
+        xlabel('PSS');ylabel('E/I SpkRatio')
+        xlim([-1.8 -0.2])
+        LogScale('y',2)
+        
+for ss = 1:length(states)
+    subplot(6,3,6+ss)
+    for tt = 1:length(cellclasses)
+        plot(PSScorrhist.bins,PSScorrhist.rate.(states{ss}).(cellclasses{tt}),...
+            classcolors{tt},'linewidth',2)
+        hold on
+    end
+    plot([0 0],get(gca,'ylim'),'k')
+    xlabel('PSS-Rate Corr');
+    ylabel('# cells')
+    title(states{ss})
+    xlim([-0.5 0.5])
+end
 
+for ss = 1:length(states)
+    subplot(6,3,9+ss)
+    for tt = 1:length(cellclasses)
+        plot(PSScorrhist.bins,PSScorrhist.CV2.(states{ss}).(cellclasses{tt}),...
+            classcolors{tt},'linewidth',2)
+        hold on
+    end
+    plot([0 0],get(gca,'ylim'),'k')
+    xlabel('PSS-CV2 Corr');
+    ylabel('# cells')
+    xlim([-0.5 0.5])
+end
 
+for tt = 1:length(cellclasses)
+    subplot(3,3,6+tt)
+    for ss = 1:length(states)
+    	plot(CV2mat.PSS(CV2mat.timeidx.(states{ss})),CV2mat.(cellclasses{tt})(CV2mat.timeidx.(states{ss})),'.','color',statecolors{ss})
+        hold on
+    end
+    xlabel('PSS');ylabel(['<CV2>, ',cellclasses{tt}])
+
+end
+
+NiceSave('PSSandSpiking',figfolder,baseName)
 %% PSS and UP/DOWN
 
 SlowWaves = bz_LoadEvents(basePath,'SlowWaves');
@@ -306,6 +418,7 @@ end
 
 %%
 figure
+subplot(2,2,1)
 for ss = 1:2
     plot(SlowWaves.PSS.(updown{ss}),log10(SlowWaves.dur.(updown{ss})),'.','color',UDcolor{ss})
     hold on
@@ -313,3 +426,5 @@ end
 xlabel('PSS');ylabel('Dur (s)')
 LogScale('y',10)
 legend(updown{:},'location','northwest')
+NiceSave('PSSandUPDOWN',figfolder,baseName)
+
