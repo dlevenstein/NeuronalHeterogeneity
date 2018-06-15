@@ -427,13 +427,13 @@ end
 
 %%
 figure
-subplot(2,2,1)
+subplot(3,2,1)
 for ss = 1:2
-    plot(SlowWaves.PSS.(updown{ss}),log10(SlowWaves.dur.(updown{ss})),'.','color',UDcolor{ss})
+    plot(SlowWaves.PSS.(updown{ss}),log10(SlowWaves.dur.(updown{ss})),'.','color',UDcolor{ss},'markersize',3)
     hold on
 end
 xlabel('PSS');ylabel('Dur (s)')
 LogScale('y',10)
-legend(updown{:},'location','northwest')
+legend(updown{:},'location','eastoutside')
 NiceSave('PSSandUPDOWN',figfolder,baseName)
 
