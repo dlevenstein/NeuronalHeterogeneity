@@ -190,7 +190,7 @@ subplot(6,1,5)
 %     plot(specslope.timestamps,specslope.intercept,'k')
 %     xlim(exwin)
 %     %ylabel('Intercept')
-subplot(6,3,16:17)
+subplot(6,2,11)
     for ss = 1:length(states)
     plot(PSShist.bins,PSShist.(states{ss}),statecolors{ss},'linewidth',2)
     hold on
