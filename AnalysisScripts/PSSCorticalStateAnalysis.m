@@ -5,7 +5,7 @@ function [ output_args ] = PSSCorticalStateAnalysis( basePath,figfolder )
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 figfolder = '/Users/dlevenstein/Dropbox/Research/Current Projects/FRHetAndDynamics/AnalysisScripts/AnalysisFigs';
-figfolder = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs';
+figfolder = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs/PSSCorticalStateAnalysis';
 %%
 baseName = bz_BasenameFromBasepath(basePath);
 
@@ -22,8 +22,8 @@ lfp_down = bz_DownsampleLFP(lfp,downsamplefactor);
 %%
 dt = 0.5;
 
-numwins = 20;
-winsizes = logspace(1,1.5,numwins);
+numwins = 21;
+winsizes = logspace(0,1.5,numwins);
 for ww = 1:numwins
     ww
     [specslope_temp] = bz_PowerSpectrumSlope(lfp_down,winsizes(ww),dt,'showfig',false);
@@ -38,15 +38,22 @@ for ww = 1:numwins
 end
 
 %% Compare different windows
+
+states = fieldnames(SleepState.ints);
+statecolors = {'k','b','r'};
+
 maxlag = 200;
 clear PSSautocorr
 clear PSSwincorr
 for ss = 1:length(states)
-    specslope.timeidx.(states{ss}) = InIntervals(specslope.timestamps,SleepState.ints.(states{ss}));
+    specslope_wins.timeidx.(states{ss}) = ...
+        InIntervals(specslope_wins.timestamps,SleepState.ints.(states{ss})) &...
+        ~isnan(specslope_wins.data(:,end));
     
-    PSSwincorr.(states{ss}) = corr(specslope.data(specslope.timeidx.(states{ss}),:),'type','spearman');
+    PSSwincorr.(states{ss}) = corr(specslope_wins.data(specslope_wins.timeidx.(states{ss}),:),...
+        'type','spearman','rows','pairwise');
     
-    [PSSxcorr,lags] = xcov(specslope.data(specslope.timeidx.(states{ss}),:),maxlag./dt,'coeff');
+    [PSSxcorr,lags] = xcov(specslope_wins.data(specslope_wins.timeidx.(states{ss}),:),maxlag./dt,'coeff');
     PSSxcorr_mat = reshape(PSSxcorr,length(lags),numwins,numwins);
     for ll = 1:numwins
         PSSautocorr.(states{ss})(:,ll) = PSSxcorr_mat(:,ll,ll);
@@ -54,79 +61,12 @@ for ss = 1:length(states)
 end
 
 
-
-%%
-figure
-plot((lags).*dt,PSSautocorr)
-%LogScale('x',10)
-%%
-colororder = makeColorMap([0 0.5 0],[0.8 0.5 0],numwins/2);
-exwinsize = 1000;
-exwin = bz_RandomWindowInIntervals(specslope.timestamps([1 end])',exwinsize);
-
-
-figure
-% subplot(4,1,1)
-%     set(gca,'colororder',colororder)
-%     hold all
-%     plot(specslope.timestamps,specslope.data(:,1:2:end),'linewidth',1)
-%     xlim(exwin);ylim([-2 0])
-%     legend(num2str(winsizes(1:2:end)'))
-
-    
-for ss = 1:length(states)
-    
-exwinsize = 40;
-sexwin.(states{ss}) = bz_RandomWindowInIntervals(SleepState.ints.(states{ss}),exwinsize);
-    
-subplot(4,3,ss)
-bz_MultiLFPPlot(lfp,'timewin',sexwin.(states{ss}))
-
-subplot(4,3,ss+3)
-    set(gca,'colororder',colororder)
-    hold all
-    plot(specslope.timestamps,specslope.data(:,1:2:end),'linewidth',1)
-    xlim(sexwin.(states{ss}));ylim([-2 0])
-    legend(num2str(winsizes(1:2:end)'))
-
-% 
-%     subplot(3,3,ss+3)
-%         imagesc(log10(winsizes),log10(winsizes),PSSwincorr.(states{ss}))
-%         LogScale('xy',10)
-%         colorbar
-%         caxis([0.5 1])
-    subplot(6,3,ss+12)
-    set(gca,'colororder',colororder)
-    hold all
-        plot((lags).*dt,PSSautocorr.(states{ss})(:,1:2:end))
-        
-        plot(maxlag.*[-1 1],[0 0],'k')
-        ylim([-0.2 1])
-        xlim(150*[-1 1])
-        title(states{ss})
-        
-    subplot(6,3,ss+15)
-    set(gca,'colororder',colororder)
-    hold all
-        plot((lags).*dt,PSSautocorr.(states{ss})(:,1:2:end))
-        
-        plot(maxlag.*[-1 1],[0 0],'k')
-        ylim([-0.2 1])
-        xlim(20*[-1 1])
-        title(states{ss})
-end
-
-%%
-figure
-hist(specslope.rsq)
-
-%% PSS and State
+%% Pick the "best" window for further analysis
 dt = 0.5;
-winsize = 4;
+winsize = 5;
 [specslope,specgram] = bz_PowerSpectrumSlope(lfp,winsize,dt,'showfig',true);
 
-states = fieldnames(SleepState.ints);
-statecolors = {'k','b','r'};
+
 numbins = 20;
 PSShist.bins = linspace(-2,0,numbins);
 for ss = 1:length(states)
@@ -134,6 +74,84 @@ for ss = 1:length(states)
     
     PSShist.(states{ss}) = hist(specslope.data(specslope.timeidx.(states{ss})),PSShist.bins);
 end
+
+
+%% Figure: Time Window Comparison
+skipnum = 5;
+colororder = makeColorMap([0 0.5 0],[0.8 0.5 0],ceil(numwins/skipnum));
+exwinsize = 1000;
+exwin = bz_RandomWindowInIntervals(specslope_wins.timestamps([1 end])',exwinsize);
+
+
+figure
+subplot(4,1,1)
+    imagesc(specgram.timestamps,log2(specgram.freqs),specgram.amp)
+    hold on
+    StateScorePlot({SleepState.ints.NREMstate,SleepState.ints.REMstate,SleepState.ints.WAKEstate},...
+        {'b','r','k'})
+    axis xy
+    xlim(exwin)
+    ylabel({'Specgram','f (Hz)'})
+    LogScale('y',2)
+
+subplot(4,1,2)
+    set(gca,'colororder',colororder)
+    hold all
+    plot(specslope_wins.timestamps,specslope_wins.data(:,1:skipnum:end),'linewidth',1)
+    xlim(exwin);ylim([-2 0])
+    legend(num2str(winsizes(1:skipnum:end)'))
+for ss = 1:length(states)
+    subplot(4,4,ss+8)
+        imagesc(log10(winsizes),log10(winsizes),PSSwincorr.(states{ss}))
+        LogScale('xy',10)
+        colorbar
+        caxis([0.5 1])
+        
+    subplot(4,4,ss+12)
+    set(gca,'colororder',colororder)
+    hold all
+        plot((lags).*dt,PSSautocorr.(states{ss})(:,1:skipnum:end))
+        
+        plot(maxlag.*[-1 1],[0 0],'k')
+        ylim([-0.2 1])
+        xlim(150*[-1 1])
+        title(states{ss})
+end
+NiceSave('CompareWindow',figfolder,baseName)
+%% Figure: Zoom in to compare state
+
+figure    
+for ss = 1:length(states)
+    
+exwinsize = 30;
+sexwin.(states{ss}) = bz_RandomWindowInIntervals(SleepState.ints.(states{ss}),exwinsize);
+    
+subplot(6,3,(ss-1).*6+[1 2])
+    bz_MultiLFPPlot(lfp,'timewin',sexwin.(states{ss}))
+
+subplot(6,3,(ss-1).*6+[4 5])
+    set(gca,'colororder',colororder)
+    hold all
+    plot(specslope_wins.timestamps,specslope_wins.data(:,1:skipnum:end),'linewidth',1)
+    xlim(sexwin.(states{ss}));ylim([-2 0])
+    
+
+    subplot(3,3,ss*3)
+    set(gca,'colororder',colororder)
+    hold all
+        plot((lags).*dt,PSSautocorr.(states{ss})(:,1:skipnum:end))
+        plot(maxlag.*[-1 1],[0 0],'k')
+        ylim([-0.2 1])
+        xlim(20*[-1 1])
+        title(states{ss})
+legend(num2str(winsizes(1:skipnum:end)'),'location','northoutside')
+end
+NiceSave('CompareWindow_states',figfolder,baseName)
+
+%%
+figure
+hist(specslope.rsq)
+
 
 
 %%
@@ -171,13 +189,15 @@ subplot(6,1,5)
 %     plot(specslope.timestamps,specslope.intercept,'k')
 %     xlim(exwin)
 %     %ylabel('Intercept')
-subplot(6,2,11)
+subplot(6,3,16:17)
     for ss = 1:length(states)
     plot(PSShist.bins,PSShist.(states{ss}),statecolors{ss},'linewidth',2)
     hold on
     end
     xlabel('PSS')
-    legend(states{:})
+    legend(states{:},'location','eastoutside')
+    
+NiceSave('PSSbyState',figfolder,baseName)
 %% Relate PSS and Spiking
 
 ISIStats.allspikes.PSS = cellfun(@(X) interp1(specslope.timestamps,specslope.data,X,'nearest'),ISIStats.allspikes.times,'UniformOutput',false);
