@@ -129,12 +129,14 @@ sexwin.(states{ss}) = bz_RandomWindowInIntervals(SleepState.ints.(states{ss}),ex
     
 subplot(6,3,(ss-1).*6+[1 2])
     bz_MultiLFPPlot(lfp,'timewin',sexwin.(states{ss}))
+    ylabel(states{ss})
 
 subplot(6,3,(ss-1).*6+[4 5])
     set(gca,'colororder',colororder)
     hold all
     plot(specslope_wins.timestamps,specslope_wins.data(:,1:skipnum:end),'linewidth',1)
     xlim(sexwin.(states{ss}));ylim([-2 0])
+    ylabel('PSS')
     
 
     subplot(3,3,ss*3)
@@ -145,6 +147,7 @@ subplot(6,3,(ss-1).*6+[4 5])
         ylim([-0.2 1])
         xlim(20*[-1 1])
         title(states{ss})
+        xlabel('t lag (s)')
 legend(num2str(winsizes(1:skipnum:end)'),'location','northoutside')
 end
 NiceSave('CompareWindow_states',figfolder,baseName)
@@ -197,6 +200,9 @@ subplot(6,2,11)
     end
     xlabel('PSS')
     legend(states{:},'location','eastoutside')
+    axis tight
+    box off
+    xlim([-1.75 -0.25])
     
 NiceSave('PSSbyState',figfolder,baseName)
 %% Relate PSS and Spiking
