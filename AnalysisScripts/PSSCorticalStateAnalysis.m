@@ -433,6 +433,8 @@ for ss = 1:2
     hold on
 end
 xlabel('PSS');ylabel('Dur (s)')
+axis tight
+box off
 LogScale('y',10)
 legend(updown{:},'location','eastoutside')
 NiceSave('PSSandUPDOWN',figfolder,baseName)
