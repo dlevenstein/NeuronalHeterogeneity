@@ -127,14 +127,14 @@ NiceSave('CompareWindow',figfolder,baseName)
 figure    
 for ss = 1:length(states)
     
-exwinsize = 30;
+exwinsize = 25
 sexwin.(states{ss}) = bz_RandomWindowInIntervals(SleepState.ints.(states{ss}),exwinsize);
     
-subplot(6,3,(ss-1).*6+[1 2])
+subplot(8,3,(ss-1).*6+[1 2])
     bz_MultiLFPPlot(lfp,'timewin',sexwin.(states{ss}))
     ylabel(states{ss})
 
-subplot(6,3,(ss-1).*6+[4 5])
+subplot(8,3,(ss-1).*6+[4 5])
     set(gca,'colororder',colororder)
     hold all
     plot(specslope_wins.timestamps,specslope_wins.data(:,1:skipnum:end),'linewidth',1)
