@@ -119,7 +119,7 @@ for ss = 1:length(states)
         ylim([-0.2 1])
         xlim(150*[-1 1])
         title(states{ss})
-        ylabel('t lag (s)')
+        xlabel('t lag (s)');ylabel('corr')
 end
 NiceSave('CompareWindow',figfolder,baseName)
 %% Figure: Zoom in to compare state
