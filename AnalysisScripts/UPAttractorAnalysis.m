@@ -19,22 +19,23 @@ SWwin = 1;
 prewin = [-0.2 0];
 postwin = [0 0.2];
 
-for dd = 1:length(SlowWaves.timestamps)
+for dd = 2:(length(SlowWaves.timestamps)-1)
     %Find Spikes near the slow waves
     dd
-    %thisSWwin = SlowWaves.timestamps+SWwin.*[-1 1];
+    %Spike time relative to this slow wave
     reltime = cellfun(@(X) X-SlowWaves.timestamps(dd),ISIStats.allspikes.times,'UniformOutput',false);
-    SWrelidx = cellfun(@(X) abs(X)<SWwin,reltime,'UniformOutput',false);
+    thisSW = cellfun(@(X) X>SlowWaves.timestamps(dd-1) & X<SlowWaves.timestamps(dd+1),ISIStats.allspikes.times,'UniformOutput',false);
+    %Is it within the window and in the domain of THIS SW
+    SWrelidx = cellfun(@(X,Y) abs(X)<SWwin & Y,reltime,thisSW,'UniformOutput',false);
+    
+    %Calculate all the stuff about spike stats
     SWrelCV2(dd,:) = cellfun(@(X,Y) X(Y),ISIStats.allspikes.CV2,SWrelidx,'UniformOutput',false);
     SWreltime(dd,:) = cellfun(@(X,Y) X(Y),reltime,SWrelidx,'UniformOutput',false);
     ISIn(dd,:) = cellfun(@(X,Y) X(Y),ISIStats.allspikes.ISIs,SWrelidx,'UniformOutput',false);
     ISInp1(dd,:) = cellfun(@(X,Y) X([false; Y(1:end-1)]),ISIStats.allspikes.ISIs,SWrelidx,'UniformOutput',false);
 
-    
-    
 end
 
-%%
 for cc = 1:spikes.numcells
     SWrelCV2_all{cc} = cat(1,SWrelCV2{:,cc});
     SWreltime_all{cc} = cat(1,SWreltime{:,cc});
@@ -59,7 +60,10 @@ SWCV2bypop.(celltypes{tt}).std = std(binmeans(:,CellClass.(celltypes{tt})),[],2)
 end
 
 
-%%
+%% ISI return maps around SW
+%(add ACG)
+
+win = 0.15;
 postSWreturnmaps = cellfun(@(X,Y,Z) hist3([log10(X(Z>0&Z<win)) log10(Y(Z>0&Z<win))],{ISIStats.ISIhist.logbins,ISIStats.ISIhist.logbins}),...
     ISIn_all,ISInp1_all,SWreltime_all,'UniformOutput',false);
 postSWreturnmaps = cellfun(@(X) X./sum(X(:)),postSWreturnmaps,'UniformOutput',false);
@@ -83,6 +87,8 @@ for tt = 1:length(celltypes)
 end
 
 %%
+histcolors = flipud(gray);
+
 figure
 subplot(2,2,1)
     imagesc(bincenters,[1 spikes.numcells],binmeans(:,ISIStats.sorts.NREMstate.CV2byclass)')
@@ -151,10 +157,9 @@ NiceSave('CVandSW',figfolder,baseName)
 %%
 %cc = 10;
 
-win = 0.15;
 %[ bincenters,binmeans,binstd,binnum,binneddata ] = BinDataTimes(SWrelCV2_all{cc},SWreltime_all{cc},binedges );
 excells = [randsample(find(CellClass.pE),1) randsample(find(CellClass.pI),1)];
-histcolors = flipud(gray);
+
 
 figure
 for ee = 1:length(excells)
@@ -201,7 +206,9 @@ binsize = 0.1; %because maximum dt with maximum dimensionality
 [~,spikemat.NREMtimes] = RestrictInts(spikemat.timestamps,SleepState.ints.NREMstate);
 spikemat.NREMspikemat = spikemat.data(spikemat.NREMtimes,:);
 
-spikemat.data = bsxfun(@(X,Y) X./Y,spikemat.data,mean(spikemat.NREMspikemat,1));
+%spikemat.data = bsxfun(@(X,Y) X./Y,spikemat.data,mean(spikemat.NREMspikemat,1));
+%spikemat.data = NormToInt(spikemat.data,'modZ', SleepState.ints.NREMstate,1./spikemat.dt);
+spikemat.data = NormToInt(spikemat.data,'mean', SleepState.ints.NREMstate,1./spikemat.dt);
 
 
 %%
@@ -209,40 +216,49 @@ spikemat.data = bsxfun(@(X,Y) X./Y,spikemat.data,mean(spikemat.NREMspikemat,1));
 simwin = 1.5;
 simwin_dt = simwin./spikemat.dt;
 %Note: might want to normalize each cell by it's mean rate...
-corrtypes = {'spearman','jaccard'};
+corrtypes = {'spearman','jaccard','pearson'};
 for cc = 1:length(corrtypes)
-    simmat.(corrtypes{cc}) = zeros(2.*simwin_dt+1,2.*simwin_dt+1,length(SlowWaves.timestamps));
+    simmat.(corrtypes{cc}) = nan(2.*simwin_dt+1,2.*simwin_dt+1,length(SlowWaves.timestamps));
 end
 
 SWidx = interp1(spikemat.timestamps,1:length(spikemat.timestamps),SlowWaves.timestamps,'nearest');
-for dd = 1:length(SlowWaves.timestamps)
+for dd = 2:length(SlowWaves.timestamps)-1
     dd
     %Find window around slow wave
-    for tt = 1:length(celltypes)
     SWwinidx = (SWidx(dd)-simwin_dt):(simwin_dt+SWidx(dd));
+    %Find the exclusion window after the next slow wave
+    insideidx = SWidx(dd-1):SWidx(dd+1);
+    ousideidx = ~ismember(SWwinidx,insideidx);
+    thisSWspikemat = spikemat.data(SWwinidx,:);
+    thisSWspikemat(ousideidx,:) = nan;
     
-    %Calculate population vector correlations
-%     corrdist = pdist(spikemat.data(SWwinidx,:),'mahalanobis',covmat);
-%     simmat.mahalanobis(:,:,dd) = squareform(corrdist);
-    
-    corrdist = pdist(spikemat.data(SWwinidx,CellClass.(celltypes{tt})),'spearman');
-    simmat.(celltypes{tt}).spearman(:,:,dd) = squareform(corrdist);
-    %corrdist = pdist(spikemat.data(SWwinidx,:),'cityblock');
-    %corrdist = pdist(spikemat.data(SWwinidx,:),'correlation');
-    %corrdist = pdist(spikemat.data(SWwinidx,:),'cosine');
-    %corrdist = pdist(spikemat.data(SWwinidx,:)>0,'hamming');
-    corrdist = pdist(spikemat.data(SWwinidx,CellClass.(celltypes{tt}))>0,'jaccard');
-    simmat.(celltypes{tt}).jaccard(:,:,dd) = squareform(corrdist);
+    for tt = 1:length(celltypes)
+        
+        
+
+        %Calculate population vector correlation
+        corrdist = pdist(thisSWspikemat(:,CellClass.(celltypes{tt})),'spearman');
+        simmat.(celltypes{tt}).spearman(:,:,dd) = squareform(corrdist);
+
+        corrdist = pdist(thisSWspikemat(:,CellClass.(celltypes{tt}))>0,'jaccard');
+        simmat.(celltypes{tt}).jaccard(:,:,dd) = squareform(corrdist);
+        
+        corrdist = pdist(thisSWspikemat(:,CellClass.(celltypes{tt}))>0,'correlation');
+        simmat.(celltypes{tt}).pearson(:,:,dd) = squareform(corrdist);
     end
     
-    corrdist = pdist(spikemat.data(SWwinidx,:),'spearman');
+    corrdist = pdist(thisSWspikemat,'spearman');
     simmat.ALL.spearman(:,:,dd) = squareform(corrdist);
     %corrdist = pdist(spikemat.data(SWwinidx,:),'cityblock');
     %corrdist = pdist(spikemat.data(SWwinidx,:),'correlation');
     %corrdist = pdist(spikemat.data(SWwinidx,:),'cosine');
     %corrdist = pdist(spikemat.data(SWwinidx,:)>0,'hamming');
-    corrdist = pdist(spikemat.data(SWwinidx,:)>0,'jaccard');
+    corrdist = pdist(thisSWspikemat>0,'jaccard');
     simmat.ALL.jaccard(:,:,dd) = squareform(corrdist);
+    
+    corrdist = pdist(thisSWspikemat,'correlation');
+    simmat.ALL.pearson(:,:,dd) = squareform(corrdist);
+   
 end
 %%
 t_simwin = -simwin:spikemat.dt:simwin;
@@ -312,5 +328,45 @@ figure
         xlim(tbounds);ylim(tbounds)
         xlabel('t (rel to SW, s)');ylabel('t (rel to SW, s)')
 NiceSave('UPStateSimilarity',figfolder,baseName)
+
+
+%%
+lfp = bz_GetLFP(SlowWaves.detectorinfo.detectionchannel,'basepath',basePath);
+
+%%
+exSW = randsample(length(SlowWaves.timestamps),1);
+exSWwin = SlowWaves.timestamps(exSW)+tbounds;
+
+figure
+subplot(4,1,1)
+    bz_MultiLFPPlot(lfp,'timewin',exSWwin,'spikes',spikes)
+    hold on
+    plot(SlowWaves.timestamps(exSW).*[1 1],get(gca,'ylim'),'k')
+    
+subplot(3,1,2)
+    imagesc(t_simwin,t_simwin,1-simmat.ALL.spearman(:,:,exSW))
+    hold on
+    xlim(tbounds);ylim(tbounds)
+        plot([0 0],tbounds,'k');plot(tbounds,[0 0],'k');
+        %colorbar
+        %caxis([0 1])
+        
+subplot(3,1,3)
+    imagesc(t_simwin,t_simwin,1-simmat.ALL.jaccard(:,:,exSW))
+    hold on
+    xlim(tbounds);ylim(tbounds)
+        plot([0 0],tbounds,'k');plot(tbounds,[0 0],'k');
+        %colorbar
+        %caxis([0 1])
+        
+%% Num Spikes each cell in UP state
+for uu = 1:length(SlowWaves.ints.UP)
+    %Num spikes each cell
+    uu
+    SlowWaves.spikenum(uu,:) = cellfun(@(X) sum(X>SlowWaves.ints.UP(uu,1) & X<SlowWaves.ints.UP(uu,2)),spikes.times);
+end
+
+%%
+
 end
 

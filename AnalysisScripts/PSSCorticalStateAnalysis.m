@@ -4,7 +4,7 @@ function [ output_args ] = PSSCorticalStateAnalysis( basePath,figfolder )
 %% DEV
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
-figfolder = '/Users/dlevenstein/Dropbox/Research/Current Projects/FRHetAndDynamics/AnalysisScripts/AnalysisFigs';
+figfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs/PSSCorticalStateAnalysis';
 %figfolder = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs';
 %%
 baseName = bz_BasenameFromBasepath(basePath);
@@ -99,6 +99,8 @@ subplot(6,2,11)
     end
     xlabel('PSS')
     legend(states{:})
+    
+NiceSave('PSSExample',figfolder,baseName)
 %% Relate PSS and Spiking
 
 ISIStats.allspikes.PSS = cellfun(@(X) interp1(specslope.timestamps,specslope.data,X,'nearest'),ISIStats.allspikes.times,'UniformOutput',false);
@@ -116,6 +118,7 @@ end
 ratePSScorr.ALL = corr(spikemat.PSS,spikemat.data,'type','spearman','rows','complete');
 CV2PSScorr.ALL = cellfun(@(X,Y) corr(X,Y,'type','spearman','rows','complete'),ISIStats.allspikes.PSS,ISIStats.allspikes.CV2);
 %%
+%ADD: ALL
 for ss = 1:length(states)
 %ss = 1;
     spikemat.timeidx.(states{ss}) = InIntervals(spikemat.timestamps,SleepState.ints.(states{ss}));
@@ -126,30 +129,34 @@ for ss = 1:length(states)
     CV2PSScorr.(states{ss}) = cellfun(@(X,Y,Z) corr(X(Z),Y(Z),'type','spearman','rows','complete'),...
         ISIStats.allspikes.PSS,ISIStats.allspikes.CV2,instatespikes);
  
-    
-
+end    
+%%
     figure
-    subplot(2,2,1)
+for ss = 1:length(states)
+    subplot(4,3,ss)
     for tt = 1:length(cellclasses)
     	plot(ISIStats.summstats.(states{ss}).meanCV2(CellClass.(cellclasses{tt})),ratePSScorr.(states{ss})(CellClass.(cellclasses{tt})),'.','color',classcolors{tt})
         hold on
     end
     xlabel('<CV2>');ylabel('Rate-PSS Corr')
     
-    subplot(2,2,2)
+
+    subplot(4,3,ss+3)
+    for tt = 1:length(cellclasses)
+    	plot(ISIStats.summstats.(states{ss}).meanCV2(CellClass.(cellclasses{tt})),CV2PSScorr.(states{ss})(CellClass.(cellclasses{tt})),'.','color',classcolors{tt})
+        hold on
+    end
+    xlabel('<CV2>');ylabel('CV2-PSS Corr')
+    
+
+    subplot(4,3,ss+6)
     for tt = 1:length(cellclasses)
     	plot(log10(ISIStats.summstats.(states{ss}).meanrate(CellClass.(cellclasses{tt}))),ratePSScorr.(states{ss})(CellClass.(cellclasses{tt})),'.','color',classcolors{tt})
         hold on
     end
     xlabel('Mean Rate');ylabel('Rate-PSS Corr')
     
-    subplot(2,2,3)
-    for tt = 1:length(cellclasses)
-    	plot(ISIStats.summstats.(states{ss}).meanCV2(CellClass.(cellclasses{tt})),CV2PSScorr.(states{ss})(CellClass.(cellclasses{tt})),'.','color',classcolors{tt})
-        hold on
-    end
-    xlabel('<CV2>');ylabel('CV2-PSS Corr')
-    subplot(2,2,4)
+    subplot(4,3,ss+9)
     for tt = 1:length(cellclasses)
     	plot(log10(ISIStats.summstats.(states{ss}).meanrate(CellClass.(cellclasses{tt}))),CV2PSScorr.(states{ss})(CellClass.(cellclasses{tt})),'.','color',classcolors{tt})
         hold on
@@ -191,8 +198,8 @@ SlowWaves = bz_LoadEvents(basePath,'SlowWaves');
 
 
 %%
-updown = {'UP','DOWN'};
-UDcolor = {'r','b'};
+updown = {'DOWN','UP'};
+UDcolor = {'b','r'};
 for ss = 1:2
     SlowWaves.dur.(updown{ss}) = diff(SlowWaves.ints.(updown{ss}),1,2);
     SlowWaves.midpoint.(updown{ss}) = mean(SlowWaves.ints.(updown{ss}),2);
