@@ -95,7 +95,7 @@ subplot(4,1,1)
     ylabel({'Specgram','f (Hz)'})
     LogScale('y',2)
 
-subplot(4,1,2)
+subplot(6,1,3)
     set(gca,'colororder',colororder)
     hold all
     plot(specslope_wins.timestamps,specslope_wins.data(:,1:skipnum:end),'linewidth',1)
