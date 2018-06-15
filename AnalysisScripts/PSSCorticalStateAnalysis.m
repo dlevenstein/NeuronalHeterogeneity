@@ -80,7 +80,7 @@ end
 %% Figure: Time Window Comparison
 skipnum = 5;
 colororder = makeColorMap([0 0.5 0],[0.8 0.5 0],ceil(numwins/skipnum));
-exwinsize = 1000;
+exwinsize = 800;
 exwin = bz_RandomWindowInIntervals(specslope_wins.timestamps([1 end])',exwinsize);
 
 
@@ -107,6 +107,7 @@ for ss = 1:length(states)
         LogScale('xy',10)
         colorbar
         caxis([0.5 1])
+        title(states{ss})
         
     subplot(4,4,ss+12)
     set(gca,'colororder',colororder)
