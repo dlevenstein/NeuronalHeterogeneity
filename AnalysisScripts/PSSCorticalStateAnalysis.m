@@ -343,14 +343,14 @@ NiceSave('PSSandCells',figfolder,baseName)
 
 %%
 figure
-subplot(3,3,1)
+subplot(4,4,1)
  for ss = 1:length(states)  
-        ScatterWithLinFit(spikemat.PSS(spikemat.timeidx.(states{ss})),...
-            log2(spikemat.poprate.pE(spikemat.timeidx.(states{ss}))),...
-            'color',statecolors{ss},'markersize',1,'showtext',false)
-%         plot(spikemat.PSS(spikemat.timeidx.(states{ss})),...
+%         ScatterWithLinFit(spikemat.PSS(spikemat.timeidx.(states{ss})),...
 %             log2(spikemat.poprate.pE(spikemat.timeidx.(states{ss}))),...
-%             '.','color',statecolors{ss},'markersize',1)
+%             'color',statecolors{ss},'markersize',1,'showtext',false)
+        plot(spikemat.PSS(spikemat.timeidx.(states{ss})),...
+            log2(spikemat.poprate.pE(spikemat.timeidx.(states{ss}))),...
+            '.','color',statecolors{ss},'markersize',1)
         hold on
  end
  axis tight
@@ -359,14 +359,14 @@ subplot(3,3,1)
        xlim([-1.8 -0.2])
         LogScale('y',2)
         
-subplot(3,3,2)
+subplot(4,4,2)
  for ss = 1:length(states)  
-        ScatterWithLinFit(spikemat.PSS(spikemat.timeidx.(states{ss})),...
-            log2(spikemat.poprate.pI(spikemat.timeidx.(states{ss}))),...
-            'color',statecolors{ss},'markersize',1,'showtext',false)
-%         plot(spikemat.PSS(spikemat.timeidx.(states{ss})),...
+%         ScatterWithLinFit(spikemat.PSS(spikemat.timeidx.(states{ss})),...
 %             log2(spikemat.poprate.pI(spikemat.timeidx.(states{ss}))),...
-%             '.','color',statecolors{ss},'markersize',1)        
+%             'color',statecolors{ss},'markersize',1,'showtext',false)
+        plot(spikemat.PSS(spikemat.timeidx.(states{ss})),...
+            log2(spikemat.poprate.pI(spikemat.timeidx.(states{ss}))),...
+            '.','color',statecolors{ss},'markersize',1)        
         hold on
  end
         axis tight
@@ -375,14 +375,14 @@ subplot(3,3,2)
         xlim([-1.8 -0.2])
         LogScale('y',2)
         
-subplot(3,3,3)
+subplot(4,4,3)
  for ss = 1:length(states)  
-        ScatterWithLinFit(spikemat.PSS(spikemat.timeidx.(states{ss})),...
-            log10(spikemat.poprate.pE(spikemat.timeidx.(states{ss}))./spikemat.poprate.pI(spikemat.timeidx.(states{ss}))),...
-            'color',statecolors{ss},'markersize',1,'showtext',false)
-%         plot(spikemat.PSS(spikemat.timeidx.(states{ss})),...
-%             log2(spikemat.poprate.pE(spikemat.timeidx.(states{ss}))./spikemat.poprate.pI(spikemat.timeidx.(states{ss}))),...
-%             '.','color',statecolors{ss},'markersize',1)
+%         ScatterWithLinFit(spikemat.PSS(spikemat.timeidx.(states{ss})),...
+%             log10(spikemat.poprate.pE(spikemat.timeidx.(states{ss}))./spikemat.poprate.pI(spikemat.timeidx.(states{ss}))),...
+%             'color',statecolors{ss},'markersize',1,'showtext',false)
+        plot(spikemat.PSS(spikemat.timeidx.(states{ss})),...
+            log2(spikemat.poprate.pE(spikemat.timeidx.(states{ss}))./spikemat.poprate.pI(spikemat.timeidx.(states{ss}))),...
+            '.','color',statecolors{ss},'markersize',1)
         hold on
  end
  axis tight
@@ -392,7 +392,7 @@ subplot(3,3,3)
         LogScale('y',2)
         
 for ss = 1:length(states)
-    subplot(6,3,6+ss)
+    subplot(6,4,ss*4)
     for tt = 1:length(cellclasses)
 %         plot(PSScorrhist.bins,PSScorrhist.rate.(states{ss}).(cellclasses{tt}),...
 %             classcolors{tt},'linewidth',2)
@@ -404,11 +404,11 @@ for ss = 1:length(states)
     xlabel('PSS-Rate Corr');
     ylabel('# cells')
     title(states{ss})
-    xlim([-0.5 0.5])
+    xlim([-0.4 0.4])
 end
 
 for ss = 1:length(states)
-    subplot(6,3,9+ss)
+    subplot(6,4,ss*4+9)
     for tt = 1:length(cellclasses)
 %         plot(PSScorrhist.bins,PSScorrhist.CV2.(states{ss}).(cellclasses{tt}),...
 %             classcolors{tt},'linewidth',2)
@@ -419,11 +419,11 @@ for ss = 1:length(states)
     plot([0 0],get(gca,'ylim'),'k')
     xlabel('PSS-CV2 Corr');
     ylabel('# cells')
-    xlim([-0.5 0.5])
+    xlim([-0.25 0.25])
 end
 
 for tt = 1:length(cellclasses)
-    subplot(3,3,6+tt)
+    subplot(4,4,tt+13)
     for ss = 1:length(states)
     	plot(CV2mat.PSS(CV2mat.timeidx.(states{ss})),CV2mat.(cellclasses{tt})(CV2mat.timeidx.(states{ss})),...
             '.','color',statecolors{ss},'markersize',2)
@@ -435,7 +435,7 @@ for tt = 1:length(cellclasses)
 
 end
 
-subplot(3,3,9)
+subplot(4,4,16)
 for tt = 1:length(cellclasses)
     plot(log2(CV2mat.rate.(cellclasses{tt})),CV2mat.(cellclasses{tt}),...
         '.','color',classcolors{tt},'markersize',1)
