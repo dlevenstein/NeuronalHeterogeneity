@@ -450,7 +450,7 @@ NiceSave('PSSandSpiking',figfolder,baseName,'tiff')
 
 %%
 
-exwinsize = 1000;
+exwinsize = 500;
 exwin = bz_RandomWindowInIntervals(specslope.timestamps([1 end])',exwinsize);
 figure
 
@@ -466,29 +466,37 @@ subplot(6,1,1)
 
 
 subplot(6,1,4)
-    plot(specslope.timestamps,specslope.data,'k')
+    plot(specslope.timestamps,specslope.data,'k','linewidth',1)
+    axis tight
     xlim(exwin)
     ylabel('PSS')
+    box off
+    
 subplot(6,1,[2:3])
     bz_MultiLFPPlot(lfp,'spikes',spikes,'timewin',exwin,...
         'cellgroups',{CellClass.pE,CellClass.pI},...
         'sortmetric',ISIStats.summstats.NREMstate.meanrate,...
         'scaleLFP',0.4,'scalespikes',1)
-
+    xlabel('')
     box off
 subplot(6,1,5)
-    plot(spikemat.timestamps,log10(spikemat.poprate.pE),'k')
+for tt = 1:length(cellclasses)
+    plot(spikemat.timestamps,log2(spikemat.poprate.(cellclasses{tt})),classcolors{tt},'linewidth',1)
     hold on
-    plot(spikemat.timestamps,log10(spikemat.poprate.pI),'r')
+end
+    axis tight
     xlim(exwin)
     box off
-    ylabel('Pop. Rate (Spk/Cell/S)')
+    ylabel({'Pop. Rate', '(Spk/Cell/S)'})
     legend(cellclasses{:})
+    LogScale('y',2)
     
 subplot(6,1,6)
-    plot(CV2mat.timestamps,CV2mat.pE,'k')
+for tt = 1:length(cellclasses)
+    plot(CV2mat.timestamps,CV2mat.(cellclasses{tt}),classcolors{tt},'linewidth',1)
     hold on
-    plot(CV2mat.timestamps,CV2mat.pI,'r')
+end
+    axis tight
     xlim(exwin)
     box off
     ylabel('<CV2>')
