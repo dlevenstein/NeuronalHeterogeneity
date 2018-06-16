@@ -487,6 +487,8 @@ subplot(6,1,6)
     hold on
     plot(CV2mat.timestamps,CV2mat.pI,'r')
     xlim(exwin)
+    
+    NiceSave('PSSandSpikingExample',figfolder,baseName)
 %% PSS and UP/DOWN
 
 SlowWaves = bz_LoadEvents(basePath,'SlowWaves');
