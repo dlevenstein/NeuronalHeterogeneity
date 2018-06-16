@@ -446,7 +446,7 @@ axis tight
 LogScale('x',2)
 xlabel('Pop. Rate');ylabel('<CV2>')
 
-NiceSave('PSSandSpiking',figfolder,baseName)
+NiceSave('PSSandSpiking',figfolder,baseName,'tiff')
 
 %%
 
@@ -468,6 +468,7 @@ subplot(6,1,1)
 subplot(6,1,4)
     plot(specslope.timestamps,specslope.data,'k')
     xlim(exwin)
+    ylabel('PSS')
 subplot(6,1,[2:3])
     bz_MultiLFPPlot(lfp,'spikes',spikes,'timewin',exwin,...
         'cellgroups',{CellClass.pE,CellClass.pI},...
@@ -481,14 +482,18 @@ subplot(6,1,5)
     plot(spikemat.timestamps,log10(spikemat.poprate.pI),'r')
     xlim(exwin)
     box off
+    ylabel('Pop. Rate (Spk/Cell/S)')
+    legend(cellclasses{:})
     
 subplot(6,1,6)
     plot(CV2mat.timestamps,CV2mat.pE,'k')
     hold on
     plot(CV2mat.timestamps,CV2mat.pI,'r')
     xlim(exwin)
+    box off
+    ylabel('<CV2>')
     
-    NiceSave('PSSandSpikingExample',figfolder,baseName)
+    NiceSave('PSSandSpikingExample',figfolder,baseName,'tiff')
 %% PSS and UP/DOWN
 
 SlowWaves = bz_LoadEvents(basePath,'SlowWaves');
