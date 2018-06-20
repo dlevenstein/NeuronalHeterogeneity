@@ -292,6 +292,8 @@ for tt = 1:length(cellclasses)
         caxis([0 5e-3])
         
 end
+
+NiceSave('trialReturnmaps',figfolder,baseName)
 %%
 figure
 subplot(2,1,1)
