@@ -76,6 +76,7 @@ lfp = bz_GetLFP(sessionInfo.thetaChans(2),'basepath',basePath);
 [specslope,specgram] = bz_PowerSpectrumSlope(lfp,binsize,dt,'showfig',true);
 
 %% mean over trials
+% NOTE: CV2MAT IS BIASED BY HIGHEST FR CELLS. 
 aroundtrialwindow = 4;
 linear.numtrials = length(linear.events.trialIntervals);
 buffer = 2;
@@ -209,12 +210,12 @@ for cc = 1:spikes.numcells
     ISIn_all{cc} = cat(1,ISIn{:,cc});
     ISInp1_all{cc} = cat(1,ISInp1{:,cc});
     
-    if length(ISIn_all{cc})<100
-        ISIn_all{cc} = [nan;nan;nan];
-        ISInp1_all{cc} = [nan;nan;nan];
-        trialrelCV2_all{cc} = [nan;nan;nan];
-        trialnormtime_all{cc} = [-0.5 0.5 1.5];
-    end
+%     if length(ISIn_all{cc})<100
+%         ISIn_all{cc} = [nan;nan;nan];
+%         ISInp1_all{cc} = [nan;nan;nan];
+%         trialrelCV2_all{cc} = [nan;nan;nan];
+%         trialnormtime_all{cc} = [-0.5 0.5 1.5];
+%     end
 end
 
 %%
@@ -225,13 +226,30 @@ bincenters = bincenters{1};
 binmeans = cat(2,binmeans{:});
 binstd = cat(2,binstd{:});
 
+%[~,cellCV2trialmean] = cellfun
+
 for tt = 1:length(cellclasses)
 trialCV2bypop.(cellclasses{tt}).mean = nanmean(binmeans(:,CellClass.(cellclasses{tt})),2);
 trialCV2bypop.(cellclasses{tt}).std = nanstd(binmeans(:,CellClass.(cellclasses{tt})),[],2);
 end
 
 %%
+for tt = 1:length(cellclasses)
+excell.(cellclasses{tt}) = randsample(find(CellClass.Pyr),1);
+end
 figure
+
+subplot(2,2,1)
+imagesc(bincenters,[0 1],binmeans(:,ISIStats.sorts.ALL.ratebyclass)')
+colorbar
+caxis([0 1.5])
+    
+for tt = 2:length(cellclasses)
+subplot(length(cellclasses),2,2.*tt)
+plot(trialnormtime_all{excell.(cellclasses{tt})},(trialrelCV2_all{excell.(cellclasses{tt})}),'.','color',classcolors{tt})
+%LogScale('y',10)
+end
+
 subplot(4,2,5)
 plot([0 0],[0.7 1.5],'k')
 hold on
@@ -243,6 +261,8 @@ for tt = 1:length(cellclasses)
 end
 ylim([0.8 1.4])
 xlabel('t - relative to Trial');ylabel('<CV2>')
+
+%excell = 
 
 %%
 %% ISI return maps around trial
@@ -420,5 +440,154 @@ plot([1 1],get(gca,'ylim'),'k')
 set(gca,'XTickLabels',{['-',num2str(aroundtrialwindow)],'S','E',['+',num2str(aroundtrialwindow)]})
     
 NiceSave('meantrial',figfolder,baseName)
+
+
+%%
+
+spikemat.PSS = interp1(specslope.timestamps,specslope.data,spikemat.timestamps);
+CV2mat.PSS = interp1(specslope.timestamps,specslope.data,CV2mat.timestamps);
+
+%%
+figure
+subplot(2,2,1)
+plot(CV2mat.PSS,CV2mat.Int,'r.')
+xlabel('PSS');ylabel('Pop. <CV2>')
+
+subplot(2,2,2)
+plot(CV2mat.PSS,CV2mat.Pyr,'k.')
+xlabel('PSS');ylabel('Pop. <CV2>')
+
+subplot(2,2,3)
+plot(log2(CV2mat.rate.Int),CV2mat.Int,'r.')
+hold on
+plot(log2(CV2mat.rate.Pyr),(CV2mat.Pyr),'k.')
+LogScale('x',2)
+xlabel('Pop. Rate (spk/cell/s)');ylabel('Pop. <CV2>')
+
+%%
+ISIStats.allspikes.PSS = cellfun(@(X) interp1(specslope.timestamps,specslope.data,X,'nearest'),ISIStats.allspikes.times,'UniformOutput',false);
+
+PSScorrhist.bins = linspace(-1,1,40);
+states = fieldnames(SleepState.ints);
+for ss = 1:length(states)
+%ss = 1;
+    spikemat.timeidx.(states{ss}) = InIntervals(spikemat.timestamps,SleepState.ints.(states{ss}));
+    CV2mat.timeidx.(states{ss}) = InIntervals(CV2mat.timestamps,SleepState.ints.(states{ss}));
+    instatespikes = cellfun(@(X) InIntervals(X,SleepState.ints.(states{ss})),ISIStats.allspikes.times,'UniformOutput',false);
+
+    ratePSScorr.(states{ss}) = corr(spikemat.PSS(spikemat.timeidx.(states{ss})),...
+        spikemat.data(spikemat.timeidx.(states{ss}),:),'type','spearman','rows','complete');
+    CV2PSScorr.(states{ss}) = cellfun(@(X,Y,Z) corr(X(Z),Y(Z),'type','spearman','rows','complete'),...
+        ISIStats.allspikes.PSS,ISIStats.allspikes.CV2,instatespikes);
+    
+    for tt = 1:length(cellclasses)
+        PSScorrhist.rate.(states{ss}).(cellclasses{tt}) = ...
+            hist(ratePSScorr.(states{ss})(CellClass.(cellclasses{tt})),PSScorrhist.bins);
+        PSScorrhist.CV2.(states{ss}).(cellclasses{tt}) = ...
+            hist(CV2PSScorr.(states{ss})(CellClass.(cellclasses{tt})),PSScorrhist.bins);
+    end
+ 
+end   
+
+%%
+ratePSScorr.ALL = corr(spikemat.PSS,spikemat.data,'type','spearman','rows','complete');
+CV2PSScorr.ALL = cellfun(@(X,Y) corr(X,Y,'type','spearman','rows','complete'),ISIStats.allspikes.PSS,ISIStats.allspikes.CV2);
+
+
+%%
+figure
+    subplot(2,2,1)
+    for tt = 1:length(cellclasses)
+    	plot(ISIStats.summstats.ALL.meanCV2(CellClass.(cellclasses{tt})),ratePSScorr.ALL(CellClass.(cellclasses{tt})),'.','color',classcolors{tt})
+        hold on
+    end
+    plot(get(gca,'xlim'),[0 0],'k')
+    title('ALL')
+    ylim([-0.3 0.3])
+    xlabel('<CV2>');ylabel('Rate-PSS Corr')
+    
+    subplot(2,2,2)
+    for tt = 1:length(cellclasses)
+    	plot(log10(ISIStats.summstats.ALL.meanrate(CellClass.(cellclasses{tt}))),ratePSScorr.ALL(CellClass.(cellclasses{tt})),'.','color',classcolors{tt})
+        hold on
+    end
+    plot(get(gca,'xlim'),[0 0],'k')
+    title('ALL')
+    ylim([-0.3 0.3])
+    xlabel('Mean Rate');ylabel('Rate-PSS Corr')
+    
+    
+        subplot(2,2,3)
+    for tt = 1:length(cellclasses)
+    	plot(log10(ISIStats.summstats.ALL.meanrate(CellClass.(cellclasses{tt}))),CV2PSScorr.ALL(CellClass.(cellclasses{tt})),'.','color',classcolors{tt})
+        hold on
+    end
+    plot(get(gca,'xlim'),[0 0],'k')
+    title('ALL')
+    ylim([-0.3 0.3])
+    xlabel('Mean Rate');ylabel('CV2-PSS Corr')
+    
+    
+    
+    %%
+    
+    %%
+
+exwinsize = 500;
+timewin = bz_RandomWindowInIntervals(specslope.timestamps([1 end])',exwinsize);
+
+figure
+
+subplot(6,1,1)
+    imagesc(specgram.timestamps,log2(specgram.freqs),specgram.amp)
+    hold on
+   % StateScorePlot({SleepState.ints.NREMstate,SleepState.ints.REMstate,SleepState.ints.WAKEstate},...
+   %     {'b','r','k'})
+    axis xy
+    xlim(timewin)
+    ylabel({'Specgram','f (Hz)'})
+    LogScale('y',2)
+    
+
+
+subplot(6,1,4)
+    plot(specslope.timestamps,specslope.data,'k','linewidth',1)
+    axis tight
+    xlim(timewin)
+    ylabel('PSS')
+    box off
+    
+
+subplot(6,1,[2:3])
+    bz_MultiLFPPlot(lfp,'spikes',spikes,'timewin',timewin,...
+      	 'sortmetric',ISIStats.summstats.WAKEstate.meanrate )
+     %        'cellgroups',{CellClass.Pyr},...
+       % ,...
+        %)
+    hold on
+    plot(linear.events.trialIntervals',ones(size(linear.events.trialIntervals))','r')
+    xlim(timewin)
+    
+subplot(6,1,5)
+for pp = 1:2
+    plot(spikemat.timestamps,log2(spikemat.poprate.(cellclasses{pp})),classcolors{pp},'linewidth',1)
+    hold on
+end
+    axis tight
+    xlim(timewin)
+    box off
+    ylabel({'Pop. Rate', '(Spk/Cell/S)'})
+    legend(cellclasses{:})
+    LogScale('y',2)
+    
+subplot(6,1,6)
+for pp = 1:2
+    plot(CV2mat.timestamps,CV2mat.(cellclasses{pp}),classcolors{pp},'linewidth',1)
+    hold on
+end
+    axis tight
+    xlim(timewin)
+    box off
+    ylabel('<CV2>')
 end
 
