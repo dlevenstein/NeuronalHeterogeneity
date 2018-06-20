@@ -80,7 +80,7 @@ aroundtrialwindow = 4;
 linear.numtrials = length(linear.events.trialIntervals);
 buffer = 2;
 
-numbins = 60;
+numbins = 90;
 trialdata.linearizedposition = linspace(-1,2,numbins);
 for pp = 1:length(cellclasses)
     trialdata.popCV2.(cellclasses{pp}) = nan(numbins,linear.numtrials);
@@ -99,12 +99,12 @@ for bb = 2:linear.numtrials-1
     posttrialwindow= sortedtrialtimes(bb,2) + aroundtrialwindow.*[0 1];
     betweenothertrials = [sortedtrialtimes(bb-1,2)+buffer sortedtrialtimes(bb+1,1)-buffer];
     
-    
+    %Spike Rate Stuff
     pretrialtimes = InIntervals(spikemat.timestamps,pretrialwindow);
     trialtimes = InIntervals(spikemat.timestamps,trialwindow);
     posttrialtimes = InIntervals(spikemat.timestamps,posttrialwindow);
-    linearizedposition = [linspace(-1,-0.1,sum(pretrialtimes)),...
-        linspace(0,1,sum(trialtimes)),linspace(1.1,2,sum(posttrialtimes))]';
+    linearizedposition = [linspace(-1,-0.01,sum(pretrialtimes)),...
+        linspace(0.01,0.99,sum(trialtimes)),linspace(1.01,2,sum(posttrialtimes))]';
     
     %othertrialtimes
     othertrialtimes = ~InIntervals(spikemat.timestamps,betweenothertrials);
@@ -139,12 +139,12 @@ for bb = 2:linear.numtrials-1
             interp1(linearizedposition,popratetrial,trialdata.linearizedposition)';
     end
  
-    
+    %LFP Spectrum Stuff
     pretrialtimes = InIntervals(specslope.timestamps,pretrialwindow);
     trialtimes = InIntervals(specslope.timestamps,trialwindow);
     posttrialtimes = InIntervals(specslope.timestamps,posttrialwindow);
-    linearizedposition = [linspace(-1,-0.1,sum(pretrialtimes)),...
-        linspace(0,1,sum(trialtimes)),linspace(1.1,2,sum(posttrialtimes))]';
+    linearizedposition = [linspace(-1,-0.01,sum(pretrialtimes)),...
+        linspace(0,1,sum(trialtimes)),linspace(1.01,2,sum(posttrialtimes))]';
     
         %othertrialtimes
     othertrialtimes = ~InIntervals(specslope.timestamps,betweenothertrials);
@@ -175,6 +175,21 @@ for bb = 2:linear.numtrials-1
     
     trialdata.specgram(:,:,bb) = ...
         interp1(linearizedposition,specgramtrial,trialdata.linearizedposition);
+    
+    
+    %Individual spike stuff
+    normtime = cellfun(@(X) IntervalTimeNormalize(X,trialwindow,aroundtrialwindow),ISIStats.allspikes.times,'UniformOutput',false);
+    thistrial = cellfun(@(X) X>betweenothertrials(1) & X<betweenothertrials(2),ISIStats.allspikes.times,'UniformOutput',false);
+    %Is it within the window and in the domain of THIS SW
+    trialrelidx = cellfun(@(X,Y) X>-1 & X<2 & Y,normtime,thistrial,'UniformOutput',false);
+    
+    ISIn(bb,:) = cellfun(@(X,Y) X(Y),ISIStats.allspikes.ISIs,trialrelidx,'UniformOutput',false);
+    ISInp1(bb,:) = cellfun(@(X,Y) X([false; Y(1:end-1)]),ISIStats.allspikes.ISIs,trialrelidx,'UniformOutput',false);
+    trialrelCV2(bb,:) = cellfun(@(X,Y) X(Y),ISIStats.allspikes.CV2,trialrelidx,'UniformOutput',false);
+    trialnormtime(bb,:) = cellfun(@(X,Y) X(Y),normtime,trialrelidx,'UniformOutput',false);
+    
+    
+    
 end
 
 for pp = 1:length(cellclasses)
@@ -187,6 +202,96 @@ grouptrialdata.PSS.mean = nanmean(trialdata.PSS,2);
 grouptrialdata.PSS.std = nanstd(trialdata.PSS,[],2);
 grouptrialdata.specgram = nanmean(trialdata.specgram,3);
 
+%%
+for cc = 1:spikes.numcells
+    trialrelCV2_all{cc} = cat(1,trialrelCV2{:,cc});
+    trialnormtime_all{cc} = cat(1,trialnormtime{:,cc});
+    ISIn_all{cc} = cat(1,ISIn{:,cc});
+    ISInp1_all{cc} = cat(1,ISInp1{:,cc});
+    
+    if length(ISIn_all{cc})<100
+        ISIn_all{cc} = [nan;nan;nan];
+        ISInp1_all{cc} = [nan;nan;nan];
+        trialrelCV2_all{cc} = [nan;nan;nan];
+        trialnormtime_all{cc} = [-0.5 0.5 1.5];
+    end
+end
+
+%%
+binsize = 0.1;
+binedges = -1:binsize:2;
+[ bincenters,binmeans,binstd,binnum,binneddata ] = cellfun(@(X,Y) BinDataTimes(X,Y,binedges),trialrelCV2_all,trialnormtime_all,'UniformOutput',false);
+bincenters = bincenters{1};
+binmeans = cat(2,binmeans{:});
+binstd = cat(2,binstd{:});
+
+for tt = 1:length(cellclasses)
+trialCV2bypop.(cellclasses{tt}).mean = nanmean(binmeans(:,CellClass.(cellclasses{tt})),2);
+trialCV2bypop.(cellclasses{tt}).std = nanstd(binmeans(:,CellClass.(cellclasses{tt})),[],2);
+end
+
+%%
+figure
+subplot(4,2,5)
+plot([0 0],[0.7 1.5],'k')
+hold on
+for tt = 1:length(cellclasses)
+    plot(bincenters,trialCV2bypop.(cellclasses{tt}).mean,'o-','color',classcolors{tt})
+    hold on
+    errorshade(bincenters,trialCV2bypop.(cellclasses{tt}).mean,...
+        trialCV2bypop.(cellclasses{tt}).std,trialCV2bypop.(cellclasses{tt}).std,classcolors{tt},'scalar')
+end
+ylim([0.8 1.4])
+xlabel('t - relative to Trial');ylabel('<CV2>')
+
+%%
+%% ISI return maps around trial
+%(add ACG)
+
+win = 0.15;
+
+outtrialreturnmaps = cellfun(@(X,Y,Z) hist3([log10(X(Z<0|Z>1)) log10(Y(Z<0|Z>1))],{ISIStats.ISIhist.logbins,ISIStats.ISIhist.logbins}),...
+    ISIn_all,ISInp1_all,trialnormtime_all,'UniformOutput',false);
+outtrialreturnmaps = cellfun(@(X) X./sum(X(:)),outtrialreturnmaps,'UniformOutput',false);
+outtrialreturnmaps = cat(3,outtrialreturnmaps{:});
+
+intrialreturnmaps = cellfun(@(X,Y,Z) hist3([log10(X(Z<1&Z>0)) log10(Y(Z<1&Z>0))],{ISIStats.ISIhist.logbins,ISIStats.ISIhist.logbins}),...
+    ISIn_all,ISInp1_all,trialnormtime_all,'UniformOutput',false);
+intrialreturnmaps = cellfun(@(X) X./sum(X(:)),intrialreturnmaps,'UniformOutput',false);
+intrialreturnmaps = cat(3,intrialreturnmaps{:});
+
+
+for tt = 1:length(cellclasses)
+    meanouttrialreturn.(cellclasses{tt}) = nanmean(outtrialreturnmaps(:,:,CellClass.(cellclasses{tt})),3);
+    meanintrialreturn.(cellclasses{tt}) = nanmean(intrialreturnmaps(:,:,CellClass.(cellclasses{tt})),3);
+end
+
+%%
+histcolors = flipud(gray);
+figure
+for tt = 1:length(cellclasses)
+    subplot(3,4,0+tt)
+    colormap(gca,histcolors)
+        imagesc(ISIStats.ISIhist.logbins,ISIStats.ISIhist.logbins,...
+            meanouttrialreturn.(cellclasses{tt})')
+        LogScale('xy',10)
+        %xlabel('ISI_n');ylabel('ISI_n+1')
+        axis xy
+        caxis([0 5e-3])
+        title(cellclasses{tt})
+        %colorbar
+        
+        
+    subplot(3,4,8+tt)
+    colormap(gca,histcolors)
+        imagesc(ISIStats.ISIhist.logbins,ISIStats.ISIhist.logbins,...
+            meanintrialreturn.(cellclasses{tt})')
+        LogScale('xy',10)
+        %xlabel('Preceeding ISI');ylabel('Next ISI')
+        axis xy
+        caxis([0 5e-3])
+        
+end
 %%
 figure
 subplot(2,1,1)
@@ -295,6 +400,8 @@ subplot(4,2,4)
     errorshade(trialdata.linearizedposition,grouptrialdata.PSS.mean,...
         grouptrialdata.PSS.std,grouptrialdata.PSS.std,...
         'k','scalar')
+    axis tight
+    ylabel('PSS')
     plot([0 0],get(gca,'ylim'),'k')
 plot([1 1],get(gca,'ylim'),'k')
     set(gca,'XTick',[-1 0 1 2]);
