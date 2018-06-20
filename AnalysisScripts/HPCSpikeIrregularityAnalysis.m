@@ -303,7 +303,7 @@ subplot(2,1,2)
 %%
 randtrial = randsample(length(linear.events.trialIntervals),1);
 %randtrial = bb;
-timewin = sortedtrialtimes(randtrial,:) + 5.*[-1 1];
+timewin = sortedtrialtimes(randtrial,:) + 4.*[-1 1];
 
 figure
 
