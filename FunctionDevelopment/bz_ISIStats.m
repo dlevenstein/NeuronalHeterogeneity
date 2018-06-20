@@ -29,7 +29,7 @@ function [ ISIstats ] = bz_ISIStats( spikes,varargin )
 %
 %DLevenstein 2018
 %% Parse the inputs
-defaultstates.ALLtime = [-Inf Inf];
+defaultstates.ALL = [-Inf Inf];
 
 % parse args
 p = inputParser;
@@ -158,7 +158,11 @@ end
 
 %Make the cell-type specific sortings
 if ~isempty(cellclass)
-    classnames = unique(cellclass);
+    %Check for empty cell class entries
+    noclass = cellfun(@isempty,cellclass);
+    numclassycells = sum(~noclass);
+    %cellclass(noclass)={'none'};
+    classnames = unique(cellclass(~noclass));
     numclasses = length(classnames);
     for cl = 1:numclasses
         inclasscells{cl} = strcmp(classnames{cl},cellclass);
@@ -177,6 +181,7 @@ if ~isempty(cellclass)
     end  
 else
     numclasses = 1; 
+    numclassycells = numcells;
     inclasscells{1} = true(1,numcells);
     sorts.(statenames{ss}).ratebyclass = sorts.(statenames{ss}).rate;
     sorts.(statenames{ss}).ratebyclass = sorts.(statenames{ss}).rate;
@@ -234,10 +239,10 @@ figure
         box off
 
     subplot(2,3,4)
-        imagesc((ISIhist.logbins),[1 numcells],...
+        imagesc((ISIhist.logbins),[1 numclassycells],...
             ISIhist.(statenames{ss}).log(sorts.(statenames{ss}).ratebyclass,:))
         hold on
-        plot(log10(1./(summstats.(statenames{ss}).meanrate(sorts.(statenames{ss}).ratebyclass))),[1:numcells],'k.','LineWidth',2)
+        plot(log10(1./(summstats.(statenames{ss}).meanrate(sorts.(statenames{ss}).ratebyclass))),[1:numclassycells],'k.','LineWidth',2)
         plot(ISIhist.logbins([1 end]),sum(inclasscells{1}).*[1 1]+0.5,'r')
         LogScale('x',10)
         xlabel('ISI (s)')
@@ -250,10 +255,10 @@ figure
         title('ISI Distribution (Log Scale)')
         
     subplot(2,3,5)
-        imagesc((ISIhist.logbins),[1 numcells],...
+        imagesc((ISIhist.logbins),[1 numclassycells],...
             ISIhist.(statenames{ss}).log(sorts.(statenames{ss}).ISICVbyclass,:))
         hold on
-        plot(log10(1./(summstats.(statenames{ss}).meanrate(sorts.(statenames{ss}).ISICVbyclass))),[1:numcells],'k.','LineWidth',2)
+        plot(log10(1./(summstats.(statenames{ss}).meanrate(sorts.(statenames{ss}).ISICVbyclass))),[1:numclassycells],'k.','LineWidth',2)
         plot(ISIhist.logbins([1 end]),sum(inclasscells{1}).*[1 1]+0.5,'r')
         LogScale('x',10)
         xlabel('ISI (s)')
@@ -266,10 +271,10 @@ figure
         title('ISI Distribution (Log Scale)')
         
     subplot(2,3,6)
-        imagesc((ISIhist.logbins),[1 numcells],...
+        imagesc((ISIhist.logbins),[1 numclassycells],...
             ISIhist.(statenames{ss}).log(sorts.(statenames{ss}).CV2byclass,:))
         hold on
-        plot(log10(1./(summstats.(statenames{ss}).meanrate(sorts.(statenames{ss}).CV2byclass))),[1:numcells],'k.','LineWidth',2)
+        plot(log10(1./(summstats.(statenames{ss}).meanrate(sorts.(statenames{ss}).CV2byclass))),[1:numclassycells],'k.','LineWidth',2)
         plot(ISIhist.logbins([1 end]),sum(inclasscells{1}).*[1 1]+0.5,'r')
         LogScale('x',10)
         xlabel('ISI (s)')
