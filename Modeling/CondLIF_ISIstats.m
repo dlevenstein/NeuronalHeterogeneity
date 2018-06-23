@@ -12,8 +12,8 @@
 %% Add the approprate folders to the path
 %Path of the SOSpikingModel repository
 
-repopath = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity'; 
-%repopath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity'; 
+%repopath = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity'; 
+repopath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity'; 
 addpath(genpath(repopath))
 
 figfolder = [repopath,'/Modeling/Figures/EIBalance'];
@@ -55,11 +55,11 @@ R_is = logspace(2,5,40);
 
 for ee = 1:length(R_es)
     ee
-    rates.R_e = R_es(ee);
-    for ii = 1:length(R_is)
+    parfor ii = 1:length(R_is)
         ii
-        rates.R_i = R_is(ii);
-    [ spikestats(ee,ii) ] = NoisyInputSims( cellparams,synparams,rates,'showfig',false );
+
+    [ spikestats(ee,ii) ] = NoisyInputSims( cellparams,synparams,...
+        [R_es(ee) R_is(ii) 0],'showfig',false );
     
     spkrate(ee,ii) = spikestats(ee,ii).rate;
     ISICV(ee,ii) = spikestats(ee,ii).ISI_CV;
@@ -67,7 +67,7 @@ for ee = 1:length(R_es)
 end
     
 if SAVESIM
-    save([savefolder,'/isistats.mat']);
+    save([savefolder,'/isistats4.mat']);
 end
     
 %%
