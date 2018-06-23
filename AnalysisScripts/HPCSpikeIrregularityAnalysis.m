@@ -529,8 +529,11 @@ figure
     plot(get(gca,'xlim'),[0 0],'k')
     title('ALL')
     ylim([-0.3 0.3])
+    xlim([-2 2])
+    LogScale('x',10)
     xlabel('Mean Rate');ylabel('CV2-PSS Corr')
     
+    NiceSave('CellCV2Corr',figfolder,baseName)
     
     
     %%
