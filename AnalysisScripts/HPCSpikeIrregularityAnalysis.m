@@ -18,6 +18,7 @@ spikes = bz_GetSpikes('basepath',basePath);
 SleepState = bz_LoadStates(basePath,'SleepState');
 %%
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
+Tuning = bz_LoadCellinfo(basePath,'Tuning');
 %CellClass = CellClass.CellClass;
 %%
 CellClass.label = cell(size(CellClass.Pyr));
@@ -48,8 +49,12 @@ end
 
 %% Calculate the spike stats
 [ ISIStats ] = bz_ISIStats( spikes,'cellclass',CellClass.label,'showfig',true,...
-    'ints',SleepState.ints);
+    'ints',SleepState.ints,'figfolder',figfolder,'basePath',basePath);
+%ISIStats = bz_LoadCellinfo(baseName,'ISIStats');
 
+%%
+figure
+plot(ISISt
 %% Mean binned CV2...
 clear CV2mat
 CV2mat.winsize = binsize;
