@@ -53,8 +53,7 @@ end
 %ISIStats = bz_LoadCellinfo(baseName,'ISIStats');
 
 %%
-figure
-plot(ISISt
+
 %% Mean binned CV2...
 clear CV2mat
 CV2mat.winsize = binsize;
@@ -261,8 +260,8 @@ hold on
 for tt = 1:length(cellclasses)
     plot(bincenters,trialCV2bypop.(cellclasses{tt}).mean,'o-','color',classcolors{tt})
     hold on
-    errorshade(bincenters,trialCV2bypop.(cellclasses{tt}).mean,...
-        trialCV2bypop.(cellclasses{tt}).std,trialCV2bypop.(cellclasses{tt}).std,classcolors{tt},'scalar')
+    %errorshade(bincenters,trialCV2bypop.(cellclasses{tt}).mean,...
+    %    trialCV2bypop.(cellclasses{tt}).std,trialCV2bypop.(cellclasses{tt}).std,classcolors{tt},'scalar')
 end
 ylim([0.8 1.4])
 xlabel('t - relative to Trial');ylabel('<CV2>')
@@ -454,21 +453,21 @@ CV2mat.PSS = interp1(specslope.timestamps,specslope.data,CV2mat.timestamps);
 
 %%
 figure
-subplot(2,2,1)
-plot(CV2mat.PSS,CV2mat.Int,'r.')
+subplot(3,3,1)
+ScatterWithLinFit(CV2mat.PSS,CV2mat.Int,'color','r','markersize',2)
 xlabel('PSS');ylabel('Pop. <CV2>')
 
-subplot(2,2,2)
-plot(CV2mat.PSS,CV2mat.Pyr,'k.')
+subplot(3,3,2)
+ScatterWithLinFit(CV2mat.PSS,CV2mat.Pyr,'color','k','markersize',2)
 xlabel('PSS');ylabel('Pop. <CV2>')
 
-subplot(2,2,3)
-plot(log2(CV2mat.rate.Int),CV2mat.Int,'r.')
+subplot(3,3,3)
+plot(log2(CV2mat.rate.Int),CV2mat.Int,'r.','markersize',2)
 hold on
-plot(log2(CV2mat.rate.Pyr),(CV2mat.Pyr),'k.')
+plot(log2(CV2mat.rate.Pyr),(CV2mat.Pyr),'k.','markersize',2)
 LogScale('x',2)
 xlabel('Pop. Rate (spk/cell/s)');ylabel('Pop. <CV2>')
-
+NiceSave('PopCV2and PSS',figfolder,baseName)
 %%
 ISIStats.allspikes.PSS = cellfun(@(X) interp1(specslope.timestamps,specslope.data,X,'nearest'),ISIStats.allspikes.times,'UniformOutput',false);
 
