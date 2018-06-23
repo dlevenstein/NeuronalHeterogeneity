@@ -156,8 +156,8 @@ timewin = TimeStamps([1 end]);
 timewin = [0 T];
 if SHOWFIG
     figure;
-    isifig = subplot(2,1,1);
-    plot(TimeStamps,v,'color',0.5.*[1 1 1])
+    isifig = subplot(4,2,1);
+    plot(TimeStamps,v(:,1:10:end),'color',0.5.*[1 1 1])
     hold on
     plot(TimeStamps,v(:,1),'color',0.2.*[1 1 1])
     plot(TimeStamps,meanV,'k')
@@ -169,28 +169,30 @@ if SHOWFIG
         'BaseValue',v_th,'facecolor','k');
     %b(1).BaseValue = v_th;
     box off
+    axis tight
+   % ylim([-60 -40])
     xlabel('t (ms)')
-    ylabel('V')
+    ylabel('V (mV)')
     xlim(timewin)
 
-    subplot(4,1,3)
+    subplot(8,2,5)
     plot(TimeStamps,g_e(:,1),'g')
     hold on
     plot(TimeStamps,g_i(:,1),'r')
-    xlabel('t (s)')
+    xlabel('t (ms)')
     ylabel('g (nS)')
     box off
     xlim(timewin)
 
-    subplot(4,1,4)
+    subplot(8,2,7)
     plot(TimeStamps,(g_i(:,1)+g_e(:,1)+cellparams.g_L)./cellparams.g_L,'k')
-    xlabel('t (s)')
+    xlabel('t (ms)')
     ylabel('GAMMA (g_L^-^1)')
     box off
     xlim(timewin)
     
     if figfolder
-       % NiceSave('SimISI',figfolder,'CondLIF')
+       NiceSave('SimISI',figfolder,'CondLIF')
     end
 end
 

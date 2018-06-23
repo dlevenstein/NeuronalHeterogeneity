@@ -98,21 +98,7 @@ g_i = synparams.w_i.*synparams.tau_si.*synparams.K_i.*R_is./1000;
 [G_e,G_i] = meshgrid(g_e,g_i);
 gamma = 1+(1/cellparams.g_L).*(G_e+G_i);
 
-%%
-figure
-subplot(2,2,1)
-imagesc(log10(R_es),log10(R_is),log10(gamma)')
-hold on
-        plot(log10(R_es),log10(Ri_Vinf),'k--','linewidth',0.5)
-        plot(log10(R_es),log10(Ri_Vinf(3,:)),'k','linewidth',1)
-LogScale('xy',10)
-xlim([2 5]);ylim([2 5])
-axis xy
-colorbar
-caxis([0 2.5])
-xlabel('K_eR_e (Hz)');ylabel('K_iR_i (Hz)')
 
-NiceSave('VinfGamma',figfolder,'CondLIF')
 
 
 %% Simulations in Vinf/Gamma space
@@ -124,13 +110,13 @@ Gammas = logspace(0,2,30);
 [ erate,irate ] = CondLIFReparm( V,G,cellparams,synparams );
 for vv = 1:length(Vinfs)
     vv
-    parfor gg = 1:length(Gammas)
+    parfor ggg = 1:length(Gammas)
         %gg
-    [ spikestats_VG(vv,gg) ] = NoisyInputSims( cellparams,synparams,...
-        [erate(vv,gg) irate(vv,gg) 0],'showfig',false );
+    [ spikestats_VG(vv,ggg) ] = NoisyInputSims( cellparams,synparams,...
+        [erate(vv,ggg) irate(vv,ggg) 0],'showfig',false );
     
-    spkrate_VG(vv,gg) = spikestats_VG(vv,gg).rate;
-    ISICV_VG(vv,gg) = spikestats_VG(vv,gg).ISI_CV;
+    spkrate_VG(vv,ggg) = spikestats_VG(vv,ggg).rate;
+    ISICV_VG(vv,ggg) = spikestats_VG(vv,ggg).ISI_CV;
     end
 end
 %%
@@ -151,19 +137,19 @@ rates.R_i = subthreshex_lowG.R_i;
 [subthreshex_lowG.spikestats,subthreshex_lowG.fig] = NoisyInputSims( cellparams,synparams,rates,...
     'showfig',true,'figfolder',figfolder ); 
 %%
-subthreshex_highG.Vinf = -50;
-%subthreshex_highG.Gammma = 30;
-subthreshex_highG.Gammma = 40;
-[ subthreshex_highG.R_e,subthreshex_highG.R_i ] = ...
-    CondLIFReparm( subthreshex_highG.Vinf,subthreshex_highG.Gammma,cellparams,synparams );
-rates.R_e = subthreshex_highG.R_e;
-rates.R_i = subthreshex_highG.R_i;
-[subthreshex_highG.spikestats,subthreshex_highG.fig] = NoisyInputSims( cellparams,synparams,rates,...
-    'showfig',true,'figfolder',figfolder ); 
+% subthreshex_highG.Vinf = -50;
+% %subthreshex_highG.Gammma = 30;
+% subthreshex_highG.Gammma = 30;
+% [ subthreshex_highG.R_e,subthreshex_highG.R_i ] = ...
+%     CondLIFReparm( subthreshex_highG.Vinf,subthreshex_highG.Gammma,cellparams,synparams );
+% rates.R_e = subthreshex_highG.R_e;
+% rates.R_i = subthreshex_highG.R_i;
+% [subthreshex_highG.spikestats,subthreshex_highG.fig] = NoisyInputSims( cellparams,synparams,rates,...
+%     'showfig',true,'figfolder',figfolder ); 
 
 %%
 supthreshex.Vinf = -40;
-supthreshex.Gammma = 3;
+supthreshex.Gammma = 5;
 [ supthreshex.R_e,supthreshex.R_i ] = ...
     CondLIFReparm( supthreshex.Vinf,supthreshex.Gammma,cellparams,synparams );
 rates.R_e = supthreshex.R_e;
@@ -174,133 +160,186 @@ rates.R_i = supthreshex.R_i;
 %%
 logISIbins = linspace(0,3.5,25);
 supthreshex.ISIhist = hist(log10(supthreshex.spikestats.ISIs),logISIbins);
-subthreshex_highG.ISIhist = hist(log10(subthreshex_highG.spikestats.ISIs),logISIbins);
+%subthreshex_highG.ISIhist = hist(log10(subthreshex_highG.spikestats.ISIs),logISIbins);
 subthreshex_lowG.ISIhist = hist(log10(subthreshex_lowG.spikestats.ISIs),logISIbins);
 
 supthreshex.returnISIhist = hist3([log10(supthreshex.spikestats.ISIs(1:end-1))',...
     log10(supthreshex.spikestats.ISIs(2:end))'],...
     {logISIbins,logISIbins});
-subthreshex_highG.returnISIhist = hist3([log10(subthreshex_highG.spikestats.ISIs(1:end-1))',...
-    log10(subthreshex_highG.spikestats.ISIs(2:end))'],...
-    {logISIbins,logISIbins});
+% subthreshex_highG.returnISIhist = hist3([log10(subthreshex_highG.spikestats.ISIs(1:end-1))',...
+%     log10(subthreshex_highG.spikestats.ISIs(2:end))'],...
+%     {logISIbins,logISIbins});
 subthreshex_lowG.returnISIhist = hist3([log10(subthreshex_lowG.spikestats.ISIs(1:end-1))',...
     log10(subthreshex_lowG.spikestats.ISIs(2:end))'],...
     {logISIbins,logISIbins});
 %%
 figure
-subplot(4,3,4)
-    bar(logISIbins,supthreshex.ISIhist)
-    LogScale('x',10)
+histmap = flipud(colormap(gray));
+colormap(gcf,histmap)
+subplot(6,4,1)
+    bar(logISIbins,supthreshex.ISIhist,'facecolor','k')
+    
     box off
     xlim(logISIbins([1 end]))
+    LogScale('x',10)
     xlabel('ISI (ms)')
-subplot(4,4,7)
+subplot(6,6,4)
     imagesc(logISIbins,logISIbins,supthreshex.returnISIhist)
     axis xy
     LogScale('xy',10)
     xlabel('ISI_n');ylabel('ISI_n+1')
     
-subplot(4,3,7)
-    bar(logISIbins,subthreshex_highG.ISIhist)
-    LogScale('x',10)
-    box off
-    xlim(logISIbins([1 end]))
-    xlabel('ISI (ms)')
-subplot(4,4,11)
-    imagesc(logISIbins,logISIbins,subthreshex_highG.returnISIhist)
-    axis xy
-    LogScale('xy',10)
-    xlabel('ISI_n');ylabel('ISI_n+1')
+% subplot(4,3,7)
+%     bar(logISIbins,subthreshex_highG.ISIhist)
+%     LogScale('x',10)
+%     box off
+%     xlim(logISIbins([1 end]))
+%     xlabel('ISI (ms)')
+% subplot(4,4,11)
+%     imagesc(logISIbins,logISIbins,subthreshex_highG.returnISIhist)
+%     axis xy
+%     LogScale('xy',10)
+%     xlabel('ISI_n');ylabel('ISI_n+1')
     
-subplot(4,3,10)
-    bar(logISIbins,subthreshex_lowG.ISIhist)
-    LogScale('x',10)
+subplot(6,4,9)
+    bar(logISIbins,subthreshex_lowG.ISIhist,'facecolor','k')
+    
     box off
     xlim(logISIbins([1 end]))
+    LogScale('x',10)
     xlabel('ISI (ms)')
-subplot(4,4,15)
+subplot(6,6,16)
     imagesc(logISIbins,logISIbins,subthreshex_lowG.returnISIhist)
     axis xy
     LogScale('xy',10)
     xlabel('ISI_n');ylabel('ISI_n+1')
 
-%NiceSave('ExSpikeStats',figfolder,'CondLIF')
-%%
+NiceSave('ExSpikeStats',figfolder,'CondLIF')
+%% Figure
 spklim = 900;
 figure
-    subplot(2,2,1)
+    subplot(3,3,1)
         h = imagesc(log10(R_es),log10(R_is),log10(spkrate'.*1000));
         hold on
         set(h, 'AlphaData', (numspks>spklim)') 
         plot(log10(R_es),log10(Ri_Vinf),'k--','linewidth',0.5)
         plot(log10(R_es),log10(Ri_Vinf(3,:)),'k','linewidth',1)
-        plot(log10(subthreshex_highG.R_e),log10(subthreshex_highG.R_i),'r*')
+        %plot(log10(subthreshex_highG.R_e),log10(subthreshex_highG.R_i),'r*')
         plot(log10(subthreshex_lowG.R_e),log10(subthreshex_lowG.R_i),'r*')
         plot(log10(supthreshex.R_e),log10(supthreshex.R_i),'r*')
         colorbar
         axis xy
+        caxis([-1 3.5])
         LogScale('xy',10)
         LogScale('c',10)
         title('Mean Rate');
-        %xlim([2 5]);ylim([2 5])
+        xlim([2 4.5]);ylim([2 4.5])
         xlabel('K_eR_e (Hz)');ylabel('K_iR_i (Hz)')
-    subplot(2,2,2)
+    subplot(3,3,2)
         h = imagesc(log10(R_es),log10(R_is),ISICV');
         hold on
         set(h, 'AlphaData', (numspks>spklim)') 
         plot(log10(R_es),log10(Ri_Vinf),'k--','linewidth',0.5)
         plot(log10(R_es),log10(Ri_Vinf(3,:)),'k','linewidth',1)
-        plot(log10(subthreshex_highG.R_e),log10(subthreshex_highG.R_i),'r*')
+        %plot(log10(subthreshex_highG.R_e),log10(subthreshex_highG.R_i),'r*')
         plot(log10(subthreshex_lowG.R_e),log10(subthreshex_lowG.R_i),'r*')
         plot(log10(supthreshex.R_e),log10(supthreshex.R_i),'r*')
         colorbar
-        caxis([0 1.2])
-        %xlim([2 5]);ylim([2 5])
+        caxis([0.5 1.5])
+        xlim([2 4.5]);ylim([2 4.5])
         axis xy
         LogScale('xy',10)
         title('CV_I_S_I');
         xlabel('K_eR_e (Hz)');ylabel('K_iR_i (Hz)')
         
 
-    subplot(2,2,3)
+    subplot(3,3,7)
         h = imagesc(Vinfs,log10(Gammas),log10(spkrate_VG.*1000));
         set(h, 'AlphaData', (numspks_VG>spklim)) 
         hold on
         plot(cellparams.v_th.*[1 1],log10(Gammas([1 end])),'k','linewidth',1)
-        plot((subthreshex_highG.Vinf),log10(subthreshex_highG.Gammma),'r*')
+        %plot((subthreshex_highG.Vinf),log10(subthreshex_highG.Gammma),'r*')
         plot((subthreshex_lowG.Vinf),log10(subthreshex_lowG.Gammma),'r*')
         plot((supthreshex.Vinf),log10(supthreshex.Gammma),'r*')
         axis xy
         colorbar
         title('Mean Rate');
+        caxis([-1 3.5])
         LogScale('y',10)
         LogScale('c',10)
-        %xlim([
-        xlabel('V_i_n_f');ylabel('Gamma')
-    subplot(2,2,4)
+        ylim([0 2])
+        xlabel('V_i_n_f (mV)');ylabel('Gamma')
+    subplot(3,3,8)
         h = imagesc(Vinfs,log10(Gammas),(ISICV_VG));
         set(h, 'AlphaData', (numspks_VG>spklim)) 
         hold on
         plot(cellparams.v_th.*[1 1],log10(Gammas([1 end])),'k','linewidth',1)
-        plot((subthreshex_highG.Vinf),log10(subthreshex_highG.Gammma),'r*')
+       %plot((subthreshex_highG.Vinf),log10(subthreshex_highG.Gammma),'r*')
         plot((subthreshex_lowG.Vinf),log10(subthreshex_lowG.Gammma),'r*')
         plot((supthreshex.Vinf),log10(supthreshex.Gammma),'r*')
         axis xy
         colorbar
-        caxis([0 1.25])
+        caxis([0.5 1.5])
+        ylim([0 2])
         title('CV_I_S_I');
         LogScale('y',10)
-        xlabel('V_i_n_f');ylabel('Gamma')
+        xlabel('V_i_n_f (mV)');ylabel('Gamma')
 
 NiceSave('ISIbyInputRates',figfolder,'CondLIF')
 
+%% Figure: converting Vinf<->Gamma
+irateplot = irate;irateplot(irateplot<0)=nan;
+%iheatmap = 
+
+figure
+subplot(3,3,1)
+    imagesc(log10(R_es),log10(R_is),log10(gamma)')
+    hold on
+            plot(log10(R_es),log10(Ri_Vinf),'k--','linewidth',0.5)
+            plot(log10(R_es),log10(Ri_Vinf(3,:)),'k','linewidth',1)
+    LogScale('xy',10)
+    xlim([2 4.5]);ylim([2 4.5])
+    axis xy
+    colorbar
+    caxis([0 2])
+    title('Gamma')
+    LogScale('c',10)
+    xlabel('K_eR_e (Hz)');ylabel('K_iR_i (Hz)')
+    
+subplot(4,4,3)
+    h = imagesc(Vinfs,log10(Gammas),log10(erate));
+        set(h, 'AlphaData', (irate>0)) 
+    axis xy
+    colorbar
+    caxis([1 5])
+    LogScale('c',10)
+    LogScale('y',10)
+    
+    title('E Rate')
+    xlabel('V_i_n_f');ylabel('Gamma')
+    
+subplot(4,4,4)
+    h = imagesc(Vinfs,log10(Gammas),log10(irateplot));
+    set(h, 'AlphaData', (irate>0)) 
+    axis xy
+    colorbar
+    caxis([1 5])
+    LogScale('c',10)
+    title('I Rate')
+    LogScale('y',10)
+    
+    xlabel('V_i_n_f');ylabel('Gamma')
+
+NiceSave('VinfGamma',figfolder,'CondLIF')
         
+
         %%
 
 pickgamma = [5 15 20];
 
 numbins = 50;
-ISIhist.logISIbins = linspace(-4,2,numbins);
+clear ISIhist
+ISIhist.logISIbins = linspace(-3.5,1.5,numbins);
 ISIhist.FI = zeros(numbins,length(Vinfs),length(pickgamma));
 for gg = 1:length(pickgamma)
     for vv = 1:length(Vinfs)
@@ -308,41 +347,250 @@ for gg = 1:length(pickgamma)
     end
 end
 
+pickRi = [5 15 20];
+
+numbins = 50;
+ISIhist.FI_EI = zeros(numbins,length(Vinfs),length(pickRi));
+for ii = 1:length(pickRi)
+    for ee = 1:length(R_es)
+        ISIhist.FI_EI(:,ee,ii) = hist(log10(spikestats(ee,pickRi(ii)).ISIs./1000),ISIhist.logISIbins);
+    end
+end
+
 
 %%
+plotspkerate_VG = spkrate_VG;
+plotspkerate_VG(numspks_VG<spklim) = nan;
+
+plotISICV_VG = ISICV_VG;
+plotISICV_VG(numspks_VG<spklim) = nan;
+
+plotspkerate = spkrate;
+plotspkerate(numspks<spklim) = nan;
+
+plotISICV = ISICV;
+plotISICV(numspks<spklim) = nan;
+
+
 figure
-    subplot(4,2,1)
-        plot(Vinfs,log10(spkrate_VG(pickgamma,:).*1000),'linewidth',2)
-        legend({num2str(Gammas(pickgamma(1))),num2str(Gammas(pickgamma(2))),num2str(Gammas(pickgamma(3)))},'location','southeast')
+    subplot(6,3,1)
+        plot(Vinfs,log10(plotspkerate_VG(pickgamma,:).*1000),'linewidth',2)
+        %legend({num2str(Gammas(pickgamma(1))),num2str(Gammas(pickgamma(2))),num2str(Gammas(pickgamma(3)))},'location','southeast')
         LogScale('y',10)
+        ylim([-1 3.5]);xlim(Vinfs([1 end])) 
         xlabel('V_I_n_f');ylabel('Rate (Hz)')
-        axis tight
+        ylim([-1 3.5]);xlim(Vinfs([1 end])) 
         box off
         
-    subplot(4,2,2)
-        plot(Vinfs,(spkrate_VG(pickgamma,:).*1000),'linewidth',2)
-        legend({num2str(Gammas(pickgamma(1))),num2str(Gammas(pickgamma(2))),num2str(Gammas(pickgamma(3)))},'location','northwest')
+    subplot(6,3,4)
+        plot(Vinfs,(plotspkerate_VG(pickgamma,:).*1000),'linewidth',2)
+        %legend({num2str(Gammas(pickgamma(1))),num2str(Gammas(pickgamma(2))),num2str(Gammas(pickgamma(3)))},'location','northwest')
         xlabel('V_I_n_f');ylabel('Rate (Hz)')
-        axis tight
         box off
-        ylim([0 500])
-        NiceSave('FICurve',figfolder,'CondLIF')
+        ylim([0 1500]);xlim(Vinfs([1 end])) 
         
-    subplot(4,2,3)
-        plot(Vinfs,(ISICV_VG(pickgamma,:)),'linewidth',2)
-        legend({num2str(Gammas(pickgamma(1))),num2str(Gammas(pickgamma(2))),num2str(Gammas(pickgamma(3)))},'location','southeast')
+    subplot(6,3,5)
+        plot(Vinfs,(plotspkerate_VG(pickgamma,:).*1000),'linewidth',2)
+        %legend({num2str(Gammas(pickgamma(1))),num2str(Gammas(pickgamma(2))),num2str(Gammas(pickgamma(3)))},'location','northwest')
+        xlabel('V_I_n_f');ylabel('Rate (Hz)')
+        box off
+        ylim([0 30]);xlim([-55 -45]) 
+                legend({num2str(round(Gammas(pickgamma(1)))),...
+            num2str(round(Gammas(pickgamma(2)))),num2str(round(Gammas(pickgamma(3))))},'location','eastoutside')
+        
+    subplot(6,3,7)
+        plot(Vinfs,(plotISICV_VG(pickgamma,:)),'linewidth',2)
         %LogScale('y',10)
         xlabel('V_I_n_f');ylabel('CV_I_S_I')
-        axis tight
+        xlim(Vinfs([1 end])) ;ylim([0 1.5])
         box off
         
         for gg = 1:length(pickgamma)
-    subplot(4,2,2*gg+2)
+    subplot(6,3,3*gg+7)
     imagesc(Vinfs,ISIhist.logISIbins,ISIhist.FI(:,:,gg))
     LogScale('y',10)
     axis xy
         end
         
+        
+    subplot(6,3,3)
+        plot(log10(R_es),log10(plotspkerate(:,pickRi).*1000),'linewidth',2)
+        %legend({num2str(R_is(pickRi(1))),num2str(R_is(pickRi(2))),num2str(R_is(pickRi(3)))},'location','southeast')
+        axis tight
+        xlim([2.7 4.5])
+        LogScale('xy',10)
+        xlabel('R_e');ylabel('Rate (Hz)')
+        %axis tight
+        box off
+        
+    subplot(6,3,6)
+        plot(log10(R_es),(plotspkerate(:,pickRi).*1000),'linewidth',2)
+        %legend({num2str(R_is(pickRi(1))),num2str(R_is(pickRi(2))),num2str(R_is(pickRi(3)))},'location','northwest')
+        xlabel('R_e');ylabel('Rate (Hz)')
+        %axis tight
+        
+        axis tight
+        xlim([2.7 4.5])
+        LogScale('x',10)
+        box off
+        ylim([0 1000])
+        %NiceSave('FICurve',figfolder,'CondLIF')
+        
+    subplot(6,3,9)
+        plot(log10(R_es),(plotISICV(:,pickRi)),'linewidth',2)
+        %legend({num2str(round(R_is(pickRi(1)))),num2str(round(R_is(pickRi(2)))),num2str(round(R_is(pickRi(3))))},'location','eastoutside')
+        axis tight
+        xlim([2.7 4.5])
+        LogScale('x',10)
+        xlabel('R_e');ylabel('CV_I_S_I')
+        %
+        box off
+        
+        for gg = 1:length(pickRi)
+    subplot(6,3,3*gg+9)
+    imagesc(Vinfs,ISIhist.logISIbins,ISIhist.FI_EI(:,:,gg))
+    LogScale('y',10)
+    axis xy
+        end
+        
+NiceSave('FICurve_VG',figfolder,'CondLIF')
+
+%%
+figure
+
+NiceSave('FICurve_EI',figfolder,'CondLIF')
+
+
+%% BELOW FOR LATER! MOVE TO OTHER SCRIPT
+%% Fit exponential to the datas. 
+
+expfittype = fittype( 'A.*k.^(V-V0)','dependent',{'R'},'independent',{'V'},'coefficients',{'A','k','V0'})
+%%
+options = fitoptions(expfittype);
+options.StartPoint = [1,1,-50];
+options.Lower = [0 1 -70];
+options.Upper = [10 10 -30];
+options.MaxIter = 1e15;
+options.MaxFunEvals = 1e15;
+expfit = fit(Vinfs',(spkrate_VG(pickgamma(2),:).*1000)',expfittype,options)
+
+%%
+PLfittype = fittype( '(exp(k)).*heaviside(V-V0).*(V-V0).^n','dependent',{'R'},'independent',{'V'},'coefficients',{'n','k','V0'})
+%%
+options = fitoptions(PLfittype);
+options.StartPoint = [1,1,-50];
+options.Lower = [1 -6 -70];
+options.Upper = [10 1 -30];
+options.MaxIter = 1e15;
+options.MaxFunEvals = 1e15;
+
+whichgamma = 1;
+vmax = -43;
+%figure
+for gg = 2:length(Gammas)
+PLfit = fit(Vinfs(Vinfs<vmax & ~isnan(spkrate_VG(gg,:)))',(spkrate_VG(gg,(Vinfs<vmax& ~isnan(spkrate_VG(gg,:)))).*1000)',PLfittype,options);
+V0_eachfit(gg) = PLfit.V0;
+n(gg) = PLfit.n;
+k(gg) = PLfit.k;
+
+%subplot(5,6,gg)
+%plot(PLfit,Vinfs,(spkrate_VG(gg,:).*1000))
+end
+
+%%
+figure
+subplot(2,2,1)
+plot(log(Gammas),V0_eachfit,'k.')
+xlabel('G');ylabel('V0')
+%LogScale('x',10)
+subplot(2,2,2)
+plot(log(Gammas),n,'k.')
+%LogScale('x',10)
+xlabel('ln(G)');ylabel('n')
+subplot(2,2,3)
+plot(log(Gammas),(k),'k.')
+%LogScale('x',10)
+xlabel('ln(G)');ylabel('ln(k)')
+
+%%
+linPLfittype = fittype( 'exp(mk.*log(gamma)+bk).*heaviside(V-V0).*(V-V0).^(mn.*log(gamma)+bn)',...
+    'dependent',{'R'},'independent',{'V','gamma'},'coefficients',{'mn','bn','mk','bk','V0'});
+%%
+
+options = fitoptions(linPLfittype);
+options.StartPoint = [0.5,1,-1,0,-50];
+options.Upper = [3 3  0  2 -30];
+options.Lower = [0 0 -5 -4 -70];
+options.MaxIter = 1e15;
+options.MaxFunEvals = 1e15;
+%% Reshape everything
+%condition: V<-43, gamma<100 ~isnan(rate)
+V_fit = V(:);
+G_fit = G(:);
+rate_fit = spkrate_VG(:).*1000;
+
+conditions = V_fit<=-44 & G_fit<50 &G_fit>1 & ~isnan(rate_fit);
+
+V_fit = V_fit(conditions);
+G_fit = G_fit(conditions);
+rate_fit = rate_fit(conditions);
+
+%%
+linPLfit = fit([V_fit G_fit],rate_fit,linPLfittype,options)
+%%
+figure
+plot(linPLfit,[V_fit G_fit],rate_fit)
+
+%%
+figure
+mn = linPLfit.mn;
+bn = linPLfit.bn;
+mk = linPLfit.mk;
+bk= linPLfit.bk;
+V0= linPLfit.V0;
+subplot(2,2,4)
+    imagesc(Vinfs,log10(Gammas),log10(exp(mk.*log(G)+bk).*heaviside(V-V0).*(V-V0).^(mn.*log(G)+bn)))
+    axis xy
+    colorbar
+    caxis([-1 5])
+    ylim([0 2])
+    LogScale('y',10)
+    xlabel('V_I_n_f');ylabel('Gamma')
+
+subplot(2,2,3)
+    imagesc(Vinfs,log10(Gammas),log10(spkrate_VG.*1000))
+    axis xy
+    colorbar
+    caxis([-1 5])
+    ylim([0 2])
+        LogScale('y',10)
+    xlabel('V_I_n_f');ylabel('Gamma')    
+subplot(3,3,1)
+    plot(log(Gammas),V0_eachfit,'k.')
+    hold on
+    plot(log(Gammas),V0.*ones(size(Gammas)),'k')
+    xlabel('G');ylabel('V0')
+    %LogScale('x',10)
+    xlim([0 log(100)])
+subplot(3,3,2)
+    plot(log(Gammas),n,'k.')
+    hold on
+    plot(log(Gammas),mn.*log(Gammas)+bn,'k')
+    %LogScale('x',10)
+    xlabel('ln(G)');ylabel('n')
+    xlim([0 log(100)])
+subplot(3,3,3)
+    plot(log(Gammas),(k),'k.')
+    hold on
+    plot(log(Gammas),mk.*log(Gammas)+bk,'k')
+    %LogScale('x',10)
+    xlabel('ln(G)');ylabel('ln(k)')
+    xlim([0 log(100)])
+%%
+xtest = linspace(-2,2,100);
+figure
+plot(xtest,0.002.*heaviside(xtest-1).*(xtest-1).^2,'k')
+
 
 %% FI curve
 R_es = logspace(2,3,20);
