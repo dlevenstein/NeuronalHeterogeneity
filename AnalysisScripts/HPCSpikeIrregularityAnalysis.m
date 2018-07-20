@@ -467,7 +467,7 @@ hold on
 plot(log2(CV2mat.rate.Pyr),(CV2mat.Pyr),'k.','markersize',2)
 LogScale('x',2)
 xlabel('Pop. Rate (spk/cell/s)');ylabel('Pop. <CV2>')
-NiceSave('PopCV2and PSS',figfolder,baseName)
+NiceSave('PopCV2andPSS',figfolder,baseName)
 %%
 ISIStats.allspikes.PSS = cellfun(@(X) interp1(specslope.timestamps,specslope.data,X,'nearest'),ISIStats.allspikes.times,'UniformOutput',false);
 
