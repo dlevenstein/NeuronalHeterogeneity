@@ -85,6 +85,7 @@ numcells = length(spikes.UID);
 
 %Calculate ISI and CV2 for allspikes
 allspikes.ISIs = cellfun(@diff,spikes.times,'UniformOutput',false);
+allspikes.meanISI = cellfun(@(X) (X(1:end-1)+X(2:end))./2,allspikes.ISIs,'UniformOutput',false);
 allspikes.CV2 = cellfun(@(X) 2.*abs(X(2:end)-X(1:end-1))./(X(2:end)+X(1:end-1)),allspikes.ISIs ,'UniformOutput',false);
 %Make sure times line up
 allspikes.times = cellfun(@(X) X(2:end-1),spikes.times,'UniformOutput',false);
