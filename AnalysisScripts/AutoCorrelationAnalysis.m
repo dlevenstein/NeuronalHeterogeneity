@@ -24,6 +24,7 @@ numclasses = length(classnames);
 classcolors = {'k','r'};
 % lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
 %     'basepath',basePath);
+
 %%
 sessionInfo = bz_getSessionInfo(basePath);
 
@@ -54,19 +55,19 @@ figure
 subplot(2,2,1)
     imagesc(ccg.t,[1 spikes.numcells],log10(acgs(:,ISIStats.sorts.ALL.ratebyclass))')
     axis xy
-    xlim([-0.1 0.1])
+    xlim([-0.2 0.2])
     
 subplot(4,2,2)
     plot(ccg.t,ccg.popccgs(:,1,1),'k')
     hold on
     plot(ccg.t,ccg.popccgs(:,2,2),'r')
-    xlim([-0.1 0.1])
+    xlim([-0.2 0.2])
     
 subplot(4,2,4)
     plot(ccg.t,ccg.popccgs(:,2,1),'k')
     hold on
     plot(ccg.t,ccg.popccgs(:,1,2),'r')
-    xlim([-0.1 0.1])
+    xlim([-0.2 0.2])
     
     
     %% Log Spaced ACG/CCG
@@ -88,9 +89,9 @@ subplot(4,2,4)
 figure
 for ss = 1:numstates
 subplot(3,3,ss*3)
-imagesc(logacg.t,[1 spikes.numcells],log10(logacg.(statenames{ss}).acg(:,ISIStats.sorts.(statenames{ss}).ratebyclass)'))
-%colorbar
-caxis([-1.5 2])
+imagesc(logacg.t,[1 spikes.numcells],log10(logacg.(statenames{ss}).acg(:,ISIStats.sorts.(statenames{ss}).ratepE)'))
+colorbar
+caxis([-1.5 1.5])
 title((statenames{ss}))
 LogScale('x',10)
 ylabel({'Unit:','Sort by Rate/Type'})

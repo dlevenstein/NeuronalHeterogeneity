@@ -185,7 +185,8 @@ else
     numclassycells = numcells;
     inclasscells{1} = true(1,numcells);
     sorts.(statenames{ss}).ratebyclass = sorts.(statenames{ss}).rate;
-    sorts.(statenames{ss}).ratebyclass = sorts.(statenames{ss}).rate;
+    sorts.(statenames{ss}).ISICVbyclass = sorts.(statenames{ss}).ISICV;
+    sorts.(statenames{ss}).CV2byclass = sorts.(statenames{ss}).CV2;
 end
 
 

@@ -3,6 +3,7 @@
     [X Y] = meshgrid(logbins,logbins);
     CV2test = 2.*abs(10.^(X)-10.^(Y))./(10.^(X)+10.^(Y));
     logCV2test = 2.*abs((X)-(Y))./((X)+(Y));
+    logCV2test = log10(CV2test);
     
 bwcolormap = [makeColorMap([0 0 0.2],[0 0 0.9],[1 1 1]);makeColorMap([1 1 1],[0.9 0 0],[0.2 0 0])];
     
@@ -26,8 +27,12 @@ bwcolormap = [makeColorMap([0 0 0.2],[0 0 0.9],[1 1 1]);makeColorMap([1 1 1],[0.
             colormap(bwcolormap)
             caxis([0 2])
             title('logCV2')
-        caxis([0 2])
+        caxis([-1 1])
         xlabel('ISI_n');ylabel('ISI_n_+_1')
         LogScale('xy',10)
     
     %NiceSave('CV2map',figfolder,[]);
+    
+    
+%%
+ISIs = 
