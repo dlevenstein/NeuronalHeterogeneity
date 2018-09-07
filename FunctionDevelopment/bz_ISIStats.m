@@ -106,6 +106,10 @@ summstats.(statenames{ss}).meanrate = 1./summstats.(statenames{ss}).meanISI;
 summstats.(statenames{ss}).ISICV = cellfun(@(X) std(X)./mean(X),ISIs);
 summstats.(statenames{ss}).meanCV2 = cellfun(@(X) mean(X),CV2);
 
+%Account for no spikes
+summstats.(statenames{ss}).meanrate(isnan(summstats.(statenames{ss}).meanrate))=0;
+
+
 if SHUFFLECV2
     % CV2 for shuffled ISIs
     numshuffle = 100;

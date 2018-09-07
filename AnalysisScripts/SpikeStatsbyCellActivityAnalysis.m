@@ -1,4 +1,4 @@
-function [ ] = SpikeStatsbyPopActivityAnalysis(basePath,figfolder)
+function [ ] = SpikeStatsbyCellActivityAnalysis(basePath,figfolder)
 
 %% DEV
 %reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
@@ -7,7 +7,7 @@ basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/Dino_mPFC/Dino_061814';
 %basePath = pwd;
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyPopActivityAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyCellActivityAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
@@ -24,6 +24,8 @@ cellcolor = {'k','r'};
 statenames = fieldnames(SleepState.ints);
 
 %% Calculate spike count matrix
+
+%IDEA: Instead of constant time bin.... constant spike count bin.
 binsize = 0.25; %s
 binsize = 0.5; %s
 overlap = 10;
@@ -107,12 +109,13 @@ subplot(2,2,tt+2)
 imagesc(cellhists.ratebins,cellhists.cv2bins,cellhists.meanhist.(celltypes{tt})')
 axis xy
 colorbar
-caxis([0 0.15])
+caxis([0 0.08])
 title(celltypes{tt})
 xlabel(['Spike Count, (',num2str(binsize),'s bins']);
 ylabel('CV2')
 end
 
+NiceSave('RateCV2correlation',figfolder,baseName)
 %%
 figure
 for tt = 1:length(celltypes)
@@ -120,11 +123,14 @@ subplot(2,2,tt)
 imagesc(cellhists.logISIbins,cellhists.cv2bins,cellhists.meanISIvCV2hist.(celltypes{tt})')
 axis xy
 colorbar
-caxis([0 0.15])
+caxis([0 0.1])
 xlabel('meanISI');ylabel('CV2')
 LogScale('x',10)
 title(celltypes{tt})
 end
+
+NiceSave('MeanISIvCV2',figfolder,baseName)
+
 
 %%
 excell = randsample(spikes.numcells,1);
@@ -155,4 +161,147 @@ for tt = 1:length(celltypes)
     hold on
 end
 %plot(
+
+%% Constant Spike Count Bins
+
+nspkintervals = 10;
+
+cspkbinstats.meanISI = cellfun(@(X) movmean(X,nspkintervals),ISIStats.allspikes.ISIs,'UniformOutput',false);
+cspkbinstats.rate = cellfun(@(X) 1./X ,cspkbinstats.meanISI,'UniformOutput',false);
+cspkbinstats.bindur = cellfun(@(X) movsum(X,nspkintervals),ISIStats.allspikes.ISIs,'UniformOutput',false);
+cspkbinstats.stdISI = cellfun(@(X) movstd(X,nspkintervals),ISIStats.allspikes.ISIs,'UniformOutput',false);
+cspkbinstats.CVISI = cellfun(@(X,Y) X./Y,cspkbinstats.stdISI,cspkbinstats.meanISI,'UniformOutput',false);
+cspkbinstats.meanCV2 = cellfun(@(X) movmean(X,nspkintervals),ISIStats.allspikes.CV2,'UniformOutput',false);
+cspkbinstats.times = cellfun(@(X) movmean(X,nspkintervals),ISIStats.allspikes.times,'UniformOutput',false);
+
+cspkbinstats.summstats.rateCV2corr = cellfun(@(X,Y) corr(X,Y,'type','spearman'),...
+    cspkbinstats.rate,cspkbinstats.meanCV2);
+cspkbinstats.summstats.binderCV = cellfun(@(X) std((X))/mean((X)),...
+    cspkbinstats.bindur);
+
+instatebintimes = cellfun(@(X) InIntervals(X,double(SleepState.ints.(state))),...
+    cspkbinstats.times,'UniformOutput',false);
+
+
+cspkbinstats.cellhists.cv2bins = linspace(0,2,30);
+cspkbinstats.cellhists.ratebins = linspace(-1,2.25,30);
+numbinthresh = 25;
+
+cspkbinstats.cellhists.ratehist = cellfun(@(X,Z) hist(log10(X(Z)),cspkbinstats.cellhists.ratebins),...
+    cspkbinstats.rate,instatebintimes,...
+    'UniformOutput',false);
+underthresh = cellfun(@(X) X<numbinthresh,cspkbinstats.cellhists.ratehist,...
+    'UniformOutput',false);
+for cc = 1:spikes.numcells
+    cspkbinstats.cellhists.ratehist{cc}(underthresh{cc}) = nan;
+end
+
+
+
+cspkbinstats.cellhists.rateVcv2 = cellfun(@(X,Y,Z) hist3([log10(X(Z)),Y(Z)],...
+    {cspkbinstats.cellhists.ratebins,cspkbinstats.cellhists.cv2bins}),...
+    cspkbinstats.rate,cspkbinstats.meanCV2,instatebintimes,...
+    'UniformOutput',false);
+
+cspkbinstats.cellhists.rateVcv2 = cellfun(@(X,Y) bsxfun(@(x,y) x./y,X,Y'),...
+    cspkbinstats.cellhists.rateVcv2,cspkbinstats.cellhists.ratehist,...
+    'UniformOutput',false);
+
+% cspkbinstats.cellhists.rateVcv2 = cellfun(@(X) X./sum(X(:)),...
+%     cspkbinstats.cellhists.rateVcv2,...
+%     'UniformOutput',false);
+
+%Two normalizations needed : joint probability and conditional on rate
+%probabiltiy....
+
+for tt=1:length(celltypes)
+    cspkbinstats.cellhists.meanhist.(celltypes{tt}) = nanmean(cat(3,cspkbinstats.cellhists.rateVcv2{CellClass.(celltypes{tt})}),3);
+end
+
+%%
+figure
+for tt = 1:length(celltypes)
+    subplot(2,2,tt+2)
+        imagesc(cspkbinstats.cellhists.ratebins,cspkbinstats.cellhists.cv2bins,cspkbinstats.cellhists.meanhist.(celltypes{tt})')
+        hold on
+        plot(get(gca,'xlim'),[1 1],'k')
+        axis xy
+        LogScale('x',10)
+        colorbar
+        caxis([0 0.18])
+        title(celltypes{tt})
+        xlabel(['Rate (',num2str(nspkintervals),'spk bins)']);
+        ylabel('CV2')
+end
+
+NiceSave('MeanRateCV2',figfolder,baseName)
+%%
+figure
+subplot(2,2,1)
+    plot(log10(ISIStats.summstats.ALL.meanrate),cspkbinstats.summstats.rateCV2corr,'.')
+    hold on
+    plot(get(gca,'xlim'),[0 0],'k')
+    xlabel('Cell Rate');ylabel('Rate-CV correlation')
+subplot(2,2,2)
+    plot(log10(ISIStats.summstats.ALL.meanrate),cspkbinstats.summstats.binderCV,'.')
+    xlabel('Cell Rate');ylabel('CV of bin duration')
+
+%%
+figure
+subplot(2,2,1)
+plot(log10(1./cspkbinstats.meanISI{excell}),cspkbinstats.CVISI{excell},'.')
+xlabel('Mean ISI (s)')
+ylabel('CV ISI')
+LogScale('x',10)
+
+%%
+figure
+subplot(2,2,1)
+imagesc(cspkbinstats.cellhists.ratebins,cspkbinstats.cellhists.cv2bins,cspkbinstats.cellhists.rateVcv2{excell}')
+hold on
+plot(get(gca,'xlim'),[1 1],'k')
+plot(log10(ISIStats.summstats.ALL.meanrate(excell)),ISIStats.summstats.ALL.meanCV2(excell),'r+')
+axis xy
+LogScale('x',10)
+xlabel('Rate (Hz)');ylabel('CV2')
+
+subplot(2,2,2)
+hist(log10(cspkbinstats.bindur{excell}))
+LogScale('x',10)
+xlabel('Bin Duration (s)')
+
+subplot(2,2,3)
+plot(log10(cspkbinstats.meanISI{excell}),cspkbinstats.meanCV2{excell},'.')
+hold on
+plot(get(gca,'xlim'),[1 1],'k')
+xlabel('Mean ISI (s)')
+ylabel('Mean CV2')
+LogScale('x',10)
+ylim([0 2])
+
+subplot(2,2,4)
+plot(log10(1./cspkbinstats.meanISI{excell}),cspkbinstats.meanCV2{excell},'.')
+hold on
+plot(get(gca,'xlim'),[1 1],'k')
+plot(log10(ISIStats.summstats.ALL.meanrate(excell)),ISIStats.summstats.ALL.meanCV2(excell),'r+')
+xlabel('Rate (Hz)')
+ylabel('Mean CV2')
+LogScale('x',10)
+ylim([0 2])
+
+%%
+twin = bz_RandomWindowInIntervals(SleepState.ints.NREMstate,100);
+excell = randsample(spikes.numcells,1);
+figure
+subplot(3,1,1)
+bz_MultiLFPPlot(lfp,'timewin',twin,'spikes',spikes,'plotcells',excell)
+subplot(3,1,2)
+plot(ISIStats.allspikes.times{excell},log10(ISIStats.allspikes.ISIs{excell}),'.')
+xlim(twin)
+LogScale('y',10)
+subplot(3,1,3)
+plot(cspkbinstats.times{excell},log10(1./cspkbinstats.meanISI{excell}),'o-')
+xlim(twin)
+LogScale('y',10)
+
 end
