@@ -8,7 +8,7 @@ freq1 = 3;
 freq2 = 30;
 %phase = pi;
 
-T = 5000; %s
+T = 1000; %s
 dt = 0.001; %s
 %t = dt:dt:T;
 
@@ -48,7 +48,7 @@ wavespec = bz_WaveSpec(lfp,'nfreqs',10,'frange',[1 100]);
 
 %%
 tic
-[ GLMFP ] = GLMLFP( {spktimes},wavespec );
+[ GLMFP ] = GLMLFP( {spktimes},wavespec,'intervals',[1 100;300 400]);
 toc
 %% Simulate ISIs
 for tt = 1:length(GLMFP.timestamps)
@@ -100,7 +100,7 @@ legend('Actual','Simulated','location','northwest')
 LogScale('x',10)
 xlabel('ISI (s)')
 
-NiceSave('PhaseCouplingISIToy',figfolder,'PhasePoisson')
+%NiceSave('PhaseCouplingISIToy',figfolder,'PhasePoisson')
 %%
 xwin = [0 5];
 figure

@@ -1,4 +1,4 @@
-function [ GLMFP ] = GLMLFP( spiketimes,specgram )
+function [ GLMFP ] = GLMLFP( spiketimes,specgram,varargin )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 % Specgram: structure with
@@ -12,38 +12,41 @@ function [ GLMFP ] = GLMLFP( spiketimes,specgram )
 %specgram = wavespec;
 %
 %%
+% parse args
+p = inputParser;
+addParameter(p,'intervals',[0 Inf],@isnumeric)
+
+parse(p,varargin{:})
+intervals = p.Results.intervals;
+
+%%
 dt = 1/specgram.samplingRate;
 spkmat = bz_SpktToSpkmat(spiketimes,'binsize',dt);
 spkmat.specgram = interp1(specgram.timestamps,specgram.data,spkmat.timestamps,'nearest');
+
+status = InIntervals(spkmat.timestamps,intervals);
+spkmat.specgram = spkmat.specgram(status,:);
+spkmat.data = spkmat.data(status);
+spkmat.timestamps = spkmat.timestamps(status);
+
 spkmat_in = double(spkmat.data);
 
-%% Nonparametric
+abX = zscore(log10(abs(spkmat.specgram)));
+%abX = NormToInt(log10(abs(specgram.data)),'modZ');
+angX = angle(spkmat.specgram);
+%% Binn power for nonparametric power dependence
 %nphasebins = 10;
 npowerbins = 10;
 nfreqs = length(specgram.freqs);
 
-abX = zscore(log10(abs(specgram.data)));
-%abX = NormToInt(log10(abs(specgram.data)),'modZ');
-angX = angle(specgram.data);
-
-abX = interp1(specgram.timestamps,abX,spkmat.timestamps,'nearest');
-angX = interp1(specgram.timestamps,angX,spkmat.timestamps,'nearest');
-
-spkmat_in = double(spkmat.data);
-
-%phaseedges = linspace(-pi,pi,nphasebins+1);
-%phasecenters = phaseedges(1:end-1)+diff(phaseedges(1:2));
-%[~,~,phaseBIN] = histcounts(angX,phaseedges);
 poweredges = linspace(-1.75,1.75,npowerbins+1);
 powercenters = poweredges(1:end-1)+0.5.*diff(poweredges(1:2));
 poweredges(1) = -Inf; poweredges(end) = Inf;
 [~,~,powerBIN] = histcounts(abX,poweredges);
-%%
-%binnedphasepowers = zeros(size(phaseBIN,1),nphasebins,npowerbins);
+
 binnedpowers = zeros(size(powerBIN,1),npowerbins);
 for ff = 1:nfreqs
     for tt = 1:length(powerBIN)
-    %binnedphasepowers(tt,phaseBIN(tt),powerBIN(tt)) = 1;
     binnedpowers(tt,powerBIN(tt,ff),ff) = 1;
     end
 end
@@ -115,7 +118,7 @@ nlogL = @(k) -(spkmat_in'*(A(k,POW,TH).*dt) - sum(exp(A(k,POW,TH)).*dt));
 %%
 %%minimize nloglik!
 %Constrain: power kernel>=0
-options = optimoptions('fmincon','Display','iter','Algorithm','sqp','UseParallel',true);
+options = optimoptions('fmincon','Display','iter','Algorithm','sqp');%,'UseParallel',true);
 %try also: 'Algorithm','active-set'
 options.MaxFunctionEvaluations = 2e4;
 %%
@@ -124,6 +127,9 @@ lb = -inf(size(kernelPredict));
 ub = inf(size(kernelPredict));
 lb(powidx) = 0;
 ub(powidx) = 5;
+lb(phaseidx) = -3*pi;
+ub(phaseidx) = 3*pi;
+lb(1) = 1e-4; ub(1) = 100;
 initial = zeros(size(kernelPredict));
 initial(1) = 1;
 kernelPredict = fmincon(nlogL,initial,[],[],[],[],lb,ub,[],options);
