@@ -27,7 +27,7 @@ statenames = fieldnames(SleepState.ints);
 
 %IDEA: Instead of constant time bin.... constant spike count bin.
 binsize = 0.25; %s
-binsize = 0.5; %s
+binsize = 1; %s
 overlap = 10;
 spikemat = bz_SpktToSpkmat(spikes,'binsize',binsize,'overlap',overlap);
 
@@ -184,18 +184,22 @@ instatebintimes = cellfun(@(X) InIntervals(X,double(SleepState.ints.(state))),..
 
 
 cspkbinstats.cellhists.cv2bins = linspace(0,2,30);
-cspkbinstats.cellhists.ratebins = linspace(-1,2.25,30);
+cspkbinstats.cellhists.ratebins = linspace(-1.5,2.5,40);
 numbinthresh = 25;
 
 cspkbinstats.cellhists.ratehist = cellfun(@(X,Z) hist(log10(X(Z)),cspkbinstats.cellhists.ratebins),...
     cspkbinstats.rate,instatebintimes,...
     'UniformOutput',false);
+
+cspkbinstats.cellhists.ratehist_norm = cellfun(@(X) X./sum(X),...
+    cspkbinstats.cellhists.ratehist,'UniformOutput',false);
+cspkbinstats.cellhists.ratehist_norm = cat(1,cspkbinstats.cellhists.ratehist_norm{:});
+
 underthresh = cellfun(@(X) X<numbinthresh,cspkbinstats.cellhists.ratehist,...
     'UniformOutput',false);
 for cc = 1:spikes.numcells
     cspkbinstats.cellhists.ratehist{cc}(underthresh{cc}) = nan;
 end
-
 
 
 cspkbinstats.cellhists.rateVcv2 = cellfun(@(X,Y,Z) hist3([log10(X(Z)),Y(Z)],...
@@ -221,7 +225,7 @@ end
 %%
 figure
 for tt = 1:length(celltypes)
-    subplot(2,2,tt+2)
+    subplot(3,2,tt)
         imagesc(cspkbinstats.cellhists.ratebins,cspkbinstats.cellhists.cv2bins,cspkbinstats.cellhists.meanhist.(celltypes{tt})')
         hold on
         plot(get(gca,'xlim'),[1 1],'k')
@@ -234,17 +238,53 @@ for tt = 1:length(celltypes)
         ylabel('CV2')
 end
 
+
+subplot(2,2,3)
+    imagesc(cspkbinstats.cellhists.ratebins,[0 spikes.numcells],...
+        cspkbinstats.cellhists.ratehist_norm(ISIStats.sorts.ALL.ratebyclass,:))
+    hold on
+    plot(get(gca,'xlim'),sum(CellClass.pE).*[1 1],'r')
+    LogScale('x',10)
+    colorbar
+    %caxis([0 0.18])
+    xlabel(['Rate (',num2str(nspkintervals),'spk bins)']);
+    ylabel('Cell (Sorted by Rate)')
+
 NiceSave('MeanRateCV2',figfolder,baseName)
+
+
 %%
 figure
-subplot(2,2,1)
-    plot(log10(ISIStats.summstats.ALL.meanrate),cspkbinstats.summstats.rateCV2corr,'.')
+
+for tt = 1:length(celltypes)
+subplot(3,3,1)
+    plot(log10(ISIStats.summstats.ALL.meanrate(CellClass.(celltypes{tt}))),...
+        cspkbinstats.summstats.rateCV2corr(CellClass.(celltypes{tt})),...
+        '.','color',cellcolor{tt},'markersize',8)
     hold on
+    box off
+    axis tight
     plot(get(gca,'xlim'),[0 0],'k')
-    xlabel('Cell Rate');ylabel('Rate-CV correlation')
-subplot(2,2,2)
-    plot(log10(ISIStats.summstats.ALL.meanrate),cspkbinstats.summstats.binderCV,'.')
+    LogScale('x',10)
+    xlabel('Cell Rate (Hz)');ylabel('Rate-CV2 correlation')
+subplot(3,3,2)
+    plot(log10(ISIStats.summstats.ALL.meanrate(CellClass.(celltypes{tt}))),...
+        cspkbinstats.summstats.binderCV(CellClass.(celltypes{tt})),...
+        '.','color',cellcolor{tt})
+    hold on
     xlabel('Cell Rate');ylabel('CV of bin duration')
+    
+subplot(3,3,3)
+    plot((ISIStats.summstats.ALL.meanCV2(CellClass.(celltypes{tt}))),...
+        cspkbinstats.summstats.rateCV2corr(CellClass.(celltypes{tt})),...
+        '.','color',cellcolor{tt},'markersize',8)
+    hold on
+    box off 
+    axis tight
+    plot(get(gca,'xlim'),[0 0],'k')
+    xlabel('Mean CV2');ylabel('Rate-CV2 correlation')
+end
+NiceSave('BinRateCV2Correlation',figfolder,baseName)
 
 %%
 figure
@@ -254,6 +294,32 @@ xlabel('Mean ISI (s)')
 ylabel('CV ISI')
 LogScale('x',10)
 
+
+
+%%
+twin = bz_RandomWindowInIntervals(SleepState.ints.NREMstate,60);
+excell = randsample(spikes.numcells,1);
+figure
+subplot(3,1,1)
+bz_MultiLFPPlot(lfp,'timewin',twin,'spikes',spikes,'plotcells',excell)
+% subplot(3,1,2)
+%     plot(ISIStats.allspikes.times{excell},log10(ISIStats.allspikes.ISIs{excell}),'.')
+%     xlim(twin)
+%     LogScale('y',10)
+subplot(3,1,2)
+    plot(cspkbinstats.times{excell},log10(cspkbinstats.rate{excell}),'o-')
+    axis tight
+    xlim(twin)
+    LogScale('y',10)
+    
+subplot(3,1,3)
+    plot(cspkbinstats.times{excell},(cspkbinstats.meanCV2{excell}),'o-')
+    axis tight
+    xlim(twin)
+    ylim([0 2])
+    
+
+
 %%
 figure
 subplot(2,2,1)
@@ -262,8 +328,10 @@ hold on
 plot(get(gca,'xlim'),[1 1],'k')
 plot(log10(ISIStats.summstats.ALL.meanrate(excell)),ISIStats.summstats.ALL.meanCV2(excell),'r+')
 axis xy
+caxis([0 0.18])
 LogScale('x',10)
 xlabel('Rate (Hz)');ylabel('CV2')
+title({['Cell: ',num2str(excell)],['Type: ',CellClass.label{excell}]})
 
 subplot(2,2,2)
 hist(log10(cspkbinstats.bindur{excell}))
@@ -289,19 +357,5 @@ ylabel('Mean CV2')
 LogScale('x',10)
 ylim([0 2])
 
-%%
-twin = bz_RandomWindowInIntervals(SleepState.ints.NREMstate,100);
-excell = randsample(spikes.numcells,1);
-figure
-subplot(3,1,1)
-bz_MultiLFPPlot(lfp,'timewin',twin,'spikes',spikes,'plotcells',excell)
-subplot(3,1,2)
-plot(ISIStats.allspikes.times{excell},log10(ISIStats.allspikes.ISIs{excell}),'.')
-xlim(twin)
-LogScale('y',10)
-subplot(3,1,3)
-plot(cspkbinstats.times{excell},log10(1./cspkbinstats.meanISI{excell}),'o-')
-xlim(twin)
-LogScale('y',10)
-
+NiceSave('ExCellRateCV2 ',figfolder,baseName)
 end
