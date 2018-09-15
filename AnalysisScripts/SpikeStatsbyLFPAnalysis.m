@@ -1,4 +1,4 @@
-function [ jitterCV2,ISIstats ] = SpikeStatsbyLFPAnalysis(basePath,figfolder)
+function [ ] = SpikeStatsbyLFPAnalysis(basePath,figfolder)
 
 %% DEV
 reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';

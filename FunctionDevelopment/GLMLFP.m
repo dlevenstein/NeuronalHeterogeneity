@@ -81,11 +81,12 @@ end
 
 TH = angX;
 POW = binnedpowers;
+%abX = abX;
 
 %%
 %Make a variable to hold the predicted kernels:
 %nfreq = 1;
-kernelPredict = zeros(1+nfreqs.*npowerbins+nfreqs,1)';
+kernelPredict = zeros(1+nfreqs.*npowerbins+2*nfreqs,1)';
 powidx = 2:(nfreqs.*npowerbins+1);
 phaseidx = (nfreqs.*npowerbins+2):(nfreqs.*npowerbins+nfreqs+1);
 ratepowidx = (nfreqs.*npowerbins+nfreqs+2):(nfreqs.*npowerbins+2*nfreqs+1);
