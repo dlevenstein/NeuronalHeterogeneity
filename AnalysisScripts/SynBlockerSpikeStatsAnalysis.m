@@ -22,14 +22,16 @@ spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
 %%
 timeints.lightStim = [27 43].*60.*2/3;
 timeints.dark = [0 27;43 50].*60.*2/3;
-%timeints.Eonly = [57 92;102 175].*60.*2/3;
-timeints.Eonly = [102 175].*60.*2/3;
+timeints.Eonly = [57 92;102 175].*60.*2/3;
+%timeints.Eonly = [102 175].*60.*2/3;
 timeints.Eonly_light = [92 102].*60.*2/3;
 timeints.EI = [180 230].*60.*2/3;
 %%
 %Waveform classification
-CellClass = bz_CellClassification(basePath);
+%CellClass = bz_CellClassification(basePath);
 
+[~,depthID] = ismember(spikes.maxWaveformCh,sessionInfo.AnatGrps.Channels);
+[~,depthsort] = sort(depthID);
 %%
 [ ISIstats ] = bz_ISIStats( spikes,'ints',timeints,...
     'figfolder',figfolder,'forceRedetect',true,...
@@ -83,36 +85,42 @@ xlabel('CV2: Dark');ylabel('CV2: Light')
 title('E-Block')
 %%
 figure
-subplot(2,2,1)
+subplot(3,3,1)
 plot(log10(ISIstats.summstats.dark.meanrate),log10(ISIstats.summstats.Eonly.meanrate),'k.')
 hold on
 plot([-2 2],[-2 2],'k')
+axis tight
 LogScale('xy',10)
-xlabel('Rate: Dark (Hz)');ylabel('Rate: E Block (Hz)')
+xlabel('Rate: Baseline (Hz)');ylabel('Rate: E Block (Hz)')
 
 
-subplot(2,2,2)
+subplot(3,3,2)
 plot((ISIstats.summstats.dark.meanCV2),(ISIstats.summstats.Eonly.meanCV2),'k.')
 hold on
 plot([0 2],[0 2],'k')
-xlabel('CV2: Dark');ylabel('CV2: E Block')
+xlabel('CV2: Baseline');ylabel('CV2: E Block')
+axis tight
 %LogScale('xy',10)
 
-subplot(2,2,3)
+subplot(3,3,3)
 plot(log10(ISIstats.summstats.dark.meanrate),(ISIstats.summstats.Eonly.meanCV2),'k.')
 hold on
 plot([-1 2],[1 1],'k')
-xlabel('Rate: Dark');ylabel('CV2: E Block')
+xlabel('Rate: Baseline');ylabel('CV2: E Block')
+axis tight
 LogScale('x',10)
 
 
-subplot(2,2,4)
+subplot(3,3,4)
 plot(log10(ISIstats.summstats.dark.meanrate),(ISIstats.summstats.dark.meanCV2),'k.')
 hold on
-plot([-1 2],[1 1],'k')
-xlabel('Rate: Dark');ylabel('CV2: Dark')
+axis tight
+plot(get(gca,'xlim'),[1 1],'k')
+xlabel('Rate: Baseline');ylabel('CV2: Baseline')
+
 LogScale('x',10)
 ylim([0 2])
+  NiceSave('BaseStats',figfolder,baseName)
 
 
 %%
@@ -123,13 +131,15 @@ subplot(2,2,1)
     plot(get(gca,'xlim'),[0 0],'k')
     LogScale('xy',10)
     xlabel('Mean Rate (Dark)');ylabel('Rate (E block)/Rate (Dark)')
-subplot(2,2,2)
+subplot(3,3,3)
     plot(log10(ISIstats.summstats.Esynchange),ISIstats.summstats.Esynchange_CV2,'k.')
     hold on
+    axis tight
     plot(get(gca,'xlim'),[0 0],'k')
     plot([0 0],get(gca,'ylim'),'k')
-    LogScale('x',10)
-    xlabel('Rate (E block)/Rate (Dark)');ylabel('CV2 (E block)-CV2 (Dark)')
+   % LogScale('x',10)
+    
+    xlabel('Fold Rate Change');ylabel('CV2 Change')
     
 subplot(2,2,3)
     plot(log10(ISIstats.summstats.dark.meanrate),ISIstats.summstats.Esynchange_CV2,'k.')
@@ -143,7 +153,52 @@ subplot(2,2,4)
     hold on
     plot(get(gca,'xlim'),[0 0],'k')
     %LogScale('x',10)
-    xlabel('CV2 (Dark)');ylabel('Change CV2')   
+    xlabel('CV2 (Dark)');ylabel('Change CV2')
+    
+  NiceSave('RelateCV2Rate',figfolder,baseName)
+
+    
+%% Everything by depth!
+figure
+subplot(3,4,1)
+    plot(log10(ISIstats.summstats.Esynchange),-depthID,'k.')
+    hold on
+    plot([0 0],get(gca,'ylim'),'k')
+    %LogScale('x',10)
+    xlabel('Fold Rate Change')
+    ylabel('Depth')
+    axis tight
+    box off
+subplot(3,4,2)
+    plot((ISIstats.summstats.Esynchange_CV2),-depthID,'k.')
+    hold on
+    plot([0 0],get(gca,'ylim'),'k')
+    xlabel('CV2 Change')
+    ylabel('Depth')
+    axis tight
+    box off
+ 
+    
+subplot(3,4,3)
+    plot(log10(ISIstats.summstats.dark.meanrate),-depthID,'k.')
+    hold on
+    %plot([0 0],get(gca,'ylim'),'k')
+    xlabel('Rate')
+    ylabel('Depth')
+    axis tight
+    box off
+    
+subplot(3,4,4)
+    plot((ISIstats.summstats.dark.meanCV2),-depthID,'k.')
+    hold on
+    %plot([0 0],get(gca,'ylim'),'k')
+    xlabel('CV2')
+    ylabel('Depth')
+    axis tight
+    box off
+    
+  NiceSave('ChangeByDepth',figfolder,baseName)
+
 %%
 spkwinsize = 20;
 spkmat = bz_SpktToSpkmat(spikes,'binsize',spkwinsize,'overlap',4);
@@ -176,10 +231,10 @@ excell = 7;
 
 figure
 subplot(3,1,1)
-imagesc(spkmat.timestamps,[0 spikes.numcells],   log10(spkmat.data(:,ISIstats.sorts.Esynchange)./spkwinsize)')
+imagesc(spkmat.timestamps,[0 spikes.numcells],   log10(spkmat.data(:,depthsort)./spkwinsize)')
 hold on
 StateScorePlot( timeints,{'r','k','b','r','g'} )
-axis xy
+%axis xy
 xlabel('t (s)')
 %xlim([0 12000])
 ylabel('Cell (Sorted by Dark Rate)')
@@ -214,16 +269,16 @@ xlabel('t (s)')
 ratecolormap = makeColorMap([1 1 1],[0.5 0.5 0.5],[0.8 0 0]);
 cv2colormap = makeColorMap([0 0 0.8],[0.5 0.5 0.5],[0.8 0 0]);
 
-whichsort = ISIstats.sorts.Esynchange_CV2;
+whichsort = depthsort;
 figure
 subplot(3,1,1)
 imagesc(spkmat.timestamps,[0 spikes.numcells],   log10(spkmat.data(:,whichsort)./spkwinsize)')
 hold on
 StateScorePlot( timeints,{'r','k','b','r','g'} )
-axis xy
+%axis xy
 xlabel('t (s)')
 %xlim([0 12000])
-ylabel('Cell (Sorted by CV2 Change)')
+ylabel('Cell (Sorted by Depth)')
 colorbar('eastoutside')
 colormap(gca,ratecolormap)
 LogScale('c',10)
@@ -235,11 +290,11 @@ colormap(gca,cv2colormap)
 %xlim([0 12000])
 caxis([0.5 1.5])
 colorbar('eastoutside')
-axis xy
+%axis xy
 xlabel('t (s)')
-ylabel('Cell (Sorted by CV2 Change)')
+ylabel('Cell (Sorted by Depth)')
 
-
+NiceSave('CellsActivityByDepth',figfolder,baseName)
 
 %%
 figure

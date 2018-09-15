@@ -87,13 +87,16 @@ POW = binnedpowers;
 %nfreq = 1;
 kernelPredict = zeros(1+nfreqs.*npowerbins+nfreqs,1)';
 powidx = 2:(nfreqs.*npowerbins+1);
-phaseidx = (nfreqs.*npowerbins+2):(1+nfreqs.*npowerbins+nfreqs);
+phaseidx = (nfreqs.*npowerbins+2):(nfreqs.*npowerbins+nfreqs+1);
+ratepowidx = (nfreqs.*npowerbins+nfreqs+2):(nfreqs.*npowerbins+2*nfreqs+1);
 %Kernels: [rate, powerdependence, phase]
 
 %Make a function for log(rate) (i.e. input!, pre-nonlinearity) as f'n of kernels (a) and design matrix (units spk/s)
 %A = @(a,S,R) (S*a(2:ntfilt+1) + R*a(ntfilt+2:ntfilt+nthist+1) + log(a(1)));
 %A = @(a,POW,TH) (POW*a(2:npowerbins+1)'.*cos(TH+a(npowerbins+2)) + log(a(1)));
-A = @(a,POW,TH) (LFPCouplingKernel(POW,TH,a(phaseidx),a(powidx)) + log(a(1)));
+A = @(a,POW,TH,abX) (abX*a(ratepowidx) + ...
+    LFPCouplingKernel(POW,TH,a(phaseidx),a(powidx)) + ...
+    log(a(1)));
 %Make a function for loglikelihood as f'n of kernel
 %Recall....
 %        Poisson likelihood:      P(s|r) = (r*dt)^s/s! exp(-(r.*dt))  
@@ -101,7 +104,7 @@ A = @(a,POW,TH) (LFPCouplingKernel(POW,TH,a(phaseidx),a(powidx)) + log(a(1)));
 %     giving log-likelihood:  log P(s|r) =  s log (r*dt) - (r*dt)   
 %nlogL = @(k) -(spkmat'*(A(k,S,R).*dt) - sum(exp(A(k,S,R)).*dt));
 %nlogL = @(k) -(spkmat_in'*(A(k,POW,TH).*dt) - sum(exp(A(k,POW,TH)).*dt));
-nlogL = @(k) -(spkmat_in'*(A(k,POW,TH).*dt) - sum(exp(A(k,POW,TH)).*dt));
+nlogL = @(k) -(spkmat_in'*(A(k,POW,TH,abX).*dt) - sum(exp(A(k,POW,TH,abX)).*dt));
 
 %%
 % powerkerneltest = linspace(0,1,npowerbins);
@@ -139,24 +142,25 @@ R0 = kernelPredict(1);
 Rpower = kernelPredict(powidx);
 Rpower = reshape(Rpower,npowerbins,nfreqs);
 Rphase = kernelPredict(phaseidx);
-figure
-plot(powercenters,Rpower)
+Rratepower = kernelPredict(ratepowidx);
+%figure
+%plot(powercenters,Rpower)
 %% Check the result
-predictedinput =A(kernelPredict,POW,TH);
+predictedinput =A(kernelPredict,POW,TH,abX);
 predictedrate = exp(predictedinput);
-figure
-subplot(2,2,1)
-    plot(spkmat.timestamps,predictedinput)
-    hold on
-    %plot(t,input)
-    xlim([1 5])
-    %legend('Predicted Drive','Drive')
-subplot(2,2,2)
-    plot(spkmat.timestamps,predictedrate)
-    hold on
-    %plot(t,rate)
-    xlim([1 5])
-    legend('Predicted Rate','Rate')
+% figure
+% subplot(2,2,1)
+%     plot(spkmat.timestamps,predictedinput)
+%     hold on
+%     %plot(t,input)
+%     xlim([1 5])
+%     %legend('Predicted Drive','Drive')
+% subplot(2,2,2)
+%     plot(spkmat.timestamps,predictedrate)
+%     hold on
+%     %plot(t,rate)
+%     xlim([1 5])
+%     legend('Predicted Rate','Rate')
 
 % %Make a variable to hold the predicted kernels
 % kernelPredict = zeros(1+ntfilt+nthist,1);
@@ -178,6 +182,7 @@ subplot(2,2,2)
 GLMFP.R0 = R0;
 GLMFP.Rpower = Rpower;
 GLMFP.Rphase = Rphase;
+GLMFP.Rratepower = Rratepower;
 %GLMFP.freqs 
 GLMFP.powerbins = powercenters;
 GLMFP.predDrive =predictedinput;
