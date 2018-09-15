@@ -29,7 +29,7 @@ sessionInfo = bz_getSessionInfo(basePath);
 
 %% Filter the LFP for delta activity
 
-deLFP = bz_Filter(lfp,'passband',[0.5 8],'order',1,'filter','fir1');
+deLFP = bz_Filter(lfp,'passband',[0.5 6],'order',1,'filter','fir1');
 
 %% Calculate the power-phase ratemap, cv2map
 
@@ -38,8 +38,10 @@ deLFP = bz_Filter(lfp,'passband',[0.5 8],'order',1,'filter','fir1');
 
 %% GLM for coupling
 excell = 9;
-deLFP.data = deLFP.hilb;
-deLFP.freqs = 4;
+
+predLFP = deLFP;
+predLFP.data = predLFP.hilb;
+predLFP.freqs = 4;
 [ GLMFP ] = GLMLFP(spikes.times(excell),deLFP,...
     'intervals',SleepState.ints.NREMstate );
 
@@ -49,13 +51,35 @@ for tt = 1:length(GLMFP.timestamps)
     GLMFP.spkmat(tt) = rand(1)<=GLMFP.predRate(tt);
 end
 simspikes.times = {GLMFP.timestamps(GLMFP.spkmat)};
-
-
+simspikes.ISIs = diff(simspikes.times{1});
+simspikes.ISIhist = hist(log10(simspikes.ISIs),ISIStats.ISIhist.logbins);
+simspikes.ISIhist = simspikes.ISIhist./sum(simspikes.ISIhist);
 [PowerPhaseRatemap_sim] = bz_PowerPhaseRatemap(simspikes,deLFP,...
     'ints',SleepState.ints.NREMstate);
 %% Figure
+viewwin = bz_RandomWindowInIntervals(SleepState.ints.NREMstate,5);
+
 figure
-subplot(3,3,1)
+subplot(4,1,1)
+    plot(lfp.timestamps,lfp.data,'k')
+    hold on
+    plot(deLFP.timestamps,deLFP.data,'b')
+    plot(spikes.times{excell},max(double(lfp.data)).*ones(size(spikes.times{excell})),'k.')
+    xlim(viewwin)
+    ylabel({'LFP','Real Spikes'});
+    box off
+    set(gca,'xticklabels',[]);set(gca,'yticklabels',[])
+    
+subplot(4,1,2)
+    plot(GLMFP.timestamps,GLMFP.predRate,'k')
+    hold on
+    plot(simspikes.times{1},max(GLMFP.predRate).*ones(size(simspikes.times{1})),'k.')
+    xlim(viewwin)
+    ylabel({'Predicted Rate','Simulated Spikes'});
+    box off
+    set(gca,'xticklabels',[])
+
+subplot(4,3,7)
     imagesc(PowerPhaseRatemap.phasebins,PowerPhaseRatemap.powerbins,...
         PowerPhaseRatemap.ratemap{excell})
     hold on
@@ -65,8 +89,10 @@ subplot(3,3,1)
     caxis([0 15])
     axis xy
     colorbar
+    xlabel('Phase');ylabel('Power')
+    title('Real Delta Ratemap')
     
-subplot(3,3,2)
+subplot(4,3,8)
     imagesc(PowerPhaseRatemap_sim.phasebins,PowerPhaseRatemap_sim.powerbins,...
         PowerPhaseRatemap_sim.ratemap{1})
     hold on
@@ -76,13 +102,28 @@ subplot(3,3,2)
     caxis([0 15])
     axis xy
     colorbar
+    xlabel('Phase');ylabel('Power')
+    title('Simulated Delta Ratemap')
 
-subplot(3,3,4)
+subplot(4,3,11)
     plot(GLMFP.powerbins,GLMFP.Rpower,'k','linewidth',2)
+    hold on
+    text(-1.5,1,['R0 = ',num2str(round(GLMFP.R0*lfp.samplingRate,1)),' Hz'])
     axis tight
     box off
-    xlabel('Power');ylabel('Phase Coupling')
+    xlabel('Power');ylabel('GLM: Phase Coupling')
+    %title('GLM Kernel')
 
-
+subplot(4,3,9)
+    plot(ISIStats.ISIhist.logbins,ISIStats.ISIhist.NREMstate.log(excell,:),'k','linewidth',2)
+    hold on
+    plot(ISIStats.ISIhist.logbins,simspikes.ISIhist,'r','linewidth',2)
+    axis tight
+    box off
+    xlabel('ISI (s)')
+    LogScale('x',10)
+    legend('location','northeast','Real','Sim.')
+    
+NiceSave('ExCellDelta',figfolder,baseName)
 end
 
