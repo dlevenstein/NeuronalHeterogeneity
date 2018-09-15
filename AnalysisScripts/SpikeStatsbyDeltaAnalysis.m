@@ -22,7 +22,7 @@ classnames = unique(CellClass.label);
 numclasses = length(classnames);
 classcolors = {'k','r'};
 
-downsamplefactor = 5;
+downsamplefactor = 2;
 lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
      'basepath',basePath,'downsample',downsamplefactor);
 sessionInfo = bz_getSessionInfo(basePath);
@@ -45,21 +45,39 @@ deLFP.freqs = 4;
 
 
 %% Simulate spikes from GLM
+for tt = 1:length(GLMFP.timestamps)
+    GLMFP.spkmat(tt) = rand(1)<=GLMFP.predRate(tt);
+end
+simspikes.times = {GLMFP.timestamps(GLMFP.spkmat)};
 
 
+[PowerPhaseRatemap_sim] = bz_PowerPhaseRatemap(simspikes,deLFP,...
+    'ints',SleepState.ints.NREMstate);
 %% Figure
 figure
-subplot(2,2,1)
+subplot(3,3,1)
     imagesc(PowerPhaseRatemap.phasebins,PowerPhaseRatemap.powerbins,...
         PowerPhaseRatemap.ratemap{excell})
     hold on
     imagesc(PowerPhaseRatemap.phasebins+2*pi,PowerPhaseRatemap.powerbins,...
         PowerPhaseRatemap.ratemap{excell})
     xlim([-pi 3*pi])
+    caxis([0 15])
+    axis xy
+    colorbar
+    
+subplot(3,3,2)
+    imagesc(PowerPhaseRatemap_sim.phasebins,PowerPhaseRatemap_sim.powerbins,...
+        PowerPhaseRatemap_sim.ratemap{1})
+    hold on
+    imagesc(PowerPhaseRatemap_sim.phasebins+2*pi,PowerPhaseRatemap_sim.powerbins,...
+        PowerPhaseRatemap_sim.ratemap{1})
+    xlim([-pi 3*pi])
+    caxis([0 15])
     axis xy
     colorbar
 
-subplot(2,2,2)
+subplot(3,3,4)
     plot(GLMFP.powerbins,GLMFP.Rpower,'k','linewidth',2)
     axis tight
     box off
