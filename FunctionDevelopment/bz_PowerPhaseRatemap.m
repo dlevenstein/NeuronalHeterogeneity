@@ -3,7 +3,7 @@ function [PowerPhaseRatemap,spikebinIDs] = bz_PowerPhaseRatemap(spikes,filteredL
 %   Detailed explanation goes here
 %
 %INPUTS
-%   spikes          structure containing spikes.times, from bz_getSpikes
+%   spikes          structure containing spikes.times from bz_getSpikes
 %   filteredLFP     structure containing filteredLFP.timestamps, 
 %                       filteredLFP.amp, filteredLFP.phase,
 %                       filteredLFP.samplingRate. from bz_Filter(lfp).
@@ -13,6 +13,12 @@ function [PowerPhaseRatemap,spikebinIDs] = bz_PowerPhaseRatemap(spikes,filteredL
 %   'powernorm'     (default: 'modZ')
 %   'ratenorm'      (default: 'none')
 %   'numbins'       (default: 20)
+%   'metric'        if you would like to calculate average of some other
+%                   metric (i.e. not rate) as function of power/phase
+%                   should be cell array (similar to spikes) with value of
+%                   other metric for each spike
+%   'Nspikethresh'  number of spikes threshold to count mean metric
+%                   (default: 10)
 %
 %OUTPUTS
 %   PowerPhaseRatemap
@@ -23,17 +29,22 @@ function [PowerPhaseRatemap,spikebinIDs] = bz_PowerPhaseRatemap(spikes,filteredL
 p = inputParser;
 addParameter(p,'ints',[0 Inf],@isnumeric)
 addParameter(p,'powernorm','Zlog')
+addParameter(p,'metric',[])
+addParameter(p,'Nspikethresh',10)
 
 parse(p,varargin{:})
 ints = p.Results.ints;
 powernorm = p.Results.powernorm;
+metric = p.Results.metric;
+Nspikethresh = p.Results.Nspikethresh;
 
 %% Find lfp and spikes in the intervals
 instatespiketimes = cellfun(@(X) InIntervals(X,ints),...
     spikes.times,'UniformOutput',false);
 instateLFPtimes = InIntervals(filteredLFP.timestamps,ints);
 
-
+%%
+numcells = length(spikes.times);
 %%
 
 %Normalize Power
@@ -56,7 +67,7 @@ numbins = 20;
 %Power/Phase Bins
 phaseedges = linspace(-pi,pi,numbins+1);
 PowerPhaseRatemap.phasebins=phaseedges(1:end-1)+0.5.*diff(phaseedges(1:2));
-poweredges = linspace(-1.75,1.75,numbins+1);
+poweredges = linspace(-1.8,1.8,numbins+1);
 PowerPhaseRatemap.powerbins=poweredges(1:end-1)+0.5.*diff(poweredges(1:2));
 poweredges(1) = -Inf; poweredges(end) = Inf;
 
@@ -88,6 +99,36 @@ PowerPhaseRatemap.ratemap = cellfun(@(X) X./PowerPhaseRatemap.occupancy,...
 
 PowerPhaseRatemap.meanrate = nanmean(cat(3,PowerPhaseRatemap.ratemap{:}),3);
 
+if ~isempty(metric)
+    for po = 1:length(PowerPhaseRatemap.powerbins)
+        for ph = 1:length(PowerPhaseRatemap.phasebins)
+
+            %Find the spikes in the right bin
+            inbinspikes = cellfun(@(X,Y,Z) X==po & Y==ph ,...
+                spikebinIDs.powerbin,spikebinIDs.phasebin,...
+                'UniformOutput',false);
+            
+            %Find the metric from spikes in the state
+            instatmetric = cellfun(@(X,Y) X(Y),metric,instatespiketimes,...
+                'UniformOutput',false);
+
+            %Map for each cell
+            for cc = 1:numcells
+                PowerPhaseRatemap.metricmap{cc}(po,ph) = ...
+                    nanmean(instatmetric{cc}(inbinspikes{cc}));
+                
+                 %Threshold.
+                if sum(inbinspikes{cc}) < Nspikethresh
+                    PowerPhaseRatemap.metricmap{cc}(po,ph) = nan;
+                end
+            end
+
+        end
+    end
+    
+	PowerPhaseRatemap.meanmetric = nanmean(cat(3,PowerPhaseRatemap.metricmap{:}),3);
+
+end
 %%
 %excell = randsample(spikes.numcells,1);
 figure
@@ -119,7 +160,23 @@ subplot(2,2,3)
     xlabel('Power (Z(log))');ylabel('Time (s)')
     box off
     axis tight
-
+    
+if ~isempty(metric)
+    subplot(2,2,2)
+        h = imagesc(PowerPhaseRatemap.phasebins,PowerPhaseRatemap.powerbins,...
+            PowerPhaseRatemap.meanmetric);
+        hold on
+        h2 = imagesc(PowerPhaseRatemap.phasebins+2*pi,PowerPhaseRatemap.powerbins,...
+            PowerPhaseRatemap.meanmetric);
+        set(h,'AlphaData',~isnan(PowerPhaseRatemap.meanmetric));
+        set(h2,'AlphaData',~isnan(PowerPhaseRatemap.meanmetric));
+        plot(linspace(-pi,3*pi,100),cos(linspace(-pi,3*pi,100)),'k')
+        xlim([-pi 3*pi])
+        axis xy
+        colorbar  
+        xlabel('Phase');
+        ylabel('Power (Z(log))')
+end
 
 end
 

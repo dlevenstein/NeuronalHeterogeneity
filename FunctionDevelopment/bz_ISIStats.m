@@ -81,7 +81,7 @@ numstates = length(statenames);
 
 
 %% ISI and CV2 statistics
-numcells = length(spikes.UID);
+numcells = length(spikes.times);
 
 %Calculate ISI and CV2 for allspikes
 allspikes.ISIs = cellfun(@diff,spikes.times,'UniformOutput',false);

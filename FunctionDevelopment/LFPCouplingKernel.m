@@ -1,4 +1,4 @@
-function [ lambda ] = LFPCouplingKernel( binnedpowers,phases,prefphase,powerdependence )
+function [ lambda ] = LFPCouplingKernel( binnedpowers,phases,prefphase,powerdependence,powerratedependence )
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 %phasepowergram = spkmat.specgram;
@@ -37,7 +37,7 @@ POW = reshape(binnedpowers,[ntsteps,length(powerdependence)]);
 
 %A = @(a,POW,TH) (POW*a(2:npowerbins+1)'.*cos(TH+a(npowerbins+2)) + log(a(1)));
 %lambda = zeros(
-lambda = POW*powerdependence'.*sum(cos(bsxfun(@plus,TH,prefphase)),2);
+lambda = log(POW*powerratedependence')+POW*powerdependence'.*sum(cos(bsxfun(@plus,TH,prefphase)),2);
 
 end
 

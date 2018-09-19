@@ -1,4 +1,4 @@
-function [ GLMFP ] = GLMLFP( spiketimes,specgram,varargin )
+function [ GLMFP ] = GLMLFP_param( spiketimes,specgram,varargin )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 % Specgram: structure with
@@ -80,24 +80,32 @@ end
 %% Making the explanatory matrix
 
 TH = angX;
-POW = binnedpowers;
+POW = abX;
 %abX = abX;
 
 %%
 %Make a variable to hold the predicted kernels:
 %nfreq = 1;
-kernelPredict = zeros(1+2*nfreqs.*npowerbins+nfreqs,1)';
-powidx = 2:(nfreqs.*npowerbins+1);
-phaseidx = (nfreqs.*npowerbins+2):(nfreqs.*npowerbins+nfreqs+1);
-ratepowidx = (nfreqs.*npowerbins+nfreqs+2):(2.*nfreqs.*npowerbins+nfreqs+1);
+kernelPredict = zeros(1+6.*nfreqs,1)';
+phaseidx = 2:(1.*nfreqs+1);
+p_0 = (1.*nfreqs+2):(2.*nfreqs+1);
+k_b = (2.*nfreqs+2):(3.*nfreqs+1);
+alph_b = (3.*nfreqs+2):(4.*nfreqs+1);
+k_a = (4.*nfreqs+2):(5.*nfreqs+1);
+alph_a = (5.*nfreqs+2):(6.*nfreqs+1);
 %Kernels: [rate, powerdependence, phase]
 
 %Make a function for log(rate) (i.e. input!, pre-nonlinearity) as f'n of kernels (a) and design matrix (units spk/s)
 %A = @(a,S,R) (S*a(2:ntfilt+1) + R*a(ntfilt+2:ntfilt+nthist+1) + log(a(1)));
 %A = @(a,POW,TH) (POW*a(2:npowerbins+1)'.*cos(TH+a(npowerbins+2)) + log(a(1)));
-A = @(a,POW,TH) (... %(abX*a(ratepowidx) + ...
-    LFPCouplingKernel(POW,TH,a(phaseidx),a(powidx),a(ratepowidx)));% + ...
-    %log(a(1)));
+%lambda = log(POW*powerratedependence')+POW*powerdependence'.*sum(cos(bsxfun(@plus,TH,prefphase)),2);
+%NOTE: this does not yet work with multiple frequencies...
+A = @(a,POW,TH) (a(k_b).*max(POW-a(p_0),0).^a(alph_b) + ...
+    a(k_a).*max(POW-a(p_0),0).^a(alph_a).*sum(cos(bsxfun(@plus,TH,a(phaseidx))),2) + ...
+    log(a(1)));
+% A = @(a,POW,TH) (... %(abX*a(ratepowidx) + ...
+%     LFPCouplingKernel(POW,TH,a(phaseidx),a(powidx),a(ratepowidx)) + ...
+%     log(a(1)));
 %Make a function for loglikelihood as f'n of kernel
 %Recall....
 %        Poisson likelihood:      P(s|r) = (r*dt)^s/s! exp(-(r.*dt))  
@@ -127,15 +135,16 @@ options = optimoptions('fmincon','Display','iter','Algorithm','sqp');%,'UseParal
 %Decrease tolerance.....
 options.MaxFunctionEvaluations = 2e4;
 %%
+
 %Add constraint: no <0 coupling
 lb = -inf(size(kernelPredict));
 ub = inf(size(kernelPredict));
-lb(powidx) = 0;
-ub(powidx) = 5;
-lb(phaseidx) = -3*pi;
-ub(phaseidx) = 3*pi;
-lb(1) = 1e-5; ub(1) = 100;
-lb(ratepowidx) = 1e-5; ub(ratepowidx) = 100;
+lb(p_0) = -2;           ub(p_0) = 2;
+lb(alph_b) = 0; 
+lb(alph_a) = 0; 
+lb(phaseidx) = -3*pi;   ub(phaseidx) = 3*pi;
+lb(1) = 1e-5;           ub(1) = 100;
+
 
 %Aeq = zeros(size(kernelPredict));
 %Aeq(ratepowidx) = 1;
@@ -143,16 +152,25 @@ lb(ratepowidx) = 1e-5; ub(ratepowidx) = 100;
 
 initial = zeros(size(kernelPredict));
 initial(1) = 1;
-initial(ratepowidx) = 1;
+initial(alph_b) = 2;
+initial(alph_a) = 2;
+
 kernelPredict = fmincon(nlogL,initial,[],[],[],[],lb,ub,[],options);
 %Aeq: zeros(size(kernelPredict) Aeq(ratepowidx)=1  beq: 0
 %%
 R0 = kernelPredict(1);
-Rpower = kernelPredict(powidx);
-Rpower = reshape(Rpower,npowerbins,nfreqs);
 Rphase = kernelPredict(phaseidx);
-Rratepower = kernelPredict(ratepowidx);
-Rratepower = reshape(Rratepower,npowerbins,nfreqs);
+Rp0 = kernelPredict(p_0);
+Rkb = kernelPredict(k_b);
+Ralph_b = kernelPredict(alph_b);
+Rka = kernelPredict(k_a);
+Ralph_a = kernelPredict(alph_a);
+
+% Rpower = kernelPredict(powidx);
+% Rpower = reshape(Rpower,npowerbins,nfreqs);
+% 
+% Rratepower = kernelPredict(ratepowidx);
+% Rratepower = reshape(Rratepower,npowerbins,nfreqs);
 %figure
 %plot(powercenters,Rpower)
 %% Check the result
@@ -190,11 +208,13 @@ predictedrate = exp(predictedinput);
 % kernelPredict = fminunc(nlogL,initial);
 %%
 GLMFP.R0 = R0;
-GLMFP.Rpower = Rpower;
 GLMFP.Rphase = Rphase;
-GLMFP.Rratepower = Rratepower;
-%GLMFP.freqs 
-GLMFP.powerbins = powercenters;
+GLMFP.Rp0 = Rp0;
+GLMFP.Rkb = Rkb;
+GLMFP.Ralph_b = Ralph_b;
+GLMFP.Rka = Rka;
+GLMFP.Ralph_a = Ralph_a;
+
 GLMFP.predDrive =predictedinput;
 GLMFP.predRate = predictedrate;
 GLMFP.timestamps = spkmat.timestamps;
