@@ -2,10 +2,10 @@ function [  ] = SpikeStatsbyDeltaAnalysis(basePath,figfolder)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %% DEV
-%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
-basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-%basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
+reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+%reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
+%basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
+basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 %basePath = pwd;
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyDeltaAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
@@ -108,8 +108,8 @@ for tt= 1:numclasses
     PowerPhaseRatemap.classCV2.(classnames{tt}) = nanmean(cat(3,PowerPhaseRatemap.metricmap{CellClass.(classnames{tt})}),3);
     PowerPhaseRatemap.classrate.(classnames{tt}) = nanmean(cat(3,PowerPhaseRatemap.ratemap{CellClass.(classnames{tt})}),3);
 
-    PowerPhaseRatemap_ga.classCV2.(classnames{tt}) = nanmean(cat(3,PowerPhaseRatemap_ga.metricmap{CellClass.(classnames{tt})}),3);
-    PowerPhaseRatemap_ga.classrate.(classnames{tt}) = nanmean(cat(3,PowerPhaseRatemap_ga.ratemap{CellClass.(classnames{tt})}),3);
+  %  PowerPhaseRatemap_ga.classCV2.(classnames{tt}) = nanmean(cat(3,PowerPhaseRatemap_ga.metricmap{CellClass.(classnames{tt})}),3);
+   % PowerPhaseRatemap_ga.classrate.(classnames{tt}) = nanmean(cat(3,PowerPhaseRatemap_ga.ratemap{CellClass.(classnames{tt})}),3);
 
     
     ISIstats_sim.ISIhist.NREMstate.popmean.(classnames{tt}) = ...
@@ -147,8 +147,8 @@ subplot(4,3,6+tt)
     plot(ISIstats_sim.ISIhist.logbins,...
         ISIstats_sim.ISIhist.NREMstate.popmean.(classnames{tt}),'--','color',classcolors{tt})
     hold on
-    plot(ISIstats_poiss.ISIhist.logbins,...
-        ISIstats_poiss.ISIhist.NREMstate.popmean.(classnames{tt}),':','color',classcolors{tt})
+%    plot(ISIstats_poiss.ISIhist.logbins,...
+%        ISIstats_poiss.ISIhist.NREMstate.popmean.(classnames{tt}),':','color',classcolors{tt})
     plot(ISIStats.ISIhist.logbins,...
         ISIStats.ISIhist.NREMstate.popmean.(classnames{tt}),'-','linewidth',2,'color',classcolors{tt})
     xlabel('ISI (s)');
@@ -183,11 +183,13 @@ end
 
 for tt= 1:numclasses
     subplot(4,4,2+tt)
-        imagesc(PowerPhaseRatemap.phasebins,PowerPhaseRatemap.powerbins,...
+        h=imagesc(PowerPhaseRatemap.phasebins,PowerPhaseRatemap.powerbins,...
             PowerPhaseRatemap_sim.classCV2.(classnames{tt}))
         hold on
-        imagesc(PowerPhaseRatemap.phasebins+2*pi,PowerPhaseRatemap.powerbins,...
+        h2=imagesc(PowerPhaseRatemap.phasebins+2*pi,PowerPhaseRatemap.powerbins,...
             PowerPhaseRatemap_sim.classCV2.(classnames{tt}))
+        set(h,'AlphaData',~isnan(PowerPhaseRatemap_sim.classCV2.(classnames{tt})));
+        set(h2,'AlphaData',~isnan(PowerPhaseRatemap_sim.classCV2.(classnames{tt})));
         xlim([-pi 3*pi])
         caxis([0.7 1.3])
         axis xy
@@ -214,11 +216,13 @@ end
 
 for tt= 1:numclasses
     subplot(4,4,6+tt)
-        imagesc(PowerPhaseRatemap.phasebins,PowerPhaseRatemap.powerbins,...
+        h=imagesc(PowerPhaseRatemap.phasebins,PowerPhaseRatemap.powerbins,...
             PowerPhaseRatemap.classCV2.(classnames{tt}))
         hold on
-        imagesc(PowerPhaseRatemap.phasebins+2*pi,PowerPhaseRatemap.powerbins,...
+        h2=imagesc(PowerPhaseRatemap.phasebins+2*pi,PowerPhaseRatemap.powerbins,...
             PowerPhaseRatemap.classCV2.(classnames{tt}))
+        set(h,'AlphaData',~isnan(PowerPhaseRatemap.classCV2.(classnames{tt})));
+        set(h2,'AlphaData',~isnan(PowerPhaseRatemap.classCV2.(classnames{tt})));
         xlim([-pi 3*pi])
         caxis([0.7 1.3])
         axis xy
@@ -229,37 +233,37 @@ for tt= 1:numclasses
 end
 
 
-for tt= 1:numclasses
-    subplot(4,4,12+tt)
-        imagesc(PowerPhaseRatemap_ga.phasebins,PowerPhaseRatemap_ga.powerbins,...
-            PowerPhaseRatemap_ga.classrate.(classnames{tt}))
-        hold on
-        imagesc(PowerPhaseRatemap_ga.phasebins+2*pi,PowerPhaseRatemap_ga.powerbins,...
-            PowerPhaseRatemap_ga.classrate.(classnames{tt}))
-        xlim([-pi 3*pi])
-        caxis([0 maxrate.(classnames{tt})])
-        axis xy
-        colorbar
-        xlabel('Phase');ylabel('Power')
-        title('Real Gamma Ratemap')
-end
+% for tt= 1:numclasses
+%     subplot(4,4,12+tt)
+%         imagesc(PowerPhaseRatemap_ga.phasebins,PowerPhaseRatemap_ga.powerbins,...
+%             PowerPhaseRatemap_ga.classrate.(classnames{tt}))
+%         hold on
+%         imagesc(PowerPhaseRatemap_ga.phasebins+2*pi,PowerPhaseRatemap_ga.powerbins,...
+%             PowerPhaseRatemap_ga.classrate.(classnames{tt}))
+%         xlim([-pi 3*pi])
+%         caxis([0 maxrate.(classnames{tt})])
+%         axis xy
+%         colorbar
+%         xlabel('Phase');ylabel('Power')
+%         title('Real Gamma Ratemap')
+% end
 
 
-for tt= 1:numclasses
-    subplot(4,4,14+tt)
-        imagesc(PowerPhaseRatemap_ga.phasebins,PowerPhaseRatemap_ga.powerbins,...
-            PowerPhaseRatemap_ga.classCV2.(classnames{tt}))
-        hold on
-        imagesc(PowerPhaseRatemap_ga.phasebins+2*pi,PowerPhaseRatemap_ga.powerbins,...
-            PowerPhaseRatemap_ga.classCV2.(classnames{tt}))
-        xlim([-pi 3*pi])
-        caxis([0.7 1.3])
-        axis xy
-        colorbar
-        colormap(gca,cv2color)
-        xlabel('Phase');ylabel('Power')
-        title('Real Gamma CV2map')
-end
+% for tt= 1:numclasses
+%     subplot(4,4,14+tt)
+%         imagesc(PowerPhaseRatemap_ga.phasebins,PowerPhaseRatemap_ga.powerbins,...
+%             PowerPhaseRatemap_ga.classCV2.(classnames{tt}))
+%         hold on
+%         imagesc(PowerPhaseRatemap_ga.phasebins+2*pi,PowerPhaseRatemap_ga.powerbins,...
+%             PowerPhaseRatemap_ga.classCV2.(classnames{tt}))
+%         xlim([-pi 3*pi])
+%         caxis([0.7 1.3])
+%         axis xy
+%         colorbar
+%         colormap(gca,cv2color)
+%         xlabel('Phase');ylabel('Power')
+%         title('Real Gamma CV2map')
+% end
 
 NiceSave('DeltaCoupling',figfolder,baseName)
 
@@ -292,17 +296,17 @@ subplot(5,1,3)
     box off
     set(gca,'xticklabels',[])
     
-subplot(5,1,4)
-    hold on
-    for cc = 1:spikes.numcells
-        whichcell = ISIStats.sorts.NREMstate.rate(cc);
-        plot(simspikes_poiss.times{whichcell},cc.*ones(size(simspikes_poiss.times{whichcell})),'k.')
-    end
-    xlim(viewwin);ylim([0 spikes.numcells])
-    ylabel('Poisson Spikes');
-    box off
-    set(gca,'xticklabels',[])
-  
+% subplot(5,1,4)
+%     hold on
+%     for cc = 1:spikes.numcells
+%         whichcell = ISIStats.sorts.NREMstate.rate(cc);
+%         plot(simspikes_poiss.times{whichcell},cc.*ones(size(simspikes_poiss.times{whichcell})),'k.')
+%     end
+%     xlim(viewwin);ylim([0 spikes.numcells])
+%     ylabel('Poisson Spikes');
+%     box off
+%     set(gca,'xticklabels',[])
+%   
 subplot(5,1,2)
     plot(lfp.timestamps,lfp.data,'k')
     hold on
@@ -395,7 +399,7 @@ subplot(4,3,9)
     plot(ISIStats.ISIhist.logbins,ISIStats.ISIhist.NREMstate.log(excell,:),'k','linewidth',2)
     hold on
     plot(ISIstats_sim.ISIhist.logbins,ISIstats_sim.ISIhist.NREMstate.log(excell,:),'k--','linewidth',2)
-    plot(ISIstats_poiss.ISIhist.logbins,ISIstats_poiss.ISIhist.NREMstate.log(excell,:),'k:','linewidth',2)
+   % plot(ISIstats_poiss.ISIhist.logbins,ISIstats_poiss.ISIhist.NREMstate.log(excell,:),'k:','linewidth',2)
 
     axis tight
     box off

@@ -156,8 +156,7 @@ Rratepower = reshape(Rratepower,npowerbins,nfreqs);
 %figure
 %plot(powercenters,Rpower)
 %% Check the result
-predictedinput =A(kernelPredict,POW,TH);
-predictedrate = exp(predictedinput);
+predictedrate = exp(A(kernelPredict,POW,TH));
 % figure
 % subplot(2,2,1)
 %     plot(spkmat.timestamps,predictedinput)
@@ -195,7 +194,7 @@ GLMFP.Rphase = Rphase;
 GLMFP.Rratepower = Rratepower;
 %GLMFP.freqs 
 GLMFP.powerbins = powercenters;
-GLMFP.predDrive =predictedinput;
+%GLMFP.predDrive =predictedinput;
 GLMFP.predRate = predictedrate;
 GLMFP.timestamps = spkmat.timestamps;
 %GLMFP.MSE?
