@@ -83,7 +83,7 @@ for cc = 1:spikes.numcells
     cc
     for tt = 1:length(GLMmodelfit(cc).timestamps)
         GLMmodelfit(cc).spkmat(tt) = rand(1)<=GLMmodelfit(cc).predRate(tt);
-        Poissmodelfit(cc).spkmat(tt) = rand(1)<=GLMmodelfit(excell).R0;
+        Poissmodelfit(cc).spkmat(tt) = rand(1)<=ISIStats.summstats.NREMstate.meanrate(cc)./predLFP.samplingRate;
     end
     simspikes.times{cc} = GLMmodelfit(cc).timestamps(GLMmodelfit(cc).spkmat);
     simspikes_poiss.times{cc} = GLMmodelfit(cc).timestamps(Poissmodelfit(cc).spkmat);
@@ -147,8 +147,8 @@ subplot(4,3,6+tt)
     plot(ISIstats_sim.ISIhist.logbins,...
         ISIstats_sim.ISIhist.NREMstate.popmean.(classnames{tt}),'--','color',classcolors{tt})
     hold on
-%    plot(ISIstats_poiss.ISIhist.logbins,...
-%        ISIstats_poiss.ISIhist.NREMstate.popmean.(classnames{tt}),':','color',classcolors{tt})
+    plot(ISIstats_poiss.ISIhist.logbins,...
+        ISIstats_poiss.ISIhist.NREMstate.popmean.(classnames{tt}),':','color',classcolors{tt})
     plot(ISIStats.ISIhist.logbins,...
         ISIStats.ISIhist.NREMstate.popmean.(classnames{tt}),'-','linewidth',2,'color',classcolors{tt})
     xlabel('ISI (s)');
@@ -283,7 +283,7 @@ NiceSave('DeltaCoupling',figfolder,baseName)
 % % hold on
 % % plot(PowerPhaseRatemap.phasebins+2*pi, PowerPhaseRatemap.meanrate(end/2,:))
 %% Figure
-viewwin = bz_RandomWindowInIntervals(SleepState.ints.NREMstate,5);
+viewwin = bz_RandomWindowInIntervals(SleepState.ints.NREMstate,4);
 figure
 subplot(5,1,3)
     hold on
@@ -296,23 +296,23 @@ subplot(5,1,3)
     box off
     set(gca,'xticklabels',[])
     
-% subplot(5,1,4)
-%     hold on
-%     for cc = 1:spikes.numcells
-%         whichcell = ISIStats.sorts.NREMstate.rate(cc);
-%         plot(simspikes_poiss.times{whichcell},cc.*ones(size(simspikes_poiss.times{whichcell})),'k.')
-%     end
-%     xlim(viewwin);ylim([0 spikes.numcells])
-%     ylabel('Poisson Spikes');
-%     box off
-%     set(gca,'xticklabels',[])
+subplot(5,1,4)
+    hold on
+    for cc = 1:spikes.numcells
+        whichcell = ISIStats.sorts.NREMstate.rate(cc);
+        plot(simspikes_poiss.times{whichcell},cc.*ones(size(simspikes_poiss.times{whichcell})),'k.')
+    end
+    xlim(viewwin);ylim([0 spikes.numcells])
+    ylabel('Poisson Spikes');
+    box off
+    set(gca,'xticklabels',[])
 %   
 subplot(5,1,2)
     plot(lfp.timestamps,lfp.data,'k')
     hold on
     plot(deLFP.timestamps,deLFP.data,'b')
     xlim(viewwin)
-    ylabel({'LFP','Real Spikes'});
+    ylabel('LFP');
     box off
     set(gca,'xticklabels',[]);set(gca,'yticklabels',[])
     

@@ -197,6 +197,8 @@ GLMFP.powerbins = powercenters;
 %GLMFP.predDrive =predictedinput;
 GLMFP.predRate = predictedrate;
 GLMFP.timestamps = spkmat.timestamps;
+GLMFP.dt = dt;
+%GLMFP.ratefun = A
 %GLMFP.MSE?
 
 end
