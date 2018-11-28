@@ -1,4 +1,4 @@
-function [ EIGLM ] = GLMEI( spikes,CellClass,varargin )
+function [ EIGLM ] = GLMEI_LFP( spikes,filtlfp,CellClass,varargin )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %
@@ -22,8 +22,11 @@ smoothwin = p.Results.smoothwin;
 
 dt = 0.001;
 spkmat = bz_SpktToSpkmat(spikes,'binsize',dt);
+spkmat.filtlfp = interp1(filtlfp.timestamps,filtlfp.data,spkmat.timestamps,'nearest');
+
 
 status = InIntervals(spkmat.timestamps,intervals);
+spkmat.filtlfp = spkmat.filtlfp(status,:);
 spkmat.data = spkmat.data(status,:);
 spkmat.timestamps = spkmat.timestamps(status);
 
@@ -54,16 +57,39 @@ IMUA = double(IMUA);
 % plot(spkmat.timestamps,spkmat_in,'k')
 % xlim(viewints)
 
+%% Get Phase/BinnedPower
+
+abX = zscore(log10(abs(spkmat.filtlfp)));
+angX = angle(spkmat.filtlfp);
+
+npowerbins = 10;
+nfreqs = length(filtlfp.freqs);
+
+poweredges = linspace(-1.75,1.75,npowerbins+1);
+powercenters = poweredges(1:end-1)+0.5.*diff(poweredges(1:2));
+poweredges(1) = -Inf; poweredges(end) = Inf;
+[~,~,powerBIN] = histcounts(abX,poweredges);
+
+binnedpowers = zeros(size(powerBIN,1),npowerbins);
+for tt = 1:length(powerBIN)
+    binnedpowers(tt,powerBIN(tt)) = 1;
+end
+
+
 %% Set up the kernel and indices for parameters
-kernelPredict = zeros(3,1)';
+kernelPredict = zeros(5+npowerbins-1,1)';
 ridx = 1;
 Eidx = 2;
 Iidx = 3;
+phidx = 4;
+powidx = 5:(5+npowerbins-1);
 
 %% Functions.... clean this up
 
 %Function for log(rate) from E, I and kernels (a)
-A = @(a,E,I) (a(Eidx)*E + a(Iidx)*I + log(a(ridx)));% + ...
+A = @(a,E,I,POW,TH) (a(Eidx)*E + a(Iidx)*I + ...
+    POW*a(powidx)'.*cos(TH+a(phidx)) + ...
+    log(a(ridx)));% + ...
                % + H*a(histidx));
 % V = @(a,POW,TH,abX) (... %(abX*a(ratepowidx) + ...
 %     LFPCouplingKernel(POW,TH,a(phaseidx),a(powidx)) + ...
@@ -81,7 +107,8 @@ A = @(a,E,I) (a(Eidx)*E + a(Iidx)*I + log(a(ridx)));% + ...
 %nlogL = @(k) -(spkmat'*(A(k,S,R).*dt) - sum(exp(A(k,S,R)).*dt));
 %nlogL = @(k) -(spkmat_in'*(A(k,POW,TH).*dt) - sum(exp(A(k,POW,TH)).*dt));
 %nlogL = @(k) -(spkmat_in'*(A(k,POW,TH,abX).*dt) - sum(exp(A(k,POW,TH,abX)).*dt));
-nlogL = @(k) -(spkmat_in'*(A(k,EMUA,IMUA).*dt) - sum(exp(A(k,EMUA,IMUA)).*dt));
+nlogL = @(k) -(spkmat_in'*(A(k,EMUA,IMUA,binnedpowers,angX).*dt) - ...
+    sum(exp(A(k,EMUA,IMUA,binnedpowers,angX)).*dt));
 
 %% Constraints and fitting parameters
 %%minimize nloglik!
@@ -94,18 +121,14 @@ options.MaxFunctionEvaluations = 2e4;
 %Add constraint: no <0 coupling
 lb = -inf(size(kernelPredict));
 ub = inf(size(kernelPredict));
-% lb(Eidx) = 0;
-% lb(Iidx) = 0;
-% lb(kidx) = 1e-6;
-% lb(alphaidx) = 0.5;
-% lb(ELidx) = -70;
-% ub(ELidx) = -20;
+lb(phidx) = -4*pi;
+ub(phidx) = 4*pi;
+lb(powidx) = 0;
+ub(powidx) = 5;
 lb(ridx) = 1e-5; ub(ridx) = 100; 
 initial = zeros(size(kernelPredict));
 
 initial(ridx) = 1e-3;
-initial(Eidx) = 0;
-initial(Iidx) = 0;
 
 
 
@@ -113,15 +136,13 @@ initial(Iidx) = 0;
 kernelPredict = fmincon(nlogL,initial,[],[],[],[],lb,ub,[],options);
 
 %%
-%NlogL = nlogL(kernelPredict);
-R0 = kernelPredict(ridx);
-RE = kernelPredict(Eidx);
-RI = kernelPredict(Iidx);
-predictedrate = exp(A(kernelPredict,EMUA,IMUA));
+predictedrate = exp(A(kernelPredict,EMUA,IMUA,binnedpowers,angX));
 
-EIGLM.R0 = R0;
-EIGLM.RE = RE;
-EIGLM.RI = RI;
+EIGLM.R0 = kernelPredict(ridx);
+EIGLM.RE = kernelPredict(Eidx);
+EIGLM.RI = kernelPredict(Iidx);
+EIGLM.Rpower = kernelPredict(powidx);
+EIGLM.Rphase = kernelPredict(phidx);
 EIGLM.predRate = predictedrate;
 EIGLM.timestamps = spkmat.timestamps;
 EIGLM.dt = dt;
@@ -129,26 +150,27 @@ EIGLM.nlogL = nlogL(kernelPredict);
 
 %%
 % A(kernelPredict)
-% %%
+% % %%
 % viewints = bz_RandomWindowInIntervals(intervals,5);
 % 
 % figure
 % subplot(4,1,1)
-% plot(spkmat.timestamps,Erate,'k')
+% plot(spkmat.timestamps,EMUA,'k')
 % hold on
-% plot(spkmat.timestamps,Irate,'r')
+% plot(spkmat.timestamps,IMUA,'r')
 % xlim(viewints)
 % subplot(4,1,2)
-% plot(spkmat.timestamps,spkmat_in,'k')
+% plot(spkmat.timestamps,real(spkmat.filtlfp),'k')
 % xlim(viewints)
 % subplot(4,1,3)
-% plot(spkmat.timestamps,A(initial,Erate,Irate))
+% plot(spkmat.timestamps,spkmat_in,'k')
 % xlim(viewints)
-% 
 % subplot(4,1,4)
-% plot(spkmat.timestamps,exp(A(initial,Erate,Irate)))
+% plot(spkmat.timestamps,predictedrate)
 % xlim(viewints)
 % 
+
+
 % %%
 % figure
 % subplot(4,1,1)
