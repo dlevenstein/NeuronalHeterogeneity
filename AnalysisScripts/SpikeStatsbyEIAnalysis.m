@@ -797,10 +797,10 @@ figure
 plot(cspkbinstats.MUA{excell},log10(cspkbinstats.rate{excell}),'.')
 LogScale('y',10)
 %% Delta for GLM 
-deLFP = bz_Filter(lfp,'passband',[0.5 6],'order',1,'filter','fir1');
-predLFP = deLFP;
-predLFP.data = predLFP.hilb;
-predLFP.freqs = 4;
+% deLFP = bz_Filter(lfp,'passband',[0.5 6],'order',1,'filter','fir1');
+% predLFP = deLFP;
+% predLFP.data = predLFP.hilb;
+% predLFP.freqs = 4;
 
 %%
 
@@ -811,12 +811,10 @@ predLFP.freqs = 4;
 clear GLMmodelfit
 for cc = 1:spikes.numcells
     cc
-% [ GLMmodelfit(cc) ] = GLMLFP_param(spikes.times(cc),predLFP,...
-%     'intervals',SleepState.ints.NREMstate );
-%     [ GLMmodelfit(cc) ] = GLMEI(spikes,CellClass,'intervals',stateints,...
-%         'refcell',cc,'smoothwin',binsize);
-    [ GLMmodelfit(cc) ] = GLMEI_LFP(spikes,predLFP,CellClass,'intervals',stateints,...
+    [ GLMmodelfit(cc) ] = GLMEI(spikes,CellClass,'intervals',stateints,...
         'refcell',cc,'smoothwin',binsize);
+%     [ GLMmodelfit(cc) ] = GLMEI_LFP(spikes,predLFP,CellClass,'intervals',stateints,...
+%         'refcell',cc,'smoothwin',binsize);
 end
 %save([fitfolder,'EIMUA'],GLMmodelfit)
 
@@ -1167,7 +1165,7 @@ NiceSave('GLMPopCoupling',figfolder,baseName)
     
 %% Plot the simulated data
 %% Figure
-viewwin = bz_RandomWindowInIntervals(SleepState.ints.(thisstate),5);
+viewwin = bz_RandomWindowInIntervals(SleepState.ints.(thisstate),10);
 figure
 subplot(5,1,4)
     hold on
@@ -1227,10 +1225,10 @@ cc = 20;
 %clear GLMmodelfit
 for tt = 1:length(timescales)
     tt
-%     [ GLMmodelfit_ts(tt) ] = GLMEI(spikes,CellClass,'intervals',stateints,...
-%         'refcell',cc,'smoothwin',timescales(tt));
-    [ GLMmodelfit_ts(tt) ] = GLMEI_LFP(spikes,predLFP,CellClass,'intervals',stateints,...
+    [ GLMmodelfit_ts(tt) ] = GLMEI(spikes,CellClass,'intervals',stateints,...
         'refcell',cc,'smoothwin',timescales(tt));
+%     [ GLMmodelfit_ts(tt) ] = GLMEI_LFP(spikes,predLFP,CellClass,'intervals',stateints,...
+%         'refcell',cc,'smoothwin',timescales(tt));
 end
 %%
 figure
