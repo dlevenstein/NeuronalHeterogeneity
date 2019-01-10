@@ -3,7 +3,7 @@ function [ ] = RateFluctuationAnalysis(basePath,figfolder)
 %   Detailed explanation goes here
 %% DEV
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-figfolder = '/Users/dlevenstein/Dropbox/Research/Current Projects/FRHetAndDynamics/AnalysisScripts/AnalysisFigs';
+figfolder = '/Users/dlevenstein/Dropbox/Research/Current Projects/FRHetAndDynamics/AnalysisScripts/AnalysisFigs/RateFluctuationAnalysis';
 baseName = bz_BasenameFromBasepath(basePath);
 
 spikes = bz_GetSpikes('basePath',basePath);
@@ -77,13 +77,13 @@ figure
     legend('NREM','REM','WAKE')
     LogScale('x',10)
     xlabel('Bin Size (s)');ylabel(['Dimensionality (',num2str(length(spikes.UID)),' neurons)'])
-    
+NiceSave('Dimensionality',figfolder,baseName)    
 %%
 figure
 subplot(2,2,1)
-    plot(log10(spikecountmean(CellClass.pE)),log10(spikecountCV(CellClass.pE)),'k.')
+    plot(log10(spikecountmean(:,CellClass.pE)),log10(spikecountCV(:,CellClass.pE)),'k.')
     hold on
-    plot(log10(spikecountmean(CellClass.pI)),log10(spikecountCV(CellClass.pI)),'r.')
+    plot(log10(spikecountmean(:,CellClass.pI)),log10(spikecountCV(:,CellClass.pI)),'r.')
     LogScale('xy',10)
 subplot(2,2,2)
     imagesc(SPKhist.bins,1:length(spikes.UID),log10(SPKhist.hist(:,sorts.rate))')

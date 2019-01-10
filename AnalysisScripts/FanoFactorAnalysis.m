@@ -68,7 +68,6 @@ FFstats.FF = (FFstats.std.^2)./FFstats.mean;
 %%
 figure
 subplot(2,2,1)
-
 plot(log10(ISIStats.summstats.NREMstate.meanrate),FFstats.FF,'.')
 
 subplot(2,2,2)
@@ -76,15 +75,6 @@ plot(log10(ISIStats.summstats.NREMstate.meanCV2),FFstats.FF,'.')
 
 subplot(2,2,3)
 plot(log10(ISIStats.summstats.NREMstate.ISICV),FFstats.FF,'.')
-
-
-
-%%
-%%
-
-
-
-
 
 
 
