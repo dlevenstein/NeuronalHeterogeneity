@@ -50,6 +50,9 @@ for ss = 1:length(statenames)
        meanISIhist.std.(statenames{ss}).(classnames{cc}) = ...
            nanstd(ISIstats.ISIhist.(statenames{ss}).log(CellClass.(classnames{cc}),:),[],1);
 
+       meanreturnhist.(statenames{ss}).(classnames{cc}) = ...
+           nanmean(ISIstats.ISIhist.(statenames{ss}).return(:,:,CellClass.(classnames{cc})),3);
+       
    end
 end
 %% CV2-rate correlation
@@ -149,7 +152,7 @@ rates = ISIstats.summstats.NREMstate.meanrate(exE);
 excell = [exE(sortedrateidx) randsample(find(CellClass.pI),1)]
 figure
 for ee = 1:4
-    subplot(6,3,3.*ee)
+    subplot(6,3,3.*ee-1)
     hold on
     for ss = 1:2 
         plot(ISIstats.ISIhist.logbins(1,:),ISIstats.ISIhist.(statenames{ss}).log(excell(ee),:),...
@@ -160,6 +163,27 @@ for ee = 1:4
     box off
     xlim([-3 2.25]);ylim([0 0.125])
     LogScale('x',10)
+        if ee==4
+            xlabel('ISI (s)')
+        end
+        
+	for ss = 1:2
+        subplot(6,6,6.*ee+ss-2)    
+        colormap(histcolors)
+        if ss==2
+            colormap(gca,NREMhistcolors)
+        end
+
+            imagesc(ISIstats.ISIhist.logbins(1,:),ISIstats.ISIhist.logbins(1,:),...
+                ISIstats.ISIhist.(statenames{ss}).return(:,:,excell(ee)))
+            hold on
+            plot(log10(1./ISIstats.summstats.(statenames{ss}).meanrate(excell(ee))),...
+                log10(1./ISIstats.summstats.(statenames{ss}).meanrate(excell(ee))),'r+')
+
+            axis xy
+            set(gca,'ytick',[]);set(gca,'xtick',[]);
+    end
+
 end
 
 NREMhistcolors = makeColorMap([1 1 1],[0 0 0.8]);
@@ -189,7 +213,7 @@ for ss = 1:2
 end
 
 for cc = 1:length(classnames)
-    subplot(6,3,12+3.*cc)
+    subplot(6,3,11+3.*cc)
     hold on
     for ss = 1:2
         errorshade(meanISIhist.logbins,meanISIhist.(statenames{ss}).(classnames{cc}),...
@@ -209,9 +233,24 @@ for cc = 1:length(classnames)
         LogScale('x',10)
         if cc ==2
             xlabel('ISI (s)')
-
         end
+        
+	for ss = 1:2
+        subplot(6,6,6.*cc+22+ss)    
+        colormap(histcolors)
+        if ss==2
+            colormap(gca,NREMhistcolors)
+        end
+
+            imagesc(meanreturnhist.(statenames{ss}).(classnames{cc}))
+            axis xy
+            set(gca,'ytick',[]);set(gca,'xtick',[]);
+    end
+
 end
+
+
+
 NiceSave('ISIfig',figfolder,[])
 
 %%
@@ -275,6 +314,10 @@ for ss=1:numstates
 end
 
 NiceSave('ISIstatsbystate',figfolder,[])
+
+%%
+figure
+
 %%
 figure
 colormap(histcolors)
