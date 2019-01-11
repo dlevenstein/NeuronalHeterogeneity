@@ -162,10 +162,13 @@ for ee = 1:4
     LogScale('x',10)
 end
 
-
+NREMhistcolors = makeColorMap([1 1 1],[0 0 0.8]);
 for ss = 1:2
-    subplot(3,3,ss*3-2)
+    subplot(3,4,ss*4-3)
     colormap(histcolors)
+    if ss==2
+        colormap(gca,NREMhistcolors)
+    end
        % subplot(2,3,4)
             imagesc((ISIstats.ISIhist.logbins(1,:)),[1 numcells],...
                 ISIstats.ISIhist.(statenames{ss}).log(sorts.(statenames{ss}).ratebyclass,:))
