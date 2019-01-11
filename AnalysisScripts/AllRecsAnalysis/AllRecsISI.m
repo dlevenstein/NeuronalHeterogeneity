@@ -222,7 +222,7 @@ figure
 
 %Rate
 for ss=1:numstates
-    subplot(3,3,ss)
+    subplot(4,4,ss)
         plot(log10(ISIstats.summstats.(plotstates{ss}).meanrate(CellClass.pE)),...
             log10(ISIstats.summstats.(plotstates2{ss}).meanrate(CellClass.pE)),...
             'k.','markersize',4)
@@ -239,7 +239,7 @@ end
 
 %CV
 for ss=1:numstates
-    subplot(3,3,ss+3)
+    subplot(4,4,ss+4)
         plot(log2(ISIstats.summstats.(plotstates{ss}).ISICV(CellClass.pE)),...
             log2(ISIstats.summstats.(plotstates2{ss}).ISICV(CellClass.pE)),'k.','markersize',4)
         hold on
@@ -255,7 +255,7 @@ end
 
 %CV2
 for ss=1:numstates
-    subplot(3,3,ss+6)
+    subplot(4,4,ss+8)
         plot((ISIstats.summstats.(plotstates{ss}).meanCV2(CellClass.pE)),...
             (ISIstats.summstats.(plotstates2{ss}).meanCV2(CellClass.pE)),'k.','markersize',4)
         hold on
