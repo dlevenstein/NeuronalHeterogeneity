@@ -220,6 +220,7 @@ plotstates2 = {'NREMstate','NREMstate','REMstate'};
 %% CV/CV2 by state
 figure
 
+%Rate
 for ss=1:numstates
     subplot(3,3,ss)
         plot(log10(ISIstats.summstats.(plotstates{ss}).meanrate(CellClass.pE)),...
@@ -229,11 +230,14 @@ for ss=1:numstates
         plot(log10(ISIstats.summstats.(plotstates{ss}).meanrate(CellClass.pI)),...
             log10(ISIstats.summstats.(plotstates2{ss}).meanrate(CellClass.pI)),...
             'r.','markersize',4)
-        plot(log10([0.03 30]),log10([0.03 30]),'k')
+        %plot(log10([0.03 30]),log10([0.03 30]),'k')
         xlabel([plotstates{ss},' Rate']);ylabel([plotstates2{ss},' Rate'])
         LogScale('xy',10)
+        axis tight
+        UnityLine('linetype','-')
 end
 
+%CV
 for ss=1:numstates
     subplot(3,3,ss+3)
         plot(log2(ISIstats.summstats.(plotstates{ss}).ISICV(CellClass.pE)),...
@@ -241,11 +245,15 @@ for ss=1:numstates
         hold on
         plot(log2(ISIstats.summstats.(plotstates{ss}).ISICV(CellClass.pI)),...
             log2(ISIstats.summstats.(plotstates2{ss}).ISICV(CellClass.pI)),'r.','markersize',4)
-        plot(log2([1 6]),log2([1 6]),'k')
+        %plot(log2([1 6]),log2([1 6]),'k')
         xlabel([plotstates{ss},' CV']);ylabel([plotstates2{ss},' CV'])
         LogScale('xy',2)
+        axis tight
+        UnityLine('linetype','-')
 end
 
+
+%CV2
 for ss=1:numstates
     subplot(3,3,ss+6)
         plot((ISIstats.summstats.(plotstates{ss}).meanCV2(CellClass.pE)),...
@@ -253,11 +261,13 @@ for ss=1:numstates
         hold on
         plot((ISIstats.summstats.(plotstates{ss}).meanCV2(CellClass.pI)),...
             (ISIstats.summstats.(plotstates2{ss}).meanCV2(CellClass.pI)),'r.','markersize',4)
-        plot(([0 2]),([0 2]),'k')
+        %plot(([0 2]),([0 2]),'k')
         
         xlabel([plotstates{ss},' CV2']);ylabel([plotstates2{ss},' CV2'])
         xlim([0.4 1.6]);ylim([0.4 1.6])
        % LogScale('xy',2)
+       axis tight
+        UnityLine('linetype','-')
 end
 
 NiceSave('ISIstatsbystate',figfolder,[])
