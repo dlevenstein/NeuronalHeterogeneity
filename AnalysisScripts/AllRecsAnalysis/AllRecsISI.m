@@ -207,6 +207,10 @@ for cc = 1:length(classnames)
         xlim([-3 2.25])
         %ylim([0 0.087])
         LogScale('x',10)
+        if cc ==2
+            xlabel('ISI (s)')
+
+        end
 end
 NiceSave('ISIfig',figfolder,[])
 
