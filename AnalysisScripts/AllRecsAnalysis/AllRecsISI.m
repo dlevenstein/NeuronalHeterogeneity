@@ -149,16 +149,16 @@ rates = ISIstats.summstats.NREMstate.meanrate(exE);
 excell = [exE(sortedrateidx) randsample(find(CellClass.pI),1)]
 figure
 for ee = 1:4
-    subplot(8,4,4.*ee)
+    subplot(6,3,3.*ee)
     hold on
     for ss = 1:2 
         plot(ISIstats.ISIhist.logbins(1,:),ISIstats.ISIhist.(statenames{ss}).log(excell(ee),:),...
-            'color',statecolors{ss})
+            'color',statecolors{ss},'linewidth',2)
         plot(log10(1./ISIstats.summstats.(statenames{ss}).meanrate(excell(ee))).*[1 1],...
             [0 0.12],'color',statecolors{ss});
     end
     box off
-    xlim([-3 2.25]);ylim([0 0.12])
+    xlim([-3 2.25]);ylim([0 0.125])
     LogScale('x',10)
 end
 
@@ -186,7 +186,7 @@ for ss = 1:2
 end
 
 for cc = 1:length(classnames)
-    subplot(8,4,20+4.*cc)
+    subplot(6,3,12+3.*cc)
     hold on
     for ss = 1:2
         errorshade(meanISIhist.logbins,meanISIhist.(statenames{ss}).(classnames{cc}),...
@@ -196,10 +196,11 @@ for cc = 1:length(classnames)
     for ss = 1:2
         
         plot(meanISIhist.logbins,meanISIhist.(statenames{ss}).(classnames{cc}),...
-            'color',statecolors{ss},'linewidth',1)
+            'color',statecolors{ss},'linewidth',2)
     end
     
         axis tight
+        yrange = get(gca,'ylim');ylim([0 yrange(2)])
         xlim([-3 2.25])
         %ylim([0 0.087])
         LogScale('x',10)
