@@ -108,7 +108,7 @@ subplot(3,3,ss+3)
     xlim([-2.2 1.7]); ylim([-1 5])
     plot(get(gca,'xlim'),[0 0],'k')
     title(statenames{ss})
-    xlabel('FR (Hz)');ylabel('<CV2>')
+    xlabel('FR (Hz)');ylabel('CV')
 end
 
 NiceSave('RateandCV2',figfolder,[])
