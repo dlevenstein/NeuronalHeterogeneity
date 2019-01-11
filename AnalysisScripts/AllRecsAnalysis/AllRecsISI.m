@@ -79,8 +79,8 @@ subplot(3,3,ss)
     plot(log10(ISIstats.summstats.(statenames{ss}).meanrate(excells)),...
         ISIstats.summstats.(statenames{ss}).meanCV2(excells),...
         'o','color',[0.1 0.7 0],'markersize',5,'LineWidth',2)
-    LogScale('x',10)
     xlim([-2.2 1.7]); ylim([0.4 1.6])
+	LogScale('x',10)
     plot(get(gca,'xlim'),[1 1],'k')
     title(statenames{ss})
     xlabel('FR (Hz)');ylabel('<CV2>')
@@ -104,8 +104,9 @@ subplot(3,3,ss+3)
     plot(log10(ISIstats.summstats.(statenames{ss}).meanrate(excells)),...
         log2(ISIstats.summstats.(statenames{ss}).ISICV(excells)),...
         'o','color',[0.1 0.7 0],'markersize',5,'LineWidth',2)
-    LogScale('x',10);LogScale('y',2);
+    
     xlim([-2.2 1.7]); ylim([-1 5])
+    LogScale('x',10);LogScale('y',2);
     plot(get(gca,'xlim'),[0 0],'k')
     title(statenames{ss})
     xlabel('FR (Hz)');ylabel('CV')
