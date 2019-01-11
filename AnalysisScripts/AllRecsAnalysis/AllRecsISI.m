@@ -66,7 +66,7 @@ for cl = 1:numclasses
 end
 %%
 %excells = 981, 869 559 613 513 585
-excells = [552 281 356 932];
+excells = [281 552 356 932];
 histcolors = flipud(gray);
 figure
 for ss = 1:length(statenames)
@@ -88,13 +88,27 @@ subplot(3,3,ss)
     
     
     %cc=1;
-    for cc = 1:length(excells)
-        subplot(6,6,((cc+1).*6)+2.*ss-0.5)
-        colormap(gca,histcolors)
-            imagesc(ISIstats.ISIhist.(statenames{ss}).return(:,:,excells(cc)))
-            set(gca,'ytick',[]);set(gca,'xtick',[])
-            axis xy
-    end
+%     for cc = 1:length(excells)
+%         subplot(6,6,((cc+1).*6)+2.*ss-0.5)
+%         colormap(gca,histcolors)
+%             imagesc(ISIstats.ISIhist.(statenames{ss}).return(:,:,excells(cc)))
+%             set(gca,'ytick',[]);set(gca,'xtick',[])
+%             axis xy
+%     end
+subplot(3,3,ss+3)
+    plot(log10(ISIstats.summstats.(statenames{ss}).meanrate(CellClass.pE)),...
+        log2(ISIstats.summstats.(statenames{ss}).ISICV(CellClass.pE)),'k.','markersize',4)
+    hold on
+    plot(log10(ISIstats.summstats.(statenames{ss}).meanrate(CellClass.pI)),...
+        log2(ISIstats.summstats.(statenames{ss}).ISICV(CellClass.pI)),'r.','markersize',4)
+    plot(log10(ISIstats.summstats.(statenames{ss}).meanrate(excells)),...
+        log2(ISIstats.summstats.(statenames{ss}).ISICV(excells)),...
+        'o','color',[0.1 0.7 0],'markersize',5,'LineWidth',2)
+    LogScale('x',10);LogScale('y',2);
+    xlim([-2.2 1.7]); ylim([-1 5])
+    plot(get(gca,'xlim'),[0 0],'k')
+    title(statenames{ss})
+    xlabel('FR (Hz)');ylabel('<CV2>')
 end
 
 NiceSave('RateandCV2',figfolder,[])
@@ -149,7 +163,8 @@ NiceSave('ISIdistssorted',figfolder,[])
 exE = randsample(find(CellClass.pE),3);
 rates = ISIstats.summstats.NREMstate.meanrate(exE);
 [~,sortedrateidx] = sort(rates);
-excell = [exE(sortedrateidx) randsample(find(CellClass.pI),1)]
+excell = [exE(sortedrateidx) randsample(find(CellClass.pI),1)];
+excell = excells;
 figure
 for ee = 1:4
     subplot(6,3,3.*ee-1)
@@ -316,33 +331,33 @@ end
 NiceSave('ISIstatsbystate',figfolder,[])
 
 %%
-figure
 
-%%
-figure
-colormap(histcolors)
-ff=0;
-for cc = 1:numcells
-    cellnum = sorts.NREMstate.CV2byclass(cc);   %%sortrate.NREMstate(cc);
-    subplot(6,7,mod(cc-1,42)+1)
-    imagesc((ISIstats.ISIhist.NREMstate.return(:,:,cellnum)))
-    hold on
-    plot(log10(1./ISIstats.summstats.NREMstate.meanrate(cellnum)),log10(1./ISIstats.summstats.NREMstate.meanrate(cellnum)),'k+')
-    axis xy
-    LogScale('xy',10)
-    set(gca,'ytick',[]);set(gca,'xtick',[]);
-    %caxis([0 0.003])
-    %xlim(ISIstats.ISIhist.logbins([1 end]));ylim(ISIstats.ISIhist.logbins([1 end]))
-    %xlabel(['FR: ',num2str(round(ISIstats.summstats.NREMstate.meanrate(cellnum),2)),'Hz'])
-    title([num2str(round(ISIstats.summstats.NREMstate.meanCV2(cellnum),2))])
-    if mod(cc,42) == 0 || cc ==numcells
-        ff= ff+1;
-        NiceSave(['ISIreturnmap',num2str(ff)],figfolder,[]);
-        figure
-        colormap(histcolors)
-    end
-end
-close
+
+%% All return maps
+% figure
+% colormap(histcolors)
+% ff=0;
+% for cc = 1:numcells
+%     cellnum = sorts.NREMstate.CV2byclass(cc);   %%sortrate.NREMstate(cc);
+%     subplot(6,7,mod(cc-1,42)+1)
+%     imagesc((ISIstats.ISIhist.NREMstate.return(:,:,cellnum)))
+%     hold on
+%     plot(log10(1./ISIstats.summstats.NREMstate.meanrate(cellnum)),log10(1./ISIstats.summstats.NREMstate.meanrate(cellnum)),'k+')
+%     axis xy
+%     LogScale('xy',10)
+%     set(gca,'ytick',[]);set(gca,'xtick',[]);
+%     %caxis([0 0.003])
+%     %xlim(ISIstats.ISIhist.logbins([1 end]));ylim(ISIstats.ISIhist.logbins([1 end]))
+%     %xlabel(['FR: ',num2str(round(ISIstats.summstats.NREMstate.meanrate(cellnum),2)),'Hz'])
+%     title([num2str(round(ISIstats.summstats.NREMstate.meanCV2(cellnum),2))])
+%     if mod(cc,42) == 0 || cc ==numcells
+%         ff= ff+1;
+%         NiceSave(['ISIreturnmap',num2str(ff)],figfolder,[]);
+%         figure
+%         colormap(histcolors)
+%     end
+% end
+% close
 
 %% Manually Classify ISI Types
 
