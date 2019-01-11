@@ -225,11 +225,11 @@ for ss=1:numstates
     subplot(4,4,ss)
         plot(log10(ISIstats.summstats.(plotstates{ss}).meanrate(CellClass.pE)),...
             log10(ISIstats.summstats.(plotstates2{ss}).meanrate(CellClass.pE)),...
-            'k.','markersize',4)
+            'k.','markersize',2)
         hold on
         plot(log10(ISIstats.summstats.(plotstates{ss}).meanrate(CellClass.pI)),...
             log10(ISIstats.summstats.(plotstates2{ss}).meanrate(CellClass.pI)),...
-            'r.','markersize',4)
+            'r.','markersize',2)
         %plot(log10([0.03 30]),log10([0.03 30]),'k')
         xlabel([plotstates{ss},' Rate']);ylabel([plotstates2{ss},' Rate'])
         LogScale('xy',10)
@@ -241,10 +241,12 @@ end
 for ss=1:numstates
     subplot(4,4,ss+4)
         plot(log2(ISIstats.summstats.(plotstates{ss}).ISICV(CellClass.pE)),...
-            log2(ISIstats.summstats.(plotstates2{ss}).ISICV(CellClass.pE)),'k.','markersize',4)
+            log2(ISIstats.summstats.(plotstates2{ss}).ISICV(CellClass.pE)),...
+            'k.','markersize',2)
         hold on
         plot(log2(ISIstats.summstats.(plotstates{ss}).ISICV(CellClass.pI)),...
-            log2(ISIstats.summstats.(plotstates2{ss}).ISICV(CellClass.pI)),'r.','markersize',4)
+            log2(ISIstats.summstats.(plotstates2{ss}).ISICV(CellClass.pI)),...
+            'r.','markersize',2)
         %plot(log2([1 6]),log2([1 6]),'k')
         xlabel([plotstates{ss},' CV']);ylabel([plotstates2{ss},' CV'])
         LogScale('xy',2)
@@ -257,10 +259,12 @@ end
 for ss=1:numstates
     subplot(4,4,ss+8)
         plot((ISIstats.summstats.(plotstates{ss}).meanCV2(CellClass.pE)),...
-            (ISIstats.summstats.(plotstates2{ss}).meanCV2(CellClass.pE)),'k.','markersize',4)
+            (ISIstats.summstats.(plotstates2{ss}).meanCV2(CellClass.pE)),...
+            'k.','markersize',2)
         hold on
         plot((ISIstats.summstats.(plotstates{ss}).meanCV2(CellClass.pI)),...
-            (ISIstats.summstats.(plotstates2{ss}).meanCV2(CellClass.pI)),'r.','markersize',4)
+            (ISIstats.summstats.(plotstates2{ss}).meanCV2(CellClass.pI)),...
+            'r.','markersize',2)
         %plot(([0 2]),([0 2]),'k')
         
         xlabel([plotstates{ss},' CV2']);ylabel([plotstates2{ss},' CV2'])
