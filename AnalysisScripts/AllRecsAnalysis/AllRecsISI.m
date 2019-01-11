@@ -5,9 +5,12 @@ ISIstats = bz_LoadCellinfo(datasetPath,'ISIStats','dataset',true,'catall',true);
 %%
 CellClass = bz_LoadCellinfo(datasetPath,'CellClass','dataset',true,'catall',true);
 %
-figfolder = '/mnt/data1/Dropbox/research/Current Projects/FRHET_temp/SpikeStatsAnalysis';
+reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+%reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsAnalysis'];
 %%
 statenames = fieldnames(ISIstats.summstats);
+statecolors = {'k','b','r'};
 numstates = length(statenames);
 numcells = length(CellClass.UID);
 
@@ -38,6 +41,17 @@ for ss = 1:length(statenames)
     end  
 end
 
+%Calculate mean ISI dists by state and cell type
+meanISIhist.logbins = ISIstats.ISIhist.logbins(1,:);
+for ss = 1:length(statenames)
+   for cc = 1:length(classnames)
+       meanISIhist.(statenames{ss}).(classnames{cc}) = ...
+           nanmean(ISIstats.ISIhist.(statenames{ss}).log(CellClass.(classnames{cc}),:),1);
+       meanISIhist.std.(statenames{ss}).(classnames{cc}) = ...
+           nanstd(ISIstats.ISIhist.(statenames{ss}).log(CellClass.(classnames{cc}),:),[],1);
+
+   end
+end
 %% CV2-rate correlation
 for cl = 1:numclasses 
     for ss = 1:length(statenames)
@@ -125,6 +139,72 @@ colormap(histcolors)
 end
 
 NiceSave('ISIdistssorted',figfolder,[])
+
+%%
+%Get 3 random E cells and 1 I cell
+%Sort the E cells by rate
+exE = randsample(find(CellClass.pE),3);
+rates = ISIstats.summstats.NREMstate.meanrate(exE);
+[~,sortedrateidx] = sort(rates);
+excell = [exE(sortedrateidx) randsample(find(CellClass.pI),1)]
+figure
+for ee = 1:4
+    subplot(8,4,4.*ee)
+    hold on
+    for ss = 1:2 
+        plot(ISIstats.ISIhist.logbins(1,:),ISIstats.ISIhist.(statenames{ss}).log(excell(ee),:),...
+            'color',statecolors{ss})
+        plot(log10(1./ISIstats.summstats.(statenames{ss}).meanrate(excell(ee))).*[1 1],...
+            [0 0.12],'color',statecolors{ss});
+    end
+    box off
+    xlim([-3 2.25]);ylim([0 0.12])
+    LogScale('x',10)
+end
+
+
+for ss = 1:2
+    subplot(3,3,ss*3-2)
+    colormap(histcolors)
+       % subplot(2,3,4)
+            imagesc((ISIstats.ISIhist.logbins(1,:)),[1 numcells],...
+                ISIstats.ISIhist.(statenames{ss}).log(sorts.(statenames{ss}).ratebyclass,:))
+            hold on
+            plot(log10(1./(ISIstats.summstats.(statenames{ss}).meanrate(sorts.(statenames{ss}).ratebyclass))),...
+                [1:numcells],'k.','markersize',1)
+            plot(ISIstats.ISIhist.logbins([1 end]),sum(inclasscells{1}).*[1 1]+0.5,'r')
+            LogScale('x',10)
+            xlabel('ISI (s)')
+            xlim(ISIstats.ISIhist.logbins([1 end]))
+            %colorbar
+          %  legend('1/Mean Firing Rate (s)','location','southeast')
+            ylabel('Cell (Sorted by FR, Type)')
+            %legend('1/Mean Firing Rate (s)','location','southeast')
+            caxis([0 0.1])
+            %title('ISI Distribution (Log Scale)')
+            title(statenames{ss})
+end
+
+for cc = 1:length(classnames)
+    subplot(8,4,20+4.*cc)
+    hold on
+    for ss = 1:2
+        errorshade(meanISIhist.logbins,meanISIhist.(statenames{ss}).(classnames{cc}),...
+            meanISIhist.std.(statenames{ss}).(classnames{cc}),meanISIhist.std.(statenames{ss}).(classnames{cc}),...
+            statecolors{ss},'scalar')
+    end
+    for ss = 1:2
+        
+        plot(meanISIhist.logbins,meanISIhist.(statenames{ss}).(classnames{cc}),...
+            'color',statecolors{ss},'linewidth',1)
+    end
+    
+        axis tight
+        xlim([-3 2.25])
+        %ylim([0 0.087])
+        LogScale('x',10)
+end
+NiceSave('ISIfig',figfolder,[])
 
 %%
 plotstates = {'WAKEstate','REMstate','WAKEstate'};
