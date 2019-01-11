@@ -232,8 +232,8 @@ for ss=1:numstates
             'r.','markersize',2)
         %plot(log10([0.03 30]),log10([0.03 30]),'k')
         xlabel([plotstates{ss},' Rate']);ylabel([plotstates2{ss},' Rate'])
-        LogScale('xy',10)
         axis tight
+        LogScale('xy',10)
         UnityLine('linetype','-')
 end
 
@@ -249,8 +249,8 @@ for ss=1:numstates
             'r.','markersize',2)
         %plot(log2([1 6]),log2([1 6]),'k')
         xlabel([plotstates{ss},' CV']);ylabel([plotstates2{ss},' CV'])
-        LogScale('xy',2)
         axis tight
+        LogScale('xy',2)
         UnityLine('linetype','-')
 end
 
