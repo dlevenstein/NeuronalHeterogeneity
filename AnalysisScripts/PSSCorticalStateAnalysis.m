@@ -579,7 +579,7 @@ axis xy
 hold on
 xlim([-1.6 -0.3])
 ylabel({'CV_2', 'pE Pop.'})
-ylim([0.75 1.25])
+ylim([0.75 1.4])
 plot(get(gca,'xlim'),[1 1],'w--')
 
 subplot(5,4,5)
@@ -587,7 +587,7 @@ imagesc(PSSpIhist.Xbins,PSSpIhist.Ybins,PSSpIhist.pYX')
 axis xy
 hold on
 xlim([-1.6 -0.3])
-ylim([0.75 1.25])
+ylim([0.75 1.4])
 ylabel({'CV_2',' pI Pop.'})
 plot(get(gca,'xlim'),[1 1],'w--')
 
@@ -621,30 +621,30 @@ subplot(6,4,3)
     NiceSave('CV2byPSSstats',figfolder,baseName,'tiff')
 
 %% PSS and UP/DOWN
-
-SlowWaves = bz_LoadEvents(basePath,'SlowWaves');
-
-
-%%
-updown = {'DOWN','UP'};
-UDcolor = {'b','r'};
-for ss = 1:2
-    SlowWaves.dur.(updown{ss}) = diff(SlowWaves.ints.(updown{ss}),1,2);
-    SlowWaves.midpoint.(updown{ss}) = mean(SlowWaves.ints.(updown{ss}),2);
-    SlowWaves.PSS.(updown{ss}) = interp1(specslope.timestamps,specslope.data,SlowWaves.midpoint.(updown{ss}));
-end
-
-%%
-figure
-subplot(3,2,1)
-for ss = 1:2
-    plot(SlowWaves.PSS.(updown{ss}),log10(SlowWaves.dur.(updown{ss})),'.','color',UDcolor{ss},'markersize',3)
-    hold on
-end
-xlabel('PSS');ylabel('Dur (s)')
-axis tight
-box off
-LogScale('y',10)
-legend(updown{:},'location','eastoutside')
-NiceSave('PSSandUPDOWN',figfolder,baseName)
-
+% 
+% SlowWaves = bz_LoadEvents(basePath,'SlowWaves');
+% 
+% 
+% %%
+% updown = {'DOWN','UP'};
+% UDcolor = {'b','r'};
+% for ss = 1:2
+%     SlowWaves.dur.(updown{ss}) = diff(SlowWaves.ints.(updown{ss}),1,2);
+%     SlowWaves.midpoint.(updown{ss}) = mean(SlowWaves.ints.(updown{ss}),2);
+%     SlowWaves.PSS.(updown{ss}) = interp1(specslope.timestamps,specslope.data,SlowWaves.midpoint.(updown{ss}));
+% end
+% 
+% %%
+% figure
+% subplot(3,2,1)
+% for ss = 1:2
+%     plot(SlowWaves.PSS.(updown{ss}),log10(SlowWaves.dur.(updown{ss})),'.','color',UDcolor{ss},'markersize',3)
+%     hold on
+% end
+% xlabel('PSS');ylabel('Dur (s)')
+% axis tight
+% box off
+% LogScale('y',10)
+% legend(updown{:},'location','eastoutside')
+% NiceSave('PSSandUPDOWN',figfolder,baseName)
+% 
