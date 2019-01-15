@@ -10,21 +10,17 @@ basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/GrosmarkAD/Gatsby/Gatsby_08022013';
 
 %figfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs';
-figfolder = [repoRoot,'/AnalysisScripts/AnalysisFigs/AnalysisFigs'];
+figfolder = [repoRoot,'/AnalysisScripts/AnalysisFigs/SpikeStatsAnalysis'];
 
 %figfolder = '/mnt/data1/Dropbox/research/Current Projects/FRHET_temp/SpikeStatsAnalysis';
 
 %%
-%REMOVE THIS SOON, JUST TO GET STUFF TO DP
+
 baseName = bz_BasenameFromBasepath(basePath);
 
 spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
 SleepState = bz_LoadStates(basePath,'SleepState');
-% for reformatting SleepState
-%SleepState = SleepScoreMaster(basePath,'noPrompts',true);
-
-%LFP for plot
 lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
     'basepath',basePath,'noPrompts',true);
 
