@@ -4,9 +4,17 @@ function [ jitterCV2,ISIstats ] = SpikeStatsAnalysis(basePath,figfolder)
 %
 
 %% DEV
+repoRoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity'; %desktop
+
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-figfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs';
+basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/GrosmarkAD/Gatsby/Gatsby_08022013';
+
+%figfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs';
+figfolder = [repoRoot,'/AnalysisScripts/AnalysisFigs/AnalysisFigs'];
+
 %figfolder = '/mnt/data1/Dropbox/research/Current Projects/FRHET_temp/SpikeStatsAnalysis';
+
+%%
 %REMOVE THIS SOON, JUST TO GET STUFF TO DP
 baseName = bz_BasenameFromBasepath(basePath);
 

@@ -2,11 +2,13 @@ function [ output_args ] = PSSCorticalStateAnalysis( basePath,figfolder )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %% DEV
+repoRoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity'; %desktop
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
+basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/GrosmarkAD/Gatsby/Gatsby_08022013';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 %figfolder = '/Users/dlevenstein/Dropbox/Research/Current Projects/FRHetAndDynamics/AnalysisScripts/AnalysisFigs';
-figfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs/PSSCorticalStateAnalysis';
-
+%figfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs/PSSCorticalStateAnalysis';
+figfolder = [repoRoot,'/AnalysisScripts/AnalysisFigs/PSSCorticalStateAnalysis'];
 %%
 baseName = bz_BasenameFromBasepath(basePath);
 
