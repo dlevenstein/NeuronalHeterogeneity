@@ -579,7 +579,7 @@ axis xy
 hold on
 xlim([-1.6 -0.3])
 ylabel({'CV_2', 'pE Pop.'})
-ylim([0.75 1.4])
+ylim([0.9 1.4])
 plot(get(gca,'xlim'),[1 1],'w--')
 
 subplot(5,4,5)
@@ -587,7 +587,7 @@ imagesc(PSSpIhist.Xbins,PSSpIhist.Ybins,PSSpIhist.pYX')
 axis xy
 hold on
 xlim([-1.6 -0.3])
-ylim([0.75 1.4])
+ylim([0.75 1.15])
 ylabel({'CV_2',' pI Pop.'})
 plot(get(gca,'xlim'),[1 1],'w--')
 
