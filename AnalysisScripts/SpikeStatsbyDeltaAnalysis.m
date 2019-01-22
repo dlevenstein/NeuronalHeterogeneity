@@ -4,8 +4,8 @@ function [  ] = SpikeStatsbyDeltaAnalysis(basePath,figfolder)
 %% DEV
 reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
-%basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
+basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
+%basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 %basePath = pwd;
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyDeltaAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
@@ -23,7 +23,7 @@ numclasses = length(classnames);
 classcolors = {'k','r'};
 SlowWaves = bz_LoadEvents(basePath,'SlowWaves');
 
-downsamplefactor = 1;
+downsamplefactor = 2;
 lfp = bz_GetLFP(SlowWaves.detectorinfo.detectionchannel,...
      'basepath',basePath,'downsample',downsamplefactor);
 sessionInfo = bz_getSessionInfo(basePath);
