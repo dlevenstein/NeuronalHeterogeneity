@@ -1,16 +1,16 @@
-function [ jitterCV2,ISIstats ] = SpikeStatsAnalysis(basePath,figfolder)
+function [ jitterCV2 ] = SpikeStatsAnalysis(basePath,figfolder)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 %
 
 %% DEV
-repoRoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity'; %desktop
+%repoRoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity'; %desktop
 
-basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/GrosmarkAD/Gatsby/Gatsby_08022013';
+%basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
+%basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/GrosmarkAD/Gatsby/Gatsby_08022013';
 
 %figfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs';
-figfolder = [repoRoot,'/AnalysisScripts/AnalysisFigs/SpikeStatsAnalysis'];
+%figfolder = [repoRoot,'/AnalysisScripts/AnalysisFigs/SpikeStatsAnalysis'];
 
 %figfolder = '/mnt/data1/Dropbox/research/Current Projects/FRHET_temp/SpikeStatsAnalysis';
 
