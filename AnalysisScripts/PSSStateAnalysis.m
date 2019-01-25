@@ -154,19 +154,36 @@ set(gca,'xticklabel',regions)
 set(gca,'ytick',cumsum(numregchans)-0.5.*numregchans)
 set(gca,'yticklabel',regions)
 
-subplot(5,4,16)
+subplot(5,4,17)
+    imagesc(log2(lowerbounds),log2(upperbounds),regioncorr')
+    hold on
+    %plot(log2(bestbounds(1)),log2(bestbounds(2)),'r+')
+    %plot(log2(lowerbounds(examples(1))),log2(upperbounds(examples(2))),'k+')
+    axis xy
+    LogScale('xy',2)
+    xlabel('L-Bound (Hz)');ylabel('U-Bound (Hz)')
+    ColorbarWithAxis([0.4 0.9],'HPC-CTX Corr')
+
+subplot(5,4,20)
 %hist(PSSEMGcorr)
 BoxAndScatterPlot({PSSEMGcorr(regchanIDX{1}),PSSEMGcorr(regchanIDX{2})},...
     'labels',regions,'colors',cat(1,regcolor{:}))
 ylim([0 1])
 ylabel('EMG-PSS corr')
 
-subplot(5,4,15)
+subplot(5,4,16)
 plot(log10(winsizes),PSScorr_win)
 xlabel('Window Duration (s)');ylabel({'HPC-CTX', 'PSS corrrelation'})
 xlim(log10(winsizes([1 end])))
 ylim([0 1])
 LogScale('x',10)
+
+subplot(5,4,14)
+    plot(specslope.data(:,ismember(specslope.channels,repchan(1))),...
+        specslope.data(:,ismember(specslope.channels,repchan(2))),...
+        '.')
+    xlabel([regions{1},' PSS']);ylabel([regions{2},' PSS'])
+    
 
 
 exwin = bz_RandomWindowInIntervals(specslope.timestamps([1 end]),2000);
@@ -190,16 +207,6 @@ for rr = 1:length(regions)
           bz_ScaleBar('s')
 
 end
-
-subplot(5,4,14)
-    imagesc(log2(lowerbounds),log2(upperbounds),regioncorr')
-    hold on
-    %plot(log2(bestbounds(1)),log2(bestbounds(2)),'r+')
-    %plot(log2(lowerbounds(examples(1))),log2(upperbounds(examples(2))),'k+')
-    axis xy
-    LogScale('xy',2)
-    xlabel('L-Bound (Hz)');ylabel('U-Bound (Hz)')
-    colorbar
     
 
 subplot(6,1,3)
@@ -213,10 +220,7 @@ NiceSave('PSSasGlobalState',figfolder,baseName)
 
 %%
 figure
-        plot(specslope.data(:,ismember(specslope.channels,repchan(1))),...
-            specslope.data(:,ismember(specslope.channels,repchan(2))),...
-            '.')
-        xlabel([regions{1},' PSS']);ylabel([regions{2},' PSS'])
+
 %% Relate to firing rates, firing rate distribution width!
 %% Calculate PSS and its bimodality for different bounds (SlowWave channel)
 
@@ -246,7 +250,7 @@ xlim(log10(winsizes([1 end])))
 %ylim([0 1])
 LogScale('x',10)
 
-
+clo 
 % 
 % subplot(4,2,2)
 %     plot(histbins,swhists(:,bestboundsIdx(1),bestboundsIdx(2)),'r')
