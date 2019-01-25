@@ -6,7 +6,7 @@ basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/GrosmarkAD/Achilles/Achilles_
 repoRoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity'; %desktop
 
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %laptop
+repoRoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %laptop
 
 figfolder = [repoRoot,'/AnalysisScripts/AnalysisFigs/PSSStateAnalysis'];
 %%
@@ -15,34 +15,122 @@ SleepState = bz_LoadStates(basePath,'SleepState');
 sessionInfo = bz_getSessionInfo(basePath);
 %% Calculate PSS and its bimodality for different bounds (SlowWave channel)
 downsamplefactor = 5;
-usechans = [sessionInfo.channels(ismember(sessionInfo.region,'CTX')),...
-    sessionInfo.channels(ismember(sessionInfo.region,'HPC'))];
+
+regions = {'CTX','HPC'};
+for rr = 1:length(regions)
+    regchans{rr}  = sessionInfo.channels(ismember(sessionInfo.region,regions{rr}));
+end
+usechans = [regchans{:}];
+for rr = 1:length(regions)
+    regchanIDX{rr} = ismember(usechans,regchans{rr});
+end
+regcolor = {[0 0 0.4],[0.5 0 0.2]};
+numregchans = cellfun(@length,regchans);
+repchan = [SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
+    randsample(regchans{2},1)];
+
+
 %%
 allLFP = bz_GetLFP(usechans,...
     'basepath',basePath,'downsample',downsamplefactor);
 
 %% Calculate PSS correlation between channels
 bounds = [4 100];
-winsize = 5; %Why not use what your'e usingv for sleep scoring?....
-dt = 1;
+winsize = 10; %Why not use what your'e usingv for sleep scoring?....
+dt = 5;
 specslope = bz_PowerSpectrumSlope(allLFP,winsize,dt,'frange',bounds);
 
 
 %%
 PSScorr = corr(specslope.data,'type','spearman');
+
+%Pick a HPC example channel with best correlation to CTX
+%Best HPC chan
+repchan(2) = max(PSScorr(ismember(specslope.channels,repchan(rr)),regchanIDX{2}));
+repchan(2) = regchans{2}(repchan(2));
 %%
 spikegroupordering = [sessionInfo.spikeGroups.groups{:}];
-[spikegroupordering,~,spikegroupsort] = intersect(spikegroupordering,usechans,'stable')
+[spikegroupordering,~,spikegroupsort] = intersect(spikegroupordering,usechans,'stable');
+
+
+%% Compare Time Scales
+
+numhistbins = 20;
+histbins = linspace(0,1,numhistbins);
+
+bounds = [4 100];
+dt = 1;
+winsizes = logspace(-0.33,1.7,15);
+for ww = 1:length(winsizes)
+    specslope_win = bz_PowerSpectrumSlope(allLFP,winsizes(ww),dt,...
+        'frange',bounds,'channels',repchan);
+    PSScorr_win(ww) = corr(specslope_win.data(:,1),specslope_win.data(:,2),'type','spearman');
+    
+        % Histogram and diptest of Slow Wave Power
+        for rr = 1:length(regions)
+            broadbandSlowWave = specslope_win.data(:,rr);
+    %         broadbandSlowWave = smooth(broadbandSlowWave,smoothfact.*specslope_freqs.samplingRate);
+            broadbandSlowWave = ...
+                (broadbandSlowWave-min(broadbandSlowWave))./...
+                max(broadbandSlowWave-min(broadbandSlowWave));
+            
+            [swhist.temp]= hist(broadbandSlowWave,histbins);
+
+            swhists_win.(regions{rr})(:,ww) = swhist.temp;
+            dipSW_win.(regions{rr})(ww) = bz_hartigansdiptest(broadbandSlowWave);
+        end
+end
+
+
+%% Compare Frequency Bands
+window = 10;
+dt = 5; %Updated to speed up (don't need to sample at fine time resolution for channel selection)
+%smoothfact = 10;
+
+nbounds = 15;
+upperbounds = logspace(1.66,2.33,nbounds);
+lowerbounds = logspace(0,1.33,nbounds);
+
+
+clear swhists
+clear dipSW
+for uu = 1:nbounds
+    uu
+    for ll = 1:nbounds
+        [specslope_freqs] = bz_PowerSpectrumSlope(allLFP,window,dt,...
+            'frange',[lowerbounds(ll) upperbounds(uu)],'channels',repchan);
+        
+        
+
+        
+        % Histogram and diptest of Slow Wave Power
+        for rr = 1:length(regions)
+            broadbandSlowWave = specslope_freqs.data(:,rr);
+    %         broadbandSlowWave = smooth(broadbandSlowWave,smoothfact.*specslope_freqs.samplingRate);
+            broadbandSlowWave = ...
+                (broadbandSlowWave-min(broadbandSlowWave))./...
+                max(broadbandSlowWave-min(broadbandSlowWave));
+            
+            [swhist.temp]= hist(broadbandSlowWave,histbins);
+
+            swhists.(regions{rr})(:,ll,uu) = swhist.temp;
+            dipSW.(regions{rr})(ll,uu) = bz_hartigansdiptest(broadbandSlowWave);
+        end
+        
+        regioncorr(ll,uu) = corr(specslope_freqs.data(:,1),specslope_freqs.data(:,2),'type','spearman');
+
+    end
+end
+
 %%
-figure
-subplot(2,2,1)
-imagesc(PSScorr(spikegroupsort,spikegroupsort))
-colorbar
-caxis([0 1])
+[~,bestboundsIdx] = max(dipSW(:));
+[bestboundsIdx(1),bestboundsIdx(2)] = ind2sub(size(dipSW),bestboundsIdx);
 
-subplot(4,1,3)
-plot(specslope.timestamps,specslope.data)
+bestbounds(2) = upperbounds(bestboundsIdx(2));
+bestbounds(1) = lowerbounds(bestboundsIdx(1));
 
+examples = [4,5];
+%%
 
 %% correlation with EMG
 EMGfromLFP = bz_EMGFromLFP(basePath);
@@ -52,73 +140,125 @@ PSSEMGcorr = corr(specslope.data,specslope.EMG,'type','spearman');
 
 %%
 hist(PSSEMGcorr)
-%% Calculate PSS and its bimodality for different bounds (SlowWave channel)
-downsamplefactor = 5;
-allLFP = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
-    'basepath',basePath,'downsample',downsamplefactor);
 
 %%
-%Parameters from SleepScoreMaster (optimize these too?)
-window = 10;
-noverlap = 5; %Updated to speed up (don't need to sample at fine time resolution for channel selection)
-smoothfact = 10;
 
-nbounds = 10;
-upperbounds = logspace(1.66,2.33,nbounds);
-lowerbounds = logspace(0,1.33,nbounds);
+%add example windows
+figure
+subplot(5,4,13)
+imagesc(PSScorr(spikegroupsort,spikegroupsort))
+colorbar
+ColorbarWithAxis([0 1],'Corr(PSS)')
+set(gca,'xtick',cumsum(numregchans)-0.5.*numregchans)
+set(gca,'xticklabel',regions)
+set(gca,'ytick',cumsum(numregchans)-0.5.*numregchans)
+set(gca,'yticklabel',regions)
 
-numhistbins = 21;
-histbins = linspace(0,1,numhistbins);
+subplot(5,4,17)
+    imagesc(log2(lowerbounds),log2(upperbounds),regioncorr')
+    hold on
+    %plot(log2(bestbounds(1)),log2(bestbounds(2)),'r+')
+    %plot(log2(lowerbounds(examples(1))),log2(upperbounds(examples(2))),'k+')
+    axis xy
+    LogScale('xy',2)
+    xlabel('L-Bound (Hz)');ylabel('U-Bound (Hz)')
+    ColorbarWithAxis([0.4 0.9],'HPC-CTX Corr')
 
-for uu = 1:nbounds
-    uu
-    for ll = 1:nbounds
-        [specslope,~] = bz_PowerSpectrumSlope(allLFP,window,window-noverlap,...
-            'frange',[lowerbounds(ll) upperbounds(uu)]);
-        
-        
-        broadbandSlowWave = specslope.data;
-        broadbandSlowWave = smooth(broadbandSlowWave,smoothfact.*specslope.samplingRate);
-        broadbandSlowWave = ...
-            (broadbandSlowWave-min(broadbandSlowWave))./...
-            max(broadbandSlowWave-min(broadbandSlowWave));
-        
-        % Histogram and diptest of Slow Wave Power
-        [swhist]= hist(broadbandSlowWave,histbins);
+subplot(5,4,20)
+%hist(PSSEMGcorr)
+BoxAndScatterPlot({PSSEMGcorr(regchanIDX{1}),PSSEMGcorr(regchanIDX{2})},...
+    'labels',regions,'colors',cat(1,regcolor{:}))
+ylim([0 1])
+ylabel('EMG-PSS corr')
 
-        swhists(:,uu,ll) = swhist;
-        dipSW(uu,ll) = bz_hartigansdiptest((broadbandSlowWave));
-        
-    end
+subplot(5,4,16)
+plot(log10(winsizes),PSScorr_win)
+xlabel('Window Duration (s)');ylabel({'HPC-CTX', 'PSS corrrelation'})
+xlim(log10(winsizes([1 end])))
+ylim([0 1])
+LogScale('x',10)
+
+subplot(5,4,14)
+    plot(specslope.data(:,ismember(specslope.channels,repchan(1))),...
+        specslope.data(:,ismember(specslope.channels,repchan(2))),...
+        '.')
+    xlabel([regions{1},' PSS']);ylabel([regions{2},' PSS'])
+    
+
+
+exwin = bz_RandomWindowInIntervals(specslope.timestamps([1 end]),2000);
+
+for rr = 1:length(regions)
+    subplot(6,1,rr)
+        imagesc(specslope.timestamps,log2(specslope.freqs),...
+            specslope.specgram(:,:,ismember(specslope.channels,repchan(rr))))
+        hold on
+        axis xy
+
+        LogScale('y',2)
+        ylabel({regions{rr},'f (Hz)'})
+
+        yyaxis right
+        plot(specslope.timestamps,...
+            specslope.data(:,ismember(specslope.channels,repchan(rr))),...
+            'color',regcolor{rr},'linewidth',1)
+        ylabel('PSS')
+        xlim(exwin)
+          bz_ScaleBar('s')
+
 end
+    
 
-%%
-%upper and lower are backwards. silly
-[~,bestboundsIdx] = max(dipSW(:));
-[bestboundsIdx(1),bestboundsIdx(2)] = ind2sub(size(dipSW),bestboundsIdx);
+subplot(6,1,3)
+    plot(EMGfromLFP.timestamps,EMGfromLFP.data)
+        xlim(exwin)
+        box off
+      bz_ScaleBar('s')
+      ylabel('EMG')
+      
+NiceSave('PSSasGlobalState',figfolder,baseName)
 
-bestbounds(1) = upperbounds(bestboundsIdx(1));
-bestbounds(2) = lowerbounds(bestboundsIdx(2));
-
-examples = [4,5];
 %%
 figure
-subplot(2,2,1)
-    imagesc(log2(lowerbounds),log2(upperbounds),dipSW)
+
+%% Relate to firing rates, firing rate distribution width!
+%% Calculate PSS and its bimodality for different bounds (SlowWave channel)
+
+
+%%
+figure
+for rr = 1:length(regions)
+subplot(5,4,4+rr)
+    imagesc(log2(lowerbounds),log2(upperbounds),dipSW.(regions{rr})')
     hold on
-    plot(log2(bestbounds(2)),log2(bestbounds(1)),'r+')
-    plot(log2(lowerbounds(examples(2))),log2(upperbounds(examples(1))),'k+')
+    %plot(log2(bestbounds(1)),log2(bestbounds(2)),'r+')
+    %plot(log2(lowerbounds(examples(1))),log2(upperbounds(examples(2))),'k+')
     axis xy
     LogScale('xy',2)
     xlabel('Lower Bound (Hz)');ylabel('Upper Bound (Hz)')
     colorbar
-subplot(4,2,2)
-    plot(histbins,swhists(:,bestboundsIdx(1),bestboundsIdx(2)),'r')
-    hold on
-    plot(histbins,swhists(:,examples(1),examples(2)),'k')
-    
+    title(regions{rr})
+end
+
+subplot(5,4,2)
+hold on
+for rr = 1:length(regions)
+    plot(log10(winsizes),dipSW_win.(regions{rr}),'color',regcolor{rr})
+end
+xlabel('Window Duration (s)');ylabel('Dip Test')
+xlim(log10(winsizes([1 end])))
+%ylim([0 1])
+LogScale('x',10)
+
+clo 
+% 
+% subplot(4,2,2)
+%     plot(histbins,swhists(:,bestboundsIdx(1),bestboundsIdx(2)),'r')
+%     hold on
+%     plot(histbins,swhists(:,examples(1),examples(2)),'k')
+%     
 %histogram: good, OK, bad dips
 
-NiceSave('PSSBounds',figfolder,baseName)
+NiceSave('PSSBimodality',figfolder,baseName)
 end
 
