@@ -150,7 +150,7 @@ statecolors = {'k','b','r',[0.6 0.6 0.6]};
 %% Pick the "best" window for further analysis
 dt = 0.5;
 winsize = 8;
-[specslope,specgram] = bz_PowerSpectrumSlope(lfp,winsize,dt,'showfig',true,...
+specslope = bz_PowerSpectrumSlope(lfp,winsize,dt,'showfig',true,...
     'saveMat',basePath);
 
 
@@ -169,7 +169,7 @@ exwinsize = 2000;
 exwin = bz_RandomWindowInIntervals(specslope.timestamps([1 end])',exwinsize);
 figure
 subplot(4,1,1)
-    imagesc(specgram.timestamps,log2(specgram.freqs),specgram.amp)
+    imagesc(specslope.timestamps,log2(specslope.freqs),specslope.specgram)
     ylabel({'Specgram','f (Hz)'})
     axis xy
     StateScorePlot({SleepState.ints.NREMstate,SleepState.ints.REMstate,SleepState.ints.WAKEstate},...
@@ -282,6 +282,8 @@ for tt = 1:length(cellclasses)
 end
 
 %%
+nspklim = 20;
+
 PSScorrhist.bins = linspace(-1,1,40);
 for ss = 1:length(states)
 %ss = 1;
@@ -289,17 +291,22 @@ for ss = 1:length(states)
     CV2mat.timeidx.(states{ss}) = InIntervals(CV2mat.timestamps,SleepState.ints.(states{ss}));
     instatespikes = cellfun(@(X) InIntervals(X,SleepState.ints.(states{ss})),ISIStats.allspikes.times,'UniformOutput',false);
 
+    toofewspikes = cellfun(@sum,instatespikes) < nspklim;
+    instatespikes(toofewspikes) = {1}; %To account for 0 spikes
+
     ratePSScorr.(states{ss}) = corr(spikemat.PSS(spikemat.timeidx.(states{ss})),...
         spikemat.data(spikemat.timeidx.(states{ss}),:),'type','spearman','rows','complete');
     CV2PSScorr.(states{ss}) = cellfun(@(X,Y,Z) corr(X(Z),Y(Z),'type','spearman','rows','complete'),...
         ISIStats.allspikes.PSS,ISIStats.allspikes.CV2,instatespikes);
     
-    for tt = 1:length(cellclasses)
-        PSScorrhist.rate.(states{ss}).(cellclasses{tt}) = ...
-            hist(ratePSScorr.(states{ss})(CellClass.(cellclasses{tt})),PSScorrhist.bins);
-        PSScorrhist.CV2.(states{ss}).(cellclasses{tt}) = ...
-            hist(CV2PSScorr.(states{ss})(CellClass.(cellclasses{tt})),PSScorrhist.bins);
-    end
+    CV2PSScorr.(states{ss})(toofewspikes) = nan;
+    
+%     for tt = 1:length(cellclasses)
+%         PSScorrhist.rate.(states{ss}).(cellclasses{tt}) = ...
+%             hist(ratePSScorr.(states{ss})(CellClass.(cellclasses{tt})),PSScorrhist.bins);
+%         PSScorrhist.CV2.(states{ss}).(cellclasses{tt}) = ...
+%             hist(CV2PSScorr.(states{ss})(CellClass.(cellclasses{tt})),PSScorrhist.bins);
+%     end
  
 end    
 %% Figure: PSS and Spiking
@@ -475,7 +482,7 @@ exwin = bz_RandomWindowInIntervals(specslope.timestamps([1 end])',exwinsize);
 figure
 
 subplot(6,1,1)
-    imagesc(specgram.timestamps,log2(specgram.freqs),specgram.amp)
+    imagesc(specslope.timestamps,log2(specslope.freqs),specslope.specgram)
     hold on
     StateScorePlot({SleepState.ints.NREMstate,SleepState.ints.REMstate,SleepState.ints.WAKEstate},...
         {'b','r','k'})
