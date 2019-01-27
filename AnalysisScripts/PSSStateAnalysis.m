@@ -35,9 +35,9 @@ allLFP = bz_GetLFP(usechans,...
     'basepath',basePath,'downsample',downsamplefactor);
 
 %% Calculate PSS correlation between channels
-bounds = [4 100];
-winsize = 10; %Why not use what your'e usingv for sleep scoring?....
-dt = 5;
+bounds = [3 120];
+winsize = 8; %Why not use what your'e usingv for sleep scoring?....
+dt = 4;
 specslope = bz_PowerSpectrumSlope(allLFP,winsize,dt,'frange',bounds);
 
 
@@ -157,6 +157,8 @@ set(gca,'yticklabel',regions)
 subplot(5,4,17)
     imagesc(log2(lowerbounds),log2(upperbounds),regioncorr')
     hold on
+    plot(log2(bounds(1)),log2(bounds(2)),'r+')
+
     %plot(log2(bestbounds(1)),log2(bestbounds(2)),'r+')
     %plot(log2(lowerbounds(examples(1))),log2(upperbounds(examples(2))),'k+')
     axis xy
@@ -173,6 +175,9 @@ ylabel('EMG-PSS corr')
 
 subplot(5,4,16)
 plot(log10(winsizes),PSScorr_win)
+hold on
+    plot(log10(winsize),0,'r+')
+
 xlabel('Window Duration (s)');ylabel({'HPC-CTX', 'PSS corrrelation'})
 xlim(log10(winsizes([1 end])))
 ylim([0 1])
@@ -218,8 +223,7 @@ subplot(6,1,3)
       
 NiceSave('PSSasGlobalState',figfolder,baseName)
 
-%%
-figure
+
 
 %% Relate to firing rates, firing rate distribution width!
 %% Calculate PSS and its bimodality for different bounds (SlowWave channel)
@@ -231,12 +235,13 @@ for rr = 1:length(regions)
 subplot(5,4,4+rr)
     imagesc(log2(lowerbounds),log2(upperbounds),dipSW.(regions{rr})')
     hold on
+    plot(log2(bounds(1)),log2(bounds(2)),'r+')
     %plot(log2(bestbounds(1)),log2(bestbounds(2)),'r+')
     %plot(log2(lowerbounds(examples(1))),log2(upperbounds(examples(2))),'k+')
     axis xy
     LogScale('xy',2)
     xlabel('Lower Bound (Hz)');ylabel('Upper Bound (Hz)')
-    colorbar
+    ColorbarWithAxis([0 max(dipSW.(regions{rr})(:))],'Dip')
     title(regions{rr})
 end
 
@@ -245,12 +250,14 @@ hold on
 for rr = 1:length(regions)
     plot(log10(winsizes),dipSW_win.(regions{rr}),'color',regcolor{rr})
 end
+    plot(log10(winsize),0,'r+')
+
 xlabel('Window Duration (s)');ylabel('Dip Test')
 xlim(log10(winsizes([1 end])))
 %ylim([0 1])
 LogScale('x',10)
 
-clo 
+ 
 % 
 % subplot(4,2,2)
 %     plot(histbins,swhists(:,bestboundsIdx(1),bestboundsIdx(2)),'r')
