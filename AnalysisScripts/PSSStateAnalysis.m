@@ -58,7 +58,6 @@ spikegroupordering = [sessionInfo.spikeGroups.groups{:}];
 numhistbins = 20;
 histbins = linspace(0,1,numhistbins);
 
-bounds = [4 100];
 dt = 1;
 winsizes = logspace(-0.33,1.7,15);
 for ww = 1:length(winsizes)

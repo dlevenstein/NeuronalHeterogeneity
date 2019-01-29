@@ -1,15 +1,16 @@
 function [ PSShist,ratePSScorr,CV2PSScorr,...
-    PSSpEhist,PSSpIhist] = PSSCorticalStateAnalysis( basePath,figfolder )
+    PSSpECV2hist,PSSpICV2hist] = PSSCorticalStateAnalysis( basePath,figfolder )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %% DEV
 %repoRoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity'; %desktop
-%basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
+repoRoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity';
+basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/GrosmarkAD/Gatsby/Gatsby_08022013';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 %figfolder = '/Users/dlevenstein/Dropbox/Research/Current Projects/FRHetAndDynamics/AnalysisScripts/AnalysisFigs';
 %figfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs/PSSCorticalStateAnalysis';
-%figfolder = [repoRoot,'/AnalysisScripts/AnalysisFigs/PSSCorticalStateAnalysis'];
+figfolder = [repoRoot,'/AnalysisScripts/AnalysisFigs/PSSCorticalStateAnalysis'];
 %%
 baseName = bz_BasenameFromBasepath(basePath);
 
@@ -25,127 +26,6 @@ states = fieldnames(SleepState.ints);
 states{4} = 'ALL';
 SleepState.ints.ALL = [0 Inf];
 statecolors = {'k','b','r',[0.6 0.6 0.6]};
-%% Comparing different size time windows
-% downsamplefactor = 5;
-% lfp_down = bz_DownsampleLFP(lfp,downsamplefactor);
-% %% Comparing different size time windows
-% dt = 0.5;
-% 
-% numwins = 21;
-% winsizes = logspace(0,1.5,numwins);
-% for ww = 1:numwins
-%     ww
-%     [specslope_temp] = bz_PowerSpectrumSlope(lfp_down,winsizes(ww),dt,'showfig',false);
-%     if ww == 1
-%         specslope_wins=specslope_temp;
-%         specslope_wins.winsizes = winsizes;
-%     else
-%         specslope_wins.data(:,ww)= interp1(specslope_temp.timestamps,specslope_temp.data,specslope_wins.timestamps);
-%         specslope_wins.rsq(:,ww) = interp1(specslope_temp.timestamps,specslope_temp.rsq,specslope_wins.timestamps);
-%         specslope_wins.intercept(:,ww) = interp1(specslope_temp.timestamps,specslope_temp.intercept,specslope_wins.timestamps);
-%     end
-% end
-% 
-% %% Compare different windows
-% 
-% 
-% maxlag = 200;
-% clear PSSautocorr
-% clear PSSwincorr
-% for ss = 1:length(states)
-%     specslope_wins.timeidx.(states{ss}) = ...
-%         InIntervals(specslope_wins.timestamps,SleepState.ints.(states{ss})) &...
-%         ~isnan(specslope_wins.data(:,end));
-%     
-%     PSSwincorr.(states{ss}) = corr(specslope_wins.data(specslope_wins.timeidx.(states{ss}),:),...
-%         'type','spearman','rows','pairwise');
-%     
-%     [PSSxcorr,lags] = xcov(specslope_wins.data(specslope_wins.timeidx.(states{ss}),:),maxlag./dt,'coeff');
-%     PSSxcorr_mat = reshape(PSSxcorr,length(lags),numwins,numwins);
-%     for ll = 1:numwins
-%         PSSautocorr.(states{ss})(:,ll) = PSSxcorr_mat(:,ll,ll);
-%     end
-% end
-% 
-% 
-% %% Figure: Time Window Comparison
-% skipnum = 5;
-% colororder = makeColorMap([0 0.5 0],[0.8 0.5 0],ceil(numwins/skipnum));
-% exwinsize = 800;
-% exwin = bz_RandomWindowInIntervals(specslope_wins.timestamps([1 end])',exwinsize);
-% 
-% 
-% figure
-% subplot(4,1,1)
-%     imagesc(specgram.timestamps,log2(specgram.freqs),specgram.amp)
-%     hold on
-%     StateScorePlot({SleepState.ints.NREMstate,SleepState.ints.REMstate,SleepState.ints.WAKEstate},...
-%         {'b','r','k'})
-%     axis xy
-%     xlim(exwin)
-%     ylabel({'Specgram','f (Hz)'})
-%     LogScale('y',2)
-% 
-% subplot(6,1,3)
-%     set(gca,'colororder',colororder)
-%     hold all
-%     plot(specslope_wins.timestamps,specslope_wins.data(:,1:skipnum:end),'linewidth',1)
-%     xlim(exwin);ylim([-2 0])
-%     legend(num2str(winsizes(1:skipnum:end)'))
-%     ylabel('PSS')
-% for ss = 1:length(states)
-%     subplot(4,4,ss+8)
-%         imagesc(log10(winsizes),log10(winsizes),PSSwincorr.(states{ss}))
-%         LogScale('xy',10)
-%         colorbar
-%         caxis([0.5 1])
-%         title(states{ss})
-%         
-%     subplot(4,4,ss+12)
-%     set(gca,'colororder',colororder)
-%     hold all
-%         plot((lags).*dt,PSSautocorr.(states{ss})(:,1:skipnum:end))
-%         
-%         plot(maxlag.*[-1 1],[0 0],'k')
-%         ylim([-0.2 1])
-%         xlim(150*[-1 1])
-%         title(states{ss})
-%         xlabel('t lag (s)');ylabel('corr')
-% end
-% NiceSave('CompareWindow',figfolder,baseName)
-% %% Figure: Zoom in to compare state
-% 
-% figure    
-% for ss = 1:length(states)
-%     
-% exwinsize = 25
-% sexwin.(states{ss}) = bz_RandomWindowInIntervals(SleepState.ints.(states{ss}),exwinsize);
-%     
-% subplot(8,3,(ss-1).*6+[1 2])
-%     bz_MultiLFPPlot(lfp,'timewin',sexwin.(states{ss}))
-%     ylabel(states{ss})
-% 
-% subplot(8,3,(ss-1).*6+[4 5])
-%     set(gca,'colororder',colororder)
-%     hold all
-%     plot(specslope_wins.timestamps,specslope_wins.data(:,1:skipnum:end),'linewidth',1)
-%     xlim(sexwin.(states{ss}));ylim([-2 0])
-%     ylabel('PSS')
-%     
-% 
-%     subplot(3,3,ss*3)
-%     set(gca,'colororder',colororder)
-%     hold all
-%         plot((lags).*dt,PSSautocorr.(states{ss})(:,1:skipnum:end))
-%         plot(maxlag.*[-1 1],[0 0],'k')
-%         ylim([-0.2 1])
-%         xlim(20*[-1 1])
-%         title(states{ss})
-%         xlabel('t lag (s)')
-% legend(num2str(winsizes(1:skipnum:end)'),'location','northoutside')
-% end
-% NiceSave('CompareWindow_states',figfolder,baseName)
-
 
 %% Pick the "best" window for further analysis
 dt = 0.5;
@@ -176,8 +56,6 @@ subplot(4,1,1)
         {'b','r','k'})
     LogScale('y',2)
     hold on
-%     plot(specslope.timestamps,bz_NormToRange(specslope.data,'ylim',[-2 0]),...
-%         'w','linewidth',0.5)
     yyaxis right
     plot(specslope.timestamps,specslope.data,'w','linewidth',0.5)
     ylabel('PSS')
@@ -196,18 +74,6 @@ subplot(4,1,2)
     LogScale('y',2)
     ylabel('Rsq')
 
-% subplot(6,1,4)
-%     plot(specslope.timestamps,specslope.data,'k')
-%     xlim(exwin)
-%     ylabel('PSS');
-% subplot(6,1,5)
-%     plot(specslope.timestamps,specslope.rsq,'k')
-%     xlim(exwin)
-%     ylabel('Rsq')
-% subplot(6,1,6)
-%     plot(specslope.timestamps,specslope.intercept,'k')
-%     xlim(exwin)
-%     %ylabel('Intercept')
 subplot(6,2,11)
     for ss = 1:length(states)
     plot(PSShist.bins,PSShist.(states{ss}),'color',statecolors{ss},'linewidth',2)
@@ -222,7 +88,8 @@ subplot(6,2,11)
 NiceSave('PSSbyState',figfolder,baseName)
 %% Relate PSS and Spiking
 
-ISIStats.allspikes.PSS = cellfun(@(X) interp1(specslope.timestamps,specslope.data,X,'nearest'),ISIStats.allspikes.times,'UniformOutput',false);
+ISIStats.allspikes.PSS = cellfun(@(X) interp1(specslope.timestamps,specslope.data,X,'nearest'),...
+    ISIStats.allspikes.times,'UniformOutput',false);
 spkwinsize = winsize;
 overlap = spkwinsize./dt;
 spikemat = bz_SpktToSpkmat(spikes,'binsize',spkwinsize,'overlap',overlap);
@@ -231,11 +98,19 @@ spikemat.PSS = interp1(specslope.timestamps,specslope.data,spikemat.timestamps);
 cellclasses = {'pE','pI'};
 classcolors = {'k','r'};
 for tt = 1:length(cellclasses)
-    spikemat.poprate.(cellclasses{tt}) = sum(spikemat.data(:,CellClass.(cellclasses{tt})),2)./winsize./sum(CellClass.(cellclasses{tt}));
+    spikemat.poprate.(cellclasses{tt}) = ...
+        sum(spikemat.data(:,CellClass.(cellclasses{tt})),2)./winsize./sum(CellClass.(cellclasses{tt}));
+    spikemat.popCV.(cellclasses{tt}) = ...
+        std(spikemat.data(:,CellClass.(cellclasses{tt})),[],2)./mean(spikemat.data(:,CellClass.(cellclasses{tt})),2);
+    spikemat.popvar.(cellclasses{tt}) = ...
+        std(spikemat.data(:,CellClass.(cellclasses{tt})),[],2);
 end
+spikemat.poprate.EI = (spikemat.poprate.pE-spikemat.poprate.pI)./...
+    (spikemat.poprate.pE+spikemat.poprate.pI);
 %%
 ratePSScorr.ALL = corr(spikemat.PSS,spikemat.data,'type','spearman','rows','complete');
-CV2PSScorr.ALL = cellfun(@(X,Y) corr(X,Y,'type','spearman','rows','complete'),ISIStats.allspikes.PSS,ISIStats.allspikes.CV2);
+CV2PSScorr.ALL = cellfun(@(X,Y) corr(X,Y,'type','spearman','rows','complete'),...
+    ISIStats.allspikes.PSS,ISIStats.allspikes.CV2);
 %% Mean binned CV2...
 clear CV2mat
 CV2mat.winsize = spkwinsize;
@@ -354,19 +229,7 @@ for ss = 1:length(states)
 end
 
 NiceSave('PSSandCells',figfolder,baseName)
-    %% Example Cell
-    cc = randsample(spikes.numcells,1);
-    figure
-    subplot(2,2,1)
-        plot(ISIStats.allspikes.PSS{cc},log10(ISIStats.allspikes.ISIs{cc}),'.')
-        
-    subplot(2,2,2)
-        plot(ISIStats.allspikes.PSS{cc},(ISIStats.allspikes.CV2{cc}),'.')
-        
-	subplot(2,2,3)
-        plot(spikemat.PSS,log10(spikemat.data(:,cc)),'.')
-    
-    
+
 
 %%
 figure
@@ -475,6 +338,12 @@ xlabel('Pop. Rate');ylabel('<CV2>')
 
 NiceSave('PSSandSpiking',figfolder,baseName,'tiff')
 
+
+%%
+figure
+plot(log10(ISIStats.summstats.ALL.meanrate),ratePSScorr.ALL,'.')
+hold on
+plot(xlim(gca),[0 0],'k')
 %%
 %note good window: 1500 2500
 exwinsize = 800;
@@ -498,7 +367,7 @@ subplot(6,1,1)
 
     
     
-subplot(3,1,2)
+subplot(6,1,[2 3])
     bz_MultiLFPPlot(lfp,'spikes',spikes,'timewin',exwin,...
         'cellgroups',{CellClass.pE,CellClass.pI},...
         'sortmetric',ISIStats.summstats.ALL.meanrate,...
@@ -507,6 +376,18 @@ subplot(3,1,2)
     box off
     bz_ScaleBar('s')
 
+subplot(6,1,4)
+for tt = 1:length(cellclasses)
+    plot(spikemat.timestamps,spikemat.popCV.(cellclasses{tt}),classcolors{tt},'linewidth',1)
+    hold on
+end
+    plot(exwin,[1 1],'k--')
+    axis tight
+    %ylim([0.65 1.35])
+    xlim(exwin)
+    box off
+    ylabel('CV')
+    
 % subplot(6,1,5)
 % for tt = 1:length(cellclasses)
 %     plot(spikemat.timestamps,log2(spikemat.poprate.(cellclasses{tt})),classcolors{tt},'linewidth',1)
@@ -573,25 +454,70 @@ Ybounds = [0 2];
 
 minX = 50;
 
-[ PSSpEhist ] = ConditionalHist(CV2mat.PSS,CV2mat.pE,...
+[ PSSpECV2hist ] = ConditionalHist(CV2mat.PSS,CV2mat.pE,...
     'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 2]);
-[ PSSpIhist ] = ConditionalHist(CV2mat.PSS,CV2mat.pI,...
+[ PSSpICV2hist ] = ConditionalHist(CV2mat.PSS,CV2mat.pI,...
     'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 2]);
 
+[ PSSpECVhist ] = ConditionalHist(spikemat.PSS,spikemat.popCV.pE,...
+    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 2]);
+[ PSSpICVhist ] = ConditionalHist(spikemat.PSS,spikemat.popCV.pI,...
+    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 2]);
+
+
+[ PSSpEpophist ] = ConditionalHist(spikemat.PSS,spikemat.poprate.pE,...
+    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 4]);
+[ PSSpIpophist ] = ConditionalHist(spikemat.PSS,spikemat.poprate.pI,...
+    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 20]);
+
+% [ PSSpEhist ] = ConditionalHist(spikemat.PSS,(spikemat.data(:,CellClass.pE)./winsize),...
+%     'numXbins',60,'numYbins',50,'Xbounds',[-2 0],'Ybounds',[]);
+% [ PSSpIhist ] = ConditionalHist(spikemat.PSS,(spikemat.data(:,CellClass.pI)./winsize),...
+%     'numXbins',60,'numYbins',50,'Xbounds',[-2 0],'Ybounds',[]);
+
+[ PSSEIhist ] = ConditionalHist(spikemat.PSS,spikemat.poprate.EI,...
+    'numXbins',60,'numYbins',40,'Xbounds',[-2 0],'Ybounds',[]);
+
+%%
+[ PSScellhist ] = ConditionalHist(spikemat.PSS,spikemat.data./spikemat.binsize,...
+    'numXbins',60,'numYbins',50,'Xbounds',[-2 0],'Ybounds',[]);
+%%
+for tt = 1:length(cellclasses) 
+    [PSScellhist.ratedist.(cellclasses{tt}),PSScellhist.ratebins.(cellclasses{tt})] = ...
+        hist(squeeze(log10(PSScellhist.meanYX(:,:,CellClass.(cellclasses{tt}))))');
+    PSScellhist.meanrate.(cellclasses{tt}) = ...
+        mean(squeeze(log10(PSScellhist.meanYX(:,:,CellClass.(cellclasses{tt}))))',1);
+    PSScellhist.stdrate.(cellclasses{tt}) = ...
+        std(squeeze(log10(PSScellhist.meanYX(:,:,CellClass.(cellclasses{tt}))))',[],1);
+end
+%spikemat.poprate.EI
+
+%%
+figure
+subplot(2,2,1)
+imagesc(squeeze(log10(PSScellhist.meanYX(:,:,ISIStats.sorts.NREMstate.ratebyclass)))')
+subplot(2,2,2)
+imagesc(PSScellhist.Xbins(:,:,1),PSScellhist.ratebins.pE,PSScellhist.ratedist.pE)
+hold on
+plot(PSScellhist.Xbins(:,:,1),PSScellhist.meanrate.pE,'o-')
+plot(PSScellhist.Xbins(:,:,1),PSScellhist.stdrate.pE,'o-')
+LogScale('y',10)
+axis xy
 %% Figure
 
 figure
 subplot(5,4,1)
-imagesc(PSSpEhist.Xbins,PSSpEhist.Ybins,PSSpEhist.pYX')
+imagesc(PSSpECV2hist.Xbins,PSSpECV2hist.Ybins,PSSpECV2hist.pYX')
 axis xy
 hold on
+%plot(PSSpECV2hist.Xbins,PSSpECV2hist.meanYX,'o-')
 xlim([-1.6 -0.3])
 ylabel({'CV_2', 'pE Pop.'})
 ylim([0.9 1.4])
 plot(get(gca,'xlim'),[1 1],'w--')
 
 subplot(5,4,5)
-imagesc(PSSpIhist.Xbins,PSSpIhist.Ybins,PSSpIhist.pYX')
+imagesc(PSSpICV2hist.Xbins,PSSpICV2hist.Ybins,PSSpICV2hist.pYX')
 axis xy
 hold on
 xlim([-1.6 -0.3])
@@ -612,6 +538,71 @@ subplot(10,4,17)
     box off
     xlim([-1.6 -0.3])
     
+subplot(5,4,13)
+imagesc(PSSpECVhist.Xbins,PSSpECVhist.Ybins,PSSpECVhist.pYX')
+axis xy
+hold on
+xlim([-1.6 -0.3])
+ylabel({'Rate CV', 'pE Pop.'})
+ylim([0.5 1.6])
+%plot(get(gca,'xlim'),[1 1],'w--')
+
+subplot(5,4,17)
+imagesc(PSSpICVhist.Xbins,PSSpICVhist.Ybins,PSSpICVhist.pYX')
+axis xy
+hold on
+xlim([-1.6 -0.3])
+ylim([0.5 1.6])
+ylabel({'Rate CV',' pI Pop.'})
+%plot(get(gca,'xlim'),[1 1],'w--')
+    
+ 
+subplot(5,4,14)
+imagesc(PSSpEpophist.Xbins,PSSpEpophist.Ybins,PSSpEpophist.pYX')
+axis xy
+hold on
+xlim([-1.6 -0.3])
+ylabel('pE Pop Rate')
+%ylim([0.5 1.6])
+plot(get(gca,'xlim'),[1 1],'w--')
+
+subplot(5,4,18)
+imagesc(PSSpIpophist.Xbins,PSSpIpophist.Ybins,PSSpIpophist.pYX')
+axis xy
+hold on
+xlim([-1.6 -0.3])
+%ylim([0.5 1.6])
+ylabel('pI Pop Rate')
+plot(get(gca,'xlim'),[1 1],'w--')
+
+
+% subplot(5,4,15)
+% imagesc(PSSpEhist.Xbins,PSSpEhist.Ybins,log10(PSSpEhist.pYX)')
+% axis xy
+% hold on
+% xlim([-1.6 -0.3])
+% ylabel({'Cell FR', 'pE Pop.'})
+% %ylim([0.5 1.6])
+% plot(get(gca,'xlim'),[1 1],'w--')
+% 
+% subplot(5,4,19)
+% imagesc(PSSpIhist.Xbins,PSSpIhist.Ybins,log10(PSSpIhist.pYX)')
+% axis xy
+% hold on
+% xlim([-1.6 -0.3])
+% %ylim([0.5 1.6])
+% ylabel({'Cell FR',' pI Pop.'})
+% plot(get(gca,'xlim'),[1 1],'w--')
+
+subplot(5,4,20)
+imagesc(PSSEIhist.Xbins,PSSEIhist.Ybins,PSSEIhist.pYX')
+axis xy
+hold on
+xlim([-1.6 -0.3])
+%ylim([0.5 1.6])
+ylabel('E-I Ratio')
+plot(get(gca,'xlim'),[1 1],'w--')
+
 subplot(6,4,3)
     for tt = 1:length(cellclasses)
 %         plot(PSScorrhist.bins,PSScorrhist.CV2.(states{ss}).(cellclasses{tt}),...
@@ -628,6 +619,229 @@ subplot(6,4,3)
     
     NiceSave('CV2byPSSstats',figfolder,baseName,'tiff')
 
+    
+    
+%% Faster Time Scale Spiking 
+
+
+spikemat_fast = bz_SpktToSpkmat(spikes,'binsize',0.08,'overlap',4);
+spikemat_fast.PSS = interp1(specslope.timestamps,specslope.data,spikemat_fast.timestamps);
+
+cellclasses = {'pE','pI'};
+classcolors = {'k','r'};
+for tt = 1:length(cellclasses)
+    spikemat_fast.popspikes.(cellclasses{tt}) = ...
+        sum(spikemat_fast.data(:,CellClass.(cellclasses{tt})),2);
+    spikemat_fast.popsynch.(cellclasses{tt}) = ...
+        sum(spikemat_fast.data(:,CellClass.(cellclasses{tt}))>0,2);
+
+end
+
+%% Fast Time Scale
+[ PSSpEpophist ] = ConditionalHist(spikemat_fast.PSS,spikemat_fast.popspikes.pE,...
+    'numXbins',100,'numYbins',sum(CellClass.pE)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 sum(CellClass.pE)+0.5]);
+[ PSSpIpophist ] = ConditionalHist(spikemat_fast.PSS,spikemat_fast.popspikes.pI,...
+    'numXbins',100,'numYbins',2.*sum(CellClass.pI)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 2.*sum(CellClass.pI)+0.5]);
+PSSpEpophist.Ybins = PSSpEpophist.Ybins./sum(CellClass.pE)./spikemat_fast.binsize;
+PSSpIpophist.Ybins = PSSpEpophist.Ybins./sum(CellClass.pI)./spikemat_fast.binsize;
+
+[ PSSpEsynchhist ] = ConditionalHist(spikemat_fast.PSS,spikemat_fast.popsynch.pE,...
+    'numXbins',100,'numYbins',sum(CellClass.pE)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 sum(CellClass.pE)+0.5]);
+[ PSSpIsynchhist ] = ConditionalHist(spikemat_fast.PSS,spikemat_fast.popsynch.pI,...
+    'numXbins',100,'numYbins',2.*sum(CellClass.pI)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 2.*sum(CellClass.pI)+0.5]);
+PSSpEsynchhist.Ybins = PSSpEsynchhist.Ybins./sum(CellClass.pE);
+PSSpIsynchhist.Ybins = PSSpIsynchhist.Ybins./sum(CellClass.pI);
+
+% [ PSSpEhist ] = ConditionalHist(spikemat_fast.PSS,(spikemat_fast.data(:,CellClass.pE)),...
+%     'numXbins',100,'numYbins',16,'Xbounds',[-2 0],'Ybounds',[0 15]);
+% [ PSSpIhist ] = ConditionalHist(spikemat_fast.PSS,(spikemat_fast.data(:,CellClass.pI)),...
+%     'numXbins',100,'numYbins',16,'Xbounds',[-2 0],'Ybounds',[0 15]);
+% PSSpEhist.Ybins = PSSpEhist.Ybins./spikemat_fast.binsize;
+% PSSpIhist.Ybins = PSSpIhist.Ybins./spikemat_fast.binsize;
+
+
+
+%%
+figure
+ 
+subplot(5,4,1)
+imagesc(PSSpEpophist.Xbins,PSSpEpophist.Ybins,PSSpEpophist.pYX')
+axis xy
+hold on
+xlim([-1.6 -0.3])
+ylabel({'pE Pop Rate', ['(',num2str(spikemat_fast.binsize*1000),'ms bins)']})
+ylim([0 5])
+
+subplot(5,4,5)
+imagesc(PSSpIpophist.Xbins,PSSpIpophist.Ybins,PSSpIpophist.pYX')
+axis xy
+hold on
+xlim([-1.6 -0.3])
+ylim([0 14])
+ylabel({'pI Pop Rate', ['(',num2str(spikemat_fast.binsize*1000),'ms bins)']})
+
+subplot(10,4,17)
+    for ss = 1:3
+    plot(PSShist.bins,PSShist.(states{ss}),'color',statecolors{ss},'linewidth',2)
+    hold on
+    end
+    xlabel('PSS')
+    ylabel({'Time', 'Occupancy'})
+    set(gca,'ytick',[])
+    %legend(states{:},'location','eastoutside')
+    axis tight
+    box off
+    xlim([-1.6 -0.3])
+    
+    
+    
+ subplot(5,4,2)
+imagesc(PSSpEsynchhist.Xbins,PSSpEsynchhist.Ybins,PSSpEsynchhist.pYX')
+axis xy
+hold on
+xlim([-1.6 -0.3])
+ylabel({'pE Synch', ['(',num2str(spikemat_fast.binsize*1000),'ms bins)']})
+ylim([0 0.5])
+
+subplot(5,4,6)
+imagesc(PSSpIsynchhist.Xbins,PSSpIsynchhist.Ybins,PSSpIsynchhist.pYX')
+axis xy
+hold on
+xlim([-1.6 -0.3])
+ylim([0 1])
+ylabel({'pI Synch', ['(',num2str(spikemat_fast.binsize*1000),'ms bins)']})
+
+subplot(10,4,18)
+    for ss = 1:3
+    plot(PSShist.bins,PSShist.(states{ss}),'color',statecolors{ss},'linewidth',2)
+    hold on
+    end
+    xlabel('PSS')
+    ylabel({'Time', 'Occupancy'})
+    set(gca,'ytick',[])
+    %legend(states{:},'location','eastoutside')
+    axis tight
+    box off
+    xlim([-1.6 -0.3])
+    
+    
+%     
+%  subplot(5,4,3)
+% imagesc(PSSpEhist.Xbins,PSSpEhist.Ybins,log10(PSSpEhist.pYX)')
+% axis xy
+% hold on
+% xlim([-1.6 -0.3])
+% ylabel({'pE Cell Rate', ['(',num2str(spikemat_fast.binsize*1000),'ms bins)']})
+% %ylim([0.5 1.6])
+% 
+% subplot(5,4,7)
+% imagesc(PSSpIhist.Xbins,PSSpIhist.Ybins,log10(PSSpIhist.pYX)')
+% axis xy
+% hold on
+% xlim([-1.6 -0.3])
+% %ylim([0.5 1.6])
+% ylabel({'pI Cell Rate', ['(',num2str(spikemat_fast.binsize*1000),'ms bins)']})
+% 
+% subplot(10,4,19)
+%     for ss = 1:3
+%     plot(PSShist.bins,PSShist.(states{ss}),'color',statecolors{ss},'linewidth',2)
+%     hold on
+%     end
+%     xlabel('PSS')
+%     ylabel({'Time', 'Occupancy'})
+%     set(gca,'ytick',[])
+%     %legend(states{:},'location','eastoutside')
+%     axis tight
+%     box off
+%     xlim([-1.6 -0.3])
+
+    NiceSave('FastRatebyPSSstats',figfolder,baseName,'tiff')
+    
+%% ISI Stats
+[ PSSISIhist_allspkE ] = ConditionalHist(cat(1,ISIStats.allspikes.PSS{CellClass.pE}),...
+    log10(cat(1,ISIStats.allspikes.ISIs{CellClass.pE})),...
+    'numXbins',100,'numYbins',50,'Xbounds',[-2 0],'Ybounds',[-3 2]);
+[ PSSISIhist_allspkI ] = ConditionalHist(cat(1,ISIStats.allspikes.PSS{CellClass.pI}),...
+    log10(cat(1,ISIStats.allspikes.ISIs{CellClass.pI})),...
+    'numXbins',100,'numYbins',50,'Xbounds',[-2 0],'Ybounds',[-3 2]);
+
+
+PSSISIhist  = ConditionalHist(ISIStats.allspikes.PSS,...
+    cellfun(@(X) log10(X),ISIStats.allspikes.ISIs,'UniformOutput',false),...
+    'numXbins',100,'numYbins',50,'Xbounds',[-2 0],'Ybounds',[-3 2],'minX',25);
+
+for tt = 1:length(cellclasses)
+     PSSISIhist.mean.(cellclasses{tt}) = ...
+         nanmean(PSSISIhist.pYX(:,:,CellClass.(cellclasses{tt})),3);
+end
+%%
+figure
+subplot(5,4,1)
+imagesc(PSSISIhist_allspkE.Xbins,(PSSISIhist_allspkE.Ybins),PSSISIhist_allspkE.pYX')
+axis xy
+hold on
+xlim([-1.6 -0.3])
+ylabel('all pE ISIs')
+%ylim([0 5])
+LogScale('y',10)
+
+
+subplot(5,4,5)
+imagesc(PSSISIhist_allspkI.Xbins,(PSSISIhist_allspkI.Ybins),PSSISIhist_allspkI.pYX')
+axis xy
+hold on
+xlim([-1.6 -0.3])
+ylabel('all pE ISIs')%ylim([0 5])
+LogScale('y',10)
+
+
+
+subplot(10,4,17)
+    for ss = 1:3
+    plot(PSShist.bins,PSShist.(states{ss}),'color',statecolors{ss},'linewidth',2)
+    hold on
+    end
+    xlabel('PSS')
+    ylabel({'Time', 'Occupancy'})
+    set(gca,'ytick',[])
+    %legend(states{:},'location','eastoutside')
+    axis tight
+    box off
+    xlim([-1.6 -0.3])
+    
+    
+subplot(5,4,2)
+imagesc(PSSISIhist_allspkE.Xbins,(PSSISIhist_allspkE.Ybins),PSSISIhist.mean.pE')
+axis xy
+hold on
+xlim([-1.6 -0.3])
+ylabel('all pE ISIs')
+%ylim([0 5])
+LogScale('y',10)
+
+
+subplot(5,4,6)
+imagesc(PSSISIhist_allspkI.Xbins,(PSSISIhist_allspkI.Ybins),PSSISIhist.mean.pI')
+axis xy
+hold on
+xlim([-1.6 -0.3])
+ylabel('all pE ISIs')%ylim([0 5])
+LogScale('y',10)
+
+
+
+subplot(10,4,18)
+    for ss = 1:3
+    plot(PSShist.bins,PSShist.(states{ss}),'color',statecolors{ss},'linewidth',2)
+    hold on
+    end
+    xlabel('PSS')
+    ylabel({'Time', 'Occupancy'})
+    set(gca,'ytick',[])
+    %legend(states{:},'location','eastoutside')
+    axis tight
+    box off
+    xlim([-1.6 -0.3])
 %% PSS and UP/DOWN
 % 
 % SlowWaves = bz_LoadEvents(basePath,'SlowWaves');
