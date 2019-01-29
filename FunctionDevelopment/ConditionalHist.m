@@ -30,32 +30,62 @@ Xbounds = p.Results.Xbounds;
 Ybounds = p.Results.Ybounds;
 minX = p.Results.minX;
 
+
+%% For cell input
+
+if iscell(Y) && iscell(X)
+    CONDXY = cellfun(@(x,y) ConditionalHist(x,y,varargin{:}),...
+        X,Y,'UniformOutput',false);
+    CONDXY = bz_CollapseStruct([CONDXY{:}],3);
+    return
+end
+
+%% For multiple columns in X - conditonal probabilty of each
+
+if size(Y,2)>1 && size(X,2)==1
+    for yy = 1:size(Y,2)
+        CONDXY(yy) = ConditionalHist(X,Y(:,yy),varargin{:});
+    end
+    CONDXY = bz_CollapseStruct(CONDXY,3);
+    return
+end
+
+
+
 %%
 if isempty(Xbounds)
     Xbounds(1) = min(X); Xbounds(2) = max(X);
 end
 if isempty(Ybounds)
-    Ybounds(1) = min(Y); Ybounds(2) = max(Y);
+    Ybounds(1) = min(Y(~isinf(Y))); Ybounds(2) = max(Y(~isinf(Y)));
 end
 
-Xbins = linspace(Xbounds(1),Xbounds(2),numXbins+1);
-Xbins = Xbins(1:end-1)+ 0.5.*diff(Xbins([1 2]));
+Xedges = linspace(Xbounds(1),Xbounds(2),numXbins+1);
+Xbins = Xedges(1:end-1)+ 0.5.*diff(Xedges([1 2]));
+Xedges(1) = -inf;Xedges(end) = inf;
 
-Ybins = linspace(Ybounds(1),Ybounds(2),numYbins+1);
-Ybins = Ybins(1:end-1)+ 0.5.*diff(Ybins([1 2]));
+Yedges = linspace(Ybounds(1),Ybounds(2),numYbins+1);
+Ybins = Yedges(1:end-1)+ 0.5.*diff(Yedges([1 2]));
+Yedges(1) = -inf;Yedges(end) = inf;
 
 %First calculate the marginal probability of X
-Xhist = hist(X,Xbins);
+[Xhist,~,XbinID] = histcounts(X,Xedges);
 Xhist4norm = Xhist;Xhist4norm(Xhist4norm<=minX) = nan;
 
 %Then calculate the joint probabilty of X and Y
 [XYhist] = hist3([X,Y],{Xbins,Ybins});
 
-%
+% Conditional probability of Y given X
 pYX = bsxfun(@(x,y) x./y,XYhist,Xhist4norm');
+
+%Mean Y given X
+for xx = 1:length(Xbins)
+    meanYX(xx) = nanmean(Y(XbinID==xx));
+end
 
 CONDXY.pYX = pYX;
 CONDXY.XYhist = XYhist;
+CONDXY.meanYX = meanYX;
 CONDXY.Xhist = Xhist;
 CONDXY.Xbins = Xbins;
 CONDXY.Ybins = Ybins;
