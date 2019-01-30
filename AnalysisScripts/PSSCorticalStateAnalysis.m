@@ -1,16 +1,17 @@
 function [ PSShist,ratePSScorr,CV2PSScorr,...
-    PSSpECV2hist,PSSpICV2hist] = PSSCorticalStateAnalysis( basePath,figfolder )
+    PSSpECV2hist,PSSpICV2hist,PSSpECVhist,PSSpICVhist,PSSEIhist,PSScellhist,...
+    PSSpEpopratehist,PSSpIpopratehist,PSSpEsynchhist,PSSpIsynchhist] = PSSCorticalStateAnalysis( basePath,figfolder )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %% DEV
 %repoRoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity'; %desktop
-repoRoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity';
-basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
+%repoRoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity';
+%basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/GrosmarkAD/Gatsby/Gatsby_08022013';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 %figfolder = '/Users/dlevenstein/Dropbox/Research/Current Projects/FRHetAndDynamics/AnalysisScripts/AnalysisFigs';
 %figfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs/PSSCorticalStateAnalysis';
-figfolder = [repoRoot,'/AnalysisScripts/AnalysisFigs/PSSCorticalStateAnalysis'];
+%figfolder = [repoRoot,'/AnalysisScripts/AnalysisFigs/PSSCorticalStateAnalysis'];
 %%
 baseName = bz_BasenameFromBasepath(basePath);
 
@@ -476,7 +477,7 @@ minX = 50;
 %     'numXbins',60,'numYbins',50,'Xbounds',[-2 0],'Ybounds',[]);
 
 [ PSSEIhist ] = ConditionalHist(spikemat.PSS,spikemat.poprate.EI,...
-    'numXbins',60,'numYbins',40,'Xbounds',[-2 0],'Ybounds',[]);
+    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[-1 1]);
 
 %%
 [ PSScellhist ] = ConditionalHist(spikemat.PSS,spikemat.data./spikemat.binsize,...
@@ -638,12 +639,12 @@ for tt = 1:length(cellclasses)
 end
 
 %% Fast Time Scale
-[ PSSpEpophist ] = ConditionalHist(spikemat_fast.PSS,spikemat_fast.popspikes.pE,...
+[ PSSpEpopratehist ] = ConditionalHist(spikemat_fast.PSS,spikemat_fast.popspikes.pE,...
     'numXbins',100,'numYbins',sum(CellClass.pE)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 sum(CellClass.pE)+0.5]);
-[ PSSpIpophist ] = ConditionalHist(spikemat_fast.PSS,spikemat_fast.popspikes.pI,...
+[ PSSpIpopratehist ] = ConditionalHist(spikemat_fast.PSS,spikemat_fast.popspikes.pI,...
     'numXbins',100,'numYbins',2.*sum(CellClass.pI)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 2.*sum(CellClass.pI)+0.5]);
-PSSpEpophist.Ybins = PSSpEpophist.Ybins./sum(CellClass.pE)./spikemat_fast.binsize;
-PSSpIpophist.Ybins = PSSpEpophist.Ybins./sum(CellClass.pI)./spikemat_fast.binsize;
+PSSpEpopratehist.Ybins = PSSpEpopratehist.Ybins./sum(CellClass.pE)./spikemat_fast.binsize;
+PSSpIpopratehist.Ybins = PSSpIpopratehist.Ybins./sum(CellClass.pI)./spikemat_fast.binsize;
 
 [ PSSpEsynchhist ] = ConditionalHist(spikemat_fast.PSS,spikemat_fast.popsynch.pE,...
     'numXbins',100,'numYbins',sum(CellClass.pE)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 sum(CellClass.pE)+0.5]);
@@ -665,7 +666,7 @@ PSSpIsynchhist.Ybins = PSSpIsynchhist.Ybins./sum(CellClass.pI);
 figure
  
 subplot(5,4,1)
-imagesc(PSSpEpophist.Xbins,PSSpEpophist.Ybins,PSSpEpophist.pYX')
+imagesc(PSSpEpopratehist.Xbins,PSSpEpopratehist.Ybins,PSSpEpopratehist.pYX')
 axis xy
 hold on
 xlim([-1.6 -0.3])
@@ -673,7 +674,7 @@ ylabel({'pE Pop Rate', ['(',num2str(spikemat_fast.binsize*1000),'ms bins)']})
 ylim([0 5])
 
 subplot(5,4,5)
-imagesc(PSSpIpophist.Xbins,PSSpIpophist.Ybins,PSSpIpophist.pYX')
+imagesc(PSSpIpopratehist.Xbins,PSSpIpopratehist.Ybins,PSSpIpopratehist.pYX')
 axis xy
 hold on
 xlim([-1.6 -0.3])

@@ -73,7 +73,11 @@ Yedges(1) = -inf;Yedges(end) = inf;
 Xhist4norm = Xhist;Xhist4norm(Xhist4norm<=minX) = nan;
 
 %Then calculate the joint probabilty of X and Y
-[XYhist] = hist3([X,Y],{Xbins,Ybins});
+if length(Ybins) ==1
+    XYhist = Xhist;
+else
+    [XYhist] = hist3([X,Y],{Xbins,Ybins});
+end
 
 % Conditional probability of Y given X
 pYX = bsxfun(@(x,y) x./y,XYhist,Xhist4norm');
