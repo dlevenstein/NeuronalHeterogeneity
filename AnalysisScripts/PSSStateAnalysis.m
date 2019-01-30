@@ -36,8 +36,8 @@ allLFP = bz_GetLFP(usechans,...
 
 %% Calculate PSS correlation between channels
 bounds = [3 120];
-winsize = 8; %Why not use what your'e usingv for sleep scoring?....
-dt = 4;
+winsize = 10; %Why not use what your'e usingv for sleep scoring?....
+dt = 5;
 specslope = bz_PowerSpectrumSlope(allLFP,winsize,dt,'frange',bounds);
 
 
@@ -140,6 +140,11 @@ PSSEMGcorr = corr(specslope.data,specslope.EMG,'type','spearman');
 %%
 hist(PSSEMGcorr)
 
+%% HPC-CTX heatmap
+[multiregionhist.counts,multiregionhist.bins] = hist3([specslope.data(:,ismember(specslope.channels,repchan(1))),...
+        specslope.data(:,ismember(specslope.channels,repchan(2)))],[50 50]);
+
+
 %%
 
 %add example windows
@@ -188,8 +193,12 @@ subplot(5,4,14)
         '.')
     xlabel([regions{1},' PSS']);ylabel([regions{2},' PSS'])
     
+subplot(5,4,18)
+imagesc(multiregionhist.bins{1},multiregionhist.bins{2}, multiregionhist.counts')
+axis xy
+    xlabel([regions{1},' PSS']);ylabel([regions{2},' PSS'])
 
-
+    
 exwin = bz_RandomWindowInIntervals(specslope.timestamps([1 end]),2000);
 
 for rr = 1:length(regions)
@@ -266,5 +275,33 @@ LogScale('x',10)
 %histogram: good, OK, bad dips
 
 NiceSave('PSSBimodality',figfolder,baseName)
+
+
+
+%% PSS and UP/DOWN
+
+SlowWaves = bz_LoadEvents(basePath,'SlowWaves');
+
+updown = {'DOWN','UP'};
+UDcolor = {'b','r'};
+for ss = 1:2
+    SlowWaves.dur.(updown{ss}) = diff(SlowWaves.ints.(updown{ss}),1,2);
+    SlowWaves.midpoint.(updown{ss}) = mean(SlowWaves.ints.(updown{ss}),2);
+    SlowWaves.PSS.(updown{ss}) = interp1(specslope.timestamps,specslope.data(:,ismember(specslope.channels,repchan(1))),SlowWaves.midpoint.(updown{ss}));
+end
+
+%%
+figure
+subplot(3,2,1)
+for ss = 1:2
+    plot(SlowWaves.PSS.(updown{ss}),log10(SlowWaves.dur.(updown{ss})),'.','color',UDcolor{ss},'markersize',3)
+    hold on
+end
+xlabel('PSS');ylabel('Dur (s)')
+axis tight
+box off
+LogScale('y',10)
+legend(updown{:},'location','eastoutside')
+NiceSave('PSSandUPDOWN',figfolder,baseName)
 end
 
