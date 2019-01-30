@@ -156,6 +156,8 @@ hold on
 plot([ISIStats.allspikes.times{excell}(inwinspks)*[1 1]]',...
     [ones(size(ISIStats.allspikes.times{excell}(inwinspks)))*[2.1 2.4]]','k')
 plot(xwin,[2 2],'k')
+plot(xwin,[2 2],'k--')
+
 xlim(xwin)
 ylim([0 2.5])
 %bz_ScaleBar('s')
