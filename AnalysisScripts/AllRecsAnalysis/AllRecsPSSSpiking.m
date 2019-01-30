@@ -147,7 +147,7 @@ hold on
 plot(PSSpICV2hist.Xbins,PSSpICV2hist.meanYX','w')
 axis xy
 xlim([-1.6 -0.3])
-ylim([0.75 1.15])
+ylim([0.6 1.15])
 ylabel('Pop CV_2, pI ')
 
 plot(get(gca,'xlim'),[1 1],'w--')
