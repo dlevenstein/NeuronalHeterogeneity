@@ -843,31 +843,5 @@ subplot(10,4,18)
     axis tight
     box off
     xlim([-1.6 -0.3])
-%% PSS and UP/DOWN
-% 
-% SlowWaves = bz_LoadEvents(basePath,'SlowWaves');
-% 
-% 
-% %%
-% updown = {'DOWN','UP'};
-% UDcolor = {'b','r'};
-% for ss = 1:2
-%     SlowWaves.dur.(updown{ss}) = diff(SlowWaves.ints.(updown{ss}),1,2);
-%     SlowWaves.midpoint.(updown{ss}) = mean(SlowWaves.ints.(updown{ss}),2);
-%     SlowWaves.PSS.(updown{ss}) = interp1(specslope.timestamps,specslope.data,SlowWaves.midpoint.(updown{ss}));
-% end
-% 
-% %%
-% figure
-% subplot(3,2,1)
-% for ss = 1:2
-%     plot(SlowWaves.PSS.(updown{ss}),log10(SlowWaves.dur.(updown{ss})),'.','color',UDcolor{ss},'markersize',3)
-%     hold on
-% end
-% xlabel('PSS');ylabel('Dur (s)')
-% axis tight
-% box off
-% LogScale('y',10)
-% legend(updown{:},'location','eastoutside')
-% NiceSave('PSSandUPDOWN',figfolder,baseName)
+
 % 
