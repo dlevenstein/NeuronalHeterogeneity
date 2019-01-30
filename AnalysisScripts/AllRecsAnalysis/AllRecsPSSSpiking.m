@@ -10,9 +10,9 @@ datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets
 [PSSandSpikingAll,baseNames] = GetMatResults(figfolder,'PSSCorticalStateAnalysis','select',true);
 PSSandSpikingAll = bz_CollapseStruct(PSSandSpikingAll);
 %%
-CellClass = bz_LoadCellinfo(datasetPath.fCTX,'CellClass','dataset',true,...
+CellClass = bz_LoadCellinfo(datasetPath.CA1,'CellClass','dataset',true,...
     'baseNames',baseNames,'catall',true);
-ISIStats = bz_LoadCellinfo(datasetPath.fCTX,'ISIStats','dataset',true,...
+ISIStats = bz_LoadCellinfo(datasetPath.CA1,'ISIStats','dataset',true,...
     'baseNames',baseNames,'catall',true);
 
 %%
@@ -118,7 +118,7 @@ ylabel('# cells')
 
 
 
-NiceSave('RatebyPSS_CTX',figfolder,[])
+NiceSave('RatebyPSS_HPC',figfolder,[])
 
 %% CV/CV2 Stats
 PSSpECV2hist = bz_CollapseStruct(PSSandSpikingAll.PSSpECV2hist,3,'mean');
@@ -127,7 +127,7 @@ PSSpECVhist = bz_CollapseStruct(PSSandSpikingAll.PSSpECVhist,3,'mean');
 PSSpICVhist = bz_CollapseStruct(PSSandSpikingAll.PSSpICVhist,3,'mean');
 %%
 figure
-subplot(5,4,1)
+subplot(10,4,[1 5])
 imagesc(PSSpECV2hist.Xbins,PSSpECV2hist.Ybins,PSSpECV2hist.pYX')
 hold on
 plot(PSSpECV2hist.Xbins,PSSpECV2hist.meanYX','w')
@@ -139,7 +139,7 @@ ylabel('Pop CV_2, pE')
 ylim([0.9 1.4])
 plot(get(gca,'xlim'),[1 1],'w--')
 
-subplot(5,4,5)
+subplot(10,4,[9 13])
 imagesc(PSSpICV2hist.Xbins,PSSpICV2hist.Ybins,PSSpICV2hist.pYX')
 hold on
 plot(PSSpICV2hist.Xbins,PSSpICV2hist.meanYX','w')
@@ -161,7 +161,7 @@ end
     end
     xlabel('PSS')
     ylabel({'Time', 'Occupancy'})
-    set(gca,'ytick',[])
+   set(gca,'ytick',[])
     %legend(states{:},'location','eastoutside')
     axis tight
     y = ylim(gca);
@@ -170,7 +170,7 @@ end
     xlim([-1.6 -0.3])
     
 
-subplot(5,4,3)
+subplot(10,4,[3 7])
 imagesc(PSSpECVhist.Xbins,PSSpECVhist.Ybins,PSSpECVhist.pYX')
 axis xy
 hold on
@@ -182,7 +182,7 @@ ylabel({'Rate CV', 'pE Pop.'})
 %ylim([0.5 1.6])
 %plot(get(gca,'xlim'),[1 1],'w--')
 
-subplot(5,4,7)
+subplot(10,4,[11 15])
 imagesc(PSSpICVhist.Xbins,PSSpICVhist.Ybins,PSSpICVhist.pYX')
 axis xy
 hold on
@@ -225,4 +225,4 @@ xlabel('PSS-CV2 Corr');
 ylabel('# cells')
 %xlim([-0.25 0.25])
     
-NiceSave('CVbyPSS_CTX',figfolder,[])
+NiceSave('CVbyPSS_HPC',figfolder,[])

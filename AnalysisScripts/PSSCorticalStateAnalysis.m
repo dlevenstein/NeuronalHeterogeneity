@@ -454,6 +454,7 @@ Xbounds = [-2 0];
 Ybounds = [0 2];
 
 minX = 50;
+mincells = 4;
 
 [ PSSpECV2hist ] = ConditionalHist(CV2mat.PSS,CV2mat.pE,...
     'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 2]);
@@ -461,15 +462,17 @@ minX = 50;
     'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 2]);
 
 [ PSSpECVhist ] = ConditionalHist(spikemat.PSS,spikemat.popCV.pE,...
-    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 2]);
+    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 3]);
 [ PSSpICVhist ] = ConditionalHist(spikemat.PSS,spikemat.popCV.pI,...
-    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 2]);
-
+    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 3]);
+if sum(CellClass.pI)<mincells
+    PSSpICVhist.pYX = nan(size(PSSpICVhist.pYX));
+end
 
 [ PSSpEpophist ] = ConditionalHist(spikemat.PSS,spikemat.poprate.pE,...
     'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 4]);
 [ PSSpIpophist ] = ConditionalHist(spikemat.PSS,spikemat.poprate.pI,...
-    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 20]);
+    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 25]);
 
 % [ PSSpEhist ] = ConditionalHist(spikemat.PSS,(spikemat.data(:,CellClass.pE)./winsize),...
 %     'numXbins',60,'numYbins',50,'Xbounds',[-2 0],'Ybounds',[]);
@@ -642,7 +645,7 @@ end
 [ PSSpEpopratehist ] = ConditionalHist(spikemat_fast.PSS,spikemat_fast.popspikes.pE,...
     'numXbins',100,'numYbins',sum(CellClass.pE)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 sum(CellClass.pE)+0.5]);
 [ PSSpIpopratehist ] = ConditionalHist(spikemat_fast.PSS,spikemat_fast.popspikes.pI,...
-    'numXbins',100,'numYbins',2.*sum(CellClass.pI)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 2.*sum(CellClass.pI)+0.5]);
+    'numXbins',100,'numYbins',2.5.*sum(CellClass.pI)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 2.5.*sum(CellClass.pI)+0.5]);
 PSSpEpopratehist.Ybins = PSSpEpopratehist.Ybins./sum(CellClass.pE)./spikemat_fast.binsize;
 PSSpIpopratehist.Ybins = PSSpIpopratehist.Ybins./sum(CellClass.pI)./spikemat_fast.binsize;
 
