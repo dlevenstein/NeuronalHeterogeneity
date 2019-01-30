@@ -60,32 +60,38 @@ histcolors = flipud(gray);
 
 
 figure
-subplot(3,3,1)
+subplot(3,4,1)
     colormap(gca,histcolors)
     imagesc(ISIStats.ISIhist.logbins,ISIStats.ISIhist.logbins,...
         ISIStats.ISIhist.NREMstate.return(:,:,excell))
     hold on
-    plot((thresh_n).*[1 1],ylim(gca),'r--')
-    plot(xlim(gca),thresh_n.*[1 1],'r--')
+    %plot((thresh_n).*[1 1],ylim(gca),'r--')
+    %plot(xlim(gca),thresh_n.*[1 1],'r--')
     xlabel('ISI_n');ylabel('ISI_n_+_1')
+    xlim([-3 1]);    ylim([-3 1])
+
     axis xy
     LogScale('xy',10)
     
-subplot(6,3,7)
+subplot(6,4,9)
     bar(ISIStats.ISIhist.logbins,ISIStats.ISIhist.NREMstate.log(excell,:),'facecolor','k')
     axis tight
     box off
     LogScale('x',10)
+    xlim([-3 1]); 
     
-subplot(6,3,10)
+subplot(6,4,17)
     hist(ISIStats.allspikes.ISIs{excell}(ISIStats.allspikes.instate{excell} & ...
         ISIStats.allspikes.ISIs{excell}<4),50)
     axis tight
+    box off
     
-subplot(6,3,13)
+subplot(6,4,21)
     hist(ISIStats.allspikes.ISIs{excell}(ISIStats.allspikes.instate{excell} & ...
         ISIStats.allspikes.ISIs{excell}<0.04),100)
     axis tight
+    box off
+    xlabel('ISI (s)')
 
 NiceSave('ISIhist',figfolder,baseName)
 %%
