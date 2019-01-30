@@ -153,7 +153,7 @@ ylabel('Pop CV_2, pI ')
 plot(get(gca,'xlim'),[1 1],'w--')
 
 
-subplot(10,4,21)
+subplot(8,4,17)
     hold on
 for ss = 1:3
    errorshade(PSShist.mean.bins,PSShist.mean.(states{ss}),...
@@ -198,7 +198,7 @@ ylabel({'Rate CV',' pI Pop.'})
 %plot(get(gca,'xlim'),[1 1],'w--')
 
 
-subplot(10,4,23)
+subplot(8,4,19)
     hold on
 for ss = 1:3
    errorshade(PSShist.mean.bins,PSShist.mean.(states{ss}),...
