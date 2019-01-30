@@ -35,7 +35,7 @@ specslope = bz_PowerSpectrumSlope(lfp,winsize,dt,'showfig',true,...
     'saveMat',basePath);
 
 
-numbins = 20;
+numbins = 40;
 PSShist.bins = linspace(-2,0,numbins);
 for ss = 1:length(states)
     specslope.timeidx.(states{ss}) = InIntervals(specslope.timestamps,SleepState.ints.(states{ss}));
