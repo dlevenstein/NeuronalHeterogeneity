@@ -137,6 +137,8 @@ hold on
 xlim([-1.6 -0.3])
 ylabel('Pop CV_2, pE')
 ylim([0.9 1.4])
+   set(gca,'xtick',[])
+
 plot(get(gca,'xlim'),[1 1],'w--')
 
 subplot(10,4,[9 13])
@@ -147,10 +149,11 @@ axis xy
 xlim([-1.6 -0.3])
 ylim([0.75 1.15])
 ylabel('Pop CV_2, pI ')
+
 plot(get(gca,'xlim'),[1 1],'w--')
 
 
-subplot(10,4,17)
+subplot(10,4,21)
     hold on
 for ss = 1:3
    errorshade(PSShist.mean.bins,PSShist.mean.(states{ss}),...
@@ -181,6 +184,8 @@ caxis([0 0.05])
 ylabel({'Rate CV', 'pE Pop.'})
 %ylim([0.5 1.6])
 %plot(get(gca,'xlim'),[1 1],'w--')
+   set(gca,'xtick',[])
+
 
 subplot(10,4,[11 15])
 imagesc(PSSpICVhist.Xbins,PSSpICVhist.Ybins,PSSpICVhist.pYX')
@@ -193,7 +198,7 @@ ylabel({'Rate CV',' pI Pop.'})
 %plot(get(gca,'xlim'),[1 1],'w--')
 
 
-subplot(10,4,19)
+subplot(10,4,23)
     hold on
 for ss = 1:3
    errorshade(PSShist.mean.bins,PSShist.mean.(states{ss}),...
