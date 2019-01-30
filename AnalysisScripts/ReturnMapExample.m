@@ -108,21 +108,28 @@ subplot(3,3,1)
     LogScale('xy',10)
     
     
-subplot(6,3,7)
+subplot(6,3,3)
     bar(ISIStats.CV2hist.bins,ISIStats.CV2hist.ALL{excell},'k')
     hold on
-    for zz = 1:length(zones)
-        plot(ISIStats.CV2hist.bins,ISIStats.CV2hist.(zones{zz}){excell},'linewidth',2)
-
-    end
+%     for zz = 1:length(zones)
+%         plot(ISIStats.CV2hist.bins,ISIStats.CV2hist.(zones{zz}){excell},'linewidth',2)
+% 
+%     end
     xlabel('CV2')
+    ylabel('# Spikes')
     axis tight
+    title(['<CV2>: ',num2str(ISIStats.summstats.NREMstate.meanCV2(excell))])
     box off
     
+    
+    zonecolor = {[0.5 0.5 0.5],'b','r'};
 for zz = 1:3
     subplot(6,3,3*zz+7)
-    bar(ISIStats.CV2hist.bins,ISIStats.CV2hist.(zones{zz}){excell})
+    bar(ISIStats.CV2hist.bins,ISIStats.CV2hist.(zones{zz}){excell},'facecolor',zonecolor{zz})
+    if zz ==3
     xlabel('CV2')
+    end
+    ylabel('# Spikes')
     axis tight
     box off
 end
@@ -136,17 +143,24 @@ zonespks = cellfun(@(Y,Z) (Y&Z),ISIStats.allspikes.instate,ISIStats.allspikes.(z
 exspks.(zones{zz}) = cellfun(@(X) randsample(find(X),1),zonespks);
 
 xwin = ISIStats.allspikes.times{excell}(exspks.(zones{zz})(excell))+[-0.1 0.5];
+inwinspks = ISIStats.allspikes.times{excell}>(xwin(1)-10) & ISIStats.allspikes.times{excell}<(xwin(2)+10);
 
-subplot(4,2,4)
+subplot(4,2,6)
 bz_MultiLFPPlot(lfp,'timewin',xwin)
 bz_ScaleBar('s')
 xlabel('')
 
-subplot(4,2,6)
-plot(ISIStats.allspikes.times{excell},ISIStats.allspikes.CV2{excell},'.-')
+subplot(4,2,8)
+plot(ISIStats.allspikes.times{excell}(inwinspks),ISIStats.allspikes.CV2{excell}(inwinspks),'.-')
+hold on
+plot([ISIStats.allspikes.times{excell}(inwinspks)*[1 1]]',...
+    [ones(size(ISIStats.allspikes.times{excell}(inwinspks)))*[2.1 2.4]]','k')
+plot(xwin,[2 2],'k')
 xlim(xwin)
-ylim([0 2])
-bz_ScaleBar('s')
+ylim([0 2.5])
+%bz_ScaleBar('s')
 box off
+ylabel('CV2')
+set(gca,'xtick',[])
 %end
 NiceSave('CV2Hist',figfolder,baseName)
