@@ -453,26 +453,32 @@ numYbins = 150;
 Xbounds = [-2 0];
 Ybounds = [0 2];
 
-minX = 50;
+minx = 100;
 mincells = 4;
 
 [ PSSpECV2hist ] = ConditionalHist(CV2mat.PSS,CV2mat.pE,...
-    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 2]);
+    'numXbins',60,'numYbins',200,'Xbounds',[-2 0],'Ybounds',[0 2],...
+    'minX',minx);
 [ PSSpICV2hist ] = ConditionalHist(CV2mat.PSS,CV2mat.pI,...
-    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 2]);
+    'numXbins',60,'numYbins',200,'Xbounds',[-2 0],'Ybounds',[0 2],...
+    'minX',minx);
 
 [ PSSpECVhist ] = ConditionalHist(spikemat.PSS,spikemat.popCV.pE,...
-    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 3]);
+    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 4],...
+    'minX',minx);
 [ PSSpICVhist ] = ConditionalHist(spikemat.PSS,spikemat.popCV.pI,...
-    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 3]);
+    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 4],...
+    'minX',minx);
 if sum(CellClass.pI)<mincells
     PSSpICVhist.pYX = nan(size(PSSpICVhist.pYX));
 end
 
 [ PSSpEpophist ] = ConditionalHist(spikemat.PSS,spikemat.poprate.pE,...
-    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 4]);
+    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 4],...
+    'minX',minx);
 [ PSSpIpophist ] = ConditionalHist(spikemat.PSS,spikemat.poprate.pI,...
-    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 25]);
+    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[0 25],...
+    'minX',minx);
 
 % [ PSSpEhist ] = ConditionalHist(spikemat.PSS,(spikemat.data(:,CellClass.pE)./winsize),...
 %     'numXbins',60,'numYbins',50,'Xbounds',[-2 0],'Ybounds',[]);
@@ -480,11 +486,12 @@ end
 %     'numXbins',60,'numYbins',50,'Xbounds',[-2 0],'Ybounds',[]);
 
 [ PSSEIhist ] = ConditionalHist(spikemat.PSS,spikemat.poprate.EI,...
-    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[-1 1]);
+    'numXbins',60,'numYbins',150,'Xbounds',[-2 0],'Ybounds',[-1 1],...
+    'minX',minx);
 
-%%
 [ PSScellhist ] = ConditionalHist(spikemat.PSS,spikemat.data./spikemat.binsize,...
-    'numXbins',60,'numYbins',50,'Xbounds',[-2 0],'Ybounds',[]);
+    'numXbins',60,'numYbins',50,'Xbounds',[-2 0],'Ybounds',[],...
+    'minX',minx);
 %%
 for tt = 1:length(cellclasses) 
     [PSScellhist.ratedist.(cellclasses{tt}),PSScellhist.ratebins.(cellclasses{tt})] = ...
@@ -510,26 +517,32 @@ axis xy
 %% Figure
 
 figure
-subplot(5,4,1)
+cmap = [1 1 1;colormap(gca)];
+colormap(cmap)
+
+subplot(10,4,[1 5])
 imagesc(PSSpECV2hist.Xbins,PSSpECV2hist.Ybins,PSSpECV2hist.pYX')
 axis xy
 hold on
-%plot(PSSpECV2hist.Xbins,PSSpECV2hist.meanYX,'o-')
+plot(PSSpECV2hist.Xbins,PSSpECV2hist.meanYX,'-k')
 xlim([-1.6 -0.3])
 ylabel({'CV_2', 'pE Pop.'})
 ylim([0.9 1.4])
-plot(get(gca,'xlim'),[1 1],'w--')
+plot(get(gca,'xlim'),[1 1],'k--')
+box off
 
-subplot(5,4,5)
+subplot(10,4,[9 13])
 imagesc(PSSpICV2hist.Xbins,PSSpICV2hist.Ybins,PSSpICV2hist.pYX')
 axis xy
 hold on
+plot(PSSpICV2hist.Xbins,PSSpICV2hist.meanYX,'-k')
 xlim([-1.6 -0.3])
 ylim([0.75 1.15])
 ylabel({'CV_2',' pI Pop.'})
-plot(get(gca,'xlim'),[1 1],'w--')
+plot(get(gca,'xlim'),[1 1],'k--')
+box off
 
-subplot(10,4,17)
+subplot(8,4,17)
     for ss = 1:3
     plot(PSShist.bins,PSShist.(states{ss}),'color',statecolors{ss},'linewidth',2)
     hold on
@@ -542,44 +555,75 @@ subplot(10,4,17)
     box off
     xlim([-1.6 -0.3])
     
-subplot(5,4,13)
+subplot(10,4,[3 7])
 imagesc(PSSpECVhist.Xbins,PSSpECVhist.Ybins,PSSpECVhist.pYX')
 axis xy
 hold on
+plot(PSSpECVhist.Xbins,PSSpECVhist.meanYX,'-k')
 xlim([-1.6 -0.3])
+box off
 ylabel({'Rate CV', 'pE Pop.'})
-ylim([0.5 1.6])
+ylim([0.5 3.5])
 %plot(get(gca,'xlim'),[1 1],'w--')
 
-subplot(5,4,17)
+subplot(10,4,[11 15])
 imagesc(PSSpICVhist.Xbins,PSSpICVhist.Ybins,PSSpICVhist.pYX')
 axis xy
 hold on
+plot(PSSpICVhist.Xbins,PSSpICVhist.meanYX,'-k')
+box off
 xlim([-1.6 -0.3])
-ylim([0.5 1.6])
+ylim([0.5 1.5])
 ylabel({'Rate CV',' pI Pop.'})
 %plot(get(gca,'xlim'),[1 1],'w--')
     
  
-subplot(5,4,14)
+subplot(8,4,19)
+    for ss = 1:3
+    plot(PSShist.bins,PSShist.(states{ss}),'color',statecolors{ss},'linewidth',2)
+    hold on
+    end
+    xlabel('PSS')
+    ylabel({'Time', 'Occupancy'})
+    set(gca,'ytick',[])
+    %legend(states{:},'location','eastoutside')
+    axis tight
+    box off
+    xlim([-1.6 -0.3])
+    
+subplot(10,4,[2 6])
 imagesc(PSSpEpophist.Xbins,PSSpEpophist.Ybins,PSSpEpophist.pYX')
 axis xy
 hold on
+plot(PSSpEpophist.Xbins,PSSpEpophist.meanYX,'-k')
 xlim([-1.6 -0.3])
 ylabel('pE Pop Rate')
-%ylim([0.5 1.6])
-plot(get(gca,'xlim'),[1 1],'w--')
+ylim([0 3])
+box off
 
-subplot(5,4,18)
+subplot(10,4,[10 14])
 imagesc(PSSpIpophist.Xbins,PSSpIpophist.Ybins,PSSpIpophist.pYX')
 axis xy
 hold on
+plot(PSSpIpophist.Xbins,PSSpIpophist.meanYX,'-k')
 xlim([-1.6 -0.3])
-%ylim([0.5 1.6])
+ylim([0.5 25])
 ylabel('pI Pop Rate')
-plot(get(gca,'xlim'),[1 1],'w--')
+box off
 
-
+subplot(8,4,18)
+    for ss = 1:3
+    plot(PSShist.bins,PSShist.(states{ss}),'color',statecolors{ss},'linewidth',2)
+    hold on
+    end
+    xlabel('PSS')
+    ylabel({'Time', 'Occupancy'})
+    set(gca,'ytick',[])
+    %legend(states{:},'location','eastoutside')
+    axis tight
+    box off
+    xlim([-1.6 -0.3])
+    
 % subplot(5,4,15)
 % imagesc(PSSpEhist.Xbins,PSSpEhist.Ybins,log10(PSSpEhist.pYX)')
 % axis xy
@@ -607,7 +651,7 @@ xlim([-1.6 -0.3])
 ylabel('E-I Ratio')
 plot(get(gca,'xlim'),[1 1],'w--')
 
-subplot(6,4,3)
+subplot(6,4,21)
     for tt = 1:length(cellclasses)
 %         plot(PSScorrhist.bins,PSScorrhist.CV2.(states{ss}).(cellclasses{tt}),...
 %             classcolors{tt},'linewidth',2)
@@ -651,6 +695,9 @@ minx = 500;
     'minX',minx);
 PSSpEpopratehist.Ybins = PSSpEpopratehist.Ybins./sum(CellClass.pE)./spikemat_fast.binsize;
 PSSpIpopratehist.Ybins = PSSpIpopratehist.Ybins./sum(CellClass.pI)./spikemat_fast.binsize;
+PSSpEpopratehist.meanYX = PSSpEpopratehist.meanYX./sum(CellClass.pE)./spikemat_fast.binsize;
+PSSpIpopratehist.meanYX = PSSpIpopratehist.meanYX./sum(CellClass.pI)./spikemat_fast.binsize;
+
 
 [ PSSpEsynchhist ] = ConditionalHist(spikemat_fast.PSS,spikemat_fast.popsynch.pE,...
     'numXbins',80,'numYbins',sum(CellClass.pE)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 sum(CellClass.pE)+0.5],...
@@ -660,6 +707,8 @@ PSSpIpopratehist.Ybins = PSSpIpopratehist.Ybins./sum(CellClass.pI)./spikemat_fas
     'minX',minx);
 PSSpEsynchhist.Ybins = PSSpEsynchhist.Ybins./sum(CellClass.pE);
 PSSpIsynchhist.Ybins = PSSpIsynchhist.Ybins./sum(CellClass.pI);
+PSSpEsynchhist.meanYX = PSSpEsynchhist.meanYX./sum(CellClass.pE);
+PSSpIsynchhist.meanYX = PSSpIsynchhist.meanYX./sum(CellClass.pI);
 
 % [ PSSpEhist ] = ConditionalHist(spikemat_fast.PSS,(spikemat_fast.data(:,CellClass.pE)),...
 %     'numXbins',100,'numYbins',16,'Xbounds',[-2 0],'Ybounds',[0 15]);
@@ -680,6 +729,7 @@ subplot(10,4,[1 5])
 imagesc(PSSpEpopratehist.Xbins,PSSpEpopratehist.Ybins,PSSpEpopratehist.pYX')
 axis xy
 hold on
+plot(PSSpEpopratehist.Xbins,PSSpEpopratehist.meanYX,'-k')
 xlim([-1.6 -0.3])
 ylabel({'pE Pop Rate', ['(',num2str(spikemat_fast.binsize*1000),'ms bins)']})
 ylim([0 5])
@@ -691,6 +741,7 @@ subplot(10,4,[9 13])
 imagesc(PSSpIpopratehist.Xbins,PSSpIpopratehist.Ybins,PSSpIpopratehist.pYX')
 axis xy
 hold on
+plot(PSSpIpopratehist.Xbins,PSSpIpopratehist.meanYX,'-k')
 xlim([-1.6 -0.3])
 ylim([0 40])
 box off
@@ -715,6 +766,7 @@ subplot(10,4,[3 7])
 imagesc(PSSpEsynchhist.Xbins,PSSpEsynchhist.Ybins,PSSpEsynchhist.pYX')
 axis xy
 hold on
+plot(PSSpEsynchhist.Xbins,PSSpEsynchhist.meanYX,'-k')
 xlim([-1.6 -0.3])
 ylabel({'pE Synch', ['(',num2str(spikemat_fast.binsize*1000),'ms bins)']})
 ylim([0 0.5])
@@ -723,6 +775,7 @@ subplot(10,4,[11 15])
 imagesc(PSSpIsynchhist.Xbins,PSSpIsynchhist.Ybins,PSSpIsynchhist.pYX')
 axis xy
 hold on
+plot(PSSpIsynchhist.Xbins,PSSpIsynchhist.meanYX,'-k')
 xlim([-1.6 -0.3])
 ylim([0 1])
 ylabel({'pI Synch', ['(',num2str(spikemat_fast.binsize*1000),'ms bins)']})

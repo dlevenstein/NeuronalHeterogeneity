@@ -85,6 +85,7 @@ pYX = bsxfun(@(x,y) x./y,XYhist,Xhist4norm');
 %Mean Y given X
 for xx = 1:length(Xbins)
     meanYX(xx) = nanmean(Y(XbinID==xx));
+    meanYX(isnan(Xhist4norm)) = nan;
 end
 
 CONDXY.pYX = pYX;
