@@ -137,7 +137,7 @@ hold on
 xlim([-1.6 -0.3])
 ylabel('Pop CV_2, pE')
 ylim([0.9 1.4])
-   set(gca,'xtick',[])
+   set(gca,'xticklabel',[])
 
 plot(get(gca,'xlim'),[1 1],'w--')
 
@@ -184,7 +184,7 @@ caxis([0 0.05])
 ylabel({'Rate CV', 'pE Pop.'})
 %ylim([0.5 1.6])
 %plot(get(gca,'xlim'),[1 1],'w--')
-   set(gca,'xtick',[])
+   set(gca,'xticklabel',[])
 
 
 subplot(10,4,[11 15])

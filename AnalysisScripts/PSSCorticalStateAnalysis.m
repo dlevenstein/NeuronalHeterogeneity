@@ -4,14 +4,14 @@ function [ PSShist,ratePSScorr,CV2PSScorr,...
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %% DEV
-%repoRoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity'; %desktop
+repoRoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity'; %desktop
 %repoRoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-%basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/GrosmarkAD/Gatsby/Gatsby_08022013';
-%basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
+%basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/GrosmarkAD/Cicero/Cicero_09102014';
+basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 %figfolder = '/Users/dlevenstein/Dropbox/Research/Current Projects/FRHetAndDynamics/AnalysisScripts/AnalysisFigs';
 %figfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs/PSSCorticalStateAnalysis';
-%figfolder = [repoRoot,'/AnalysisScripts/AnalysisFigs/PSSCorticalStateAnalysis'];
+figfolder = [repoRoot,'/AnalysisScripts/AnalysisFigs/PSSCorticalStateAnalysis'];
 %%
 baseName = bz_BasenameFromBasepath(basePath);
 
@@ -642,17 +642,22 @@ for tt = 1:length(cellclasses)
 end
 
 %% Fast Time Scale
+minx = 500;
 [ PSSpEpopratehist ] = ConditionalHist(spikemat_fast.PSS,spikemat_fast.popspikes.pE,...
-    'numXbins',100,'numYbins',sum(CellClass.pE)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 sum(CellClass.pE)+0.5]);
+    'numXbins',80,'numYbins',sum(CellClass.pE)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 sum(CellClass.pE)+0.5],...
+    'minX',minx);
 [ PSSpIpopratehist ] = ConditionalHist(spikemat_fast.PSS,spikemat_fast.popspikes.pI,...
-    'numXbins',100,'numYbins',2.5.*sum(CellClass.pI)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 2.5.*sum(CellClass.pI)+0.5]);
+    'numXbins',80,'numYbins',4.*sum(CellClass.pI)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 4.*sum(CellClass.pI)+0.5],...
+    'minX',minx);
 PSSpEpopratehist.Ybins = PSSpEpopratehist.Ybins./sum(CellClass.pE)./spikemat_fast.binsize;
 PSSpIpopratehist.Ybins = PSSpIpopratehist.Ybins./sum(CellClass.pI)./spikemat_fast.binsize;
 
 [ PSSpEsynchhist ] = ConditionalHist(spikemat_fast.PSS,spikemat_fast.popsynch.pE,...
-    'numXbins',100,'numYbins',sum(CellClass.pE)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 sum(CellClass.pE)+0.5]);
+    'numXbins',80,'numYbins',sum(CellClass.pE)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 sum(CellClass.pE)+0.5],...
+    'minX',minx);
 [ PSSpIsynchhist ] = ConditionalHist(spikemat_fast.PSS,spikemat_fast.popsynch.pI,...
-    'numXbins',100,'numYbins',2.*sum(CellClass.pI)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 2.*sum(CellClass.pI)+0.5]);
+    'numXbins',80,'numYbins',sum(CellClass.pI)+1,'Xbounds',[-2 0],'Ybounds',[-0.5 sum(CellClass.pI)+0.5],...
+    'minX',minx);
 PSSpEsynchhist.Ybins = PSSpEsynchhist.Ybins./sum(CellClass.pE);
 PSSpIsynchhist.Ybins = PSSpIsynchhist.Ybins./sum(CellClass.pI);
 
@@ -665,26 +670,33 @@ PSSpIsynchhist.Ybins = PSSpIsynchhist.Ybins./sum(CellClass.pI);
 
 
 
-%%
+%% Figure: fast time scale rate
+
 figure
- 
-subplot(5,4,1)
+cmap = [1 1 1;colormap(gca)];
+
+colormap(cmap)
+subplot(10,4,[1 5])
 imagesc(PSSpEpopratehist.Xbins,PSSpEpopratehist.Ybins,PSSpEpopratehist.pYX')
 axis xy
 hold on
 xlim([-1.6 -0.3])
 ylabel({'pE Pop Rate', ['(',num2str(spikemat_fast.binsize*1000),'ms bins)']})
 ylim([0 5])
+box off
+   set(gca,'xticklabel',[])
 
-subplot(5,4,5)
+
+subplot(10,4,[9 13])
 imagesc(PSSpIpopratehist.Xbins,PSSpIpopratehist.Ybins,PSSpIpopratehist.pYX')
 axis xy
 hold on
 xlim([-1.6 -0.3])
-ylim([0 14])
+ylim([0 40])
+box off
 ylabel({'pI Pop Rate', ['(',num2str(spikemat_fast.binsize*1000),'ms bins)']})
 
-subplot(10,4,17)
+subplot(8,4,17)
     for ss = 1:3
     plot(PSShist.bins,PSShist.(states{ss}),'color',statecolors{ss},'linewidth',2)
     hold on
@@ -699,7 +711,7 @@ subplot(10,4,17)
     
     
     
- subplot(5,4,2)
+subplot(10,4,[3 7])
 imagesc(PSSpEsynchhist.Xbins,PSSpEsynchhist.Ybins,PSSpEsynchhist.pYX')
 axis xy
 hold on
@@ -707,7 +719,7 @@ xlim([-1.6 -0.3])
 ylabel({'pE Synch', ['(',num2str(spikemat_fast.binsize*1000),'ms bins)']})
 ylim([0 0.5])
 
-subplot(5,4,6)
+subplot(10,4,[11 15])
 imagesc(PSSpIsynchhist.Xbins,PSSpIsynchhist.Ybins,PSSpIsynchhist.pYX')
 axis xy
 hold on
@@ -715,7 +727,7 @@ xlim([-1.6 -0.3])
 ylim([0 1])
 ylabel({'pI Synch', ['(',num2str(spikemat_fast.binsize*1000),'ms bins)']})
 
-subplot(10,4,18)
+subplot(8,4,19)
     for ss = 1:3
     plot(PSShist.bins,PSShist.(states{ss}),'color',statecolors{ss},'linewidth',2)
     hold on
