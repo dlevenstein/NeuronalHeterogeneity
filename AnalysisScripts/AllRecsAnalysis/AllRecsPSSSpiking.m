@@ -122,7 +122,7 @@ ylabel('# cells')
 
 
 
-NiceSave('RatebyPSS_CTX',figfolder,[])
+NiceSave('RatebyPSS_HPC',figfolder,[])
 
 %% CV/CV2 Stats
 PSSpECV2hist = bz_CollapseStruct(PSSandSpikingAll.PSSpECV2hist,3,'mean');
@@ -186,9 +186,10 @@ hold on
 plot(PSSpECVhist.Xbins,PSSpECVhist.meanYX','w')
 %xlim([-1.6 -0.3])
 %colorbar
+box off
 caxis([0 0.05])
 ylabel({'Rate CV', 'pE Pop.'})
-ylim([0.5 4])
+ylim([0.5 3.8])
 %plot(get(gca,'xlim'),[1 1],'w--')
    set(gca,'xticklabel',[])
 
@@ -200,6 +201,7 @@ hold on
 plot(PSSpICVhist.Xbins,PSSpICVhist.meanYX','w')
 %xlim([-1.6 -0.3])
 %ylim([0.5 1.6])
+box off
 ylim([0.25 2])
 ylabel({'Rate CV',' pI Pop.'})
 %plot(get(gca,'xlim'),[1 1],'w--')
@@ -237,4 +239,4 @@ xlabel('PSS-CV2 Corr');
 ylabel('# cells')
 %xlim([-0.25 0.25])
     
-NiceSave('CVbyPSS_CTX',figfolder,[])
+NiceSave('CVbyPSS_HPC',figfolder,[])
