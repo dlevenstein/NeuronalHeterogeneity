@@ -66,7 +66,11 @@ states = {'WAKEstate','NREMstate','REMstate','ALL'};
 statecolors = {'k','b','r',[0.6 0.6 0.6]};
 %%
 classcolors = {'k','r'};
+cmap = [1 1 1;colormap(gca)];
+
 figure
+colormap(cmap)
+
 %subplot(2,2,1)
 % imagesc(squeeze(log10(PSScellhist.meanYX(:,:,ISIStats.sorts.NREMstate.ratebyclass)))')
 subplot(3,3,1)
@@ -127,30 +131,32 @@ PSSpECVhist = bz_CollapseStruct(PSSandSpikingAll.PSSpECVhist,3,'mean');
 PSSpICVhist = bz_CollapseStruct(PSSandSpikingAll.PSSpICVhist,3,'mean');
 %%
 figure
+colormap(cmap)
+
 subplot(10,4,[1 5])
 imagesc(PSSpECV2hist.Xbins,PSSpECV2hist.Ybins,PSSpECV2hist.pYX')
-hold on
-plot(PSSpECV2hist.Xbins,PSSpECV2hist.meanYX','w')
 axis xy
 hold on
-%plot(PSSpECV2hist.Xbins,PSSpECV2hist.meanYX,'o-')
+plot(PSSpECV2hist.Xbins,PSSpECV2hist.meanYX,'-k')
 xlim([-1.6 -0.3])
-ylabel('Pop CV_2, pE')
+ylabel({'CV_2', 'pE Pop.'})
 ylim([0.9 1.4])
+plot(get(gca,'xlim'),[1 1],'k--')
+box off
    set(gca,'xticklabel',[])
 
-plot(get(gca,'xlim'),[1 1],'w--')
 
 subplot(10,4,[9 13])
 imagesc(PSSpICV2hist.Xbins,PSSpICV2hist.Ybins,PSSpICV2hist.pYX')
-hold on
-plot(PSSpICV2hist.Xbins,PSSpICV2hist.meanYX','w')
 axis xy
+hold on
+plot(PSSpICV2hist.Xbins,PSSpICV2hist.meanYX,'-k')
 xlim([-1.6 -0.3])
-ylim([0.6 1.15])
-ylabel('Pop CV_2, pI ')
+ylim([0.75 1.15])
+ylabel({'CV_2',' pI Pop.'})
+plot(get(gca,'xlim'),[1 1],'k--')
+box off
 
-plot(get(gca,'xlim'),[1 1],'w--')
 
 
 subplot(8,4,17)

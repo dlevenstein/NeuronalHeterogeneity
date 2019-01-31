@@ -232,7 +232,15 @@ for ss = 1:3
             plot(log10(1./(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(sorts.(regions{rr}).(statenames{ss}).ratebyclass))),...
                 [1:numcells.(regions{rr})],'k.','markersize',1)
             plot(ISIstats.(regions{rr}).ISIhist.logbins([1 end]),sum(inclasscells.(regions{rr}){1}).*[1 1]+0.5,'r')
-
+            
+            plot(meanISIhist.logbins,-meanISIhist.(regions{rr}).(statenames{ss}).pE*5000+...
+                sum(inclasscells.(regions{rr}){1})+0.5,...
+                'color',statecolors{ss},'linewidth',2)
+            
+            plot(meanISIhist.logbins,-meanISIhist.(regions{rr}).(statenames{ss}).pI*2000+...
+                sum(numcells.(regions{rr})),...
+                'color',statecolors{ss},'linewidth',2)
+            
             xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
             LogScale('x',10)
             if ss==3
@@ -385,7 +393,7 @@ for ss=1:3
             'r.','markersize',2)
         %plot(log2([1 6]),log2([1 6]),'k')
         xlabel([plotstates{ss},' CV']);ylabel([plotstates2{ss},' CV'])
-        axis tight
+        xlim([-0.3 5]);        ylim([-0.3 5])
         LogScale('xy',2)
         UnityLine('linetype','-')
 end
@@ -404,9 +412,9 @@ for ss=1:3
         %plot(([0 2]),([0 2]),'k')
         
         xlabel([plotstates{ss},' CV2']);ylabel([plotstates2{ss},' CV2'])
-        xlim([0.4 1.6]);ylim([0.4 1.6])
+        
        % LogScale('xy',2)
-       axis tight
+       xlim([0.4 1.8]);ylim([0.4 1.8])
         UnityLine('linetype','-')
 end
 
