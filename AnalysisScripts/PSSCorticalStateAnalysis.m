@@ -530,6 +530,8 @@ ylabel({'CV_2', 'pE Pop.'})
 ylim([0.9 1.4])
 plot(get(gca,'xlim'),[1 1],'k--')
 box off
+   set(gca,'xticklabel',[])
+
 
 subplot(10,4,[9 13])
 imagesc(PSSpICV2hist.Xbins,PSSpICV2hist.Ybins,PSSpICV2hist.pYX')
@@ -564,6 +566,8 @@ xlim([-1.6 -0.3])
 box off
 ylabel({'Rate CV', 'pE Pop.'})
 ylim([0.5 3.5])
+   set(gca,'xticklabel',[])
+
 %plot(get(gca,'xlim'),[1 1],'w--')
 
 subplot(10,4,[11 15])
@@ -598,6 +602,8 @@ hold on
 plot(PSSpEpophist.Xbins,PSSpEpophist.meanYX,'-k')
 xlim([-1.6 -0.3])
 ylabel('pE Pop Rate')
+   set(gca,'xticklabel',[])
+
 ylim([0 3])
 box off
 
