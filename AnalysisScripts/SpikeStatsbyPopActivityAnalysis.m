@@ -18,13 +18,18 @@ SleepState.ints.ALL = [0 Inf];
 lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
     'basepath',basePath);
 
+%%
+
+ISIStats.allspikes.ISInp1 = cellfun(@(X) [X(2:end);nan],ISIStats.allspikes.ISIs,...
+    'UniformOutput',false);
+
 %% Cell types and states
 [celltypes,~,typeidx] = unique(CellClass.label);
 cellcolor = {'k','r'};
 statenames = fieldnames(SleepState.ints);
 
 %% Calculate spike count matrix
-binsize = 0.25; %s
+binsize = 0.08; %s
 overlap = 10;
 spikemat = bz_SpktToSpkmat(spikes,'binsize',binsize,'overlap',overlap);
 
@@ -61,7 +66,7 @@ end
     
 %% Calculate stuff in each state
 %for ss = 1:length(statenames)
-state = statenames{4};
+state = statenames{2};
 
 instatespiketimes = cellfun(@(X) InIntervals(X,double(SleepState.ints.(state))),...
     ISIStats.allspikes.times,'UniformOutput',false);
@@ -292,10 +297,93 @@ figure
 
         
 NiceSave('RatebyPopRate',figfolder,baseName)
+
+%% Average Synchrony (Pop Rate) during spikes in the ISI return map
+excell = randsample(spikes.numcells,1);
+
+ISIbounds = [-3 1.5];
+[meanZ,countmap ] = cellfun(@(X,Y,Z,Q) ConditionalHist3(log10(X(Q)),...
+    log10(Y(Q)),Z(Q),...
+    'numXbins',80,'numYbins',80,'Xbounds',ISIbounds,'Ybounds',ISIbounds,...
+    'minXY',30,'sigma',0.2),...
+    ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,ISIStats.allspikes.poprate.pE,...
+    instatespiketimes,'UniformOutput',false);
+meansynchall = cellfun(@mean,spikemat.bycellpoprate.pE,'UniformOutput',false);
+meanZ_norm = cellfun(@(X,Y) X./Y,meanZ,meansynchall,'UniformOutput',false);
+
+%%
+for tt = 1:length(celltypes)
+    popratereturn.(celltypes{tt}) = nanmean(cat(3,meanZ_norm{CellClass.(celltypes{tt})}),3);
+    meanreturn.(celltypes{tt}) = nanmean(cat(3,countmap{CellClass.(celltypes{tt})}),3);
+end
+
+%%
+posnegcolormap = makeColorMap([0 0 0.8],[0 0 0],[0.8 0 0]);
+histcolormap = makeColorMap([1 1 1],[0 0 0]);
+
+figure
+subplot(2,2,1)
+colormap(gca,histcolormap)
+
+s = imagesc(ISIbounds,ISIbounds,meanreturn.pE');
+axis xy
+LogScale('xy',10)
+colorbar
+%caxis([0.5 1.5])
+
+subplot(2,2,2)
+colormap(gca,histcolormap)
+
+s = imagesc(ISIbounds,ISIbounds,meanreturn.pI')
+axis xy
+LogScale('xy',10)
+colorbar
+%caxis([0.5 1.5])
+
+subplot(2,2,3)
+colormap(gca,posnegcolormap)
+
+s = imagesc(ISIbounds,ISIbounds,popratereturn.pE');
+alpha(s,meanreturn.pE'*25)
+axis xy
+caxis([0.5 1.5])
+LogScale('xy',10)
+colorbar
+
+subplot(2,2,4)
+colormap(gca,posnegcolormap)
+s = imagesc(ISIbounds,ISIbounds,popratereturn.pI')
+alpha(s,meanreturn.pI'*25)
+axis xy
+caxis([0.5 1.5])
+LogScale('xy',10)
+colorbar
+
+NiceSave('ReturnMapPopRate',figfolder,baseName)
+
 %%
 excell = randsample(spikes.numcells,1);
+
 figure
+subplot(2,2,1)
 plot(ISIStats.allspikes.cellrate{excell},ISIStats.allspikes.CV2{excell},'.')
+subplot(2,2,3)
+scatter(log10(ISIStats.allspikes.ISIs{excell}(instatespiketimes{excell})),...
+    log10(ISIStats.allspikes.ISInp1{excell}(instatespiketimes{excell})),1,...
+    log10(ISIStats.allspikes.poprate.pE{excell}(instatespiketimes{excell})))
+colorbar
+
+subplot(2,2,4)
+scatter(log10(ISIStats.allspikes.ISIs{excell}(instatespiketimes{excell})),...
+    log10(ISIStats.allspikes.ISInp1{excell}(instatespiketimes{excell})),1,...
+    log10(ISIStats.allspikes.poprate.pI{excell}(instatespiketimes{excell})))
+colorbar
+
+subplot(2,2,2)
+imagesc((meanZ_norm{excell})')
+axis xy
+colorbar
+caxis([0 2])
 %% Figure: Pop Rate
 
 %Example cell... show example window: high pE, medium pI, high pI medium
