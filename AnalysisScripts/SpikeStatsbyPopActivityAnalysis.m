@@ -361,6 +361,34 @@ colorbar
 
 NiceSave('ReturnMapPopRate',figfolder,baseName)
 
+%% Conditional CV2 distribution given pop synchrony
+[ CONDXY ] = ConditionalHist(ISIStats.allspikes.poprate.pI,...
+    ISIStats.allspikes.CV2,'Xbounds',[0 12],'numXbins',13,...
+    'numYbins',20,'Ybounds',[0 2]);
+%%
+for tt = 1:length(celltypes)
+    CV2distbyPOP.(celltypes{tt}) = nanmean(CONDXY.pYX(:,:,CellClass.(celltypes{tt})),3);
+    meanCV2byPOP.(celltypes{tt}) = nanmean(CONDXY.meanYX(:,:,CellClass.(celltypes{tt})),3);
+    PopsynchhistbyPOP = .(celltypes{tt}) = 
+end
+%%
+figure
+subplot(2,2,1)
+imagesc(CONDXY.Xbins(:,:,1),CONDXY.Ybins(:,:,1),CV2distbyPOP.pE')
+hold on
+plot(CONDXY.Xbins(:,:,excell),meanCV2byPOP.pE,'w-')
+plot(CONDXY.Xbins(:,[1 end],excell),[1 1],'w--')
+
+axis xy
+xlabel('Pop Synchrony');ylabel('CV2')
+%%
+excell = randsample(spikes.numcells,1);
+figure
+imagesc(CONDXY.Xbins(:,:,excell),CONDXY.Ybins(:,:,excell),CONDXY.pYX(:,:,excell)')
+hold on
+plot(CONDXY.Xbins(:,:,excell),CONDXY.meanYX(:,:,excell),'w-')
+plot(CONDXY.Xbins(:,:,excell),CONDXY.meanYX(:,:,excell),'w-')
+axis xy
 %%
 excell = randsample(spikes.numcells,1);
 

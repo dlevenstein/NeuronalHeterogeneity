@@ -44,23 +44,28 @@ Yedges(1) = -inf;Yedges(end) = inf;
 [N,~,~,BINX,BINY] = histcounts2(X,Y,Xedges,Yedges);
 meanZ = zeros(numXbins,numYbins);
 
-for xx = 1:length(Xbins)
-    for yy = 1:length(Ybins)
+
         
-        switch bintype
-            case 'bins'
+switch bintype
+    case 'bins'
+        for xx = 1:length(Xbins)
+            for yy = 1:length(Ybins)
                 meanZ(xx,yy) = nanmean(Z(BINX==xx & BINY==yy));
-                
-            case 'gaussian'
+            end
+        end
+
+    case 'gaussian'
+        for xx = 1:length(Xbins)
+            for yy = 1:length(Ybins)
                 pointdist = sqrt((X-Xbins(xx)).^2 + (Y-Ybins(yy)).^2);
                 weight = exp(-.5 * (pointdist/sig) .^ 2) ./ (sig * sqrt(2*pi));   %Weight by gaussian
 
                 N(xx,yy) = sum(weight);
                 meanZ(xx,yy) = sum(Z.*weight)./N(xx,yy);
+            end
         end
-
-    end
 end
+
 meanZ(N<minXY)=nan;
 N = N./length(Z);
 %weightmean(totweight<minXY)=nan;

@@ -1,6 +1,5 @@
 function [PowerPhaseRatemap,spikebinIDs] = bz_PowerPhaseRatemap(spikes,filteredLFP,varargin)
-%UNTITLED2 Summary of this function goes here
-%   Detailed explanation goes here
+%[PowerPhaseRatemap,spikebinIDs] = bz_PowerPhaseRatemap(spikes,filteredLFP,varargin)
 %
 %INPUTS
 %   spikes          structure containing spikes.times from bz_getSpikes
