@@ -2,8 +2,9 @@ function [ ] = SpikeStatsbyLFPSpecAnalysis(basePath,figfolder)
 
 %% DEV
 reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
+%basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/Dino_mPFC/Dino_061814';
 %basePath = pwd;
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyLFPSpecAnalysis'];
@@ -18,7 +19,7 @@ SlowWaves = bz_LoadEvents(basePath,'SlowWaves');
 %LFP
 %%
 %Pick channel with most cells close to it...... for now;
-usechannel = mode(spikes.maxWaveformCh);
+%usechannel = mode(spikes.maxWaveformCh);
 
 lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
     'basepath',basePath,'noPrompts',true);
