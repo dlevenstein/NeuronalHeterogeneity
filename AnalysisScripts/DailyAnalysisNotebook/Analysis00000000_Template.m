@@ -10,10 +10,9 @@ function [ ] = AnalysisXXXXXXXX(basePath,figfolder)
 %% Load Header
 %Initiate Paths
 %reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity';
+reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-%basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
-%basePath = '/mnt/proraidDL/Database/BWCRCNS/Dino_mPFC/Dino_061814';
+basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
 %basePath = pwd;
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
