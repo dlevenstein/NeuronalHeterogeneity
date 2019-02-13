@@ -1,11 +1,11 @@
 function [ ] = SpikeStatsbyPopActivityAnalysis(basePath,figfolder)
 
 %% DEV
-%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
-basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
+reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+%reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
+%basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
-%basePath = '/mnt/proraidDL/Database/BWCRCNS/Dino_mPFC/Dino_061814';
+basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/GrosmarkAD/Cicero/Cicero_09102014';
 %basePath = pwd;
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyPopActivityAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
@@ -66,7 +66,7 @@ end
     
 %% Calculate stuff in each state
 %for ss = 1:length(statenames)
-state = statenames{2};
+state = statenames{1};
 
 instatespiketimes = cellfun(@(X) InIntervals(X,double(SleepState.ints.(state))),...
     ISIStats.allspikes.times,'UniformOutput',false);
@@ -305,10 +305,10 @@ ISIbounds = [-3 1.5];
 [meanZ,countmap ] = cellfun(@(X,Y,Z,Q) ConditionalHist3(log10(X(Q)),...
     log10(Y(Q)),Z(Q),...
     'numXbins',80,'numYbins',80,'Xbounds',ISIbounds,'Ybounds',ISIbounds,...
-    'minXY',30,'sigma',0.2),...
-    ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,ISIStats.allspikes.poprate.pE,...
+    'minXY',30,'sigma',0.1),...
+    ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,ISIStats.allspikes.poprate.pI,...
     instatespiketimes,'UniformOutput',false);
-meansynchall = cellfun(@mean,spikemat.bycellpoprate.pE,'UniformOutput',false);
+meansynchall = cellfun(@mean,spikemat.bycellpoprate.pI,'UniformOutput',false);
 meanZ_norm = cellfun(@(X,Y) X./Y,meanZ,meansynchall,'UniformOutput',false);
 
 %%
