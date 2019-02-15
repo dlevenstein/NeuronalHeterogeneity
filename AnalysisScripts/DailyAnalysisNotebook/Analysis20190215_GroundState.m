@@ -73,11 +73,11 @@ for ss = 1:3
 
 
     ISIoccupancy.(state).hist = hist(ISIrate.ISI(ISIrate.instate,:),ISIoccupancy.bins);
-    ISIoccupancy.(state).hist = ISIoccupancy.(state).hist./length(ISIrate.timestamps);
+    ISIoccupancy.(state).hist = ISIoccupancy.(state).hist./length(ISIrate.timestamps(ISIrate.instate));
     %ISIoccupancy.(state).hist(ISIoccupancy.(state).hist==0)=nan;
 
     ISIoccupancy.(state).loghist = hist(log10(ISIrate.ISI(ISIrate.instate,:)),ISIoccupancy.logbins);
-    ISIoccupancy.(state).loghist = ISIoccupancy.(state).loghist./length(ISIrate.timestamps);
+    ISIoccupancy.(state).loghist = ISIoccupancy.(state).loghist./length(ISIrate.timestamps(ISIrate.instate));
     %ISIoccupancy.(state).loghist(ISIoccupancy.(state).loghist==0)=nan;
 end
 %%
@@ -97,7 +97,7 @@ subplot(3,2,ss*2-1)
     plot(log10(1./ISIStats.summstats.(state).meanrate(ISIStats.sorts.(state).ratebyclass)),...
         [1:spikes.numcells],'.')
     LogScale('x',10)
-    ColorbarWithAxis([0 0.025],'P_t(log(ISI))')
+    ColorbarWithAxis([0 0.05],'P_t(log(ISI))')
     xlabel('ISI')
     ylabel(state)
 % subplot(2,1,2)
