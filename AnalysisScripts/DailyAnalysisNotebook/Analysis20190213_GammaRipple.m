@@ -46,7 +46,7 @@ downsamplefactor = 1;
 lfp = bz_GetLFP(hpcchan,...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 %Noralize the LFP
-lfp.data = NormToInt(single(lfp.data),'modZ', SleepState.ints.NREMstate,lfp.samplingRate);
+%lfp.data = NormToInt(single(lfp.data),'modZ', SleepState.ints.NREMstate,lfp.samplingRate);
 
 %% Channel Sorting by Spike group
 %Find the channels that are used and order them by their spike group
@@ -96,11 +96,12 @@ for cc = 1:length(hpcchan)
         synchphasecoupling.(celltypes{tt})(cc,:) = synchcoupling(tt).phasemag;
         synchpowercorr.(celltypes{tt})(cc,:) = synchcoupling(tt).powercorr;
     end
+    close all
 end
 
 %% Gamma-phase coupling in the best band(s) for each cell with each channel
 
-rip.fband = [120 220]; %REM best
+rip.fband = [120 200]; %REM best
 
 % gamma = bz_Filter(lfp,'passband',gammaband);
 clear ratepowercorr
@@ -117,11 +118,13 @@ for cc = 1:length(hpcchan)
         synchripphasecoupling.(celltypes{tt})(cc) = synchcoupling(tt).phasemag;
         synchrippowercorr.(celltypes{tt})(cc) = synchcoupling(tt).powercorr;
     end
+    close all
 end
 
 %Pick the channel with the best coupling to the pE population
 [~,rip.pEchanIDX] = max(synchripphasecoupling.pE);
 rip.pEchan = lfp.channels(rip.pEchanIDX);
+sessionInfo = bz_tagChannel(basePath,rip.pEchan,'ripplechan');
 
 %% Figure: pop-phase coupling by channel
 figure
