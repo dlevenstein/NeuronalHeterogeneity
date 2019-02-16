@@ -1,32 +1,15 @@
-function [ ] = Analysis20190215(basePath,figfolder)
-% Date 02/15/2019
-%
-%
-%Question: Where do neurons spend their most time? What are the statistics
-%of the ground state and how do we show it's poisson-like 
-%
-%Statement to support and expand on:
-%"We find that forebrain neurons spend the majority of time in a low rate
-%mode with poisson-like spiking statistics. This "ground state" determines
-%the mean firing rate of the neuron and shows low amplitude fluctuations in
-%rate the follow low-dimensional population-wide dynamics.
-%
-%Plots
-%-ISI time occupancy
-%-Conditional power distribution on ISI?
-%-CV2 of low-rate state?... mean CV2 (or CV2 dist) as function of longest
-%interval?
-%-compare and fit to poisson
-%
+function [ ISIoccupancy ] = GroundStateAnalysis( basePath,figfolder )
+%UNTITLED Summary of this function goes here
+%   Detailed explanation goes here
 %% Load Header
 %Initiate Paths
-reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
-basePath = [reporoot,'Datasets/onDesktop/AG_HPC/Achilles_10252013'];
+%basePath = [reporoot,'Datasets/onDesktop/AG_HPC/Achilles_10252013'];
 %basePath = pwd;
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -36,8 +19,8 @@ CellClass = bz_LoadCellinfo(basePath,'CellClass');
 SleepState = bz_LoadStates(basePath,'SleepState');
 ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 states = fieldnames(SleepState.ints);
-states{4} = 'ALL';
-SleepState.ints.ALL = [0 Inf];
+%states{4} = 'ALL';
+%SleepState.ints.ALL = [0 Inf];
 statecolors = {'k','b','r',[0.6 0.6 0.6]};
 
 [celltypes,~,typeidx] = unique(CellClass.label);
@@ -70,6 +53,11 @@ for ss = 1:3
 %         ISIStats.allspikes.times,'UniformOutput',false);
     ISIrate.instate = InIntervals(ISIrate.timestamps,SleepState.ints.(state));
 
+    if sum(ISIrate.instate)==0
+        ISIoccupancy.(state).hist = nan(length(ISIoccupancy.bins),spikes.numcells);
+        ISIoccupancy.(state).loghist = nan(length(ISIoccupancy.logbins),spikes.numcells);
+       continue 
+    end
     %% Calculate occupancy histogram
 
 
@@ -105,41 +93,4 @@ subplot(3,2,ss*2-1)
 %     imagesc(ISIoccupancy.bins,[1 spikes.numcells],...
 %         ISIoccupancy.(state).hist(:,ISIStats.sorts.(state).ratebyclass)')
 end
-NiceSave(['ISIoccupancy'],figfolder,baseName,'includeDate',true)
-%%
-excell = randsample(spikes.numcells,1);
-viewwin = bz_RandomWindowInIntervals(SleepState.ints.(state),30);
-
-figure
-    subplot(4,1,1)
-        plot(ISIrate.timestamps,log10(ISIrate.ISI{excell}),'k')
-        axis tight
-        hold on
-        StateScorePlot(SleepState.ints,statecolors)
-        box off 
-        LogScale('y',10)
-        %hold on
-        %plot(ISIStats.allspikes.times{excell},zeros(size(ISIStats.allspikes.times{excell})),'+')
-        %xlim(viewwin)
-    subplot(4,1,2)
-        plot(ISIrate.timestamps,log10(1./ISIrate.ISI{excell}),'k')
-        %hold on
-        axis tight
-        box off
-        LogScale('y',10)
-        %plot(ISIStats.allspikes.times{excell},zeros(size(ISIStats.allspikes.times{excell})),'+')
-        %xlim(viewwin)
-    subplot(2,2,3)
-        plot(ISIrate.timestamps,ISIrate.ISI{excell},'k')
-        hold on
-        plot(ISIStats.allspikes.times{excell},zeros(size(ISIStats.allspikes.times{excell})),'+')
-        xlim(viewwin)
-    subplot(4,2,6)
-        bar(ISIoccupancy.bins,ISIoccupancy.(state).hist(excell,:))
-        axis tight
-        box off
-    subplot(4,2,8)
-        bar(ISIoccupancy.logbins,ISIoccupancy.(state).loghist(excell,:))
-        axis tight
-        box off
-        LogScale('x',10)
+NiceSave(['ISIoccupancy'],figfolder,baseName)
