@@ -859,21 +859,23 @@ end
 
 
 %% FIgure
+figure
 subplot(5,4,1)
 imagesc(PSSISIhist_allspkE.Xbins,(PSSISIhist_allspkE.Ybins),PSSISIhist_allspkE.pYX')
 axis xy
 hold on
-xlim([-1.6 -0.3])
+xlim([-1.5 -0.4])
 ylabel('all pE ISIs')
 %ylim([0 5])
 LogScale('y',10)
+title('All Spikes')
 
 
 subplot(5,4,5)
 imagesc(PSSISIhist_allspkI.Xbins,(PSSISIhist_allspkI.Ybins),PSSISIhist_allspkI.pYX')
 axis xy
 hold on
-xlim([-1.6 -0.3])
+xlim([-1.5 -0.4])
 ylabel('all pE ISIs')%ylim([0 5])
 LogScale('y',10)
 
@@ -890,24 +892,26 @@ subplot(10,4,17)
     %legend(states{:},'location','eastoutside')
     axis tight
     box off
-    xlim([-1.6 -0.3])
+    xlim([-1.5 -0.4])
     
     
 subplot(5,4,2)
 imagesc(PSSISIhist_allspkE.Xbins,(PSSISIhist_allspkE.Ybins),PSSISIhist.allspkmean.pE')
 axis xy
 hold on
-xlim([-1.6 -0.3])
+xlim([-1.5 -0.4])
 ylabel('all pE ISIs')
 %ylim([0 5])
 LogScale('y',10)
+title('Mean ISI Dist')
+
 
 
 subplot(5,4,6)
 imagesc(PSSISIhist_allspkI.Xbins,(PSSISIhist_allspkI.Ybins),PSSISIhist.allspkmean.pI')
 axis xy
 hold on
-xlim([-1.6 -0.3])
+xlim([-1.5 -0.4])
 ylabel('all pE ISIs')%ylim([0 5])
 LogScale('y',10)
 
@@ -924,7 +928,7 @@ subplot(10,4,18)
     %legend(states{:},'location','eastoutside')
     axis tight
     box off
-    xlim([-1.6 -0.3])
+    xlim([-1.5 -0.4])
 
     NiceSave('ISIdistbyPSSstats',figfolder,baseName,'figtype','tiff')
 
