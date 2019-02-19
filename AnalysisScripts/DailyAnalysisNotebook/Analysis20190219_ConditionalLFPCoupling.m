@@ -10,10 +10,11 @@ function [ ] = Analysis20190219(basePath,figfolder)
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+%reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
+basePath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC/Achilles_10252013'
 %basePath = pwd;
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
@@ -36,7 +37,7 @@ cellcolor = {'k','r'};
 %% Load the LFP if needed
 
 lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID;
-downsamplefactor = 5;
+downsamplefactor = 2;
 lfp = bz_GetLFP(lfpchan,...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 %Noralize the LFP
@@ -50,8 +51,8 @@ ints = SleepState.ints.(state);
 ISIStats.allspikes.instate = cellfun(@(X) InIntervals(X,ints),...
     ISIStats.allspikes.times,'UniformOutput',false);
 %% Get complex valued wavelet transform at each timestamp
-wavespec = bz_WaveSpec(lfp,'intervals',ints,'showprogress',true,'ncyc',10,...
-    'nfreqs',100,'frange',[1 120]); 
+wavespec = bz_WaveSpec(lfp,'intervals',ints,'showprogress',true,'ncyc',12,...
+    'nfreqs',100,'frange',[1 250]); 
 %Mean-Normalize power within the interval
 wavespec.data = bsxfun(@(X,Y) X./Y,wavespec.data,mean(abs(wavespec.data),1));
 
@@ -83,6 +84,9 @@ minX = 100;
 %For each bin calculate - mean power of spikes, power-weighted MRL (in
 %state)
 %Mean Y given X
+clear meanpower
+clear mrl
+clear mrlangle
 for xx = 1:length(Xbins)
     meanpowertemp = cellfun(@(pow,binID,instate) nanmean(pow(binID==xx & instate,:)),...
         ISIStats.allspikes.power,ISIStats.allspikes.XbinID,ISIStats.allspikes.instate,'UniformOutput',false);
@@ -120,7 +124,7 @@ subplot(3,3,tt*3)
 colormap(gca,powermap)
     imagesc(Xbins,log2(wavespec.freqs), conditionalpower.(celltypes{tt})')
     colorbar
-    caxis([0.6 1.4])
+    caxis([0.4 1.6])
     LogScale('x',10);
     LogScale('y',2)
     axis xy
@@ -140,7 +144,8 @@ subplot(3,3,tt*3-1)
     xlabel('ISI (s)');ylabel('freq (Hz)')
     title((celltypes{tt}))
 end   
-    
+  NiceSave(['ISIConditionalLFP',state],figfolder,baseName,'includeDate',true)
+  
 %%
 figure
 imagesc(Xbins,log2(wavespec.freqs),meanpower(:,:,20)')

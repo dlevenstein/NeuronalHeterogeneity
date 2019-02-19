@@ -9,7 +9,7 @@ datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets
 
 [PSSandSpikingAll,baseNames] = GetMatResults(figfolder,'PSSCorticalStateAnalysis','select',true);
 PSSandSpikingAll = bz_CollapseStruct(PSSandSpikingAll);
-thisregion = 'fCTX';
+thisregion = 'CA1';
 
 CellClass = bz_LoadCellinfo(datasetPath.(thisregion),'CellClass','dataset',true,...
     'baseNames',baseNames,'catall',true);
