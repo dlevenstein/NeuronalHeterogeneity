@@ -9,10 +9,11 @@ datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets
 
 [PSSandSpikingAll,baseNames] = GetMatResults(figfolder,'PSSCorticalStateAnalysis','select',true);
 PSSandSpikingAll = bz_CollapseStruct(PSSandSpikingAll);
+thisregion = 'CA1';
 %%
-CellClass = bz_LoadCellinfo(datasetPath.CA1,'CellClass','dataset',true,...
+CellClass = bz_LoadCellinfo(datasetPath.(thisregion),'CellClass','dataset',true,...
     'baseNames',baseNames,'catall',true);
-ISIStats = bz_LoadCellinfo(datasetPath.CA1,'ISIStats','dataset',true,...
+ISIStats = bz_LoadCellinfo(datasetPath.(thisregion),'ISIStats','dataset',true,...
     'baseNames',baseNames,'catall',true);
 
 %%
@@ -29,7 +30,7 @@ for tt = 1:length(cellclasses)
         hist(squeeze(log10(PSScellhist.meanYX(:,:,CellClass.(cellclasses{tt}))))',...
         PSScellhist.allratebins.(cellclasses{tt}));
     PSScellhist.allratedist.(cellclasses{tt}) = bsxfun(@(X,Y) X./Y,...
-        PSScellhist.allratedist.(cellclasses{tt}),sum(PSScellhist.allratedist.(cellclasses{tt}),1))
+        PSScellhist.allratedist.(cellclasses{tt}),sum(PSScellhist.allratedist.(cellclasses{tt}),1));
     PSScellhist.allmeanrate.(cellclasses{tt}) = ...
         nanmean(squeeze(log10(PSScellhist.meanYX(:,:,CellClass.(cellclasses{tt}))))',1);
     PSScellhist.allstdrate.(cellclasses{tt}) = ...
@@ -122,7 +123,7 @@ ylabel('# cells')
 
 
 
-NiceSave('RatebyPSS_HPC',figfolder,[])
+NiceSave(['RatebyPSS_',(thisregion)],figfolder,[])
 
 %% CV/CV2 Stats
 PSSpECV2hist = bz_CollapseStruct(PSSandSpikingAll.PSSpECV2hist,3,'mean');
@@ -239,4 +240,58 @@ xlabel('PSS-CV2 Corr');
 ylabel('# cells')
 %xlim([-0.25 0.25])
     
-NiceSave('CVbyPSS_HPC',figfolder,[])
+NiceSave(['CVbyPSS_',thisregion],figfolder,[])
+
+%% ISI Stats by PSS
+
+PSSISIhist  =  bz_CollapseStruct(PSSandSpikingAll.PSSISIhist,3);
+
+for tt = 1:length(cellclasses)
+     PSSISIhist.allcellmean.(cellclasses{tt}) = ...
+         nanmean(PSSISIhist.pYX(:,:,CellClass.(cellclasses{tt})),3);
+end
+
+%%
+figure
+
+for tt = 1:length(cellclasses)
+subplot(4,4,tt*4)
+imagesc(PSSISIhist.Xbins(1,:,1),(PSSISIhist.Ybins(1,:,1)),PSSISIhist.allcellmean.(cellclasses{tt})')
+axis xy
+hold on
+xlim([-1.5 -0.4])
+ylabel([cellclasses{tt},' ISI (s)'])
+%ylim([0 5])
+LogScale('y',10)
+if tt==1
+caxis([0 0.05])
+elseif tt==2
+    caxis([0 0.08])
+end
+end
+
+
+
+subplot(8,4,24)
+    hold on
+for ss = 1:3
+   errorshade(PSShist.mean.bins,PSShist.mean.(states{ss}),...
+       PSShist.std.(states{ss}),PSShist.std.(states{ss}),statecolors{ss},'scalar')
+end
+    for ss = 1:3
+    plot(PSShist.mean.bins,PSShist.mean.(states{ss}),'color',statecolors{ss},'linewidth',2)
+    end
+    xlabel('PSS')
+    ylabel({'Time', 'Occupancy'})
+    set(gca,'ytick',[])
+    
+    %legend(states{:},'location','eastoutside')
+    axis tight
+    y = ylim(gca);
+    ylim([0 y(2)])
+    box off
+    xlim([-1.5 -0.4])
+    
+    
+    NiceSave(['ISIbyPSS_',thisregion],figfolder,[])
+    

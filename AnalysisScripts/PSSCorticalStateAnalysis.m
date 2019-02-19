@@ -1,6 +1,7 @@
 function [ PSShist,ratePSScorr,CV2PSScorr,...
     PSSpECV2hist,PSSpICV2hist,PSSpECVhist,PSSpICVhist,PSSEIhist,PSScellhist,...
-    PSSpEpopratehist,PSSpIpopratehist,PSSpEsynchhist,PSSpIsynchhist] = PSSCorticalStateAnalysis( basePath,figfolder )
+    PSSpEpopratehist,PSSpIpopratehist,PSSpEsynchhist,PSSpIsynchhist,...
+    PSSISIhist] = PSSCorticalStateAnalysis( basePath,figfolder )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %% DEV
@@ -113,6 +114,8 @@ ratePSScorr.ALL = corr(spikemat.PSS,spikemat.data,'type','spearman','rows','comp
 CV2PSScorr.ALL = cellfun(@(X,Y) corr(X,Y,'type','spearman','rows','complete'),...
     ISIStats.allspikes.PSS,ISIStats.allspikes.CV2);
 %% Mean binned CV2...
+
+%Move this to bz_PopCV2
 clear CV2mat
 CV2mat.winsize = spkwinsize;
 CV2mat.timestamps = spikemat.timestamps;
@@ -337,7 +340,7 @@ axis tight
 LogScale('x',2)
 xlabel('Pop. Rate');ylabel('<CV2>')
 
-NiceSave('PSSandSpiking',figfolder,baseName,'tiff')
+NiceSave('PSSandSpiking',figfolder,baseName,'figtype','tiff')
 
 
 %%
@@ -413,7 +416,7 @@ end
     box off
     ylabel('<CV2>')
     
-    NiceSave('PSSandSpikingExample',figfolder,baseName,'tiff')
+    NiceSave('PSSandSpikingExample',figfolder,baseName,'figtype','tiff')
 
 %%
 NREMex = randsample(Restrict(CV2mat.timestamps,SleepState.ints.NREMstate),1);
@@ -444,7 +447,7 @@ subplot(3,3,1)
         ['CV2pE: ',num2str(round(CV2mat.pE(CV2mat.timestamps==WAKEex),3))],...
         ['CV2pI: ',num2str(round(CV2mat.pI(CV2mat.timestamps==WAKEex),3))]})
     
-    NiceSave('PSSandSpikingExample2',figfolder,baseName,'tiff')
+    NiceSave('PSSandSpikingExample2',figfolder,baseName,'figtype','tiff')
 
 %% Heatmaps
 numXbins = 60;
@@ -671,7 +674,7 @@ subplot(6,4,21)
     xlim([-0.25 0.25])
     %legend('pE cells','pI ce
     
-    NiceSave('CV2byPSSstats',figfolder,baseName,'tiff')
+    NiceSave('CV2byPSSstats',figfolder,baseName,'figtype','tiff')
 
     
     
@@ -830,79 +833,32 @@ subplot(8,4,19)
 %     box off
 %     xlim([-1.6 -0.3])
 
-    NiceSave('FastRatebyPSSstats',figfolder,baseName,'tiff')
+    NiceSave('FastRatebyPSSstats',figfolder,baseName,'figtype','tiff')
     
 %% ISI Stats
 [ PSSISIhist_allspkE ] = ConditionalHist(cat(1,ISIStats.allspikes.PSS{CellClass.pE}),...
     log10(cat(1,ISIStats.allspikes.ISIs{CellClass.pE})),...
-    'numXbins',100,'numYbins',50,'Xbounds',[-2 0],'Ybounds',[-3 2]);
+    'numXbins',75,'numYbins',75,'Xbounds',[-1.5 -0.4],'Ybounds',[-3 2]);
 [ PSSISIhist_allspkI ] = ConditionalHist(cat(1,ISIStats.allspikes.PSS{CellClass.pI}),...
     log10(cat(1,ISIStats.allspikes.ISIs{CellClass.pI})),...
-    'numXbins',100,'numYbins',50,'Xbounds',[-2 0],'Ybounds',[-3 2]);
+    'numXbins',75,'numYbins',75,'Xbounds',[-1.5 -0.4],'Ybounds',[-3 2]);
 
 
 PSSISIhist  = ConditionalHist(ISIStats.allspikes.PSS,...
     cellfun(@(X) log10(X),ISIStats.allspikes.ISIs,'UniformOutput',false),...
-    'numXbins',100,'numYbins',50,'Xbounds',[-2 0],'Ybounds',[-3 2],'minX',25);
+    'numXbins',100,'numYbins',50,'Xbounds',[-1.5 -0.4],'Ybounds',[-3 2],'minX',25);
 
 for tt = 1:length(cellclasses)
-     PSSISIhist.mean.(cellclasses{tt}) = ...
+     PSSISIhist.allspkmean.(cellclasses{tt}) = ...
          nanmean(PSSISIhist.pYX(:,:,CellClass.(cellclasses{tt})),3);
 end
 
 
-%% Conditional prev/next ISI at each spike given PSS
-
-% Next ISI each spike
-ISIStats.allspikes.ISInp1 = cellfun(@(X) [X(2:end); nan],...
-    ISIStats.allspikes.ISIs,'UniformOutput',false);
 
 
-[ CONDXY ] = cellfun(@(X,Y,Z) ConditionalHist( [Z;Z],log10([X;Y]),...
-    'Xbounds',[-2 0],'Ybounds',[-3 1.5]),...
-    ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
-    ISIStats.allspikes.PSS,...
-    'UniformOutput',false);
-CONDXY = cat(1,CONDXY{:});
-CONDXY = CollapseStruct( CONDXY,3);
 
 
-for tt = 1:length(celltypes)
-    ISIdistbyPSS.(celltypes{tt}) = nanmean(CONDXY.pYX(:,:,CellClass.(celltypes{tt})),3);
-    %meanthetabyPOP.(celltypes{tt}) = nanmean(CONDXY.meanYX(:,:,CellClass.(celltypes{tt})),3);
-end
-
-%%
-figure
-
-
-%%
-figure
-for tt = 1:length(celltypes)
-subplot(5,4,tt*4)
-    imagesc(CONDXY.Xbins(1,:,1),CONDXY.Ybins(1,:,1), ISIdistbyPSS.(celltypes{tt})')
-    axis xy
-    LogScale('y',10)
-    xlabel('PSS');ylabel('ISI (s)')
-    title((celltypes{tt}))
-    colorbar
-    caxis([0 0.07])
-end 
-
-subplot(10,4,20)
-    for ss = 1:3
-    plot(PSShist.bins,PSShist.(states{ss}),'color',statecolors{ss},'linewidth',2)
-    hold on
-    end
-    xlabel('PSS')
-    ylabel({'Time', 'Occupancy'})
-    set(gca,'ytick',[])
-    %legend(states{:},'location','eastoutside')
-    axis tight
-    box off
-    xlim([-1.6 -0.3])
-
-
+%% FIgure
 subplot(5,4,1)
 imagesc(PSSISIhist_allspkE.Xbins,(PSSISIhist_allspkE.Ybins),PSSISIhist_allspkE.pYX')
 axis xy
@@ -938,7 +894,7 @@ subplot(10,4,17)
     
     
 subplot(5,4,2)
-imagesc(PSSISIhist_allspkE.Xbins,(PSSISIhist_allspkE.Ybins),PSSISIhist.mean.pE')
+imagesc(PSSISIhist_allspkE.Xbins,(PSSISIhist_allspkE.Ybins),PSSISIhist.allspkmean.pE')
 axis xy
 hold on
 xlim([-1.6 -0.3])
@@ -948,7 +904,7 @@ LogScale('y',10)
 
 
 subplot(5,4,6)
-imagesc(PSSISIhist_allspkI.Xbins,(PSSISIhist_allspkI.Ybins),PSSISIhist.mean.pI')
+imagesc(PSSISIhist_allspkI.Xbins,(PSSISIhist_allspkI.Ybins),PSSISIhist.allspkmean.pI')
 axis xy
 hold on
 xlim([-1.6 -0.3])
@@ -970,4 +926,5 @@ subplot(10,4,18)
     box off
     xlim([-1.6 -0.3])
 
-% 
+    NiceSave('ISIdistbyPSSstats',figfolder,baseName,'figtype','tiff')
+
