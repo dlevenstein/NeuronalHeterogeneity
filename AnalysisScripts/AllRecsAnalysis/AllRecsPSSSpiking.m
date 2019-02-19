@@ -9,8 +9,8 @@ datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets
 
 [PSSandSpikingAll,baseNames] = GetMatResults(figfolder,'PSSCorticalStateAnalysis','select',true);
 PSSandSpikingAll = bz_CollapseStruct(PSSandSpikingAll);
-thisregion = 'CA1';
-%%
+thisregion = 'fCTX';
+
 CellClass = bz_LoadCellinfo(datasetPath.(thisregion),'CellClass','dataset',true,...
     'baseNames',baseNames,'catall',true);
 ISIStats = bz_LoadCellinfo(datasetPath.(thisregion),'ISIStats','dataset',true,...
@@ -255,7 +255,7 @@ end
 figure
 
 for tt = 1:length(cellclasses)
-subplot(4,4,tt*4)
+subplot(4,3,tt*3)
 imagesc(PSSISIhist.Xbins(1,:,1),(PSSISIhist.Ybins(1,:,1)),PSSISIhist.allcellmean.(cellclasses{tt})')
 axis xy
 hold on
@@ -272,7 +272,7 @@ end
 
 
 
-subplot(8,4,24)
+subplot(8,3,15)
     hold on
 for ss = 1:3
    errorshade(PSShist.mean.bins,PSShist.mean.(states{ss}),...
