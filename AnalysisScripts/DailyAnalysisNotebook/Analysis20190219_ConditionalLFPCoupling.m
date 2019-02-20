@@ -37,7 +37,7 @@ cellcolor = {'k','r'};
 %% Load the LFP if needed
 
 lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID;
-downsamplefactor = 2;
+downsamplefactor = 5;
 lfp = bz_GetLFP(lfpchan,...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 %Noralize the LFP
@@ -52,7 +52,7 @@ ISIStats.allspikes.instate = cellfun(@(X) InIntervals(X,ints),...
     ISIStats.allspikes.times,'UniformOutput',false);
 %% Get complex valued wavelet transform at each timestamp
 wavespec = bz_WaveSpec(lfp,'intervals',ints,'showprogress',true,'ncyc',12,...
-    'nfreqs',100,'frange',[1 250]); 
+    'nfreqs',100,'frange',[1 120]); 
 %Mean-Normalize power within the interval
 wavespec.data = bsxfun(@(X,Y) X./Y,wavespec.data,mean(abs(wavespec.data),1));
 
