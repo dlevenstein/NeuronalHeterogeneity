@@ -37,7 +37,7 @@ cellcolor = {'k','r'};
 %% Load the LFP if needed
 
 lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID;
-downsamplefactor = 5;
+downsamplefactor = 2;
 lfp = bz_GetLFP(lfpchan,...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 %Noralize the LFP
