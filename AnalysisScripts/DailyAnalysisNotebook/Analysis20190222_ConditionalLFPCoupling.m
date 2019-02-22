@@ -1,4 +1,4 @@
-function [ ] = Analysis20190220(basePath,figfolder)
+function [ ] = Analysis20190222(basePath,figfolder)
 % Date 02/20/2019
 %
 %Goal: Develop function for conditional LFP coupling (i.e. power and phase
@@ -51,7 +51,7 @@ state = states{1};
 
 %Take only subset of time (random intervals) so wavelets doesn't break
 %computer (total 625s)
-usetime = 2500;
+usetime = 2000;%2500
 winsize = 25;
 if sum(diff(SleepState.ints.(state),1,2))>usetime
     nwin = round(usetime./winsize);
@@ -68,9 +68,9 @@ end
 % plot(windows',ones(size(windows')),'r','linewidth',4)
 %% Get complex valued wavelet transform at each timestamp
 wavespec = bz_WaveSpec(lfp,'intervals',windows,'showprogress',true,'ncyc',15,...
-    'nfreqs',150,'frange',[1 312]); 
+    'nfreqs',100,'frange',[1 312]);  %150 freqs, 1 312
 %Mean-Normalize power within the interval
-%wavespec.meanpower = mean(abs(wavespec.data),1);
+wavespec.meanpower = mean(abs(wavespec.data),1);
 
 %%
 ISIStats.allspikes.logISIs = cellfun(@(X) log10(X),ISIStats.allspikes.ISIs,'UniformOutput',false);
@@ -80,10 +80,28 @@ doubleISIs.times = cellfun(@(X) [X;X],ISIStats.allspikes.times,'UniformOutput',f
 doubleISIs.ISIs = cellfun(@(X,Y) [X;Y],ISIStats.allspikes.logISIs,ISIStats.allspikes.logISIs_next,'UniformOutput',false);
 %%
 bz_ConditionalLFPCoupling( doubleISIs,doubleISIs.ISIs,wavespec,...
-    'Xbounds',[-2.6 1],'intervals',windows,'showFig',true,...
+    'Xbounds',[-2.6 1],'intervals',windows,'showFig',false,... %true
 'minX',25,'CellClass',CellClass,...
 'saveFig',figfolder,'figName',['ISIConditionedLFP',state],'baseName',baseName);
 
 %% next: coupling conditioned on CV2
 %Add Power-ISI mutual information
+
+%Get complex-valued filtered LFP at each spike time
+for cc = 1:spikes.numcells
+    cc
+    ISIStats.allspikes.LFP{cc} = interp1(wavespec.timestamps,wavespec.data,ISIStats.allspikes.times{cc},'nearest');
+end
+
+%%
+for cc = 1:spikes.numcells
+    ISIStats.allspikes.LFP{cc} = bsxfun(@(X,Y) X./Y,ISIStats.allspikes.LFP{cc},wavespec.meanpower);
+end
+%%
+ISIbins = linspace(-2.5,1,50);
+powerbins = linspace(0,2,40);
+excell=randsample(spikes.numcells,1);
+
+joint = hist3([ISIStats.allspikes.logISIs{excell} abs(ISIStats.allspikes.LFP{excell})],{ISIbins,powerbins});
+
 

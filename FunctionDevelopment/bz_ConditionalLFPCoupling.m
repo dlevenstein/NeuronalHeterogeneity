@@ -42,6 +42,7 @@ addParameter(p,'CellClass',[])
 addParameter(p,'saveFig',false)
 addParameter(p,'figName','CondLFPCouping')
 addParameter(p,'baseName',[])
+addParameter(p,'spikeLim',Inf)
 parse(p,varargin{:})
 numXbins = p.Results.numXbins;
 Xbounds = p.Results.Xbounds;
@@ -52,6 +53,8 @@ CellClass = p.Results.CellClass;
 saveFig = p.Results.saveFig;
 figName = p.Results.figName;
 baseName = p.Results.baseName;
+spikeLim = p.Results.spikeLim;
+
 
 %% Restrict spikes and lfp to the interval
 filtLFP.inint = InIntervals(filtLFP.timestamps,ints);
@@ -59,6 +62,14 @@ filtLFP.timestamps = filtLFP.timestamps(filtLFP.inint);
 filtLFP.data = filtLFP.data(filtLFP.inint,:);
 
 spikes.inint = cellfun(@(X) InIntervals(X,ints),spikes.times,'UniformOutput',false);
+
+%Apply spikelimit here
+spikes.toomany = cellfun(@(X) (sum(X)-spikeLim).*((sum(X)-spikeLim)>0),spikes.inint);
+spikes.numcells = length(spikes.times);
+for cc = 1:spikes.numcells
+    spikes.inint{cc}(randsample(find(spikes.inint{cc}),spikes.toomany(cc)))=false;
+end
+
 spikes.times = cellfun(@(X,Y) X(Y),spikes.times,spikes.inint,'UniformOutput',false);
 spikes.condition = cellfun(@(X,Y) X(Y),condition,spikes.inint,'UniformOutput',false);
 clear condition
@@ -70,10 +81,10 @@ filtLFP.data = bsxfun(@(X,Y) X./Y,filtLFP.data,filtLFP.meanpower);
 %% Get Power/Phase at each spike
 
 %Get complex-valued filtered LFP at each spike time
-spikes.numcells = length(spikes.times);
 if spikes.numcells>50
     disp('Interpolating LFP at each spike...')
-    disp('If you have a lot of cells/spikes this can take a few minutes')
+    disp('If you have a lot of cells/spikes/freqs this can take a few minutes')
+    disp('If this is prohibitive (time or RAM), try using ''spikeLim''')
 end
 for cc = 1:spikes.numcells
     spikes.LFP{cc} = interp1(filtLFP.timestamps,filtLFP.data,spikes.times{cc},'nearest');
@@ -145,9 +156,9 @@ if SHOWFIG
     for tt = 1:length(celltypes)
     subplot(3,2,tt*2)
     colormap(gca,powermap)
-        imagesc(Xbins,log2(filtLFP.freqs), allmeanpower.(celltypes{tt})')
+        imagesc(Xbins,log2(filtLFP.freqs), (allmeanpower.(celltypes{tt}))')
         colorbar
-        caxis([0.4 1.6])
+        ColorbarWithAxis([0.5 1.5],'Power (mean^-^1)')
         LogScale('x',10);
         LogScale('y',2)
         axis xy
@@ -164,7 +175,7 @@ if SHOWFIG
         %caxis([0.5 1.5])
         LogScale('x',10);
         LogScale('y',2)
-        caxis([0 0.45])
+        ColorbarWithAxis([0 0.4],'Phase Coupling (pMRL)')
 
         axis xy
         xlabel('ISI (s)');ylabel('freq (Hz)')
@@ -180,12 +191,75 @@ if SHOWFIG
     end
 end
 
+%% Mutual Information
+powerbins = linspace(-0.5,0.5,10);
+for cc = 1:spikes.numcells
+    cc
+    for ff = 1:filtLFP.nfreqs
+        
+
+        joint = hist3([spikes.condition{cc} log10(abs(spikes.LFP{cc}(:,ff)))],{Xbins,powerbins});
+        joint = joint./sum(joint(:));
+
+        margX = hist(spikes.condition{cc},Xbins);
+        margX = margX./sum(margX);
+        margPower = hist(log10(abs(spikes.LFP{cc}(:,ff))),powerbins);
+        margPower = margPower./sum(margPower);
+        jointindependent =  bsxfun(@times, margX.', margPower);
+
+
+        mutXPow = joint.*log2(joint./jointindependent); % mutual info at each bin
+        totmutXPow(cc,ff) = nansum(mutXPow(:)); % sum of all mutual information 
+    end
+end
+
+
+
+if ~isempty(CellClass)
+    celltypes = unique(CellClass.label);
+    for tt = 1:length(celltypes)
+        groupmutinf.(celltypes{tt}) = nanmean(totmutXPow(CellClass.(celltypes{tt}),:),1);
+    end
+else
+    groupmutinf.ALL = nanmean(totmutXPow,1);
+    celltypes={'ALL'};
+end
+%%
+figure
+subplot(2,2,1)
+    imagesc(log2(filtLFP.freqs),[1 spikes.numcells],totmutXPow)
+    LogScale('x',2)
+    xlabel('Freq (Hz)');ylabel('Cell')
+subplot(2,2,2)
+hold on
+for tt = 1:length(celltypes)
+    plot(log2(filtLFP.freqs),groupmutinf.(celltypes{tt}))
+end
+    LogScale('x',2)
+%%
+figure
+subplot(2,2,1)
+imagesc(Xbins,powerbins,joint')
+axis xy
+subplot(2,2,2)
+imagesc(Xbins,powerbins,jointindependent')
+axis xy
+
+subplot(2,2,3)
+imagesc(Xbins,powerbins,mutXPow')
+axis xy
+colorbar
+
 %% Output
 ConditionalLFPCoupling.Xbins = Xbins;
 ConditionalLFPCoupling.freqs = filtLFP.freqs;
 ConditionalLFPCoupling.meanpower = meanpower;
 ConditionalLFPCoupling.mrl = mrl;
 ConditionalLFPCoupling.mrlangle = mrlangle;
+
+%%
+clear spikes
+clear filtLFP
 %%
 %ADD: condition distribution given power, power disirbution given condition
 %Mutual information? Conditional Entropy? Pwoer distribution or even
