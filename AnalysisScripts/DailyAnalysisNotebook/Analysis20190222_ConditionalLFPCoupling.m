@@ -15,7 +15,8 @@ reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
-basePath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC/Achilles_10252013'
+basePath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC/Achilles_10252013';
+basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/WatsonBO/JennBuzsaki22/20140526_277um';
 %basePath = pwd;
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
@@ -37,7 +38,7 @@ cellcolor = {'k','r'};
 
 %% Load the LFP if needed
 
-lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID;
+lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID;
 downsamplefactor = 2;
 lfp = bz_GetLFP(lfpchan,...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
@@ -46,7 +47,7 @@ lfp = bz_GetLFP(lfpchan,...
 
 %% Restrict to state
 
-state = states{1};
+state = states{2};
 %ints = SleepState.ints.(state);
 
 %Take only subset of time (random intervals) so wavelets doesn't break

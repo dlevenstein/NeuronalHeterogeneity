@@ -161,40 +161,23 @@ end
 
 
 
-if ~isempty(CellClass)
-    celltypes = unique(CellClass.label);
-    for tt = 1:length(celltypes)
-        groupmutinf.(celltypes{tt}) = nanmean(totmutXPow(CellClass.(celltypes{tt}),:),1);
-    end
-else
-    groupmutinf.ALL = nanmean(totmutXPow,1);
-    celltypes={'ALL'};
-end
-%%
-figure
-subplot(2,2,1)
-    imagesc(log2(filtLFP.freqs),[1 spikes.numcells],totmutXPow)
-    LogScale('x',2)
-    xlabel('Freq (Hz)');ylabel('Cell')
-subplot(2,2,2)
-hold on
-for tt = 1:length(celltypes)
-    plot(log2(filtLFP.freqs),groupmutinf.(celltypes{tt}))
-end
-    LogScale('x',2)
-%%
-figure
-subplot(2,2,1)
-imagesc(Xbins,powerbins,joint')
-axis xy
-subplot(2,2,2)
-imagesc(Xbins,powerbins,jointindependent')
-axis xy
 
-subplot(2,2,3)
-imagesc(Xbins,powerbins,mutXPow')
-axis xy
-colorbar
+%%
+figure
+
+%%
+% figure
+% subplot(2,2,1)
+% imagesc(Xbins,powerbins,joint')
+% axis xy
+% subplot(2,2,2)
+% imagesc(Xbins,powerbins,jointindependent')
+% axis xy
+% 
+% subplot(2,2,3)
+% imagesc(Xbins,powerbins,mutXPow')
+% axis xy
+% colorbar
 
 %%
 if SHOWFIG
@@ -205,18 +188,36 @@ if SHOWFIG
         for tt = 1:length(celltypes)
             allmeanpower.(celltypes{tt}) = nanmean(meanpower(:,:,CellClass.(celltypes{tt})),3);
             almeanpMRL.(celltypes{tt}) = nanmean(mrl(:,:,CellClass.(celltypes{tt})),3);
+            groupmutinf.(celltypes{tt}) = nanmean(totmutXPow(CellClass.(celltypes{tt}),:),1);
+
         end
     else
         allmeanpower.ALL = nanmean(meanpower,3);
         almeanpMRL.ALL = nanmean(mrl,3);
+        groupmutinf.ALL = nanmean(totmutXPow,1);
         celltypes={'ALL'};
     end
+
+
 
     
     powermap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
     figure
+    
+    subplot(3,3,1)
+        hold on
+        for tt = 1:length(celltypes)
+            plot(log2(filtLFP.freqs),groupmutinf.(celltypes{tt}))
+        end
+        box off
+        axis tight
+        xlabel('f (Hz)');ylabel('I(Power;ISI)')
+            LogScale('x',2)    
+            
+    
+    
     for tt = 1:length(celltypes)
-    subplot(3,2,tt*2)
+    subplot(3,3,tt*3)
     colormap(gca,powermap)
         imagesc(Xbins,log2(filtLFP.freqs), (allmeanpower.(celltypes{tt}))')
         colorbar
@@ -230,7 +231,7 @@ if SHOWFIG
     
     
     for tt = 1:length(celltypes)
-    subplot(3,2,tt*2-1)
+    subplot(3,3,tt*3-1)
         imagesc(Xbins,log2(filtLFP.freqs), almeanpMRL.(celltypes{tt})')
         colorbar
         hold on
@@ -260,6 +261,7 @@ ConditionalLFPCoupling.freqs = filtLFP.freqs;
 ConditionalLFPCoupling.meanpower = meanpower;
 ConditionalLFPCoupling.mrl = mrl;
 ConditionalLFPCoupling.mrlangle = mrlangle;
+ConditionalLFPCoupling.mutInfoXPower = totmutXPow;
 
 %%
 clear spikes
