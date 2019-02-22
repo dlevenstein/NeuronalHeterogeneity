@@ -21,6 +21,8 @@ function [ ConditionalLFPCoupling ] = bz_ConditionalLFPCoupling( spikes,conditio
 %   'numXbins'  number of bins for your conditional variable (default 60)
 %   'Xbounds'   bounds of your conditional variable
 %   'minX'      minumum number of spikes to calculate coupling (default 25)
+%   'spikeLim'  limit number of spikes to look at for each cell 
+%               (randomly omits spikes, default: Inf)
 %   'showFig'   true/false
 %   'saveFig'   folder in which to save the figure
 %   'figName'   default: 'CondLFPCouping'
@@ -83,7 +85,7 @@ filtLFP.data = bsxfun(@(X,Y) X./Y,filtLFP.data,filtLFP.meanpower);
 %Get complex-valued filtered LFP at each spike time
 if spikes.numcells>50
     disp('Interpolating LFP at each spike...')
-    disp('If you have a lot of cells/spikes/freqs this can take a few minutes')
+    disp('If you have a lot of cells/spikes/freqs this can take a few minutes.')
     disp('If this is prohibitive (time or RAM), try using ''spikeLim''')
 end
 for cc = 1:spikes.numcells
@@ -134,62 +136,6 @@ end
 
 
 
-%%
-if SHOWFIG
-    
-    % Separate cell classes
-    if ~isempty(CellClass)
-        celltypes = unique(CellClass.label);
-        for tt = 1:length(celltypes)
-            allmeanpower.(celltypes{tt}) = nanmean(meanpower(:,:,CellClass.(celltypes{tt})),3);
-            almeanpMRL.(celltypes{tt}) = nanmean(mrl(:,:,CellClass.(celltypes{tt})),3);
-        end
-    else
-        allmeanpower.ALL = nanmean(meanpower,3);
-        almeanpMRL.ALL = nanmean(mrl,3);
-        celltypes={'ALL'};
-    end
-
-    
-    powermap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
-    figure
-    for tt = 1:length(celltypes)
-    subplot(3,2,tt*2)
-    colormap(gca,powermap)
-        imagesc(Xbins,log2(filtLFP.freqs), (allmeanpower.(celltypes{tt}))')
-        colorbar
-        ColorbarWithAxis([0.5 1.5],'Power (mean^-^1)')
-        LogScale('x',10);
-        LogScale('y',2)
-        axis xy
-        xlabel('ISI (s)');ylabel('freq (Hz)')
-        title((celltypes{tt}))
-    end  
-    
-    
-    for tt = 1:length(celltypes)
-    subplot(3,2,tt*2-1)
-        imagesc(Xbins,log2(filtLFP.freqs), almeanpMRL.(celltypes{tt})')
-        colorbar
-        hold on
-        %caxis([0.5 1.5])
-        LogScale('x',10);
-        LogScale('y',2)
-        ColorbarWithAxis([0 0.4],'Phase Coupling (pMRL)')
-
-        axis xy
-        xlabel('ISI (s)');ylabel('freq (Hz)')
-        title((celltypes{tt}))
-    end 
-    
-    if saveFig
-        try
-            NiceSave(figName,saveFig,baseName,'includeDate',true)
-        catch
-            disp('Sorry, I wasn''t able to save your figure :''(')
-        end
-    end
-end
 
 %% Mutual Information
 powerbins = linspace(-0.5,0.5,10);
@@ -249,6 +195,64 @@ subplot(2,2,3)
 imagesc(Xbins,powerbins,mutXPow')
 axis xy
 colorbar
+
+%%
+if SHOWFIG
+    
+    % Separate cell classes
+    if ~isempty(CellClass)
+        celltypes = unique(CellClass.label);
+        for tt = 1:length(celltypes)
+            allmeanpower.(celltypes{tt}) = nanmean(meanpower(:,:,CellClass.(celltypes{tt})),3);
+            almeanpMRL.(celltypes{tt}) = nanmean(mrl(:,:,CellClass.(celltypes{tt})),3);
+        end
+    else
+        allmeanpower.ALL = nanmean(meanpower,3);
+        almeanpMRL.ALL = nanmean(mrl,3);
+        celltypes={'ALL'};
+    end
+
+    
+    powermap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
+    figure
+    for tt = 1:length(celltypes)
+    subplot(3,2,tt*2)
+    colormap(gca,powermap)
+        imagesc(Xbins,log2(filtLFP.freqs), (allmeanpower.(celltypes{tt}))')
+        colorbar
+        ColorbarWithAxis([0.5 1.5],'Power (mean^-^1)')
+        LogScale('x',10);
+        LogScale('y',2)
+        axis xy
+        xlabel('ISI (s)');ylabel('freq (Hz)')
+        title((celltypes{tt}))
+    end  
+    
+    
+    for tt = 1:length(celltypes)
+    subplot(3,2,tt*2-1)
+        imagesc(Xbins,log2(filtLFP.freqs), almeanpMRL.(celltypes{tt})')
+        colorbar
+        hold on
+        %caxis([0.5 1.5])
+        LogScale('x',10);
+        LogScale('y',2)
+        ColorbarWithAxis([0 0.4],'Phase Coupling (pMRL)')
+
+        axis xy
+        xlabel('ISI (s)');ylabel('freq (Hz)')
+        title((celltypes{tt}))
+    end 
+    
+    if saveFig
+        try
+            NiceSave(figName,saveFig,baseName,'includeDate',true)
+        catch
+            disp('Sorry, I wasn''t able to save your figure :''(')
+        end
+    end
+end
+
 
 %% Output
 ConditionalLFPCoupling.Xbins = Xbins;

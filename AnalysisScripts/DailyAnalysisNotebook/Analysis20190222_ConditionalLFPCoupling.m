@@ -11,11 +11,11 @@ function [ ] = Analysis20190222(basePath,figfolder)
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+%reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
-%basePath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC/Achilles_10252013'
+%basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
+basePath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC/Achilles_10252013'
 %basePath = pwd;
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
@@ -37,7 +37,7 @@ cellcolor = {'k','r'};
 
 %% Load the LFP if needed
 
-lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID;
+lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID;
 downsamplefactor = 2;
 lfp = bz_GetLFP(lfpchan,...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
@@ -51,7 +51,7 @@ state = states{1};
 
 %Take only subset of time (random intervals) so wavelets doesn't break
 %computer (total 625s)
-usetime = 2000;%2500
+usetime = 6000;%2500
 winsize = 25;
 if sum(diff(SleepState.ints.(state),1,2))>usetime
     nwin = round(usetime./winsize);
@@ -80,8 +80,8 @@ doubleISIs.times = cellfun(@(X) [X;X],ISIStats.allspikes.times,'UniformOutput',f
 doubleISIs.ISIs = cellfun(@(X,Y) [X;Y],ISIStats.allspikes.logISIs,ISIStats.allspikes.logISIs_next,'UniformOutput',false);
 %%
 bz_ConditionalLFPCoupling( doubleISIs,doubleISIs.ISIs,wavespec,...
-    'Xbounds',[-2.6 1],'intervals',windows,'showFig',false,... %true
-'minX',25,'CellClass',CellClass,...
+    'Xbounds',[-2.6 1],'intervals',windows,'showFig',true,... %true
+'minX',25,'CellClass',CellClass,'spikeLim',30000,...
 'saveFig',figfolder,'figName',['ISIConditionedLFP',state],'baseName',baseName);
 
 %% next: coupling conditioned on CV2
