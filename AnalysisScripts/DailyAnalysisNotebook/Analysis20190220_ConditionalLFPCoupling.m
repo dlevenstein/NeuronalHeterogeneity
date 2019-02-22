@@ -11,11 +11,11 @@ function [ ] = Analysis20190220(basePath,figfolder)
 %
 %% Load Header
 %Initiate Paths
-reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-%reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
+%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
-basePath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC/Achilles_10252013'
+%basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
+%basePath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC/Achilles_10252013'
 %basePath = pwd;
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
@@ -37,8 +37,8 @@ cellcolor = {'k','r'};
 
 %% Load the LFP if needed
 
-lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID;
-downsamplefactor = 5;
+lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID;
+downsamplefactor = 2;
 lfp = bz_GetLFP(lfpchan,...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 %Noralize the LFP
@@ -46,118 +46,40 @@ lfp = bz_GetLFP(lfpchan,...
 
 %% Restrict to state
 
-state = states{1};
-ints = SleepState.ints.(state);
+state = states{2};
+%ints = SleepState.ints.(state);
 
-ISIStats.allspikes.instate = cellfun(@(X) InIntervals(X,ints),...
-    ISIStats.allspikes.times,'UniformOutput',false);
+%Take only subset of time (random intervals) so wavelets doesn't break
+%computer (total 625s)
+if sum(diff(SleepState.ints.(state),1,2))>3600
+    nwin = 120;
+    winsize = 30; %s
+    windows = bz_RandomWindowInIntervals( SleepState.ints.(state),winsize,nwin );
+else
+    windows = SleepState.ints.(state);
+end
+
+%%
+% figure
+% plot(lfp.timestamps,lfp.data,'k')
+% hold on
+% plot(windows',ones(size(windows')),'r','linewidth',4)
 %% Get complex valued wavelet transform at each timestamp
-wavespec = bz_WaveSpec(lfp,'intervals',ints,'showprogress',true,'ncyc',12,...
-    'nfreqs',100,'frange',[1 120]); 
+wavespec = bz_WaveSpec(lfp,'intervals',windows,'showprogress',true,'ncyc',15,...
+    'nfreqs',150,'frange',[1 312]); 
 %Mean-Normalize power within the interval
-wavespec.meanpower = mean(abs(wavespec.data),1);
-
-%% Get Power/Phase at each spike
-
-%Get phase and normalized power at each spike time
-ISIStats.allspikes.power = cellfun(@(X) interp1(wavespec.timestamps,abs(wavespec.data),X,...
-    'nearest'),ISIStats.allspikes.times,'UniformOutput',false);
-ISIStats.allspikes.phase = cellfun(@(X) interp1(wavespec.timestamps,angle(wavespec.data),X,...
-    'nearest'),ISIStats.allspikes.times,'UniformOutput',false);
+%wavespec.meanpower = mean(abs(wavespec.data),1);
 
 %%
-ISIStats.spikes.X = cellfun(@(X) log10(X),ISIStats.allspikes.ISIs,'UniformOutput',false);
-ISIStats.spikes.X2 = cellfun(@(X) log10([X(2:end); nan]),ISIStats.allspikes.ISIs,'UniformOutput',false);
+ISIStats.allspikes.logISIs = cellfun(@(X) log10(X),ISIStats.allspikes.ISIs,'UniformOutput',false);
+ISIStats.allspikes.logISIs_next = cellfun(@(X) log10([X(2:end);nan]),ISIStats.allspikes.ISIs,'UniformOutput',false);
 
-%Divide condition into bin (as in ConditionalHist)
-Xbounds = [-2.5 1];
-numXbins = 70;
-
-Xedges = linspace(Xbounds(1),Xbounds(2),numXbins+1);
-Xbins = Xedges(1:end-1)+ 0.5.*diff(Xedges([1 2]));
-Xedges(1) = -inf;Xedges(end) = inf;
-
-%First calculate the marginal probability of the conditional (X)
-[Xhist,~,ISIStats.allspikes.XbinID] = cellfun(@(X) histcounts(X,Xedges),ISIStats.spikes.X,'UniformOutput',false);
-[~,~,ISIStats.allspikes.X2binID] = cellfun(@(X) histcounts(X,Xedges),ISIStats.spikes.X2,'UniformOutput',false);
-
-%Xhist4norm = Xhist;Xhist4norm(Xhist4norm<=minX) = nan;
-
+doubleISIs.times = cellfun(@(X) [X;X],ISIStats.allspikes.times,'UniformOutput',false);
+doubleISIs.ISIs = cellfun(@(X,Y) [X;Y],ISIStats.allspikes.logISIs,ISIStats.allspikes.logISIs_next,'UniformOutput',false);
 %%
-minX = 50;
-%%
-%For each bin calculate - mean power of spikes, power-weighted MRL (in
-%state)
-%Mean Y given X
-clear meanpower
-clear mrl
-clear mrlangle
-for xx = 1:length(Xbins)
-    meanpowertemp = cellfun(@(pow,binID,binID2,instate) nanmean([pow(binID==xx & instate,:);pow(binID2==xx & instate,:)]),...
-        ISIStats.allspikes.power,ISIStats.allspikes.XbinID,ISIStats.allspikes.X2binID,ISIStats.allspikes.instate,'UniformOutput',false);
-    
-    %Mean resultant vector
-    pMRVtemp = cellfun(@(pow,phs,binID,instate) nanmean(pow(binID==xx & instate,:).*exp(i.*phs(binID==xx & instate,:))),...
-        ISIStats.allspikes.power,ISIStats.allspikes.phase,...
-        ISIStats.allspikes.XbinID,ISIStats.allspikes.instate,'UniformOutput',false);
-   
-   for cc = 1:length(ISIStats.allspikes.times)
-       meanpower(xx,:,cc)=meanpowertemp{cc};
-       mrl(xx,:,cc)=abs(pMRVtemp{cc});
-       mrlangle(xx,:,cc)=angle(pMRVtemp{cc});
-       if Xhist{cc}(xx)<minX
-           meanpower(xx,:,cc) = nan;
-           mrl(xx,:,cc) = nan;
-           mrlangle(xx,:,cc) = nan;
-       end
-           
-   end
-end
+bz_ConditionalLFPCoupling( doubleISIs,doubleISIs.ISIs,wavespec,...
+    'Xbounds',[-2.6 1],'intervals',windows,'showFig',true,...
+'minX',25,'CellClass',CellClass,...
+'saveFig',figfolder,'figName',['ISIConditionedLFP',state],'baseName',baseName);
 
-%%
-for tt = 1:length(celltypes)
-    conditionalpower.(celltypes{tt}) = nanmean(meanpower(:,:,CellClass.(celltypes{tt}))./wavespec.meanpower,3);
-    conditionalpMRL.(celltypes{tt}) = nanmean(mrl(:,:,CellClass.(celltypes{tt}))./wavespec.meanpower,3);
 
-end
-
-%%
-powermap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
-figure
-for tt = 1:length(celltypes)
-subplot(3,3,tt*3)
-colormap(gca,powermap)
-    imagesc(Xbins,log2(wavespec.freqs), conditionalpower.(celltypes{tt})')
-    colorbar
-    caxis([0.4 1.6])
-    LogScale('x',10);
-    LogScale('y',2)
-    axis xy
-    xlabel('ISI (s)');ylabel('freq (Hz)')
-    title((celltypes{tt}))
-end   
-    
-
-for tt = 1:length(celltypes)
-subplot(3,3,tt*3-1)
-    imagesc(Xbins,log2(wavespec.freqs), conditionalpMRL.(celltypes{tt})')
-    colorbar
-    %caxis([0.5 1.5])
-    LogScale('x',10);
-    LogScale('y',2)
-    caxis([0 0.6])
-
-    axis xy
-    xlabel('ISI (s)');ylabel('freq (Hz)')
-    title((celltypes{tt}))
-end   
-  NiceSave(['ISIConditionalLFP',state],figfolder,baseName,'includeDate',true)
-  
-%%
-figure
-imagesc(Xbins,log2(wavespec.freqs),meanpower(:,:,20)')
-colorbar
-caxis([0.5 1.5])
-LogScale('x',10);
-LogScale('y',2)
-axis xy
