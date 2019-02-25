@@ -11,12 +11,12 @@ function [ ] = Analysis20190222(basePath,figfolder)
 %
 %% Load Header
 %Initiate Paths
-reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-%reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
-basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-%basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
-basePath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC/Achilles_10252013';
-basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/WatsonBO/JennBuzsaki22/20140526_277um';
+%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
+%basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
+basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
+%basePath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC/Achilles_10252013';
+%basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/WatsonBO/JennBuzsaki22/20140526_277um';
 %basePath = pwd;
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
@@ -38,7 +38,7 @@ cellcolor = {'k','r'};
 
 %% Load the LFP if needed
 
-lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID;
+lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID;
 downsamplefactor = 2;
 lfp = bz_GetLFP(lfpchan,...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
@@ -47,62 +47,47 @@ lfp = bz_GetLFP(lfpchan,...
 
 %% Restrict to state
 
-state = states{2};
-%ints = SleepState.ints.(state);
+for ss = 1:3
+    state = states{ss};
+    %ints = SleepState.ints.(state);
 
-%Take only subset of time (random intervals) so wavelets doesn't break
-%computer (total 625s)
-usetime = 6000;%2500
-winsize = 25;
-if sum(diff(SleepState.ints.(state),1,2))>usetime
-    nwin = round(usetime./winsize);
-    %winsize = 30; %s
-    windows = bz_RandomWindowInIntervals( SleepState.ints.(state),winsize,nwin );
-else
-    windows = SleepState.ints.(state);
+    %Take only subset of time (random intervals) so wavelets doesn't break
+    %computer (total 625s)
+    usetime = 3000;%2500
+    winsize = 25;
+    if sum(diff(SleepState.ints.(state),1,2))>usetime
+        nwin = round(usetime./winsize);
+        %winsize = 30; %s
+        windows = bz_RandomWindowInIntervals( SleepState.ints.(state),winsize,nwin );
+    else
+        windows = SleepState.ints.(state);
+    end
+
+    %%
+    % figure
+    % plot(lfp.timestamps,lfp.data,'k')
+    % hold on
+    % plot(windows',ones(size(windows')),'r','linewidth',4)
+    %% Get complex valued wavelet transform at each timestamp
+    wavespec = bz_WaveSpec(lfp,'intervals',windows,'showprogress',true,'ncyc',15,...
+        'nfreqs',100,'frange',[1 312]);  %150 freqs, 1 312
+    %Mean-Normalize power within the interval
+    wavespec.meanpower = mean(abs(wavespec.data),1);
+
+    %%
+    ISIStats.allspikes.logISIs = cellfun(@(X) log10(X),ISIStats.allspikes.ISIs,'UniformOutput',false);
+    ISIStats.allspikes.logISIs_next = cellfun(@(X) log10([X(2:end);nan]),ISIStats.allspikes.ISIs,'UniformOutput',false);
+
+    doubleISIs.times = cellfun(@(X) [X;X],ISIStats.allspikes.times,'UniformOutput',false);
+    doubleISIs.ISIs = cellfun(@(X,Y) [X;Y],ISIStats.allspikes.logISIs,ISIStats.allspikes.logISIs_next,'UniformOutput',false);
+    %%
+    LFPCoupling(ss) = bz_ConditionalLFPCoupling( doubleISIs,doubleISIs.ISIs,wavespec,...
+        'Xbounds',[-2.6 1],'intervals',windows,'showFig',true,... %true
+    'minX',25,'CellClass',CellClass,'spikeLim',30000,...
+    'saveFig',figfolder,'figName',['ISIConditionedLFP',state],'baseName',baseName);
+
 end
 
 %%
-% figure
-% plot(lfp.timestamps,lfp.data,'k')
-% hold on
-% plot(windows',ones(size(windows')),'r','linewidth',4)
-%% Get complex valued wavelet transform at each timestamp
-wavespec = bz_WaveSpec(lfp,'intervals',windows,'showprogress',true,'ncyc',15,...
-    'nfreqs',100,'frange',[1 312]);  %150 freqs, 1 312
-%Mean-Normalize power within the interval
-wavespec.meanpower = mean(abs(wavespec.data),1);
-
-%%
-ISIStats.allspikes.logISIs = cellfun(@(X) log10(X),ISIStats.allspikes.ISIs,'UniformOutput',false);
-ISIStats.allspikes.logISIs_next = cellfun(@(X) log10([X(2:end);nan]),ISIStats.allspikes.ISIs,'UniformOutput',false);
-
-doubleISIs.times = cellfun(@(X) [X;X],ISIStats.allspikes.times,'UniformOutput',false);
-doubleISIs.ISIs = cellfun(@(X,Y) [X;Y],ISIStats.allspikes.logISIs,ISIStats.allspikes.logISIs_next,'UniformOutput',false);
-%%
-bz_ConditionalLFPCoupling( doubleISIs,doubleISIs.ISIs,wavespec,...
-    'Xbounds',[-2.6 1],'intervals',windows,'showFig',true,... %true
-'minX',25,'CellClass',CellClass,'spikeLim',30000,...
-'saveFig',figfolder,'figName',['ISIConditionedLFP',state],'baseName',baseName);
-
-%% next: coupling conditioned on CV2
-%Add Power-ISI mutual information
-
-%Get complex-valued filtered LFP at each spike time
-for cc = 1:spikes.numcells
-    cc
-    ISIStats.allspikes.LFP{cc} = interp1(wavespec.timestamps,wavespec.data,ISIStats.allspikes.times{cc},'nearest');
-end
-
-%%
-for cc = 1:spikes.numcells
-    ISIStats.allspikes.LFP{cc} = bsxfun(@(X,Y) X./Y,ISIStats.allspikes.LFP{cc},wavespec.meanpower);
-end
-%%
-ISIbins = linspace(-2.5,1,50);
-powerbins = linspace(0,2,40);
-excell=randsample(spikes.numcells,1);
-
-joint = hist3([ISIStats.allspikes.logISIs{excell} abs(ISIStats.allspikes.LFP{excell})],{ISIbins,powerbins});
-
+figure
 
