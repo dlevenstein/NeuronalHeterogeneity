@@ -1,4 +1,4 @@
-function [ ] = Analysis20190224(basePath,figfolder)
+function [ ] = Analysis20190225(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Goal: create a function to map pop-LFP coupling for every channel in a
@@ -43,7 +43,7 @@ spikeGroups = sessionInfo.spikeGroups;
 clear synchphasecoupling
 clear synchpowercorr
 clear synchphaseangle
-for gg = 1:2
+for gg = 1:spikeGroups.nGroups
     display(['Mapping Spike Group ',num2str(gg)])
     %% Load the LFP in this spike group
     downsamplefactor = 2;
@@ -59,7 +59,7 @@ for gg = 1:2
 
         %Take only subset of time (random intervals) so wavelets doesn't break
         %computer (total 625s)
-        usetime = 2000;%2500
+        usetime = 2500;%2500
         winsize = 25;
         if sum(diff(SleepState.ints.(state),1,2))>usetime
             nwin = round(usetime./winsize);
@@ -70,25 +70,34 @@ for gg = 1:2
         end
 
         %Calculate pop-phase coupling for all channels
-        [freqs,synchcoupling] = ...
-            bz_GenSpikeLFPCoupling(spikes.times,lfp,'channel',spikeGroups.groups{gg}(cc),...
+        [SpikeLFPCoupling(gg).(state)] = ...
+            bz_GenSpikeLFPCoupling(spikes.times,lfp,'channel',spikeGroups.groups{gg},...
             'int',windows,'DOWNSAMPLE',1,'frange',[1 312],'ncyc',15,...
             'subpop',CellClass.pE+2.*CellClass.pI,'synchwin',0.002,'synchdt',0.002,...
             'nfreqs',150);
-            for tt = 1:length(celltypes)
-                synchphasecoupling.(state).(celltypes{tt})(:,:,gg) = synchcoupling(tt).phasemag;
-                synchphaseangle.(state).(celltypes{tt})(:,:,gg) = synchcoupling(tt).phaseangle;
-                synchpowercorr.(state).(celltypes{tt})(:,:,gg) = synchcoupling(tt).powercorr;
-            end
+%             for tt = 1:length(celltypes)
+%                 synchphasecoupling.(state).(celltypes{tt})(:,:,gg) = synchcoupling(tt).phasemag;
+%                 synchphaseangle.(state).(celltypes{tt})(:,:,gg) = synchcoupling(tt).phaseangle;
+%                 synchpowercorr.(state).(celltypes{tt})(:,:,gg) = synchcoupling(tt).powercorr;
+%             end
             close all
 
     end
     
 end
 
-%%%% PUT THE CAPABILITY FOR GENSPIKELFPCOUPLING TO DO MULTIPLE CHANNELS...
+%%
+%Need: region for each spike group. Split populations by region and cell
+%type
+%Histogram of peak channel for cells (by population)
+
+%Histogram of proportion of cells coupled to each frequency? (need
+%significance....)
+
+%Use this to pick gamma(/ripple?) channel for each cell
+
 %% Figure: pop-phase coupling by channel
-for gg =1:2;
+for gg =1:2
 
 figure
 for ss = 1:3
