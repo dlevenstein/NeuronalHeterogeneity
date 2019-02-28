@@ -1,4 +1,4 @@
-function [ ] = Analysis20190226(basePath,figfolder)
+function [ ] = Analysis20190227(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Goal: create a function to map pop-LFP coupling for every channel in a
@@ -41,7 +41,7 @@ numstates = length(states);
 spikeGroups = sessionInfo.spikeGroups;
 %%
 
-for gg = 1:length(spikeGroups)
+for gg = 8
     display(['Mapping Spike Group ',num2str(gg)])
     %% Load the LFP in this spike group
     downsamplefactor = 2;
@@ -57,7 +57,7 @@ for gg = 1:length(spikeGroups)
 
         %Take only subset of time (random intervals) so wavelets doesn't break
         %computer (total 625s)
-        usetime = 3000;%2500
+        usetime = 2000;%2500
         winsize = 25;
         if sum(diff(SleepState.ints.(state),1,2))>usetime
             nwin = round(usetime./winsize);
@@ -72,7 +72,7 @@ for gg = 1:length(spikeGroups)
             bz_GenSpikeLFPCoupling(spikes,lfp,'channel',spikeGroups.groups{gg},...
             'int',windows,'frange',[1 312],'ncyc',15,...
             'subpop',CellClass.pE+2.*CellClass.pI,'synchwin',0.002,'synchdt',0.002,...
-            'nfreqs',150,'ISIpower',true,'spikeLim',30000);
+            'nfreqs',150,'ISIpower',true,'spikeLim',20000);
 %             for tt = 1:length(celltypes)
 %                 synchphasecoupling.(state).(celltypes{tt})(:,:,gg) = synchcoupling(tt).phasemag;
 %                 synchphaseangle.(state).(celltypes{tt})(:,:,gg) = synchcoupling(tt).phaseangle;
@@ -98,6 +98,10 @@ for gg = 1:length(spikeGroups.groups)
 end
 
 %%
+%Mean in group cells
+%Mean one group away cells
+%Mean opposite hemisphere cells
+%Mean same hemisphere cells
 %Figure: example in group cell, out of group cell
 excell = randsample(find(spikeGroups.ingroupcells{11}),1);
 cellchan = find(ismember(spikeGroups.groups{8},spikes.maxWaveformCh(excell)));
