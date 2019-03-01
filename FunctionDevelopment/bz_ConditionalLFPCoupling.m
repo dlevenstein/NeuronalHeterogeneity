@@ -18,12 +18,14 @@ function [ ConditionalLFPCoupling ] = bz_ConditionalLFPCoupling( spikes,conditio
 %
 %   (options)
 %   'intervals' only calculate coupling in some time intervals
-%   'numXbins'  number of bins for your conditional variable (default 60)
+%   'numXbins'  number of bins for your conditional variable (default 75)
 %   'Xbounds'   bounds of your conditional variable
 %   'minX'      minumum number of spikes to calculate coupling (default 25)
 %   'spikeLim'  limit number of spikes to look at for each cell 
 %               (randomly omits spikes, default: Inf)
 %   'showFig'   true/false
+%   'CellClass' structure containing class of each cell for figure
+%               (from bz_CellClassification)
 %   'saveFig'   folder in which to save the figure
 %   'figName'   default: 'CondLFPCouping'
 %   'baseName'  (for figure saving)
@@ -160,10 +162,6 @@ for cc = 1:spikes.numcells
 end
 
 
-
-
-%%
-figure
 
 %%
 % figure

@@ -16,7 +16,7 @@ reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
 basePath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC/Achilles_10252013';
-basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/WatsonBO/JennBuzsaki22/20140526_277um';
+%basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/WatsonBO/JennBuzsaki22/20140526_277um';
 %basePath = pwd;
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
@@ -47,7 +47,7 @@ lfp = bz_GetLFP(lfpchan,...
 
 %% Restrict to state
 
-state = states{2};
+state = states{1};
 %ints = SleepState.ints.(state);
 
 %Take only subset of time (random intervals) so wavelets doesn't break
@@ -79,30 +79,15 @@ ISIStats.allspikes.logISIs_next = cellfun(@(X) log10([X(2:end);nan]),ISIStats.al
 
 doubleISIs.times = cellfun(@(X) [X;X],ISIStats.allspikes.times,'UniformOutput',false);
 doubleISIs.ISIs = cellfun(@(X,Y) [X;Y],ISIStats.allspikes.logISIs,ISIStats.allspikes.logISIs_next,'UniformOutput',false);
-%%
+%% Condition on ISI
 bz_ConditionalLFPCoupling( doubleISIs,doubleISIs.ISIs,wavespec,...
     'Xbounds',[-2.6 1],'intervals',windows,'showFig',true,... %true
 'minX',25,'CellClass',CellClass,'spikeLim',30000,...
 'saveFig',figfolder,'figName',['ISIConditionedLFP',state],'baseName',baseName);
 
-%% next: coupling conditioned on CV2
-%Add Power-ISI mutual information
-
-%Get complex-valued filtered LFP at each spike time
-for cc = 1:spikes.numcells
-    cc
-    ISIStats.allspikes.LFP{cc} = interp1(wavespec.timestamps,wavespec.data,ISIStats.allspikes.times{cc},'nearest');
-end
-
-%%
-for cc = 1:spikes.numcells
-    ISIStats.allspikes.LFP{cc} = bsxfun(@(X,Y) X./Y,ISIStats.allspikes.LFP{cc},wavespec.meanpower);
-end
-%%
-ISIbins = linspace(-2.5,1,50);
-powerbins = linspace(0,2,40);
-excell=randsample(spikes.numcells,1);
-
-joint = hist3([ISIStats.allspikes.logISIs{excell} abs(ISIStats.allspikes.LFP{excell})],{ISIbins,powerbins});
-
+%% Condition on CV2
+bz_ConditionalLFPCoupling( ISIStats.allspikes,ISIStats.allspikes.CV2,wavespec,...
+    'Xbounds',[0 2],'intervals',windows,'showFig',true,...
+'minX',25,'CellClass',CellClass,'spikeLim',20000,'numXbins',20,...
+'saveFig',figfolder,'figName',['CV2ConditionedLFP',state],'baseName',baseName);
 
