@@ -107,7 +107,7 @@ excell = randsample(find(spikeGroups.ingroupcells{11}),1);
 cellchan = find(ismember(spikeGroups.groups{8},spikes.maxWaveformCh(excell)));
 if isempty(cellchan); cellchan=nan;end
 figure
-for ss = 1:3
+for ss = 1:2
         subplot(3,3,1+(ss-1)*3)
         imagesc(log2(SpikeLFPCoupling(8).(states{ss}).freqs),...
             [1 length(spikeGroups.groups{8})],...
