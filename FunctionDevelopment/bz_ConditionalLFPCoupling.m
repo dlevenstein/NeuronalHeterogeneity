@@ -205,7 +205,7 @@ if SHOWFIG
     subplot(3,3,1)
         hold on
         for tt = 1:length(celltypes)
-            plot(log2(filtLFP.freqs),groupmutinf.(celltypes{tt}))
+            plot(log2(filtLFP.freqs),groupmutinf.(celltypes{tt}),'linewidth',2)
         end
         box off
         axis tight
