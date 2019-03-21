@@ -1,4 +1,4 @@
-function [ ] = Analysis20190320(basePath,figfolder)
+function [ ] = Analysis20190321(basePath,figfolder)
 % Date 03/20/19
 %
 %Questions: Ripple coupling and modulation of the ISI distribution
@@ -57,12 +57,14 @@ for rr = 1:length(regions)
         AllCellClass(CellClass.(celltypes{cc}) & strcmp(spikes.region,regions{rr})) = {classname};
     end
 end
-
+allclasses = unique(AllCellClass);
+classcolors = {'k','r','k','r'};
+classline = {'-','-','--','--'};
 %%
 
 rip.fband = [120 200];
 %%
-for gg = 1%:length(spikeGroups.groups)
+for gg = 1:length(spikeGroups.groups)
     display(['Mapping Spike Group ',num2str(gg)])
     %% Load the LFP in this spike group
     downsamplefactor = 2;
@@ -78,34 +80,60 @@ for gg = 1%:length(spikeGroups.groups)
 
         %Take only subset of time (random intervals) so wavelets doesn't break
         %computer (total 625s)
-%         usetime = 3000;%2500
-%         winsize = 25;
-%         if sum(diff(SleepState.ints.(state),1,2))>usetime
-%             nwin = round(usetime./winsize);
-%             %winsize = 30; %s
-%             try
-%                 windows = bz_RandomWindowInIntervals( SleepState.ints.(state),winsize,nwin );
-%             catch
-%                 windows = SleepState.ints.(state);
-%             end
-%         else
-%             windows = SleepState.ints.(state);
-%         end
+        usetime = 2000;%2500
+        winsize = 25;
+        if sum(diff(SleepState.ints.(state),1,2))>usetime
+            nwin = round(usetime./winsize);
+            %winsize = 30; %s
+            try
+                windows = bz_RandomWindowInIntervals( SleepState.ints.(state),winsize,nwin );
+            catch
+                windows = SleepState.ints.(state);
+            end
+        else
+            windows = SleepState.ints.(state);
+        end
 
         %Calculate pop-phase coupling for all channels
-        [SpikeLFPCoupling(gg).(state)] = ...
+        [SpikeRippleCoupling(gg).(state)] = ...
             bz_GenSpikeLFPCoupling(spikes,lfp,'channel',spikeGroups.groups{gg},...
-            'int',SleepState.ints.(state),'frange',rip.fband,'ncyc',4,...
+            'int',windows,'frange',rip.fband,'ncyc',4,...
             'cellclass',AllCellClass,'synchwin',0.002,'synchdt',0.002,...
-            'nfreqs',1,'ISIpower',true,'spikeLim',20000);
+            'nfreqs',1,'ISIpower',true,'spikeLim',10000);
             close all
 
     end
     
 end
 %Pick the channel with the best coupling to the pE population
-[~,gamma.pEchanIDX] = max(synchgammaphasecoupling.pE);
-gamma.pEchan = lfp.channels(gamma.pEchanIDX);
+% [~,gamma.pEchanIDX] = max(synchgammaphasecoupling.pE);
+% gamma.pEchan = lfp.channels(gamma.pEchanIDX);
+%%
+SpikRPCollapsed = bz_CollapseStruct(SpikeRippleCoupling,'match','justcat',true);
+
+%%
+thisstate = 'NREMstate';
+figure
+subplot(2,2,1)
+    hold on
+    for cc = 1:length(allclasses)
+        plot(SpikRPCollapsed.(thisstate).pop.(allclasses{cc}).phasemag,...
+            SpikRPCollapsed.(thisstate).detectorinfo.detectionchannel,...
+            classline{cc},'color',classcolors{cc})
+    end
+    legend(allclasses)
+
+subplot(2,3,4)
+    imagesc(squeeze(SpikRPCollapsed.NREMstate.cell.ISIpowermodulation)')
+    
+subplot(2,3,5)
+    imagesc(squeeze(SpikRPCollapsed.NREMstate.cell.spikephasemag)')
+    
+subplot(2,3,6)
+    imagesc(squeeze(SpikRPCollapsed.NREMstate.cell.ratepowercorr)')
+%% Load the figure for Wavelet coupling map
+
+load('/home/dlevenstein/Desktop/LFPcoupling.mat')
 
 %% Figure: pop-phase coupling by channel
 figure

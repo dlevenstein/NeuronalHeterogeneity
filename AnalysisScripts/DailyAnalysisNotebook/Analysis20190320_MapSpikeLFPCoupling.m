@@ -145,6 +145,8 @@ end
 
 SpikLFPCollapsed = bz_CollapseStruct(SpikeLFPCoupling,'match','justcat',true);
 
+%% Saving...
+savename = fullfile(basePath,[baseName,'.SpikeLFPCoupling.chaninfo.mat']);
 
 
 %% In/Out Group Cells
