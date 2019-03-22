@@ -121,7 +121,8 @@ subplot(2,2,1)
             SpikRPCollapsed.(thisstate).detectorinfo.detectionchannel,...
             classline{cc},'color',classcolors{cc})
     end
-    legend(allclasses)
+    legend(allclasses,'location','eastoutside')
+    axis tight
 
 subplot(2,3,4)
     imagesc(squeeze(SpikRPCollapsed.NREMstate.cell.ISIpowermodulation)')
