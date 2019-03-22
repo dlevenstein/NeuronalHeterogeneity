@@ -320,7 +320,7 @@ figure
 for io = 1:3
     
 for ss = 1:2
-        subplot(6,3,1+(ss-1)*3+(io-1)*6)
+        subplot(6,3,1+(io-1)*3+(ss-1)*9)
         imagesc(log2(SpikeLFPCoupling(gg).(states{ss}).freqs),...
             [1 length(spikeGroups.groups{gg})],...
             squeeze(SpikeLFPCoupling(gg).(states{ss}).(inout{io}).spikephasemag)');
@@ -331,19 +331,23 @@ for ss = 1:2
             1:length(spikeGroups.groups{gg}),'color','w')
 
        % plot(log2(rip.fband(2)),find(ismember(spikegroupordering,rip.pEchan)),'+')
+       if io==1 & ss==1
         title('Phase Coupling')
+       end
         LogScale('x',2)
         colorbar
         
         %caxis([0 0.12])
+        if io ==3
         xlabel('freq (Hz)');
+        end
         %if ss==1
         ylabel({states{ss},'Channel'})
        % end 
         %xlim(log2([16 192]))
         
         
-        subplot(6,3,2+(ss-1)*3+(io-1)*6)
+        subplot(6,3,2+(io-1)*3+(ss-1)*9)
         imagesc(log2(SpikeLFPCoupling(gg).(states{ss}).freqs),...
             [1 length(spikeGroups.groups{gg})],...
             squeeze(SpikeLFPCoupling(gg).(states{ss}).(inout{io}).ratepowercorr)');
@@ -352,13 +356,17 @@ for ss = 1:2
             'w--')
         plot(bz_NormToRange(SpikeRippleCoupling(gg).(states{ss}).(inout{io}).ratepowercorr,log2(rip.fband)),...
             1:length(spikeGroups.groups{gg}),'color','w')
+        if io==1 & ss==1
         title('Rate-Power')
+        end
         LogScale('x',2)
         %caxis([0 0.2])
         colorbar
+        if io ==3
         xlabel('freq (Hz)');
+        end
         
-        subplot(6,3,3+(ss-1)*3+(io-1)*6)
+        subplot(6,3,3+(io-1)*3+(ss-1)*9)
         imagesc(log2(SpikeLFPCoupling(gg).(states{ss}).freqs),...
             [1 length(spikeGroups.groups{gg})],...
             squeeze(SpikeLFPCoupling(gg).(states{ss}).(inout{io}).ISIpowermodulation)');
@@ -367,11 +375,15 @@ for ss = 1:2
             'w--')
         plot(bz_NormToRange(SpikeRippleCoupling(gg).(states{ss}).(inout{io}).ISIpowermodulation,log2(rip.fband)),...
             1:length(spikeGroups.groups{gg}),'color','w')
+        if io==1 & ss==1
         title('Power-ISI')
+        end
         LogScale('x',2)
         %caxis([0 0.2])
         colorbar
+        if io ==3
         xlabel('freq (Hz)');
+        end
 
 end 
 end
