@@ -218,11 +218,11 @@ for gg = 1:length(spikeGroups.groups)
 figure
     
 for ss = 1:3
-        subplot(3,3,ss*3-2)
+        subplot(3,4,ss*4-3)
             hold on
             for io = 1:3
             plot(SpikeRippleCoupling(gg).(states{ss}).(inout{io}).spikephasemag,...
-                -[1:length(spikeGroups.groups{gg})]);
+                -[1:length(spikeGroups.groups{gg})],'linewidth',2);
             end
             pickchan = spikeGroups.groups{gg}==rip.pEchan(gg);
             plot(SpikeRippleCoupling(gg).(states{ss}).outgroupmean.spikephasemag(pickchan),...
@@ -231,33 +231,36 @@ for ss = 1:3
            if ss ==1
             title('Phase Coupling')
            end
+           axis tight
             %xlabel('freq (Hz)');
             ylabel({states{ss},'Channel'})
             
             
-        subplot(3,3,ss*3-1)
+        subplot(3,4,ss*4-2)
             hold on
             for io = 1:3
             plot(SpikeRippleCoupling(gg).(states{ss}).(inout{io}).ratepowercorr,...
-                -[1:length(spikeGroups.groups{gg})]);
+                -[1:length(spikeGroups.groups{gg})],'linewidth',2);
             end
            % plot(log2(rip.fband(2)),find(ismember(spikegroupordering,rip.pEchan)),'+')
            if ss ==1
             title('Rate Modulation')
            end
+           axis tight
             %xlabel('freq (Hz)');
             %ylabel({states{ss},'Channel'})
 
-        subplot(3,3,ss*3)
+        subplot(3,4,ss*4-1)
             hold on
             for io = 1:3
             plot(SpikeRippleCoupling(gg).(states{ss}).(inout{io}).ISIpowermodulation,...
-                -[1:length(spikeGroups.groups{gg})]);
+                -[1:length(spikeGroups.groups{gg})],'linewidth',2);
             end
            % plot(log2(rip.fband(2)),find(ismember(spikegroupordering,rip.pEchan)),'+')
            if ss ==1
             title('ISI Modulation')
            end
+           axis tight
             %xlabel('freq (Hz)');
             %ylabel({states{ss},'Channel'})
 end 
