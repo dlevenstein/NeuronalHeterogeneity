@@ -184,7 +184,7 @@ suptitle(['SpikeGroup ',num2str(gg),': ',spikeGroups.region{gg}])
 for ss = 1:length(states)
 for tt = 1:length(allclasses)
     subplot(4,3,ss+(order(tt)*3)-3)
-        imagesc(log2(SpikeLFPCoupling(gg).(states{ss}).freqs),[0 1],...
+        imagesc(log2(SpikeLFPCoupling(gg).(states{ss}).freqs),[1 length(spikeGroups.groups{gg})],...
             SpikeLFPCoupling(gg).(states{ss}).pop.(allclasses{tt}).ISIpowermodulation')
         if ss == 1
             ylabel(allclasses{tt})
@@ -210,11 +210,15 @@ end
 for gg = 1:length(spikeGroups.groups)
 figure
 
+specchan = find(ismember(spikeGroups.groups{gg},LMChan) | ismember(spikeGroups.groups{gg},PYRChan));
+
 for ss = 1:length(states)
 for tt = 1:length(CellClass.celltypes)
     subplot(3,2,tt+(ss*2)-2)
-        imagesc(log2(SpikeLFPCoupling(gg).(states{ss}).freqs),[0 1],...
+        imagesc(log2(SpikeLFPCoupling(gg).(states{ss}).freqs),[1 length(spikeGroups.groups{gg})],...
             SpikeLFPCoupling(gg).(states{ss}).pop.(celltypes{tt}).ISIpowermodulation')
+        hold on
+        plot(zeros(size(specchan)),specchan,'r*')
         if ss == 1
             title(celltypes{tt})
         end
@@ -233,6 +237,10 @@ for tt = 1:length(CellClass.celltypes)
         if tt==1
             ylabel(states{ss})
         end
+        set(gca,'ytick',[])
+        if ss ==3
+            xlabel('f (Hz)')
+        end
         
             
 end
@@ -242,6 +250,11 @@ NiceSave(['ISIModulation_',num2str(gg)],figfolder,baseName,'includeDate',true)
 
 end
 
+%% Tag LM channel, PYR channel - two for each hemisphere.
+LMChan = [19 39 103 113];
+PYRChan = [10 42 77 116];
+    %%
+[ sessionInfo ] = bz_tagChannel( basePath,channums,'LMChan' );
 
 
 end
