@@ -103,8 +103,15 @@ for gg = 1:length(spikeGroups.groups)
     
 end
 
-%savefilename = 'SpikeLFPcouplingMap.chaninfo.mat';
-%save('savefilename','SpikeLFPCoupling');
+%% Saving...
+saveswitch = false;
+
+savename = fullfile(basePath,[baseName,'.SpikeLFPCoupling.chaninfo.mat']);
+
+if saveswitch
+    save(savename,'SpikeLFPCoupling');
+end
+
 %%
 %Need: region for each spike group. Split populations by region and cell
 %type
@@ -145,8 +152,7 @@ end
 
 SpikLFPCollapsed = bz_CollapseStruct(SpikeLFPCoupling,'match','justcat',true);
 
-%% Saving...
-savename = fullfile(basePath,[baseName,'.SpikeLFPCoupling.chaninfo.mat']);
+
 
 
 %% In/Out Group Cells
