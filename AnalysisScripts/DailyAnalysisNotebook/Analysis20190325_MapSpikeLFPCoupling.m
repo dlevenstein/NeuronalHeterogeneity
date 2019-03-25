@@ -200,14 +200,14 @@ for tt = 1:length(allclasses)
 end
 end
 
-NiceSave(['ISIPowerModulation_',num2str(gg)],figfolder,baseName,'includeDate',true)
+NiceSave(['ISIModulation_LR_',num2str(gg)],figfolder,baseName,'includeDate',true)
 
 
 end
 
 %%
-state = 'WAKEstate';
-gg =4 ;
+%state = 'WAKEstate';
+for gg = 1:length(spikeGroups.groups)
 figure
 
 for ss = 1:length(states)
@@ -215,15 +215,28 @@ for tt = 1:length(CellClass.celltypes)
     subplot(3,2,tt+(ss*2)-2)
         imagesc(log2(SpikeLFPCoupling(gg).(states{ss}).freqs),[0 1],...
             SpikeLFPCoupling(gg).(states{ss}).pop.(celltypes{tt}).ISIpowermodulation')
-        title(celltypes{tt})
+        if ss == 1
+            title(celltypes{tt})
+        end
         LogScale('x',2)
+%         switch tt
+%             case 1
+%                 caxis([0.00 0.04])
+%             case 2
+%                 caxis([0.00 0.02])
+%         end
         colorbar
         if tt==1
             ylabel(states{ss})
         end
+        
+            
 end
 end
 
+NiceSave(['ISIModulation_',num2str(gg)],figfolder,baseName,'includeDate',true)
+
+end
 
 
 
