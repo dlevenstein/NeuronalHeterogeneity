@@ -219,12 +219,16 @@ for tt = 1:length(CellClass.celltypes)
             title(celltypes{tt})
         end
         LogScale('x',2)
-%         switch tt
-%             case 1
-%                 caxis([0.00 0.04])
-%             case 2
-%                 caxis([0.00 0.02])
-%         end
+        switch tt
+            case 1
+                if ss == 2
+                    caxis([0.0125 0.02])
+                else
+                    caxis([0.0125 0.045])
+                end
+            case 2
+                caxis([0.005 0.02])
+        end
         colorbar
         if tt==1
             ylabel(states{ss})
