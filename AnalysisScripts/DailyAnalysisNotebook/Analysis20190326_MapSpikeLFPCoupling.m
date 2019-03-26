@@ -210,7 +210,7 @@ end
 for gg = 1:length(spikeGroups.groups)
 figure
 
-specchan = find(ismember(spikeGroups.groups{gg},LMChan) | ismember(spikeGroups.groups{gg},PYRChan));
+specchan = find(ismember(spikeGroups.groups{gg},lamina.RAD.chans) | ismember(spikeGroups.groups{gg},lamina.PYR.chans));
 
 for ss = 1:length(states)
 for tt = 1:length(CellClass.celltypes)
@@ -251,10 +251,11 @@ NiceSave(['ISIModulation_',num2str(gg)],figfolder,baseName,'includeDate',true)
 end
 
 %% Tag LM channel, PYR channel - two for each hemisphere.
-LMChan = [19 39 103 113];
-PYRChan = [10 42 77 116];
-[ sessionInfo ] = bz_tagChannel( basePath,LMChan,'LMChan','overwrite',true );
-[ sessionInfo ] = bz_tagChannel( basePath,PYRChan,'PYRChan','overwrite',true  );
+lamina.RAD.chans = [19 39 103 113];
+lamina.PYR.chans = [10 42 77 116];
+[ sessionInfo ] = bz_tagChannel( basePath,[],'LMChan','overwrite',true );
+[ sessionInfo ] = bz_tagChannel( basePath,lamina.RAD.chans,'RADChan','overwrite',true );
+[ sessionInfo ] = bz_tagChannel( basePath,lamina.PYR.chans,'PYRChan','overwrite',true  );
 
 %% Calcluate conditional spike phase coupling on LM chan and PYR chans
 
@@ -267,7 +268,7 @@ doubleISIs.ISIs = cellfun(@(X,Y) [X;Y],ISIStats.allspikes.logISIs,ISIStats.allsp
 %% Load the LFP if needed
 
 downsamplefactor = 2;
-lfp = bz_GetLFP([sessionInfo.channelTags.LMChan sessionInfo.channelTags.PYRChan],...
+lfp = bz_GetLFP([sessionInfo.channelTags.RADChan sessionInfo.channelTags.PYRChan],...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 %Noralize the LFP
 %lfp.data = NormToInt(single(lfp.data),'modZ', SleepState.ints.NREMstate,lfp.samplingRate);
@@ -309,12 +310,122 @@ end
 
 %% For each cell - pick its LM and PYR channel. 
 %Combine LFPCoupling results for each cell from the appropriate channels
-for cc = 1:spikes.numcells
-    %In same hemisphere, not in same spikegroup
-    sameregion = spikes.region(cc)
+lamina.names = {'PYR','RAD'};
 
-    LM = randsample(sessionInfo.channelTags.LMChan(include),1);
-    PYR = randsample(sessionInfo.channelTags.PYRChan(include),1);
+for ll = 1:length(lamina.names)
+    lamina.(lamina.names{ll}).spikegroup = zeros(size(lamina.(lamina.names{ll}).chans));
+
+    for gg = 1:length(spikeGroups.groups)
+        lamina.(lamina.names{ll}).spikegroup = ...
+            lamina.(lamina.names{ll}).spikegroup+gg.*ismember(lamina.(lamina.names{ll}).chans,spikeGroups.groups{gg});
+    end
+
+    lamina.(lamina.names{ll}).chanIDX = find(ismember(sessionInfo.channels,lamina.(lamina.names{ll}).chans));
+
+    lamina.(lamina.names{ll}).region = sessionInfo.region(lamina.(lamina.names{ll}).chanIDX);
 end
-cellLFPCoupling(ss)
+%%
+for cc = 1:spikes.numcells
+    for ll = 1:length(lamina.names)
+    %In same hemisphere, not in same spikegroup
+    sameregion = strcmp(spikes.region(cc),lamina.(lamina.names{ll}).region);
+    samespikegroup = spikes.shankID(cc) == lamina.(lamina.names{ll}).spikegroup;
+
+    lamina.(lamina.names{ll}).cellchan(cc) = randsample(find(sameregion&~samespikegroup),1);
+    end
+end
+
+%% Get the spike-lfp coupling for each cell from its appropriate spot
+clear laminarLFPCoupling
+ss = 1;
+for ll =1:2
+%ll = 2;
+offset = 0;
+if ll == 1
+    offset = length(lamina.RAD.chans);
+end
+fields = fieldnames(LFPCoupling);
+laminarLFPCoupling.(lamina.names{ll}).Xbins = LFPCoupling(1).Xbins;
+laminarLFPCoupling.(lamina.names{ll}).freqs	 = LFPCoupling(1).freqs;
+
+for cc = 1:spikes.numcells
+laminarLFPCoupling.(lamina.names{ll}).mrl(:,:,cc) = ...
+    LFPCoupling(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).mrl(:,:,cc);
+laminarLFPCoupling.(lamina.names{ll}).meanpower(:,:,cc) = ...
+    LFPCoupling(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).meanpower(:,:,cc);
+laminarLFPCoupling.(lamina.names{ll}).mutInfoXPower(cc,:) = ...
+    LFPCoupling(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).mutInfoXPower(cc,:);
+end
+
+
+%Get Cell Type Average
+for tt = 1:length(celltypes)
+    laminarLFPCoupling.(lamina.names{ll}).allmeanpower.(celltypes{tt}) = ...
+        nanmean(laminarLFPCoupling.(lamina.names{ll}).meanpower(:,:,CellClass.(celltypes{tt})),3);
+    laminarLFPCoupling.(lamina.names{ll}).almeanpMRL.(celltypes{tt}) = ...
+        nanmean(laminarLFPCoupling.(lamina.names{ll}).mrl(:,:,CellClass.(celltypes{tt})),3);
+    laminarLFPCoupling.(lamina.names{ll}).groupmutinf.(celltypes{tt}) = ...
+        nanmean(laminarLFPCoupling.(lamina.names{ll}).mutInfoXPower(CellClass.(celltypes{tt}),:),1);
+
+end
+
+end
+
+%%
+ll=1
+    powermap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
+    figure
+    
+    subplot(3,3,1)
+        hold on
+        for tt = 1:length(celltypes)
+            plot(log2(laminarLFPCoupling.PYR.freqs),laminarLFPCoupling.PYR.groupmutinf.(celltypes{tt}),...
+                'linewidth',1,'color',cellcolor{tt})
+        end
+        for tt = 1:length(celltypes)
+            plot(log2(laminarLFPCoupling.RAD.freqs),laminarLFPCoupling.RAD.groupmutinf.(celltypes{tt}),...
+                '--','linewidth',1,'color',cellcolor{tt})
+        end
+        box off
+        axis tight
+        xlabel('f (Hz)');ylabel('I(Power;ISI)')
+            LogScale('x',2)    
+            
+    
+    for ll=1:2
+    for tt = 1:length(celltypes)
+    subplot(4,3,tt+(ll*3)+4)
+    colormap(gca,powermap)
+        imagesc(laminarLFPCoupling.(lamina.names{ll}).Xbins,log2(laminarLFPCoupling.(lamina.names{ll}).freqs),...
+            log2(laminarLFPCoupling.(lamina.names{ll}).allmeanpower.(celltypes{tt}))')
+        colorbar
+        ColorbarWithAxis([-1.25 1.25],'Power (mean^-^1)')
+        LogScale('x',10);
+        LogScale('y',2)
+        LogScale('c',2)
+        axis xy
+        xlabel('ISI (s)');ylabel('freq (Hz)')
+        title((celltypes{tt}))
+    end  
+    
+    
+    for tt = 1:length(celltypes)
+    subplot(4,3,tt+(ll*3)-2)
+        imagesc(laminarLFPCoupling.(lamina.names{ll}).Xbins,log2(laminarLFPCoupling.(lamina.names{ll}).freqs),...
+            laminarLFPCoupling.(lamina.names{ll}).almeanpMRL.(celltypes{tt})')
+        colorbar
+        hold on
+        %caxis([0.5 1.5])
+        LogScale('x',10);
+        LogScale('y',2)
+        ColorbarWithAxis([0 0.6],'Phase Coupling (pMRL)')
+
+        axis xy
+        xlabel('ISI (s)');ylabel('freq (Hz)')
+        title((celltypes{tt}))
+    end 
+    end
+    
+    NiceSave('CouplingbyISI',figfolder,baseName,'includeDate',true)
+    
 end

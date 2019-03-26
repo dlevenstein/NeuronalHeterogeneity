@@ -32,7 +32,13 @@ function [ ConditionalLFPCoupling ] = bz_ConditionalLFPCoupling( spikes,conditio
 %
 %
 %OUTPUT
-%
+%   ConditionalLFPCoupling
+%       .Xbins
+%       .freqs
+%       .meanpower
+%       .mrl
+%       .mrlangle
+%       .mutInfoXPower
 %
 %DLevenstein 2019
 %%
@@ -86,11 +92,11 @@ filtLFP.data = bsxfun(@(X,Y) X./Y,filtLFP.data,filtLFP.meanpower);
 
 %Get complex-valued filtered LFP at each spike time
 if spikes.numcells>50
-    disp('Interpolating LFP at each spike...')
-    disp('If you have a lot of cells/spikes/freqs this can take a few minutes.')
-    disp('If this is prohibitive (time or RAM), try using ''spikeLim''')
+	disp('Interpolating LFP at each spike... If this is prohibitive (time or RAM), try using ''spikeLim''')
+
 end
 for cc = 1:spikes.numcells
+    bz_Counter(cc,spikes.numcells,'Interpolating Cell')
     spikes.LFP{cc} = interp1(filtLFP.timestamps,filtLFP.data,spikes.times{cc},'nearest');
 end
 
@@ -142,22 +148,25 @@ end
 %% Mutual Information
 powerbins = linspace(-0.5,0.5,10);
 for cc = 1:spikes.numcells
-    cc
+    %bz_Counter(cc,spikes.numcells,'Interpolating Cell')
     for ff = 1:filtLFP.nfreqs
         
 
-        joint = hist3([spikes.condition{cc} log10(abs(spikes.LFP{cc}(:,ff)))],{Xbins,powerbins});
-        joint = joint./sum(joint(:));
+%         joint = hist3([spikes.condition{cc} log10(abs(spikes.LFP{cc}(:,ff)))],{Xbins,powerbins});
+%         joint = joint./sum(joint(:));
+% 
+%         margX = hist(spikes.condition{cc},Xbins);
+%         margX = margX./sum(margX);
+%         margPower = hist(log10(abs(spikes.LFP{cc}(:,ff))),powerbins);
+%         margPower = margPower./sum(margPower);
+%         jointindependent =  bsxfun(@times, margX.', margPower);
+% 
+% 
+%         mutXPow = joint.*log2(joint./jointindependent); % mutual info at each bin
+%         totmutXPow(cc,ff) = nansum(mutXPow(:)); % sum of all mutual information 
+        
+        totmutXPow(cc,ff) = mutualinfo(spikes.condition{cc},log10(abs(spikes.LFP{cc}(:,ff))));
 
-        margX = hist(spikes.condition{cc},Xbins);
-        margX = margX./sum(margX);
-        margPower = hist(log10(abs(spikes.LFP{cc}(:,ff))),powerbins);
-        margPower = margPower./sum(margPower);
-        jointindependent =  bsxfun(@times, margX.', margPower);
-
-
-        mutXPow = joint.*log2(joint./jointindependent); % mutual info at each bin
-        totmutXPow(cc,ff) = nansum(mutXPow(:)); % sum of all mutual information 
     end
 end
 
