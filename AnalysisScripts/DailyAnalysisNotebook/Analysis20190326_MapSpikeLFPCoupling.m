@@ -495,7 +495,6 @@ end
         LogScale('c',2)
         axis xy
         xlabel('Theta Power (mean^-1)');ylabel('freq (Hz)')
-        title((celltypes{tt}))
     end  
     
     
@@ -512,7 +511,10 @@ end
 
         axis xy
         xlabel('Theta Power (mean^-1)');ylabel('freq (Hz)')
+        %title((celltypes{tt}))
+                if ll==1
         title((celltypes{tt}))
+        end
     end 
     end
     
