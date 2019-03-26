@@ -265,14 +265,25 @@ ISIStats.allspikes.logISIs_next = cellfun(@(X) log10([X(2:end);nan]),ISIStats.al
 doubleISIs.times = cellfun(@(X) [X;X],ISIStats.allspikes.times,'UniformOutput',false);
 doubleISIs.ISIs = cellfun(@(X,Y) [X;Y],ISIStats.allspikes.logISIs,ISIStats.allspikes.logISIs_next,'UniformOutput',false);
 
-%% Load the LFP if needed
+%% Load the LFP for spike-phase
 
 downsamplefactor = 2;
 lfp = bz_GetLFP([sessionInfo.channelTags.RADChan sessionInfo.channelTags.PYRChan],...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
-%Noralize the LFP
-%lfp.data = NormToInt(single(lfp.data),'modZ', SleepState.ints.NREMstate,lfp.samplingRate);
 
+%%
+ thchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID;
+ downsamplefactor = 5;
+ th_lfp = bz_GetLFP(thchan,...
+     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
+
+
+thetalfp = bz_Filter(th_lfp,'passband',[6 10]);
+thetalfp.amp = NormToInt((thetalfp.amp),'mean',SleepState.ints.WAKEstate);
+
+ISIStats.allspikes.thetapower =cellfun(@(X) ...
+    interp1(thetalfp.timestamps,thetalfp.amp,X,'nearest'),...
+    ISIStats.allspikes.times,'UniformOutput',false);
 %% Restrict to state
 
 for ss = 1:3
@@ -298,12 +309,19 @@ for ss = 1:3
         'nfreqs',150,'frange',[1 312],'chanID',lfp.channels(cc));
 
 
-    %%
+    %% Coupling COnditioned on ISI
     LFPCoupling(ss,cc) = bz_ConditionalLFPCoupling( doubleISIs,doubleISIs.ISIs,wavespec,...
         'Xbounds',[-2.6 1],'intervals',windows,'showFig',true,... %true
     'minX',25,'CellClass',CellClass,'spikeLim',20000,...
     'showFig',true);
 
+    %% Coupling Conditioned on theta
+        if ss~=2
+            LFPCoupling_theta(ss,cc) = bz_ConditionalLFPCoupling( ISIStats.allspikes,ISIStats.allspikes.thetapower,wavespec,...
+                'Xbounds',[0.1 2.5],'intervals',windows,'showFig',true,'numXbins',30,...
+            'minX',25,'CellClass',CellClass,'spikeLim',20000,...
+            'showFig',true);
+        end
     end
 
 end
@@ -339,40 +357,55 @@ end
 clear laminarLFPCoupling
 ss = 1;
 for ll =1:2
-%ll = 2;
-offset = 0;
-if ll == 1
-    offset = length(lamina.RAD.chans);
-end
-fields = fieldnames(LFPCoupling);
-laminarLFPCoupling.(lamina.names{ll}).Xbins = LFPCoupling(1).Xbins;
-laminarLFPCoupling.(lamina.names{ll}).freqs	 = LFPCoupling(1).freqs;
+    %ll = 2;
+    offset = 0;
+    if ll == 1
+        offset = length(lamina.RAD.chans);
+    end
+    fields = fieldnames(LFPCoupling);
+    laminarLFPCoupling.(lamina.names{ll}).Xbins = LFPCoupling(1).Xbins;
+    laminarLFPCoupling.(lamina.names{ll}).freqs	 = LFPCoupling(1).freqs;
+    laminarLFPCoupling_theta.(lamina.names{ll}).Xbins = LFPCoupling_theta(1).Xbins;
+    laminarLFPCoupling_theta.(lamina.names{ll}).freqs = LFPCoupling_theta(1).freqs;
 
-for cc = 1:spikes.numcells
-laminarLFPCoupling.(lamina.names{ll}).mrl(:,:,cc) = ...
-    LFPCoupling(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).mrl(:,:,cc);
-laminarLFPCoupling.(lamina.names{ll}).meanpower(:,:,cc) = ...
-    LFPCoupling(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).meanpower(:,:,cc);
-laminarLFPCoupling.(lamina.names{ll}).mutInfoXPower(cc,:) = ...
-    LFPCoupling(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).mutInfoXPower(cc,:);
-end
+    for cc = 1:spikes.numcells
+    laminarLFPCoupling.(lamina.names{ll}).mrl(:,:,cc) = ...
+        LFPCoupling(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).mrl(:,:,cc);
+    laminarLFPCoupling.(lamina.names{ll}).meanpower(:,:,cc) = ...
+        LFPCoupling(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).meanpower(:,:,cc);
+    laminarLFPCoupling.(lamina.names{ll}).mutInfoXPower(cc,:) = ...
+        LFPCoupling(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).mutInfoXPower(cc,:);
+    
+    laminarLFPCoupling_theta.(lamina.names{ll}).mrl(:,:,cc) = ...
+        LFPCoupling_theta(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).mrl(:,:,cc);
+    laminarLFPCoupling_theta.(lamina.names{ll}).meanpower(:,:,cc) = ...
+        LFPCoupling_theta(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).meanpower(:,:,cc);
+    laminarLFPCoupling_theta.(lamina.names{ll}).mutInfoXPower(cc,:) = ...
+        LFPCoupling_theta(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).mutInfoXPower(cc,:);
+    end
 
 
-%Get Cell Type Average
-for tt = 1:length(celltypes)
-    laminarLFPCoupling.(lamina.names{ll}).allmeanpower.(celltypes{tt}) = ...
-        nanmean(laminarLFPCoupling.(lamina.names{ll}).meanpower(:,:,CellClass.(celltypes{tt})),3);
-    laminarLFPCoupling.(lamina.names{ll}).almeanpMRL.(celltypes{tt}) = ...
-        nanmean(laminarLFPCoupling.(lamina.names{ll}).mrl(:,:,CellClass.(celltypes{tt})),3);
-    laminarLFPCoupling.(lamina.names{ll}).groupmutinf.(celltypes{tt}) = ...
-        nanmean(laminarLFPCoupling.(lamina.names{ll}).mutInfoXPower(CellClass.(celltypes{tt}),:),1);
+    %Get Cell Type Average
+    for tt = 1:length(celltypes)
+        laminarLFPCoupling.(lamina.names{ll}).allmeanpower.(celltypes{tt}) = ...
+            nanmean(laminarLFPCoupling.(lamina.names{ll}).meanpower(:,:,CellClass.(celltypes{tt})),3);
+        laminarLFPCoupling.(lamina.names{ll}).almeanpMRL.(celltypes{tt}) = ...
+            nanmean(laminarLFPCoupling.(lamina.names{ll}).mrl(:,:,CellClass.(celltypes{tt})),3);
+        laminarLFPCoupling.(lamina.names{ll}).groupmutinf.(celltypes{tt}) = ...
+            nanmean(laminarLFPCoupling.(lamina.names{ll}).mutInfoXPower(CellClass.(celltypes{tt}),:),1);
 
-end
+        laminarLFPCoupling_theta.(lamina.names{ll}).allmeanpower.(celltypes{tt}) = ...
+            nanmean(laminarLFPCoupling_theta.(lamina.names{ll}).meanpower(:,:,CellClass.(celltypes{tt})),3);
+        laminarLFPCoupling_theta.(lamina.names{ll}).almeanpMRL.(celltypes{tt}) = ...
+            nanmean(laminarLFPCoupling_theta.(lamina.names{ll}).mrl(:,:,CellClass.(celltypes{tt})),3);
+        laminarLFPCoupling_theta.(lamina.names{ll}).groupmutinf.(celltypes{tt}) = ...
+            nanmean(laminarLFPCoupling_theta.(lamina.names{ll}).mutInfoXPower(CellClass.(celltypes{tt}),:),1);
+    end
 
 end
 
 %%
-ll=1
+
     powermap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
     figure
     
@@ -427,5 +460,62 @@ ll=1
     end
     
     NiceSave('CouplingbyISI',figfolder,baseName,'includeDate',true)
+
     
+
+%% Figure Theta
+    figure
+    
+    subplot(3,3,1)
+        hold on
+        for tt = 1:length(celltypes)
+            plot(log2(laminarLFPCoupling_theta.PYR.freqs),laminarLFPCoupling_theta.PYR.groupmutinf.(celltypes{tt}),...
+                'linewidth',1,'color',cellcolor{tt})
+        end
+        for tt = 1:length(celltypes)
+            plot(log2(laminarLFPCoupling_theta.RAD.freqs),laminarLFPCoupling_theta.RAD.groupmutinf.(celltypes{tt}),...
+                '--','linewidth',1,'color',cellcolor{tt})
+        end
+        box off
+        axis tight
+        xlabel('f (Hz)');ylabel('I(Power;Theta)')
+            LogScale('x',2)    
+            
+    
+    for ll=1:2
+    for tt = 1:length(celltypes)
+    subplot(4,3,tt+(ll*3)+4)
+    colormap(gca,powermap)
+        imagesc(laminarLFPCoupling_theta.(lamina.names{ll}).Xbins,log2(laminarLFPCoupling_theta.(lamina.names{ll}).freqs),...
+            log2(laminarLFPCoupling_theta.(lamina.names{ll}).allmeanpower.(celltypes{tt}))')
+        colorbar
+        ColorbarWithAxis([-1.25 1.25],'Power (mean^-^1)')
+        %LogScale('x',10);
+        LogScale('y',2)
+        LogScale('c',2)
+        axis xy
+        xlabel('Theta Power (mean^-1)');ylabel('freq (Hz)')
+        title((celltypes{tt}))
+    end  
+    
+    
+    for tt = 1:length(celltypes)
+    subplot(4,3,tt+(ll*3)-2)
+        imagesc(laminarLFPCoupling_theta.(lamina.names{ll}).Xbins,log2(laminarLFPCoupling_theta.(lamina.names{ll}).freqs),...
+            laminarLFPCoupling_theta.(lamina.names{ll}).almeanpMRL.(celltypes{tt})')
+        colorbar
+        hold on
+        %caxis([0.5 1.5])
+        %LogScale('x',10);
+        LogScale('y',2)
+        ColorbarWithAxis([0 0.5],'Phase Coupling (pMRL)')
+
+        axis xy
+        xlabel('Theta Power (mean^-1)');ylabel('freq (Hz)')
+        title((celltypes{tt}))
+    end 
+    end
+    
+    NiceSave('CouplingbyTheta',figfolder,baseName,'includeDate',true)
+
 end
