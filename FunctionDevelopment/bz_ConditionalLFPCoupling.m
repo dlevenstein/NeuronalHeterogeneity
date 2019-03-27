@@ -264,6 +264,7 @@ end
 
 %% Output
 ConditionalLFPCoupling.Xbins = Xbins;
+ConditionalLFPCoupling.Xhist = Xhist;
 ConditionalLFPCoupling.freqs = filtLFP.freqs;
 ConditionalLFPCoupling.meanpower = meanpower;
 ConditionalLFPCoupling.mrl = mrl;
