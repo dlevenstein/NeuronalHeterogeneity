@@ -133,7 +133,6 @@ box off
 
 %% ISI Coupling conditioned on theta, theta/delta
 
-
 state = states{1};
 %ints = SleepState.ints.(state);
 
@@ -148,7 +147,6 @@ if sum(diff(SleepState.ints.(state),1,2))>usetime
 else
     windows = SleepState.ints.(state);
 end
-
 
 downsamplefactor = 2;
 lfp_laminar = bz_GetLFP([sessionInfo.channelTags.PYRChan sessionInfo.channelTags.RADChan],...
@@ -166,7 +164,7 @@ wavespec = bz_WaveSpec(lfp_laminar,'intervals',windows,'showprogress',true,'ncyc
     'showFig',true);
 %%
     LFPCoupling_thetarat(cc) = bz_ConditionalLFPCoupling( ISIStats.allspikes,ISIStats.allspikes.thetarat,wavespec,...
-        'Xbounds',[0.1 2.25],'intervals',windows,'showFig',true,'numXbins',30,...
+        'Xbounds',[0.1 2],'intervals',windows,'showFig',true,'numXbins',30,...
     'minX',25,'CellClass',CellClass,'spikeLim',20000,...
     'showFig',true);
 
