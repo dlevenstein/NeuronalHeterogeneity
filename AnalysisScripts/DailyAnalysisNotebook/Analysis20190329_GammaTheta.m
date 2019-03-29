@@ -1,4 +1,4 @@
-function [ ] = Analysis20190327(basePath,figfolder)
+function [ ] = Analysis20190329(basePath,figfolder)
 % Date 03/27/2019
 %
 %Goal: invesitgate the relationship between theta and high gamma/ripple
@@ -65,7 +65,7 @@ classline = {'-','-','--','--'};
      'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 
 %%
-thetalfp = bz_Filter(th_lfp,'passband',[6 10]);
+thetalfp = bz_Filter(th_lfp,'passband',[6 9]);
 deltalfp = bz_Filter(th_lfp,'passband',[2 20]);
 
 thetalfp.thetadelta = NormToInt(thetalfp.amp./deltalfp.amp,'mean',SleepState.ints.WAKEstate);
@@ -100,30 +100,53 @@ thetalfp.wakeidx = InIntervals(thetalfp.timestamps,SleepState.ints.WAKEstate);
 %%
 [ga_bytheta] = ConditionalHist(log2(thetalfp.amp(thetalfp.wakeidx)),log10(thetalfp.gammaamp(thetalfp.wakeidx)),...
     'Xbounds',[-3 2],'numXbins',30,'Ybounds',[-2 1.5],'numYbins',150,'minX',400);
-[ga_bythetarat] = ConditionalHist(log2(thetalfp.thetadelta(thetalfp.wakeidx)),log10(thetalfp.gammaamp(thetalfp.wakeidx)),...
-    'Xbounds',[-3 2.5],'numXbins',30,'Ybounds',[-2 1.5],'numYbins',150,'minX',400);
+[ga_bythetarat] = ConditionalHist((thetalfp.thetadelta(thetalfp.wakeidx)),(thetalfp.gammaamp(thetalfp.wakeidx)),...
+    'Xbounds',[0 4.5],'numXbins',30,'Ybounds',[0 15],'numYbins',200,'minX',400);
+
+[ga_bythetarat_log] = ConditionalHist(log2(thetalfp.thetadelta(thetalfp.wakeidx)),log2(thetalfp.gammaamp(thetalfp.wakeidx)),...
+    'Xbounds',[-3 3],'numXbins',30,'Ybounds',[-5 5],'numYbins',150,'minX',400);
+
 
 %%
 figure
-subplot(2,2,1)
+subplot(3,3,1)
 imagesc(ga_bytheta.Xbins,ga_bytheta.Ybins,log10(ga_bytheta.pYX)')
 axis xy
 LogScale('y',10)
 LogScale('x',2)
 
-subplot(2,2,3)
+subplot(3,3,4)
 bar(ga_bytheta.Xbins,ga_bytheta.Xhist)
 axis tight
 box off
 
-subplot(2,2,2)
-imagesc(ga_bythetarat.Xbins,ga_bythetarat.Ybins,log10(ga_bythetarat.pYX)')
+subplot(3,3,2)
+a = imagesc(ga_bythetarat.Xbins,ga_bythetarat.Ybins,log10(ga_bythetarat.pYX)');
+alpha(a,single((ga_bythetarat.XYhist')>5))
+box off
 axis xy
-LogScale('y',10)
-LogScale('x',2)
+%LogScale('y',10)
+%LogScale('x',2)
+xlabel('Theta Ratio');ylabel('Ga/Rp Power (120-200Hz)')
 
-subplot(2,2,4)
-bar(ga_bythetarat.Xbins,ga_bythetarat.Xhist)
+subplot(3,3,5)
+bar(ga_bythetarat.Xbins,ga_bythetarat.Xhist./thetalfp.samplingRate)
+axis tight
+box off
+
+
+
+subplot(3,3,3)
+a = imagesc(ga_bythetarat_log.Xbins,ga_bythetarat_log.Ybins,log10(ga_bythetarat_log.pYX)');
+alpha(a,single((ga_bythetarat_log.XYhist')>5))
+box off
+axis xy
+%LogScale('y',10)
+LogScale('xy',2)
+xlabel('Theta Ratio');ylabel('Ga/Rp Power (120-200Hz)')
+
+subplot(3,3,6)
+bar(ga_bythetarat_log.Xbins,ga_bythetarat_log.Xhist./thetalfp.samplingRate)
 axis tight
 box off
 
@@ -138,7 +161,7 @@ state = states{1};
 
 %Take only subset of time (random intervals) so wavelets doesn't break
 %computer (total 625s)
-usetime = 4000;%2500
+usetime = 5000;%2500
 winsize = 25;
 if sum(diff(SleepState.ints.(state),1,2))>usetime
     nwin = round(usetime./winsize);
@@ -157,16 +180,17 @@ for cc = 1:length(lfp_laminar.channels)
 wavespec = bz_WaveSpec(lfp_laminar,'intervals',windows,'showprogress',true,'ncyc',15,...
     'nfreqs',150,'frange',[1 312],'chanID',lfp_laminar.channels(cc));
 
-%% Coupling Conditioned on theta
-    LFPCoupling_theta(cc) = bz_ConditionalLFPCoupling( ISIStats.allspikes,ISIStats.allspikes.thetapower,wavespec,...
-        'Xbounds',[0.1 2.5],'intervals',windows,'showFig',true,'numXbins',30,...
-    'minX',25,'CellClass',CellClass,'spikeLim',20000,...
-    'showFig',true);
 %%
+
     LFPCoupling_thetarat(cc) = bz_ConditionalLFPCoupling( ISIStats.allspikes,ISIStats.allspikes.thetarat,wavespec,...
-        'Xbounds',[0.1 2],'intervals',windows,'showFig',true,'numXbins',30,...
+        'Xbounds',[0.1 2],'intervals',windows,'showFig',true,'numXbins',25,...
     'minX',25,'CellClass',CellClass,'spikeLim',20000,...
-    'showFig',true);
+    'showFig',true,'binNorm',true);
+%%
+    LFPCoupling_thetarat_log(cc) = bz_ConditionalLFPCoupling( ISIStats.allspikes,ISIStats.allspikes.thetarat_log,wavespec,...
+        'Xbounds',[-2.5 2],'intervals',windows,'showFig',true,'numXbins',25,...
+    'minX',25,'CellClass',CellClass,'spikeLim',20000,...
+    'showFig',true,'binNorm',true);
 
 end
 
@@ -213,8 +237,10 @@ for ll =1:2
     %fields = fieldnames(LFPCoupling);
     laminarLFPCoupling_thetarat.(lamina.names{ll}).Xbins = LFPCoupling_thetarat(1).Xbins;
     laminarLFPCoupling_thetarat.(lamina.names{ll}).freqs	 = LFPCoupling_thetarat(1).freqs;
-    laminarLFPCoupling_theta.(lamina.names{ll}).Xbins = LFPCoupling_theta(1).Xbins;
-    laminarLFPCoupling_theta.(lamina.names{ll}).freqs = LFPCoupling_theta(1).freqs;
+    
+	laminarLFPCoupling_thetarat_log.(lamina.names{ll}).Xbins = LFPCoupling_thetarat_log(1).Xbins;
+    laminarLFPCoupling_thetarat_log.(lamina.names{ll}).freqs	 = LFPCoupling_thetarat_log(1).freqs;
+
 
     for cc = 1:spikes.numcells
     laminarLFPCoupling_thetarat.(lamina.names{ll}).mrl(:,:,cc) = ...
@@ -224,12 +250,13 @@ for ll =1:2
     laminarLFPCoupling_thetarat.(lamina.names{ll}).mutInfoXPower(cc,:) = ...
         LFPCoupling_thetarat(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).mutInfoXPower(cc,:);
     
-    laminarLFPCoupling_theta.(lamina.names{ll}).mrl(:,:,cc) = ...
-        LFPCoupling_theta(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).mrl(:,:,cc);
-    laminarLFPCoupling_theta.(lamina.names{ll}).meanpower(:,:,cc) = ...
-        LFPCoupling_theta(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).meanpower(:,:,cc);
-    laminarLFPCoupling_theta.(lamina.names{ll}).mutInfoXPower(cc,:) = ...
-        LFPCoupling_theta(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).mutInfoXPower(cc,:);
+    laminarLFPCoupling_thetarat_log.(lamina.names{ll}).mrl(:,:,cc) = ...
+        LFPCoupling_thetarat_log(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).mrl(:,:,cc);
+    laminarLFPCoupling_thetarat_log.(lamina.names{ll}).meanpower(:,:,cc) = ...
+        LFPCoupling_thetarat_log(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).meanpower(:,:,cc);
+    laminarLFPCoupling_thetarat_log.(lamina.names{ll}).mutInfoXPower(cc,:) = ...
+        LFPCoupling_thetarat_log(ss,lamina.(lamina.names{ll}).cellchan(cc)+offset).mutInfoXPower(cc,:);
+
     end
 
 
@@ -242,95 +269,22 @@ for ll =1:2
         laminarLFPCoupling_thetarat.(lamina.names{ll}).groupmutinf.(celltypes{tt}) = ...
             nanmean(laminarLFPCoupling_thetarat.(lamina.names{ll}).mutInfoXPower(CellClass.(celltypes{tt}),:),1);
 
-        laminarLFPCoupling_theta.(lamina.names{ll}).allmeanpower.(celltypes{tt}) = ...
-            nanmean(laminarLFPCoupling_theta.(lamina.names{ll}).meanpower(:,:,CellClass.(celltypes{tt})),3);
-        laminarLFPCoupling_theta.(lamina.names{ll}).almeanpMRL.(celltypes{tt}) = ...
-            nanmean(laminarLFPCoupling_theta.(lamina.names{ll}).mrl(:,:,CellClass.(celltypes{tt})),3);
-        laminarLFPCoupling_theta.(lamina.names{ll}).groupmutinf.(celltypes{tt}) = ...
-            nanmean(laminarLFPCoupling_theta.(lamina.names{ll}).mutInfoXPower(CellClass.(celltypes{tt}),:),1);
+        laminarLFPCoupling_thetarat_log.(lamina.names{ll}).allmeanpower.(celltypes{tt}) = ...
+            nanmean(laminarLFPCoupling_thetarat_log.(lamina.names{ll}).meanpower(:,:,CellClass.(celltypes{tt})),3);
+        laminarLFPCoupling_thetarat_log.(lamina.names{ll}).almeanpMRL.(celltypes{tt}) = ...
+            nanmean(laminarLFPCoupling_thetarat_log.(lamina.names{ll}).mrl(:,:,CellClass.(celltypes{tt})),3);
+        laminarLFPCoupling_thetarat_log.(lamina.names{ll}).groupmutinf.(celltypes{tt}) = ...
+            nanmean(laminarLFPCoupling_thetarat_log.(lamina.names{ll}).mutInfoXPower(CellClass.(celltypes{tt}),:),1);
     end
 
 end
 
 
-%% Figure Theta
 
-powermap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
-    figure
-    
-    subplot(3,3,1)
-        hold on
-        for tt = 1:length(celltypes)
-            plot(log2(laminarLFPCoupling_theta.PYR.freqs),laminarLFPCoupling_theta.PYR.groupmutinf.(celltypes{tt}),...
-                'linewidth',1,'color',cellcolor{tt})
-        end
-        for tt = 1:length(celltypes)
-            plot(log2(laminarLFPCoupling_theta.RAD.freqs),laminarLFPCoupling_theta.RAD.groupmutinf.(celltypes{tt}),...
-                '--','linewidth',1,'color',cellcolor{tt})
-        end
-        box off
-        axis tight
-        xlabel('f (Hz)');ylabel('I(Power;Theta)')
-            LogScale('x',2)    
-            
-    
-    for ll=1:2
-    for tt = 1:length(celltypes)
-    subplot(4,3,tt+(ll*3)+4)
-    colormap(gca,powermap)
-        imagesc(laminarLFPCoupling_theta.(lamina.names{ll}).Xbins,log2(laminarLFPCoupling_theta.(lamina.names{ll}).freqs),...
-            log2(laminarLFPCoupling_theta.(lamina.names{ll}).allmeanpower.(celltypes{tt}))')
-        colorbar
-        ColorbarWithAxis([-1.25 1.25],'Power (mean^-^1)')
-        %LogScale('x',10);
-        LogScale('y',2)
-        LogScale('c',2)
-        axis xy
-        xlabel('Theta Power (mean^-1)');ylabel('freq (Hz)')
-    end  
-    
-    
-    for tt = 1:length(celltypes)
-    subplot(4,3,tt+(ll*3)-2)
-        imagesc(laminarLFPCoupling_theta.(lamina.names{ll}).Xbins,log2(laminarLFPCoupling_theta.(lamina.names{ll}).freqs),...
-            laminarLFPCoupling_theta.(lamina.names{ll}).almeanpMRL.(celltypes{tt})')
-        colorbar
-        hold on
-        %caxis([0.5 1.5])
-        %LogScale('x',10);
-        LogScale('y',2)
-        ColorbarWithAxis([0 0.5],'Phase Coupling (pMRL)')
-
-        axis xy
-        xlabel('Theta Power (mean^-1)');ylabel('freq (Hz)')
-        %title((celltypes{tt}))
-                if ll==1
-        title((celltypes{tt}))
-        end
-    end 
-    end
-    
-    NiceSave('CouplingbyTheta',figfolder,baseName,'includeDate',true)
-    
     
 %% Figure Theta Ratio
     figure
-    
-    subplot(3,3,1)
-        hold on
-        for tt = 1:length(celltypes)
-            plot(log2(laminarLFPCoupling_thetarat.PYR.freqs),laminarLFPCoupling_thetarat.PYR.groupmutinf.(celltypes{tt}),...
-                'linewidth',1,'color',cellcolor{tt})
-        end
-        for tt = 1:length(celltypes)
-            plot(log2(laminarLFPCoupling_thetarat.RAD.freqs),laminarLFPCoupling_thetarat.RAD.groupmutinf.(celltypes{tt}),...
-                '--','linewidth',1,'color',cellcolor{tt})
-        end
-        box off
-        axis tight
-        xlabel('f (Hz)');ylabel('I(Power;Theta)')
-            LogScale('x',2)    
-            
+       
     
     for ll=1:2
     for tt = 1:length(celltypes)
@@ -344,7 +298,7 @@ powermap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
         LogScale('y',2)
         LogScale('c',2)
         axis xy
-        xlabel('Theta Power (mean^-1)');ylabel('freq (Hz)')
+        xlabel('Theta Ratio (mean^-^1)');ylabel('freq (Hz)')
     end  
     
     
@@ -357,10 +311,10 @@ powermap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
         %caxis([0.5 1.5])
         %LogScale('x',10);
         LogScale('y',2)
-        ColorbarWithAxis([0 0.4],'Phase Coupling (pMRL)')
+        ColorbarWithAxis([0 0.3],'Phase Coupling (pMRL)')
 
         axis xy
-        xlabel('Theta Power (mean^-1)');ylabel('freq (Hz)')
+        xlabel('Theta Ratio (mean^-^1)');ylabel('freq (Hz)')
         %title((celltypes{tt}))
         if ll==1
         title((celltypes{tt}))
@@ -368,5 +322,89 @@ powermap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
     end 
     end
     
+    
+    subplot(4,3,1)
+        a = imagesc(ga_bythetarat.Xbins,ga_bythetarat.Ybins,log10(ga_bythetarat.pYX)');
+        alpha(a,single((ga_bythetarat.XYhist')>5))
+        box off
+        axis xy
+        %LogScale('y',10)
+        %LogScale('x',2)
+        xlabel('Theta Ratio');ylabel('Ga/Rp Power (120-200Hz)')
+
+	subplot(4,3,4)
+        bar(ga_bythetarat.Xbins,ga_bythetarat.Xhist./thetalfp.samplingRate)
+        axis tight
+        box off
+        xlabel('Theta Ratio');ylabel('Occupancy (s)')
+
+
+
+
+
+    
     NiceSave('CouplingbyThetarat',figfolder,baseName,'includeDate',true)
+    
+    
+    
+%% Figure Theta Ratio Log
+    figure
+       
+    
+    for ll=1:2
+    for tt = 1:length(celltypes)
+    subplot(4,3,tt+(ll*3)+4)
+    colormap(gca,powermap)
+        imagesc(laminarLFPCoupling_thetarat_log.(lamina.names{ll}).Xbins,log2(laminarLFPCoupling_thetarat_log.(lamina.names{ll}).freqs),...
+            log2(laminarLFPCoupling_thetarat_log.(lamina.names{ll}).allmeanpower.(celltypes{tt}))')
+        colorbar
+        ColorbarWithAxis([-1.25 1.25],'Power (mean^-^1)')
+        %LogScale('x',10);
+        LogScale('y',2)
+        LogScale('c',2)
+        axis xy
+        xlabel('Theta Ratio (mean^-^1)');ylabel('freq (Hz)')
+    end  
+    
+    
+    for tt = 1:length(celltypes)
+    subplot(4,3,tt+(ll*3)-2)
+        imagesc(laminarLFPCoupling_thetarat_log.(lamina.names{ll}).Xbins,log2(laminarLFPCoupling_thetarat_log.(lamina.names{ll}).freqs),...
+            laminarLFPCoupling_thetarat_log.(lamina.names{ll}).almeanpMRL.(celltypes{tt})')
+        colorbar
+        hold on
+        %caxis([0.5 1.5])
+        %LogScale('x',10);
+        LogScale('y',2)
+        ColorbarWithAxis([0 0.3],'Phase Coupling (pMRL)')
+
+        axis xy
+        xlabel('Theta Ratio (mean^-^1)');ylabel('freq (Hz)')
+        %title((celltypes{tt}))
+        if ll==1
+        title((celltypes{tt}))
+        end
+    end 
+    end
+    
+   
+
+
+
+    subplot(4,3,1)
+        a = imagesc(ga_bythetarat_log.Xbins,ga_bythetarat_log.Ybins,log10(ga_bythetarat_log.pYX)');
+        alpha(a,single((ga_bythetarat_log.XYhist')>5))
+        box off
+        axis xy
+        %LogScale('y',10)
+        LogScale('xy',2)
+        xlabel('Theta Ratio');ylabel('Ga/Rp Power (120-200Hz)')
+
+    subplot(4,3,4)
+        bar(ga_bythetarat_log.Xbins,ga_bythetarat_log.Xhist./thetalfp.samplingRate)
+        axis tight
+        box off
+
+    
+    NiceSave('CouplingbyThetarat_log',figfolder,baseName,'includeDate',true)
 end

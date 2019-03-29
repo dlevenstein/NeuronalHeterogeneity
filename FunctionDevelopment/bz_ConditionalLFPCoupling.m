@@ -23,6 +23,9 @@ function [ ConditionalLFPCoupling ] = bz_ConditionalLFPCoupling( spikes,conditio
 %   'minX'      minumum number of spikes to calculate coupling (default 25)
 %   'spikeLim'  limit number of spikes to look at for each cell 
 %               (randomly omits spikes, default: Inf)
+%   'binNorm'   default: false. normalize power for spike times for each 
+%               cell in each X bin, as opposed to all recording time 
+%               (recommended to try if power is non-uniform across bins)
 %   'showFig'   true/false
 %   'CellClass' structure containing class of each cell for figure
 %               (from bz_CellClassification)
@@ -53,6 +56,7 @@ addParameter(p,'saveFig',false)
 addParameter(p,'figName','CondLFPCouping')
 addParameter(p,'baseName',[])
 addParameter(p,'spikeLim',Inf)
+addParameter(p,'binNorm',false)
 parse(p,varargin{:})
 numXbins = p.Results.numXbins;
 Xbounds = p.Results.Xbounds;
@@ -64,6 +68,7 @@ saveFig = p.Results.saveFig;
 figName = p.Results.figName;
 baseName = p.Results.baseName;
 spikeLim = p.Results.spikeLim;
+binNorm = p.Results.binNorm;
 
 
 %% Restrict spikes and lfp to the interval
@@ -124,10 +129,16 @@ for xx = 1:length(Xbins)
         nanmean(abs(lfp(binID==xx,:))),...
         spikes.LFP,spikes.XbinID,'UniformOutput',false);
     
+    if binNorm
+        meanpowers = cellfun(@(lfp,binID) mean(abs(lfp(binID==xx,:)),1),spikes.LFP,spikes.XbinID,'UniformOutput',false);
+    else
+        meanpowers = 1;
+    end
+    
     %Mean resultant vector
-    pMRVtemp = cellfun(@(lfp,binID) ...
-        nanmean(abs(lfp(binID==xx,:)).*exp(1i.*angle(lfp(binID==xx,:)))),...
-        spikes.LFP,spikes.XbinID,'UniformOutput',false);
+    pMRVtemp = cellfun(@(lfp,binID,norm) ...
+        nanmean(abs(lfp(binID==xx,:)).*exp(1i.*angle(lfp(binID==xx,:))))./norm,...
+        spikes.LFP,spikes.XbinID,meanpowers,'UniformOutput',false);
    
    for cc = 1:spikes.numcells
        meanpower(xx,:,cc)=meanpowertemp{cc};
