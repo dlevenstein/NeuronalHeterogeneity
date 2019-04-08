@@ -101,10 +101,10 @@ thetalfp.wakeidx = InIntervals(thetalfp.timestamps,SleepState.ints.WAKEstate);
 [ga_bytheta] = ConditionalHist(log2(thetalfp.amp(thetalfp.wakeidx)),log10(thetalfp.gammaamp(thetalfp.wakeidx)),...
     'Xbounds',[-3 2],'numXbins',30,'Ybounds',[-2 1.5],'numYbins',150,'minX',400);
 [ga_bythetarat] = ConditionalHist((thetalfp.thetadelta(thetalfp.wakeidx)),(thetalfp.gammaamp(thetalfp.wakeidx)),...
-    'Xbounds',[0 4.5],'numXbins',30,'Ybounds',[0 15],'numYbins',200,'minX',400);
+    'Xbounds',[0.1 2],'numXbins',20,'Ybounds',[0 15],'numYbins',200,'minX',400);
 
 [ga_bythetarat_log] = ConditionalHist(log2(thetalfp.thetadelta(thetalfp.wakeidx)),log2(thetalfp.gammaamp(thetalfp.wakeidx)),...
-    'Xbounds',[-3 3],'numXbins',30,'Ybounds',[-5 5],'numYbins',150,'minX',400);
+    'Xbounds',[-2.5 2],'numXbins',20,'Ybounds',[-5 5],'numYbins',150,'minX',400);
 
 
 %%
@@ -161,7 +161,7 @@ state = states{1};
 
 %Take only subset of time (random intervals) so wavelets doesn't break
 %computer (total 625s)
-usetime = 5000;%2500
+usetime = 6000;%2500
 winsize = 25;
 if sum(diff(SleepState.ints.(state),1,2))>usetime
     nwin = round(usetime./winsize);
@@ -183,12 +183,12 @@ wavespec = bz_WaveSpec(lfp_laminar,'intervals',windows,'showprogress',true,'ncyc
 %%
 
     LFPCoupling_thetarat(cc) = bz_ConditionalLFPCoupling( ISIStats.allspikes,ISIStats.allspikes.thetarat,wavespec,...
-        'Xbounds',[0.1 2],'intervals',windows,'showFig',true,'numXbins',25,...
+        'Xbounds',[0.1 2],'intervals',windows,'showFig',true,'numXbins',20,...
     'minX',25,'CellClass',CellClass,'spikeLim',20000,...
     'showFig',true,'binNorm',true);
 %%
     LFPCoupling_thetarat_log(cc) = bz_ConditionalLFPCoupling( ISIStats.allspikes,ISIStats.allspikes.thetarat_log,wavespec,...
-        'Xbounds',[-2.5 2],'intervals',windows,'showFig',true,'numXbins',25,...
+        'Xbounds',[-2.5 2],'intervals',windows,'showFig',true,'numXbins',20,...
     'minX',25,'CellClass',CellClass,'spikeLim',20000,...
     'showFig',true,'binNorm',true);
 
@@ -227,6 +227,7 @@ end
 %% Get the spike-lfp coupling for each cell from its appropriate spot
 clear laminarLFPCoupling_theta
 clear laminarLFPCoupling_thetarat
+clear laminarLFPCoupling_thetarat_log
 ss = 1;
 for ll =1:2
     %ll = 2;
@@ -283,6 +284,8 @@ end
 
     
 %% Figure Theta Ratio
+powermap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
+
     figure
        
     
@@ -360,7 +363,7 @@ end
         colorbar
         ColorbarWithAxis([-1.25 1.25],'Power (mean^-^1)')
         %LogScale('x',10);
-        LogScale('y',2)
+        LogScale('xy',2)
         LogScale('c',2)
         axis xy
         xlabel('Theta Ratio (mean^-^1)');ylabel('freq (Hz)')
@@ -375,7 +378,7 @@ end
         hold on
         %caxis([0.5 1.5])
         %LogScale('x',10);
-        LogScale('y',2)
+        LogScale('xy',2)
         ColorbarWithAxis([0 0.3],'Phase Coupling (pMRL)')
 
         axis xy
@@ -390,10 +393,10 @@ end
    
 
 
-
+forcolor = ga_bythetarat_log.pYX;forcolor((ga_bythetarat_log.XYhist)<=20)=0;
     subplot(4,3,1)
-        a = imagesc(ga_bythetarat_log.Xbins,ga_bythetarat_log.Ybins,log10(ga_bythetarat_log.pYX)');
-        alpha(a,single((ga_bythetarat_log.XYhist')>5))
+        a = imagesc(ga_bythetarat_log.Xbins,ga_bythetarat_log.Ybins,log10(forcolor)');
+        alpha(a,single((ga_bythetarat_log.XYhist')>20))
         box off
         axis xy
         %LogScale('y',10)
