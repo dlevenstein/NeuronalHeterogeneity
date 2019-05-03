@@ -321,7 +321,7 @@ NiceSave('ISIfig',figfolder,[])
 %% Example Figure
 figure
 for ee = 1:4
-    subplot(6,3,3.*ee-1)
+    subplot(6,4,4.*ee-2)
     hold on
     for ss = 1:2 
         plot(ISIstats.(regions{rr}).ISIhist.logbins(1,:),ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(excells(ee),:),...
@@ -354,6 +354,7 @@ for ee = 1:4
     end
 
 end
+NiceSave('ISexamples',figfolder,[])
 
 
 %%
