@@ -41,14 +41,21 @@ ss = 1;
 %%
 for rr = 1:length(regions)
     for ss = 1:3
-        [ratecorr.(regions{rr}).(statenames{ss}) corrsig.(regions{rr}).(statenames{ss})] = corr(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(CellClass.(regions{rr}).pE,:),...
-            (ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).pE))','type','spearman','rows','complete');
+        [ratecorr.(regions{rr}).(statenames{ss}) corrsig.(regions{rr}).(statenames{ss})] = ...
+            corr(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(CellClass.(regions{rr}).pE,:),...
+            log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).pE))','type','spearman','rows','complete');
+        for ii = 1:length(ISIstats.(regions{rr}).ISIhist.logbins(1,:))
+        ratemutinf.(regions{rr}).(statenames{ss})(ii) = ...
+            mutualinfo(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(CellClass.(regions{rr}).pE,ii),...
+            log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).pE))');
+        end
     end
 end
 
 
 %% Sorts for plot
 sorttypes = {'rate'};
+tt =1
 %Make the cell-type specific sortings
 for rr = 1:length(regions)
     for ss = 1:length(statenames)
@@ -96,22 +103,11 @@ end
 figure
 plot(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(CellClass.(regions{rr}).pE,25),...
     log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).pE)),'.')
-%%
-figure
 
-    for rr = 1:length(regions)
-        subplot(2,2,rr)
-        hold on
-        plot(ISIstats.(regions{rr}).ISIhist.logbins([1 end]),[0 0],'k')
-        for ss = 1:3
-            plot(ISIstats.(regions{rr}).ISIhist.logbins(1,:),ratecorr.(regions{rr}).(statenames{ss}),'color',statecolors{ss})
-        end
-        LogScale('x',10)
-    end
 
     
     %%
-    
+    histcolors = flipud(gray);
     NREMhistcolors = makeColorMap([1 1 1],[0 0 0.8]);
 REMhistcolors = makeColorMap([1 1 1],[0.8 0 0]);
 statecolormap = {histcolors,NREMhistcolors,REMhistcolors};
@@ -174,6 +170,7 @@ for rr = 1:length(regions)
     end
     LogScale('x',10)
     xlim((ISIstats.(regions{rr}).ISIhist.logbins(1,[1 end])))
+    xlabel('ISI (s)');ylabel('corr(p(ISI),rate)')
 end
 
     NiceSave('pISIandCellRate',figfolder,[],'includeDate',true)
