@@ -176,5 +176,5 @@ for rr = 1:length(regions)
     xlim((ISIstats.(regions{rr}).ISIhist.logbins(1,[1 end])))
 end
 
-    NiceSave('pISIandCellRate',figfolder,baseName,'includeDate',true)
+    NiceSave('pISIandCellRate',figfolder,[],'includeDate',true)
 
