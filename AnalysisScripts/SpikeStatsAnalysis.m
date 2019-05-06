@@ -25,6 +25,7 @@ SleepState = bz_LoadStates(basePath,'SleepState');
 lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
     'basepath',basePath,'noPrompts',true);
 
+[celltypes,~,typeidx] = unique(CellClass.label);
 %%
 statenames = {'NREMstate','WAKEstate','REMstate'};
 statecolors = {'b','k','r'};
@@ -36,6 +37,49 @@ numstates = length(statenames);
     'savecellinfo',true,'basePath',basePath,'forceRedetect',true);
 
 
+%% CV2/ISI joint stats
+
+%CV2 prev spike
+ISIstats.allspikes.CV2nm1 = cellfun(@(X) [nan; X(1:end-1)],...
+    ISIstats.allspikes.CV2,'UniformOutput',false);
+
+for ss = 1:length(statenames)
+state = statenames{ss};
+ISIstats.allspikes.instate = cellfun(@(X) InIntervals(X,double(SleepState.ints.(state))),...
+    ISIstats.allspikes.times,'UniformOutput',false);
+
+%Both adjacent cpikes CV2
+[ ISICV2 ] = cellfun(@(X,Y,Z,W) ConditionalHist( log10([X(W);X(W)]),[Y(W);Z(W)],...
+    'Xbounds',[-2.6 1],'numXbins',75,'Ybounds',[0 2],'numYbins',75),...
+    ISIstats.allspikes.ISIs,ISIstats.allspikes.CV2nm1,...
+    ISIstats.allspikes.CV2,ISIstats.allspikes.instate,...
+    'UniformOutput',false);
+
+% %Both adjacent cpikes CV2 - mean normed ISI
+% [ ISICV2 ] = cellfun(@(X,Y,Z,W) ConditionalHist( log10([X(W);X(W)]./mean([X(W);X(W)])),[Y(W);Z(W)],...
+%     'Xbounds',[-3.5 1],'numXbins',75,'Ybounds',[0 2],'numYbins',75),...
+%     ISIStats.allspikes.ISIs,ISIStats.allspikes.CV2nm1,...
+%     ISIStats.allspikes.CV2,ISIStats.allspikes.instate,...
+%     'UniformOutput',false);
+
+%Mean of adj spikes cv2
+% [ ISICV2 ] = cellfun(@(X,Y,W) ConditionalHist( log10(X(W)),Y(W),...
+%     'Xbounds',[-2.6 1],'numXbins',75,'Ybounds',[0 2],'numYbins',75),...
+%     ISIStats.allspikes.ISIs,ISIStats.allspikes.meanCV2,...
+%     ISIStats.allspikes.instate,...
+%     'UniformOutput',false);
+
+ISICV2 = cat(1,ISICV2{:});
+ISICV2 = CollapseStruct( ISICV2,3);
+
+
+for tt = 1:length(celltypes)
+    CV2distbyPOP.(state).(celltypes{tt}) = nanmean(ISICV2.pYX(:,:,CellClass.(celltypes{tt})),3);
+    CV2distjointPOP.(state).(celltypes{tt}) = nanmean(ISICV2.XYprob(:,:,CellClass.(celltypes{tt})),3);
+    meanCV2byPOP.(state).(celltypes{tt}) = nanmean(ISICV2.meanYX(:,:,CellClass.(celltypes{tt})),3);
+end
+
+end
 
 %% CV/CV2 as a f'n of rate
 figure
