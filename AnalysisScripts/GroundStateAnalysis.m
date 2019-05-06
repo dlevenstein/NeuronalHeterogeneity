@@ -6,7 +6,7 @@ function [ ISIoccupancy ] = GroundStateAnalysis( basePath,figfolder )
 %reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-%basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
+basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
 %basePath = [reporoot,'Datasets/onDesktop/AG_HPC/Achilles_10252013'];
 %basePath = pwd;
 %figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
@@ -68,7 +68,21 @@ for ss = 1:3
     ISIoccupancy.(state).loghist = hist(log10(ISIrate.ISI(ISIrate.instate,:)),ISIoccupancy.logbins);
     ISIoccupancy.(state).loghist = ISIoccupancy.(state).loghist./length(ISIrate.timestamps(ISIrate.instate));
     %ISIoccupancy.(state).loghist(ISIoccupancy.(state).loghist==0)=nan;
+    
+    %% Calculate occupancy statistics
+    OccupancyStats.(state).mean = mean(ISIrate.ISI(ISIrate.instate,:));
+    OccupancyStats.(state).std = std(ISIrate.ISI(ISIrate.instate,:));
+    OccupancyStats.(state).meanlog = mean(log10(ISIrate.ISI(ISIrate.instate,:)));
+    OccupancyStats.(state).stdlog = std(log10(ISIrate.ISI(ISIrate.instate,:)));
 end
+
+%%
+figure
+subplot(2,2,1)
+plot(OccupancyStats.NREMstate.mean,OccupancyStats.WAKEstate.mean,'.')
+
+subplot(2,2,2)
+plot(OccupancyStats.NREMstate.mean,OccupancyStats.NREMstate.std,'.')
 %%
 %cmap = [1 1 1;colormap(parula)];
 
