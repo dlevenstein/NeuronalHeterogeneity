@@ -387,8 +387,10 @@ for cc = 1:length(classnames)
             set(gca,'ytick',[]);set(gca,'xtick',[]);
             if ss==1 &rr==1
                 title(classnames{cc})
-            elseif ss==3
+            elseif ss==3 
+                if rr ==2
                 xlabel('ISI (s)')
+                end
                 set(gca,'xtick',[-2:1]);
                 LogScale('x',10)
             end
