@@ -76,10 +76,10 @@ for rr = 1:length(regions)
            meanCV2hist.(regions{rr}).std.(statenames{ss}).(classnames{cc}) = ...
                nanstd(ISIstats.(regions{rr}).CV2hist.(statenames{ss})(CellClass.(regions{rr}).(classnames{cc}),:),[],1);
            
-           meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}) = ...
+           meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).log = ...
                squeeze(nanmean(ISIstats.(regions{rr}).Jointhist.(statenames{ss}).log(CellClass.(regions{rr}).(classnames{cc}),:,:),1));
-           meanJointhist.(regions{rr}).std.(statenames{ss}).(classnames{cc}) = ...
-               squeeze(nanstd(ISIstats.(regions{rr}).Jointhist.(statenames{ss}).log(CellClass.(regions{rr}).(classnames{cc}),:,:),[],1));
+           meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).norm = ...
+               squeeze(nanmean(ISIstats.(regions{rr}).Jointhist.(statenames{ss}).norm(CellClass.(regions{rr}).(classnames{cc}),:,:),1));
        
        end
     end
@@ -383,7 +383,7 @@ for cc = 1:length(classnames)
         %colormap(gca,statecolormap{ss})
 
             imagesc(meanISIhist.logbins,ISIstats.(regions{rr}).CV2hist.bins(1,:),...
-                meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc})')
+                meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).log')
             hold on
             plot(meanISIhist.logbins,meanISIhist.(regions{rr}).(statenames{ss}).(classnames{cc})*25,...
                 'color',statecolors{ss},'linewidth',1)
@@ -404,13 +404,13 @@ for cc = 1:length(classnames)
                 set(gca,'ytick',[0 1 2]);
             end
             ylim([0 2]);
-            xlim([-2.5 1.5])
+            xlim([-2.5 1.7])
             
             switch cc
                 case 1
-                    caxis([0.2e-4 0.9e-3])
+                    caxis([0.5e-4 1.05e-3])
                 case 2
-                    caxis([0.2e-4 1.7e-3])
+                    caxis([0.5e-4 1.8e-3])
             end
             
     end
