@@ -9,7 +9,7 @@ datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets
 
 [BrainStateandSpikingAll,baseNames] = GetMatResults(figfolder,'SpikeStatsbyBrainState','select',true);
 BrainStateandSpikingAll = bz_CollapseStruct(BrainStateandSpikingAll);
-thisregion = 'fCTX';
+thisregion = 'CA1';
 
 %%
 ISIbyPSS = bz_CollapseStruct(BrainStateandSpikingAll.ISIbyPSS,'match','justcat',true);
@@ -53,6 +53,9 @@ subplot(4,3,tt*3-2)
          caxis([0 0.032])
     end
     xlim(ISIbyPSS.Xbins(1,[1 end],1))
+    if strcmp(thisregion,'CA1')
+        xlim([ISIbyPSS.Xbins(1,1,1) 1.9])
+    end
 end 
 
 
@@ -86,7 +89,9 @@ subplot(6,3,10)
     box off
     axis tight
     xlim(ISIbyPSS.Xbins(1,[1 end],1))
-    
+        if strcmp(thisregion,'CA1')
+        xlim([ISIbyPSS.Xbins(1,1,1) 1.9])
+    end
     
 subplot(6,3,11)
     hold on
