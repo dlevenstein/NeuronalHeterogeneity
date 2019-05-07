@@ -66,6 +66,9 @@ for rr = 1:length(regions)
            meanISIhist.(regions{rr}).std.(statenames{ss}).(classnames{cc}) = ...
                nanstd(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(CellClass.(regions{rr}).(classnames{cc}),:),[],1);
 
+           meannormISIhist.(regions{rr}).(statenames{ss}).(classnames{cc}) = ...
+               nanmean(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).meannorm(CellClass.(regions{rr}).(classnames{cc}),:),1);
+           
            meanreturnhist.(regions{rr}).(statenames{ss}).(classnames{cc}) = ...
                nanmean(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).return(:,:,CellClass.(regions{rr}).(classnames{cc})),3);
            meanreturnhist.(regions{rr}).std.(statenames{ss}).(classnames{cc}) = ...
@@ -331,7 +334,7 @@ end
 NiceSave('ISIfig',figfolder,[])
 
 
-%%
+%% CV2 figure
 
 figure
 for rr = 1:length(regions)
@@ -419,6 +422,102 @@ end
 
 NiceSave('CV2fig',figfolder,[])
 
+
+%% Normalized ISI figure
+figure
+for rr = 1:length(regions)
+
+for ss = 1:3
+    subplot(3,4,ss*4-3+(rr-1))
+    colormap(gca,statecolormap{ss})
+
+       % subplot(2,3,4)
+            imagesc((ISIstats.(regions{rr}).ISIhist.logbins(1,:)),[1 numcells.(regions{rr})],...
+                ISIstats.(regions{rr}).ISIhist.(statenames{ss}).meannorm(sorts.(regions{rr}).(statenames{ss}).ratebyclass,:))
+            hold on
+            plot(zeros(1,numcells.(regions{rr})),...
+                [1:numcells.(regions{rr})],'k.','markersize',1)
+            plot(ISIstats.(regions{rr}).ISIhist.logbins([1 end]),sum(inclasscells.(regions{rr}){1}).*[1 1]+0.5,'r')
+            
+            plot(meanISIhist.logbins,-meannormISIhist.(regions{rr}).(statenames{ss}).pE*5000+...
+                sum(inclasscells.(regions{rr}){1})+0.5,...
+                'color',statecolors{ss},'linewidth',2)
+            
+            plot(meanISIhist.logbins,-meannormISIhist.(regions{rr}).(statenames{ss}).pI*2000+...
+                sum(numcells.(regions{rr})),...
+                'color',statecolors{ss},'linewidth',2)
+            
+            xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
+            LogScale('x',10)
+            if ss==3
+                xlabel('norm ISI log(mean^-^1)')
+            else
+                set(gca,'xticklabels',[])
+            end
+            %colorbar
+          %  legend('1/Mean Firing Rate (s)','location','southeast')
+          if rr ==1
+            ylabel({statenames{ss},'Cell'})
+          end
+            set(gca,'yticklabel',[])
+            %legend('1/Mean Firing Rate (s)','location','southeast')
+            caxis([0 0.1])
+            %title('ISI Distribution (Log Scale)')
+            if ss==1
+                title(regions{rr})
+            end
+
+                
+end
+for cc = 1:length(classnames)
+	for ss = 1:3
+        subplot(6,4,2+4*ss-4+cc+(rr-1)*12)    
+        %colormap(gca,statecolormap{ss})
+
+            imagesc(meanISIhist.logbins,ISIstats.(regions{rr}).CV2hist.bins(1,:),...
+                meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).norm')
+            hold on
+            plot(meanISIhist.logbins,meannormISIhist.(regions{rr}).(statenames{ss}).(classnames{cc})*25,...
+                'color',statecolors{ss},'linewidth',1)
+            
+            axis xy
+            ylim([0 2]);
+            set(gca,'ytick',[]);%set(gca,'xtick',[]);
+            if ss==1 &rr==1
+                title(classnames{cc})
+            elseif ss==3 
+                if rr ==2
+                xlabel('Norm ISI (log(mean^-^1))')
+                end
+                %set(gca,'xtick',[-2:1]);
+                %LogScale('x',10)
+            end
+            if cc==1 
+                ylabel('CV2')
+                set(gca,'ytick',[0 1 2]);
+            end
+            
+            xlim([-3 1])
+            
+            switch cc
+                case 1
+                    switch rr
+                        case 1
+                            caxis([0.5e-4 1.2e-3])
+                        case 2
+                            if ss == 2; caxis([0.5e-4 0.8e-3])
+                            else; caxis([0.5e-4 0.6e-3])
+                            end
+                    end
+                case 2
+                    caxis([0.5e-4 1.8e-3])
+            end
+            
+    end
+end
+end
+
+NiceSave('CV2fig_meannorm',figfolder,[])
 %% Example Figure
 figure
 for ee = 1:4
