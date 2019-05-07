@@ -5,6 +5,7 @@ figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsAnalysis'];
 datasetPath.fCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/BW_CTX';
 datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC';
 regions = {'fCTX','CA1'};
+%regions = {'fCTX'};
 %%
 for rr = 1:length(regions)
     ISIstats.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
@@ -68,7 +69,17 @@ for rr = 1:length(regions)
                nanmean(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).return(:,:,CellClass.(regions{rr}).(classnames{cc})),3);
            meanreturnhist.(regions{rr}).std.(statenames{ss}).(classnames{cc}) = ...
                nanstd(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).return(:,:,CellClass.(regions{rr}).(classnames{cc})),[],3);
-
+            
+           meanCV2hist.(regions{rr}).(statenames{ss}).(classnames{cc}) = ...
+               nanmean(ISIstats.(regions{rr}).CV2hist.(statenames{ss})(CellClass.(regions{rr}).(classnames{cc}),:),1);
+           meanCV2hist.(regions{rr}).std.(statenames{ss}).(classnames{cc}) = ...
+               nanstd(ISIstats.(regions{rr}).CV2hist.(statenames{ss})(CellClass.(regions{rr}).(classnames{cc}),:),[],1);
+           
+           meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}) = ...
+               squeeze(nanmean(ISIstats.(regions{rr}).Jointhist.(statenames{ss})(CellClass.(regions{rr}).(classnames{cc}),:,:),1));
+           meanJointhist.(regions{rr}).std.(statenames{ss}).(classnames{cc}) = ...
+               squeeze(nanstd(ISIstats.(regions{rr}).Jointhist.(statenames{ss})(CellClass.(regions{rr}).(classnames{cc}),:,:),[],1));
+       
        end
     end
 end
@@ -317,6 +328,89 @@ end
 end
 
 NiceSave('ISIfig',figfolder,[])
+
+
+%%
+
+figure
+for rr = 1:length(regions)
+for ss = 1:3
+    subplot(3,4,ss*4-3+(rr-1))
+    colormap(gca,statecolormap{ss})
+
+       % subplot(2,3,4)
+            imagesc((ISIstats.(regions{rr}).CV2hist.bins(1,:)),[1 numcells.(regions{rr})],...
+                ISIstats.(regions{rr}).CV2hist.(statenames{ss})(sorts.(regions{rr}).(statenames{ss}).ratebyclass,:))
+            hold on
+            plot((ISIstats.(regions{rr}).summstats.(statenames{ss}).meanCV2(sorts.(regions{rr}).(statenames{ss}).ratebyclass)),...
+                [1:numcells.(regions{rr})],'k.','markersize',1)
+            plot(ISIstats.(regions{rr}).CV2hist.bins([1 end]),sum(inclasscells.(regions{rr}){1}).*[1 1]+0.5,'r')
+            
+            plot(meanISIhist.logbins,-meanCV2hist.(regions{rr}).(statenames{ss}).pE*7000+...
+                sum(inclasscells.(regions{rr}){1})+0.5,...
+                'color',statecolors{ss},'linewidth',2)
+            
+            plot(meanISIhist.logbins,-meanCV2hist.(regions{rr}).(statenames{ss}).pI*4000+...
+                sum(numcells.(regions{rr})),...
+                'color',statecolors{ss},'linewidth',2)
+            
+            xlim(ISIstats.(regions{rr}).CV2hist.bins([1 end]))
+            %LogScale('x',10)
+            if ss==3
+                xlabel('CV2 (s)')
+            else
+                set(gca,'xticklabels',[])
+            end
+            %colorbar
+          %  legend('1/Mean Firing Rate (s)','location','southeast')
+          if rr ==1
+            ylabel({statenames{ss},'Cell'})
+          end
+            set(gca,'yticklabel',[])
+            %legend('1/Mean Firing Rate (s)','location','southeast')
+            caxis([0 0.1])
+            %title('ISI Distribution (Log Scale)')
+            if ss==1
+                title(regions{rr})
+            end
+
+                
+end
+for cc = 1:length(classnames)
+	for ss = 1:3
+        subplot(6,4,2+4*ss-4+cc+(rr-1)*12)    
+        %colormap(gca,statecolormap{ss})
+
+            imagesc(meanISIhist.logbins,ISIstats.(regions{rr}).CV2hist.bins(1,:),...
+                meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc})')
+            axis xy
+            set(gca,'ytick',[]);set(gca,'xtick',[]);
+            if ss==1 &rr==1
+                title(classnames{cc})
+            elseif ss==3
+                xlabel('ISI (s)')
+                set(gca,'xtick',[-2:1]);
+                LogScale('x',10)
+            end
+            if cc==1 
+                ylabel('CV2')
+                set(gca,'ytick',[0 1 2]);
+            end
+            ylim([0 2]);
+            xlim([-2.5 1.5])
+            
+            switch cc
+                case 1
+                    caxis([0.2e-4 0.8e-3])
+                case 2
+                    caxis([0.2e-4 1.5e-3])
+            end
+            
+    end
+end
+end
+
+NiceSave('CV2fig',figfolder,[])
 
 %% Example Figure
 figure

@@ -3,11 +3,11 @@ function [ ISIoccupancy ] = GroundStateAnalysis( basePath,figfolder )
 %   Detailed explanation goes here
 %% Load Header
 %Initiate Paths
-%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
-%basePath = [reporoot,'Datasets/onDesktop/AG_HPC/Achilles_10252013'];
+%basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
+basePath = [reporoot,'Datasets/onDesktop/AG_HPC/Achilles_10252013'];
 %basePath = pwd;
 %figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);

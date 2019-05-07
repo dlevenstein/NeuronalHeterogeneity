@@ -235,7 +235,11 @@ close
 switch REDOJITTER
     case false
         resultsfile = fullfile(figfolder,[baseName,'.AnalysisResults.SpikeStatsAnalysis.mat']);
-        load(resultsfile)
+        if exist(resultsfile)
+            load(resultsfile)
+        else
+            jitterCV2 = [];
+        end
     case true
         %% Jitter control
         numtimewins = 30;
