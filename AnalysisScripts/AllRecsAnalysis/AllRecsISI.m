@@ -43,9 +43,9 @@ for rr = 1:length(regions)
                 intersect(sorts.(regions{rr}).(statenames{ss}).(sorttypes{tt}),...
                 find(inclasscells.(regions{rr}){cl}),'stable');
 
-            if cl==1
-                sorts.(regions{rr}).(statenames{ss}).([sorttypes{tt},'byclass'])=[];
-            end
+                if cl==1
+                    sorts.(regions{rr}).(statenames{ss}).([sorttypes{tt},'byclass'])=[];
+                end
             sorts.(regions{rr}).(statenames{ss}).([sorttypes{tt},'byclass']) = ...
                 [sorts.(regions{rr}).(statenames{ss}).([sorttypes{tt},'byclass']),...
                 sorts.(regions{rr}).(statenames{ss}).([sorttypes{tt},classnames{cl}])];
@@ -57,6 +57,7 @@ end
 
 %Calculate mean ISI dists by state and cell type
 meanISIhist.logbins = ISIstats.(regions{1}).ISIhist.logbins(1,:);
+meanCV2hist.bins = ISIstats.(regions{1}).CV2hist.bins(1,:);
 for rr = 1:length(regions)
     for ss = 1:length(statenames)
        for cc = 1:length(classnames)
@@ -76,9 +77,9 @@ for rr = 1:length(regions)
                nanstd(ISIstats.(regions{rr}).CV2hist.(statenames{ss})(CellClass.(regions{rr}).(classnames{cc}),:),[],1);
            
            meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}) = ...
-               squeeze(nanmean(ISIstats.(regions{rr}).Jointhist.(statenames{ss})(CellClass.(regions{rr}).(classnames{cc}),:,:),1));
+               squeeze(nanmean(ISIstats.(regions{rr}).Jointhist.(statenames{ss}).log(CellClass.(regions{rr}).(classnames{cc}),:,:),1));
            meanJointhist.(regions{rr}).std.(statenames{ss}).(classnames{cc}) = ...
-               squeeze(nanstd(ISIstats.(regions{rr}).Jointhist.(statenames{ss})(CellClass.(regions{rr}).(classnames{cc}),:,:),[],1));
+               squeeze(nanstd(ISIstats.(regions{rr}).Jointhist.(statenames{ss}).log(CellClass.(regions{rr}).(classnames{cc}),:,:),[],1));
        
        end
     end
@@ -346,11 +347,11 @@ for ss = 1:3
                 [1:numcells.(regions{rr})],'k.','markersize',1)
             plot(ISIstats.(regions{rr}).CV2hist.bins([1 end]),sum(inclasscells.(regions{rr}){1}).*[1 1]+0.5,'r')
             
-            plot(meanISIhist.logbins,-meanCV2hist.(regions{rr}).(statenames{ss}).pE*7000+...
+            plot(meanCV2hist.bins,-meanCV2hist.(regions{rr}).(statenames{ss}).pE*7000+...
                 sum(inclasscells.(regions{rr}){1})+0.5,...
                 'color',statecolors{ss},'linewidth',2)
             
-            plot(meanISIhist.logbins,-meanCV2hist.(regions{rr}).(statenames{ss}).pI*4000+...
+            plot(meanCV2hist.bins,-meanCV2hist.(regions{rr}).(statenames{ss}).pI*4000+...
                 sum(numcells.(regions{rr})),...
                 'color',statecolors{ss},'linewidth',2)
             
@@ -383,6 +384,10 @@ for cc = 1:length(classnames)
 
             imagesc(meanISIhist.logbins,ISIstats.(regions{rr}).CV2hist.bins(1,:),...
                 meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc})')
+            hold on
+            plot(meanISIhist.logbins,meanISIhist.(regions{rr}).(statenames{ss}).(classnames{cc})*25,...
+                'color',statecolors{ss},'linewidth',1)
+            
             axis xy
             set(gca,'ytick',[]);set(gca,'xtick',[]);
             if ss==1 &rr==1
@@ -403,9 +408,9 @@ for cc = 1:length(classnames)
             
             switch cc
                 case 1
-                    caxis([0.2e-4 0.8e-3])
+                    caxis([0.2e-4 0.9e-3])
                 case 2
-                    caxis([0.2e-4 1.5e-3])
+                    caxis([0.2e-4 1.7e-3])
             end
             
     end
