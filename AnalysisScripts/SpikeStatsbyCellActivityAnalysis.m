@@ -1,12 +1,12 @@
 function [ ] = SpikeStatsbyCellActivityAnalysis(basePath,figfolder)
 
 %% DEV
-%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
-basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
+reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+%reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
+%basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
-%basePath = '/mnt/proraidDL/Database/BWCRCNS/Dino_mPFC/Dino_061814';
-%basePath = pwd;
+%basePath = '/mnt/proraidDL/Database/BWCRCNS/Dino_mPFC/Dino_061814';s
+basePath = pwd;
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyCellActivityAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
@@ -15,8 +15,8 @@ ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
 SleepState = bz_LoadStates(basePath,'SleepState');
 SleepState.ints.ALL = [0 Inf];
-lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
-    'basepath',basePath);
+% lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
+%     'basepath',basePath);
 
 %% Cell types and states
 [celltypes,~,typeidx] = unique(CellClass.label);
@@ -26,10 +26,9 @@ statenames = fieldnames(SleepState.ints);
 %% Calculate spike count matrix
 
 %IDEA: Instead of constant time bin.... constant spike count bin.
-binsize = 0.25; %s
-binsize = 1; %s
-overlap = 10;
-spikemat = bz_SpktToSpkmat(spikes,'binsize',binsize,'overlap',overlap);
+dt = 1;
+binsize = 10;
+spikemat = bz_SpktToSpkmat(spikes,'dt',1,'binsize',binsize);
 
 
 for cc = 1:spikes.numcells
@@ -76,6 +75,7 @@ cellhists.meanisiVcv2 = cellfun(@(X,Y,Z) hist3([log10(X(Z)),Y(Z)],{cellhists.log
 cellhists.meanisiVcv2 = cellfun(@(X,Y) bsxfun(@(x,y) x./y,X,Y'),...
     cellhists.meanisiVcv2,cellhists.meanISIhist,...
     'UniformOutput',false);
+
 
 
 
@@ -297,26 +297,26 @@ LogScale('x',10)
 
 
 %%
-twin = bz_RandomWindowInIntervals(SleepState.ints.NREMstate,60);
-excell = randsample(spikes.numcells,1);
-figure
-subplot(3,1,1)
-bz_MultiLFPPlot(lfp,'timewin',twin,'spikes',spikes,'plotcells',excell)
+% twin = bz_RandomWindowInIntervals(SleepState.ints.NREMstate,60);
+% excell = randsample(spikes.numcells,1);
+% figure
+% subplot(3,1,1)
+% bz_MultiLFPPlot(lfp,'timewin',twin,'spikes',spikes,'plotcells',excell)
+% % subplot(3,1,2)
+% %     plot(ISIStats.allspikes.times{excell},log10(ISIStats.allspikes.ISIs{excell}),'.')
+% %     xlim(twin)
+% %     LogScale('y',10)
 % subplot(3,1,2)
-%     plot(ISIStats.allspikes.times{excell},log10(ISIStats.allspikes.ISIs{excell}),'.')
+%     plot(cspkbinstats.times{excell},log10(cspkbinstats.rate{excell}),'o-')
+%     axis tight
 %     xlim(twin)
 %     LogScale('y',10)
-subplot(3,1,2)
-    plot(cspkbinstats.times{excell},log10(cspkbinstats.rate{excell}),'o-')
-    axis tight
-    xlim(twin)
-    LogScale('y',10)
-    
-subplot(3,1,3)
-    plot(cspkbinstats.times{excell},(cspkbinstats.meanCV2{excell}),'o-')
-    axis tight
-    xlim(twin)
-    ylim([0 2])
+%     
+% subplot(3,1,3)
+%     plot(cspkbinstats.times{excell},(cspkbinstats.meanCV2{excell}),'o-')
+%     axis tight
+%     xlim(twin)
+%     ylim([0 2])
     
 
 
