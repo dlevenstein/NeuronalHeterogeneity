@@ -1,4 +1,5 @@
-function [ISIbyRate,CV2byRate,ISIbyCspkRate,CV2byCspkRate ] = SpikeStatsbyRate(basePath,figfolder)
+function [ISIbyRate,CV2byRate,ISIbyCspkRate,CV2byCspkRate,Cellmeanrate,...
+    binCV2byCspkRate] = SpikeStatsbyRate(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -14,6 +15,7 @@ function [ISIbyRate,CV2byRate,ISIbyCspkRate,CV2byCspkRate ] = SpikeStatsbyRate(b
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
 %basePath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC/Achilles_10252013';
+%basePath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/BW_CTX/20140526_277um';
 %basePath = pwd;
 %figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
@@ -54,8 +56,12 @@ cspkrate.times = cellfun(@(X) movmean(X,nspkintervals+1),ISIStats.allspikes.time
 for cc = 1:spikes.numcells
     ISIStats.allspikes.rate{cc} = interp1(spkmat.timestamps,spkmat.data(:,cc),...
         ISIStats.allspikes.times{cc},'nearest');
+    try
     ISIStats.allspikes.cspkrate{cc} = interp1(cspkrate.times{cc},cspkrate.rate{cc},...
         ISIStats.allspikes.times{cc},'nearest');
+    catch
+        ISIStats.allspikes.cspkrate{cc} = nan(size(cspkrate.times{cc}));
+    end
 end
 
 ISIStats.allspikes.ISInp1 = cellfun(@(X) [X(2:end); nan],...
@@ -68,6 +74,15 @@ ISIStats.allspikes.instate = cellfun(@(X) InIntervals(X,double(SleepState.ints.(
 cspkrate.instate = cellfun(@(X) InIntervals(X,double(SleepState.ints.(state))),...
     cspkrate.times,'UniformOutput',false);
 spkmat.instats = InIntervals(spkmat.timestamps,SleepState.ints.(state));
+
+%% Distribution of binned CV2 by Rates
+[ binCV2byCspkRate.(state) ] = cellfun(@(X,Z,W) ConditionalHist(log10(Z(W)),(X(W)),...
+    'Xbounds',[-2 2.5],'numXbins',60,'Ybounds',[0 2],'numYbins',75,'minX',40),...
+    cspkrate.meanCV2,...
+    cspkrate.rate,cspkrate.instate,...
+    'UniformOutput',false);
+binCV2byCspkRate.(state) = cat(1,binCV2byCspkRate.(state){:});
+binCV2byCspkRate.(state) = CollapseStruct( binCV2byCspkRate.(state),3);
 
 %% Conditional distirbutions: ISI, CV2
 maxrate = 40;
@@ -118,7 +133,24 @@ for tt = 1:length(celltypes)
     CV2byRate.(state).pop.(celltypes{tt}) = nanmean(CV2byRate.(state).XYprob(:,:,CellClass.(celltypes{tt})),3);
     ISIbyCspkRate.(state).pop.(celltypes{tt}) = nanmean(ISIbyCspkRate.(state).XYprob(:,:,CellClass.(celltypes{tt})),3);
     CV2byCspkRate.(state).pop.(celltypes{tt}) = nanmean(CV2byCspkRate.(state).XYprob(:,:,CellClass.(celltypes{tt})),3);
+    binCV2byCspkRate.(state).pop.(celltypes{tt}) = nanmean(binCV2byCspkRate.(state).pYX(:,:,CellClass.(celltypes{tt})),3);
+    
+    ISIbyRate.celltypeidx.(celltypes{tt}) = CellClass.(celltypes{tt});
+    CV2byRate.celltypeidx.(celltypes{tt}) = CellClass.(celltypes{tt});
+    ISIbyCspkRate.celltypeidx.(celltypes{tt}) = CellClass.(celltypes{tt});
+    CV2byCspkRate.celltypeidx.(celltypes{tt}) = CellClass.(celltypes{tt});
+    binCV2byCspkRate.celltypeidx.(celltypes{tt}) = CellClass.(celltypes{tt});
 end
+
+    if length(celltypes)==1
+        ISIbyRate.celltypeidx.pI = false(size(CellClass.pE));
+        CV2byRate.celltypeidx.pI = false(size(CellClass.pE));
+        ISIbyCspkRate.celltypeidx.pI = false(size(CellClass.pE));
+        CV2byCspkRate.celltypeidx.pI = false(size(CellClass.pE));
+        binCV2byCspkRate.celltypeidx.pI = false(size(CellClass.pE));
+    end
+
+Cellmeanrate.(state) = ISIStats.summstats.(state).meanrate;
 end
 %% Figure: rate
 
@@ -244,7 +276,29 @@ subplot(6,6,ss+(tt-1)*3+12)
 %          caxis([0 0.03])
 %     end
     
+end
+
+for tt = 1:length(celltypes)
+subplot(6,6,ss+(tt-1)*3+18)
+    imagesc(binCV2byCspkRate.(state).Xbins(1,:,1),binCV2byCspkRate.(state).Ybins(1,:,1), binCV2byCspkRate.(state).pop.(celltypes{tt})')
+    %hold on
+    %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
+    axis xy
+    %LogScale('y',10)
+    if ss==1
+    ylabel('CV2');end
+    %title((celltypes{tt}))
+	%colorbar
+%     if tt ==1 
+%         caxis([0 0.6e-3])
+%     elseif tt==2
+%          caxis([0 0.003])
+%     end
+    
 end 
+
+
+
 end
 NiceSave('ISIbyCspkRate',figfolder,baseName,'includeDate',true)
 
