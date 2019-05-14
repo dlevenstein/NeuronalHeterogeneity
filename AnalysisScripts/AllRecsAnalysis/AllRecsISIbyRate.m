@@ -1,15 +1,15 @@
-reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-%reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
+%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyRate'];
 
-datasetPath.fCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/BW_CTX';
-datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC';
+%datasetPath.fCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/BW_CTX';
+%datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC';
 %regions = {'fCTX','CA1'};
 %datasetPath = figfolder;
 
 [SpikeStatsbyRateAll,baseNames] = GetMatResults(figfolder,'SpikeStatsbyRate','select',true);
 SpikeStatsbyRateAll = bz_CollapseStruct(SpikeStatsbyRateAll);
-thisregion = 'CA1';
+thisregion = 'fCTX';
 
 %%
 ISIbyCspkRate = bz_CollapseStruct(SpikeStatsbyRateAll.ISIbyCspkRate,'match','justcat',true);
@@ -25,8 +25,8 @@ statecolors = {'k','b','r'};
 celltypes = fieldnames(ISIbyCspkRate.celltypeidx);
 for ss = 1:length(states)
 for tt = 1:length(celltypes)
-    ISIbyCspkRate.(states{ss}).pop.(celltypes{tt}) = nanmean(ISIbyCspkRate.(states{ss}).XYprob(:,:,ISIbyCspkRate.celltypeidx.(celltypes{tt})),3);
-    CV2byCspkRate.(states{ss}).pop.(celltypes{tt}) = nanmean(CV2byCspkRate.(states{ss}).XYprob(:,:,CV2byCspkRate.celltypeidx.(celltypes{tt})),3);
+    ISIbyCspkRate.(states{ss}).pop.(celltypes{tt}) = nanmean(ISIbyCspkRate.(states{ss}).pYX(:,:,ISIbyCspkRate.celltypeidx.(celltypes{tt})),3);
+    CV2byCspkRate.(states{ss}).pop.(celltypes{tt}) = nanmean(CV2byCspkRate.(states{ss}).pYX(:,:,CV2byCspkRate.celltypeidx.(celltypes{tt})),3);
     binCV2byCspkRate.(states{ss}).pop.(celltypes{tt}) = nanmean(binCV2byCspkRate.(states{ss}).pYX(:,:,binCV2byCspkRate.celltypeidx.(celltypes{tt})),3);
 
     ISIbyRate.(states{ss}).pop.(celltypes{tt}) = nanmean(ISIbyRate.(states{ss}).XYprob(:,:,ISIbyRate.celltypeidx.(celltypes{tt})),3);
@@ -57,7 +57,7 @@ subplot(4,3,ss)
     %title((celltypes{tt}))
     %colorbar
     if tt ==1 
-        caxis([0 1.5e-3])
+        caxis([0 0.5e-1])
     elseif tt==2
          caxis([0 2.5e-3])
     end
@@ -77,7 +77,7 @@ subplot(4,3,ss+3)
     %title((celltypes{tt}))
 	%colorbar
     if tt ==1 
-        caxis([0 0.75e-3])
+        caxis([0 0.04])
     elseif tt==2
          caxis([0 1e-3])
     end
@@ -99,7 +99,7 @@ subplot(4,3,ss+9)
     %title((celltypes{tt}))
     %colorbar
     if tt ==1 
-        caxis([0 0.15])
+        caxis([0 0.1])
     elseif tt==2
          caxis([0 0.15])
     end

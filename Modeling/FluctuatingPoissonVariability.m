@@ -288,34 +288,150 @@ end
 
 NiceSave('CompareFFCV2',figfolder,'Poiss')
 
+
 %% Reduction in variability with sinusoidal input
 
-dt = 0.002;
-save_dt = dt;
-numbins = 20;
-freq_log = logspace(-1.5,2.5,numbins);
-sigmas_log = logspace(-1,1,numbins);
-
-for tt = 1:length(thetas_log)
+dt = 0.001;
+%save_dt = dt;
+numbins = 25;
+duration = 5000; 
+freqs = logspace(-2,2,numbins);
+kappas = logspace(-1,3,numbins);
+t = [0:dt:duration]';
+for tt = 1:length(freqs)
     tt
-    for ss = 1:length(sigmas_log)
-        theta = thetas_log(tt);
-        sigma = sqrt(log(1+sigmas_log(ss).^2));
-        mu = log(1./sqrt(sigmas_log(ss).^2+1));
+    for ss = 1:length(kappas)
+        freq = freqs(tt);
+        amp = kappas(ss);
         
+        phase = mod(t,1./freq).*2*pi.*(freq);
+        rate = circ_vmpdf(phase, 0, amp);
+        rate = rate./mean(rate);
     %Generate OU noise drive with given std, time scale 
-    [drive,t] = OUNoise(theta,sigma,duration,dt,save_dt,numsignals);
-    exprate = exp(drive+mu);
+    %exprate = exp(drive);
+    %exprate = (exprate./mean(exprate));
+    %exprate = exprate
 
-    [ s ] = PoissonRateSpikeBins(exprate,dt);
+    [ s ] = PoissonRateSpikeBins(rate,dt);
     spiketimes = t(s);
     ISIs = diff(spiketimes);
     CV2 = 2.*abs(ISIs(2:end)-ISIs(1:end-1))./(ISIs(2:end)+ISIs(1:end-1));
-    meanCV2_log(tt,ss) = mean(CV2);
+    meanCV2_sin(tt,ss) = mean(CV2);
     end
 end
+   
+
+%% Examples
+
+
+examplefreqs = [1 1 0.1 10];
+exampleamps = [1  100  100  100];
+clear exprate
+clear exprate_trials
+numsignals = 1;
+for ee = 1:length(examplefreqs)
+    ee
+    freq = examplefreqs(ee);
+     amp = exampleamps(ee);
+        
+     
+    phase = mod(t,1./freq).*2*pi.*(freq);
+    rate_ex{ee} = circ_vmpdf(phase, 0, amp);
+    rate_ex{ee} = rate_ex{ee}./mean(rate_ex{ee});
+    [ s ] = PoissonRateSpikeBins(rate_ex{ee},dt);
+    spiketimes_ex{ee} = t(s);
     
+    %Get ISIs and CV2
+    ISIs_ex{ee} = diff(spiketimes_ex{ee});
+    CV2_ex{ee} = 2.*abs(ISIs_ex{ee}(2:end)-ISIs_ex{ee}(1:end-1))./(ISIs_ex{ee}(2:end)+ISIs_ex{ee}(1:end-1));
+    meanCV2_ex{ee} = mean(CV2_ex{ee});
+    
+    
+end
+
 %%
-xtest = linspace(0,2*pi,100);
+viewwin = [10 25];
+t_idx = t>=viewwin(1) & t<=viewwin(2);
+
+heatcolormap = makeColorMap([0 0 0.8],[1 1 1],[0.8 0 0]);
 figure
-plot(xtest,exp(sin(xtest)),'k')
+subplot(5,4,1)
+%colormap(gca,heatcolormap)
+    imagesc(log10(freqs),log10(kappas),meanCV2_sin')
+    hold on
+    plot(log10(examplefreqs),log10(exampleamps),'ro')
+    plot(log10(freqs([1 end])),[0 0],'k--')
+    plot([0 0],log10(kappas([1 end])),'k--')
+    axis xy
+    xlabel('Frequency');ylabel('Amplitude')
+    colorbar
+    LogScale('x',10)
+    LogScale('y',10)
+    caxis([0.9 1.3])
+    title('<CV2>')
+    
+    
+subplots = [4 7 10 13];
+subplots2 = [9 15 21 27];
+subplots3 = [7 11 15 19];
+for ee = 1:length(examplefreqs)
+    subplot(5,3,subplots(ee))
+        plot(t(t_idx),(rate_ex{ee}(t_idx)),'color',[0.5 0.5 0.5],'linewidth',1)
+        hold on
+       % plot(t(t_idx),cos(2*pi.*(examplefreqs(ee)).*t(t_idx)),'color',[0.5 0.5 0.5],'linewidth',1)
+        plot([spiketimes_ex{ee}(spiketimes_ex{ee}>=viewwin(1) & spiketimes_ex{ee}<=viewwin(2))...
+            spiketimes_ex{ee}(spiketimes_ex{ee}>=viewwin(1) & spiketimes_ex{ee}<=viewwin(2))]',...
+            [2.*ones(size(spiketimes_ex{ee}(spiketimes_ex{ee}>=viewwin(1) & spiketimes_ex{ee}<=viewwin(2))))...
+            2.3.*ones(size(spiketimes_ex{ee}(spiketimes_ex{ee}>=viewwin(1) & spiketimes_ex{ee}<=viewwin(2))))]',...
+            'k')
+        %xlabel('t');
+        ylabel('Rate')
+        axis tight
+        
+        xlim(viewwin)
+       % ylim([-2.5 2.5])
+        
+
+        
+        bz_ScaleBar('AU')
+        
+        %LogScale('y',10)
+        box off
+        if ee==4
+            xlabel('Time (AU)')
+        end
+        
+    subplot(5,6,subplots2(ee))
+        plot(log10(ISIs_ex{ee}(1:end-1)),log10(ISIs_ex{ee}(2:end)),'k.','markersize',5)
+        %title(['<CV2>: ',num2str(round(meanCV2_ex{ee},2))])
+        xlim([-4 2]);ylim([-4 2])
+        LogScale('xy',10)
+        %xlim(
+        if ee==4
+            xlabel('ISI_n');ylabel('ISI_n_+_1')
+        end
+        
+    subplot(5,4,subplots3(ee))
+        histogram(CV2_ex{ee},'facecolor','k','BinEdges', [linspace(0,2,20),Inf])
+        %title(['FF: ',num2str(round(FF_ex{ee},1))])
+        box off
+        axis tight
+        if ee==4
+            xlabel('CV2')
+        end
+        
+    subplot(5,4,subplots3(ee)+1)
+        histogram(log10(ISIs_ex{ee}),'facecolor','k','BinEdges', linspace(-3.5,1.5,25))
+        %title(['FF: ',num2str(round(FF_ex{ee},1))])
+        box off
+        axis tight
+        if ee==4
+            xlabel('ISI')
+        end
+        
+        LogScale('x',10)
+        
+        
+end
+
+NiceSave('OscCV2',figfolder,'Poiss')
