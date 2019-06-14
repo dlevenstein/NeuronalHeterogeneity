@@ -1,0 +1,15 @@
+
+# Science Paper
+ln -s /mnt/proraidDL/Database/AGData/Achilles/Achilles_11012013/ .
+ln -s /mnt/proraidDL/Database/AGData/Achilles/Achilles_10252013/ .
+ln -s /mnt/proraidDL/Database/AGData/Buddy/Buddy_06272013/ .
+ln -s /mnt/proraidDL/Database/AGData/Cicero/Cicero_09102014/ .
+ln -s /mnt/proraidDL/Database/AGData/Cicero/Cicero_09012014/ .
+ln -s /mnt/proraidDL/Database/AGData/Cicero/Cicero_09172014/ .
+ln -s /mnt/proraidDL/Database/AGData/Gatsby/Gatsby_08282013/ .
+ln -s /mnt/proraidDL/Database/AGData/Gatsby/Gatsby_08022013/ .
+
+
+
+
+
