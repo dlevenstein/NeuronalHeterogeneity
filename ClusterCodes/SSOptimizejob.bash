@@ -6,4 +6,4 @@
 #SBATCH --mem-per-cpu=20G
 echo $1
 module load matlab/R2018a
-matlab -nodisplay -nodesktop -singleCompThread -r "cd('/gpfs/data/buzsakilab/DL');addPathsDL;bz_RunAnalysis('BehaviorAnalysis2','$1','basePath',true);exit;"
+matlab -nodisplay -nodesktop -singleCompThread -r "cd('/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/ClusterCodes');addPaths;bz_RunAnalysis('OptimizeSleepScoreParms','$1','basePath',true);exit;"
