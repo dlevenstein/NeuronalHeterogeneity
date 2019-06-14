@@ -1,4 +1,4 @@
-function [ ] = AnalysisXXXXXXXX(basePath,figfolder)
+function [dipmap] = OptimizeSleepScoreParms(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -9,14 +9,14 @@ function [ ] = AnalysisXXXXXXXX(basePath,figfolder)
 %
 %% Load Header
 %Initiate Paths
-reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
 %basePath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC/Achilles_10252013';
-basePath = '/mnt/proraidDL/Database/YSData/YutaData/YMV08_170922';
+%basePath = '/mnt/proraidDL/Database/YSData/YutaData/YMV08_170922';
 %basePath = pwd;
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %%
@@ -24,33 +24,7 @@ load(fullfile(basePath,[baseName,'.SleepScoreLFP.LFP.mat']))
 load(fullfile(basePath,[baseName,'.EMGFromLFP.LFP.mat']))
 %%
 sessionInfo = bz_getSessionInfo(basePath);
-%%
-lfp = bz_GetLFP(SleepScoreLFP.SWchanID,...
-     'basepath',basePath,'noPrompts',true);
-%% Load the SleepScoreLFP and EMG
 
-
-
-%%
-winsize = 10;
-dt = 5;
-[specslope_irasa,spec_irasa] = bz_PowerSpectrumSlope(lfp,winsize,dt,'IRASA',true,'showfig',true)
-
-[specslope,spec] = bz_PowerSpectrumSlope(lfp,winsize,dt,'IRASA',false,'showfig',true)
-
-%%
-figure
-plot(specslope_irasa.data,specslope.data,'.')
-
-%% Compare IRASA with
-lfp_down = bz_DownsampleLFP(lfp,5);
-[specslope_down,spec_down] = bz_PowerSpectrumSlope(lfp_down,2,1,'IRASA',true,'showfig',true)
-
-[specslope_high,spec_high] = bz_PowerSpectrumSlope(lfp,2,1,'IRASA',true,'showfig',true)
-
-%%
-figure
-plot(specslope_high.data,specslope_down.data,'.')
 %% Compare Bimodality IRASA vs no
 
 %%
@@ -79,24 +53,27 @@ end
 for ww = 1:length(wins)
     for ss = 1:length(swins)
         try
-        dipSW(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics(ww,ss).broadbandSlowWave));
-        dipTH(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics(ww,ss).thratio));
+        dipmap.SW(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics(ww,ss).broadbandSlowWave));
+        dipmap.TH(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics(ww,ss).thratio));
         catch
-            dipSW(ww,ss) = nan;
-            dipTH(ww,ss) = nan;
+            dipmap.SW(ww,ss) = nan;
+            dipmap.TH(ww,ss) = nan;
             
         end
         
         try
-        dipSW_IRASA(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics_IRASA(ww,ss).broadbandSlowWave));
-        dipTH_IRASA(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics_IRASA(ww,ss).thratio));
+        dipmap.SW_IRASA(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics_IRASA(ww,ss).broadbandSlowWave));
+        dipmap.TH_IRASA(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics_IRASA(ww,ss).thratio));
         catch
-            dipSW_IRASA(ww,ss) = nan;
-            dipTH_IRASA(ww,ss) = nan;
+            dipmap.SW_IRASA(ww,ss) = nan;
+            dipmap.TH_IRASA(ww,ss) = nan;
             
         end
     end
 end
+
+
+%% Stuff for Saving
 
 %%
 
@@ -107,7 +84,7 @@ examples = [10 10; 2 15];
 figure
 
 subplot(4,3,1)
-    imagesc(wins,swins,dipSW')
+    imagesc(wins,swins,dipmap.SW')
     hold all
     plot(wins(10),swins(10),'k+')
     xlabel('Win size (s)'); ylabel('Smooth window (s)')
@@ -134,7 +111,7 @@ subplot(4,3,1)
         xlabel('Theta Ratio')
     
 subplot(4,3,3)
-    imagesc(wins,swins,dipTH')
+    imagesc(wins,swins,dipmap.TH')
     hold all
         plot(wins(2),swins(15),'r+')
         plot(wins(10),swins(10),'k+')
@@ -146,7 +123,7 @@ subplot(4,3,3)
     title('Bimodality: Theta')
 
 subplot(4,3,2)
-    imagesc(wins,swins,dipSW_IRASA')
+    imagesc(wins,swins,dipmap.SW_IRASA')
     hold all
         plot(wins(2),swins(15),'r+')
     
@@ -192,5 +169,5 @@ subplot(4,1,4)
     bz_ScaleBar('s')
     ylabel('Theta (f, Hz)')
 
- NiceSave('WinIRASAOptimization',figfolder,baseName,'includeDate',true)
+ NiceSave('WinIRASAOptimization',figfolder,baseName)
 
