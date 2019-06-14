@@ -48,7 +48,6 @@ for ww = 1:length(wins)
     end
 end
        
-%TRY MEDIAN SMOOTHING!
 %% Test for bimodality
 for ww = 1:length(wins)
     for ss = 1:length(swins)
