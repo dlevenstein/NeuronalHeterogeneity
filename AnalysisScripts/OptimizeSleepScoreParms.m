@@ -133,9 +133,9 @@ subplot(4,3,2)
     title('Bimodality: IRASA')
 
 subplot(4,1,3)
-    imagesc(SleepScoreMetrics_IRASA(examples(ee,1),examples(ee,2)).t_clus,...
-        log2(StatePlotMaterials_IRASA(examples(ee,1),examples(ee,2)).swFFTfreqs),...
-        log10(StatePlotMaterials_IRASA(examples(ee,1),examples(ee,2)).swFFTspec))
+    imagesc(SleepScoreMetrics_IRASA(2,15).t_clus,...
+        log2(StatePlotMaterials_IRASA(2,15).swFFTfreqs),...
+        log10(StatePlotMaterials_IRASA(2,15).swFFTspec))
     axis xy
         hold all
         plot(SleepScoreMetrics(10,10).t_clus,...
@@ -144,7 +144,7 @@ subplot(4,1,3)
             bz_NormToRange(SleepScoreMetrics_IRASA(2,15).broadbandSlowWave),'r')
 
     xlim(xwin)
-    SpecColorRange(log10(StatePlotMaterials(examples(ee,1),examples(ee,2)).swFFTspec),[1.5 1.5])
+    SpecColorRange(log10(StatePlotMaterials(2,15).swFFTspec),[1.5 1.5])
     LogScale('y',2)
     bz_ScaleBar('s')
     ylabel('PSS (f, Hz)')
@@ -152,9 +152,9 @@ subplot(4,1,3)
 
 
 subplot(4,1,4)
-    imagesc(SleepScoreMetrics_IRASA(examples(ee,1),examples(ee,2)).t_clus,...
-        log2(StatePlotMaterials_IRASA(examples(ee,1),examples(ee,2)).thFFTfreqs),...
-        log10(StatePlotMaterials_IRASA(examples(ee,1),examples(ee,2)).thFFTspec))
+    imagesc(SleepScoreMetrics_IRASA(2,15).t_clus,...
+        log2(StatePlotMaterials_IRASA(2,15).thFFTfreqs),...
+        log10(StatePlotMaterials_IRASA(2,15).thFFTspec))
     axis xy
         hold all
         plot(SleepScoreMetrics(10,10).t_clus,...
@@ -163,7 +163,7 @@ subplot(4,1,4)
             bz_NormToRange(SleepScoreMetrics_IRASA(2,15).thratio),'r')
 
     xlim(xwin)
-    SpecColorRange(log10(StatePlotMaterials(examples(ee,1),examples(ee,2)).thFFTspec),[1.5 1.5])
+    SpecColorRange(log10(StatePlotMaterials(2,15).thFFTspec),[1.5 1.5])
     LogScale('y',2)
     bz_ScaleBar('s')
     ylabel('Theta (f, Hz)')
