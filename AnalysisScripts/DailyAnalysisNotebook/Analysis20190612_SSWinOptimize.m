@@ -20,11 +20,12 @@ figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %% Load the SleepScoreLFP and EMG
-load('YMV08_170922.SleepScoreLFP.LFP.mat')
-load('YMV08_170922.EMGFromLFP.LFP.mat')
+load(fullfile(basePath,[baseName,'.SleepScoreLFP.LFP.mat']))
+load(fullfile(basePath,[baseName,'.EMGFromLFP.LFP.mat']))
+
 
 %%
-wins = 1:15;
+wins = 1:12;
 swins = 1:25;
 
 
@@ -33,7 +34,7 @@ for ww = 1:length(wins)
     bz_Counter(ww,length(wins),'Window')
     parfor ss = 1:length(swins)
         
-[SleepScoreMetrics(ww,ss)] = ClusterStates_GetMetrics(...
+[SleepScoreMetrics(ww,ss),StatePlotMaterials(ww,ss)] = ClusterStates_GetMetrics(...
                                            basePath,SleepScoreLFP,EMGFromLFP,true,...
                                            'window',wins(ww),'smoothfact',swins(ss));
     end
@@ -56,8 +57,8 @@ end
 
 
 %%
-examples = [2 10; 10 1; 10 10; 2 25];
-
+examples = [2 10; 10 1; 10 10; 2 15];
+ xwin = bz_RandomWindowInIntervals(SleepScoreMetrics(1,1).t_clus([1 end]),1000);
 
 figure
 subplot(3,3,1)
@@ -84,7 +85,7 @@ subplot(3,3,2)
             SleepScoreMetrics(examples(ee,1),examples(ee,2)).histsandthreshs.swhist)
     end
 
-    xwin = bz_RandomWindowInIntervals(SleepScoreMetrics(1,1).t_clus([1 end]),4000);
+   
 
     subplot(4,1,3)
     hold all
@@ -104,3 +105,28 @@ subplot(3,3,2)
     NiceSave('SmoothWinOpt',figfolder,baseName,'includeDate',true)
 
     
+%%
+figure
+subplot(4,1,1)
+imagesc(SleepScoreMetrics(examples(ee,1),examples(ee,2)).t_clus,...
+    StatePlotMaterials(examples(ee,1),examples(ee,2)).swFFTfreqs,...
+    StatePlotMaterials(examples(ee,1),examples(ee,2)).swFFTspec)
+axis xy
+xlim(xwin)
+
+
+    subplot(4,1,3)
+    hold all
+    for ee = 1:size(examples,1)
+    plot(SleepScoreMetrics(examples(ee,1),examples(ee,2)).t_clus,...
+        SleepScoreMetrics(examples(ee,1),examples(ee,2)).broadbandSlowWave)
+    end
+    xlim(xwin)
+    subplot(4,1,4)
+    hold all
+    for ee = 1:size(examples,1)
+    plot(SleepScoreMetrics(examples(ee,1),examples(ee,2)).t_clus,...
+        SleepScoreMetrics(examples(ee,1),examples(ee,2)).thratio)
+    end
+
+    xlim(xwin)
