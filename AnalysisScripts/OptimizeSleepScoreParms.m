@@ -42,7 +42,7 @@ swins = 1:25;
 %% Get the metrics (PSS, theta)
 for ww = 1:length(wins)
     bz_Counter(ww,length(wins),'Window')
-    for ss = 1:length(swins)
+    parfor ss = 1:length(swins)
         
 [SleepScoreMetrics_IRASA(ww,ss),StatePlotMaterials_IRASA(ww,ss)] = ClusterStates_GetMetrics(...
                                            basePath,SleepScoreLFP,EMGFromLFP,true,...
