@@ -77,7 +77,8 @@ for ww = 1:length(wins)
     end
 end
 
-
+dipmap.wins = wins;
+dipmap.swins = swins;
 %% Stuff for Saving
 
 %%
