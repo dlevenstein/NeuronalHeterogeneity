@@ -75,13 +75,13 @@ for ww = 1:length(wins)
         try
         dipmap.SW(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics(ww,ss).broadbandSlowWave));
         dipmap.TH(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics(ww,ss).thratio));
-            
+        catch
         end
         
         try
         dipmap.SW_IRASA(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics_IRASA(ww,ss).broadbandSlowWave));
         dipmap.TH_IRASA(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics_IRASA(ww,ss).thratio));
-            
+        catch  
         end
     end
 end
