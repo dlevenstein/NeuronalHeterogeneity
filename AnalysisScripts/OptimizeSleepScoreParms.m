@@ -7,14 +7,7 @@ function [dipmap] = OptimizeSleepScoreParms(basePath,figfolder)
 %-
 %-
 %
-%% Set up for parallel in cluster
-pc = parcluster('local');
-% store temporary files in the 'scratch' drive on the cluster, labeled by job ID
-pc.JobStorageLocation = strcat(getenv('SCRATCH'), '/', getenv('SLURM_JOB_ID'));
-% enable MATLAB to utilize the multiple cores allocated in the job script
-% SLURM_NTASKS_PER_NODE is a variable set in the job script by the flag --tasks-per-node
-% we use SLURM_NTASKS_PER_NODE - 1, because one of these tasks is the original MATLAB script itself
-parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1);
+
 
 %% Load Header
 %Initiate Paths
@@ -51,6 +44,17 @@ swins = 1:25;
 %% Get the metrics (PSS, theta)
 for ww = 1:length(wins)
     bz_Counter(ww,length(wins),'Window')
+    
+    %% Set up for parallel in cluster
+    pc = parcluster('local');
+    % store temporary files in the 'scratch' drive on the cluster, labeled by job ID
+    pc.JobStorageLocation = strcat(getenv('SCRATCH'), '/', getenv('SLURM_JOB_ID'));
+    % enable MATLAB to utilize the multiple cores allocated in the job script
+    % SLURM_NTASKS_PER_NODE is a variable set in the job script by the flag --tasks-per-node
+    % we use SLURM_NTASKS_PER_NODE - 1, because one of these tasks is the original MATLAB script itself
+    parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1);
+    
+    %%
     parfor ss = 1:length(swins)
         
 [SleepScoreMetrics_IRASA(ww,ss),StatePlotMaterials_IRASA(ww,ss)] = ClusterStates_GetMetrics(...
