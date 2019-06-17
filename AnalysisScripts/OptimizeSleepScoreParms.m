@@ -26,6 +26,8 @@ load(fullfile(basePath,[baseName,'.SleepScoreLFP.LFP.mat']))
 load(fullfile(basePath,[baseName,'.EMGFromLFP.LFP.mat']))
 SleepScoreLFP.params.SWweights = 'PSS';
 SleepScoreLFP.params.SWfreqlist =[];
+
+EMGFromLFP
 %%
 if ~exist('SleepScoreLFP','var')
     display(basePath)
@@ -41,10 +43,6 @@ wins = 1:12;
 swins = 1:25;
 
 
-%% Get the metrics (PSS, theta)
-for ww = 1:length(wins)
-    bz_Counter(ww,length(wins),'Window')
-    
     %% Set up for parallel in cluster
     pc = parcluster('local');
     % store temporary files in the 'scratch' drive on the cluster, labeled by job ID
@@ -53,10 +51,15 @@ for ww = 1:length(wins)
     % SLURM_NTASKS_PER_NODE is a variable set in the job script by the flag --tasks-per-node
     % we use SLURM_NTASKS_PER_NODE - 1, because one of these tasks is the original MATLAB script itself
     parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1);
+
+%% Get the metrics (PSS, theta)
+for ww = 1:length(wins)
+    bz_Counter(ww,length(wins),'Window')
+    
     
     %%
     parfor ss = 1:length(swins)
-        
+        EMGFromLFP
 [SleepScoreMetrics_IRASA(ww,ss),StatePlotMaterials_IRASA(ww,ss)] = ClusterStates_GetMetrics(...
                                            basePath,SleepScoreLFP,EMGFromLFP,true,...
                                            'window',wins(ww),'smoothfact',swins(ss),...
