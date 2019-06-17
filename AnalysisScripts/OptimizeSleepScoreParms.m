@@ -27,7 +27,7 @@ load(fullfile(basePath,[baseName,'.EMGFromLFP.LFP.mat']))
 SleepScoreLFP.params.SWweights = 'PSS';
 SleepScoreLFP.params.SWfreqlist =[];
 
-EMGFromLFP
+%EMGFromLFP
 %%
 if ~exist('SleepScoreLFP','var')
     display(basePath)
@@ -59,7 +59,7 @@ for ww = 1:length(wins)
     
     %%
     parfor ss = 1:length(swins)
-        EMGFromLFP
+        SleepScoreLFP
 [SleepScoreMetrics_IRASA(ww,ss),StatePlotMaterials_IRASA(ww,ss)] = ClusterStates_GetMetrics(...
                                            basePath,SleepScoreLFP,EMGFromLFP,true,...
                                            'window',wins(ww),'smoothfact',swins(ss),...
