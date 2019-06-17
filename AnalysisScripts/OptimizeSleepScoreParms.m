@@ -9,20 +9,21 @@ function [dipmap] = OptimizeSleepScoreParms(basePath,figfolder)
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
 %basePath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC/Achilles_10252013';
-%basePath = '/mnt/proraidDL/Database/YSData/YutaData/YMV08_170922';
+basePath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/YS_CTX/YMV08_170922';
 %basePath = pwd;
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %%
 load(fullfile(basePath,[baseName,'.SleepScoreLFP.LFP.mat']))
 load(fullfile(basePath,[baseName,'.EMGFromLFP.LFP.mat']))
-
+SleepScoreLFP.params.SWweights = 'PSS';
+SleepScoreLFP.params.SWfreqlist =[];
 %%
 if ~exist('SleepScoreLFP','var')
     display(basePath)
@@ -55,23 +56,22 @@ for ww = 1:length(wins)
 end
        
 %% Test for bimodality
+dipmap.SW = nan(length(wins),length(swins));
+dipmap.TH = nan(length(wins),length(swins));
+dipmap.SW_IRASA = nan(length(wins),length(swins));
+dipmap.TH_IRASA = nan(length(wins),length(swins));
+
 for ww = 1:length(wins)
     for ss = 1:length(swins)
         try
         dipmap.SW(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics(ww,ss).broadbandSlowWave));
         dipmap.TH(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics(ww,ss).thratio));
-        catch
-            dipmap.SW(ww,ss) = nan;
-            dipmap.TH(ww,ss) = nan;
             
         end
         
         try
         dipmap.SW_IRASA(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics_IRASA(ww,ss).broadbandSlowWave));
         dipmap.TH_IRASA(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics_IRASA(ww,ss).thratio));
-        catch
-            dipmap.SW_IRASA(ww,ss) = nan;
-            dipmap.TH_IRASA(ww,ss) = nan;
             
         end
     end
@@ -83,7 +83,7 @@ dipmap.swins = swins;
 
 %%
 
-examples = [10 10; 2 15];
+%examples = [10 10; 2 15];
  xwin = bz_RandomWindowInIntervals(SleepScoreMetrics(1,1).t_clus([1 end]),2000);
 
 
@@ -100,21 +100,6 @@ subplot(4,3,1)
     title('Bimodality: Linear Fit')
 
 
-    subplot(4,2,3)
-    hold all
-        plot(SleepScoreMetrics(10,10).histsandthreshs.swhistbins,...
-            SleepScoreMetrics(10,10).histsandthreshs.swhist,'k')
-        plot(SleepScoreMetrics_IRASA(2,15).histsandthreshs.swhistbins,...
-            SleepScoreMetrics_IRASA(2,15).histsandthreshs.swhist,'r')
-        xlabel('Slow Wave (PSS)')
-    
-    subplot(4,2,4)
-    hold all
-        plot(SleepScoreMetrics(10,10).histsandthreshs.THhistbins,...
-            SleepScoreMetrics(10,10).histsandthreshs.THhist,'k')
-        plot(SleepScoreMetrics_IRASA(2,15).histsandthreshs.THhistbins,...
-            SleepScoreMetrics_IRASA(2,15).histsandthreshs.THhist,'r')
-        xlabel('Theta Ratio')
     
 subplot(4,3,3)
     imagesc(wins,swins,dipmap.TH')
@@ -138,6 +123,23 @@ subplot(4,3,2)
     colorbar
     caxis([0 0.065])
     title('Bimodality: IRASA')
+    
+    
+    subplot(4,2,3)
+    hold all
+        plot(SleepScoreMetrics(10,10).histsandthreshs.swhistbins,...
+            SleepScoreMetrics(10,10).histsandthreshs.swhist,'k')
+        plot(SleepScoreMetrics_IRASA(2,15).histsandthreshs.swhistbins,...
+            SleepScoreMetrics_IRASA(2,15).histsandthreshs.swhist,'r')
+        xlabel('Slow Wave (PSS)')
+    
+    subplot(4,2,4)
+    hold all
+        plot(SleepScoreMetrics(10,10).histsandthreshs.THhistbins,...
+            SleepScoreMetrics(10,10).histsandthreshs.THhist,'k')
+        plot(SleepScoreMetrics_IRASA(2,15).histsandthreshs.THhistbins,...
+            SleepScoreMetrics_IRASA(2,15).histsandthreshs.THhist,'r')
+        xlabel('Theta Ratio')
 
 subplot(4,1,3)
     imagesc(SleepScoreMetrics_IRASA(2,15).t_clus,...
