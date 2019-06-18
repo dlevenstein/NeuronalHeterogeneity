@@ -1,0 +1,20 @@
+#!/bin/bash
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV01/YMV01_170818
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV02/YMV02_170815
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV03/YMV03_170818
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV04/YMV04_170907
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV05/YMV05_170912
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV06/YMV06_170913
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV07/YMV07_170914
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV08/YMV08_170922
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV09/YMV09_171204
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV10/YMV10_171213
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV11/YMV11_171208
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV12/YMV12_171211
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV13/YMV13_180127
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV14/YMV14_180128
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV15/YMV15_180205
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV16/YMV16_180206
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV17/YMV17_180207
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV18/YMV18_180208
+sbatch ./SleepScorejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV19/YMV19_180209

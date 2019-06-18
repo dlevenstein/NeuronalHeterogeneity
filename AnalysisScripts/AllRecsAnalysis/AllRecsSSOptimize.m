@@ -45,7 +45,7 @@ subplot(4,3,3)
     xlabel('Win size (s)'); ylabel('Smooth window (s)')
     axis xy
     colorbar
-    caxis([0 0.03])
+    caxis([0 0.0075])
     title('Bimodality: Theta')
 
 subplot(4,3,2)
@@ -58,3 +58,6 @@ subplot(4,3,2)
     colorbar
     caxis([0 0.03])
     title('Bimodality: IRASA')
+    
+    
+ NiceSave('WinIRASAOptimization',figfolder,[])
