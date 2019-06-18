@@ -67,7 +67,8 @@ for ww = 1:length(wins)
                                        
 [SleepScoreMetrics(ww,ss),StatePlotMaterials(ww,ss)] = ClusterStates_GetMetrics(...
                                            basePath,SleepScoreLFP,EMGFromLFP,true,...
-                                           'window',wins(ww),'smoothfact',swins(ss));
+                                           'window',wins(ww),'smoothfact',swins(ss),...
+                                           'IRASA',false);
     end
 end
        
