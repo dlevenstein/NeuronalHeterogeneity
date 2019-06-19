@@ -31,7 +31,7 @@ subplot(4,3,1)
     xlabel('Win size (s)'); ylabel('Smooth window (s)')
     axis xy
     colorbar
-    caxis([0 0.03])
+    caxis([0 0.04])
     title('Bimodality: Linear Fit')
 
    
@@ -56,7 +56,7 @@ subplot(4,3,2)
     xlabel('Win size (s)'); ylabel('Smooth window (s)')
     axis xy
     colorbar
-    caxis([0 0.03])
+    caxis([0 0.04])
     title('Bimodality: IRASA')
     
     
