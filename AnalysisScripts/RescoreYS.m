@@ -35,5 +35,6 @@ load(fullfile(basePath,[baseName,'.SleepScoreLFP.LFP.mat']))
 %%
 %Keep yuta's time window
 scoretime = [SleepScoreLFP.t(1)-(1./SleepScoreLFP.sf) SleepScoreLFP.t(end)];
+%%
 SleepScoreMaster(basePath,'overwrite',true,'scoretime',scoretime)
 

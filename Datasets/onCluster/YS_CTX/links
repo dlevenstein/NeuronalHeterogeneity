@@ -5,7 +5,7 @@ ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/SenzaiY/YMV01/YMV01_170818/ .
 ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/SenzaiY/YMV02/YMV02_170815/ .
 ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/SenzaiY/YMV03/YMV03_170818/ .
 ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/SenzaiY/YMV04/YMV04_170907/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/SenzaiY/YMV05/YMV05_170912/ .
+#ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/SenzaiY/YMV05/YMV05_170912/ .
 ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/SenzaiY/YMV06/YMV06_170913/ .
 ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/SenzaiY/YMV07/YMV07_170914/ .
 ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/SenzaiY/YMV08/YMV08_170922/ .
