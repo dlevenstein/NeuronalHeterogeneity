@@ -91,7 +91,7 @@ subplot(6,3,10+rr-1)
 
 
 end
- NiceSave('ISIbyPSS',figfolder,regions{rr})
+ NiceSave('ISIbyPSS',figfolder,[])
  
  
  %% ISI by Theta
@@ -138,4 +138,4 @@ subplot(6,3,10+rr-1)
     xlim(ISIbytheta.(regions{rr}).Xbins(1,[1 end],1))
 
  end
- NiceSave('ISIbyTheta',figfolder,regions{rr})
+ NiceSave('ISIbyTheta',figfolder,[])
