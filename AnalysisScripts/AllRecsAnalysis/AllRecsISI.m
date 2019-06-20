@@ -5,7 +5,7 @@ figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsAnalysis'];
 datasetPath.fCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/BW_CTX';
 datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AG_HPC';
 datasetPath.vCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/YS_CTX';
-regions = {'fCTX','CA1','vCTX'};
+regions = {'vCTX','fCTX','CA1'};
 %regions = {'fCTX'};
 %%
 for rr = 1:length(regions)
@@ -430,11 +430,11 @@ for ss = 1:3
     colormap(gca,statecolormap{ss})
 
        % subplot(2,3,4)
-            imagesc((ISIstats.(regions{rr}).ISIhist.logbins(1,:)),[1 numcells.(regions{rr})],...
+            imagesc((ISIstats.(regions{rr}).ISIhist.logbins(1,:)),[1 sorts.(regions{rr}).numclassycells],...
                 ISIstats.(regions{rr}).ISIhist.(statenames{ss}).meannorm(sorts.(regions{rr}).(statenames{ss}).ratebyclass,:))
             hold on
-            plot(zeros(1,numcells.(regions{rr})),...
-                [1:numcells.(regions{rr})],'k.','markersize',1)
+            plot(zeros(1,sorts.(regions{rr}).numclassycells),...
+                [1:sorts.(regions{rr}).numclassycells],'k.','markersize',1)
             plot(ISIstats.(regions{rr}).ISIhist.logbins([1 end]),sum(inclasscells.(regions{rr}){1}).*[1 1]+0.5,'r')
             
             plot(meanISIhist.logbins,-meannormISIhist.(regions{rr}).(statenames{ss}).pE*5000+...
@@ -442,11 +442,11 @@ for ss = 1:3
                 'color',statecolors{ss},'linewidth',2)
             
             plot(meanISIhist.logbins,-meannormISIhist.(regions{rr}).(statenames{ss}).pI*2000+...
-                sum(numcells.(regions{rr})),...
+                sum(sorts.(regions{rr}).numclassycells),...
                 'color',statecolors{ss},'linewidth',2)
             
-            xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
-            LogScale('x',10)
+            xlim([-3 1.5])
+            LogScale('x',10,'exp',true)
             if ss==3
                 xlabel('norm ISI log(mean^-^1)')
             else
@@ -467,9 +467,20 @@ for ss = 1:3
 
                 
 end
+
+end
+
+NiceSave('ISIdist_meannorm',figfolder,[])
+
+
+%% Normalized ISI figure: CV2
+figure
+for rr = 1:length(regions)
+
+
 for cc = 1:length(classnames)
 	for ss = 1:3
-        subplot(6,4,2+4*ss-4+cc+(rr-1)*12)    
+        subplot(6,4,rr+(ss-1)*4+(cc-1)*12)    
         %colormap(gca,statecolormap{ss})
 
             imagesc(meanISIhist.logbins,ISIstats.(regions{rr}).CV2hist.bins(1,:),...
