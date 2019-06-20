@@ -307,12 +307,12 @@ for cc = 1:length(classnames)
                 xlabel('ISI_n (s)')
                 end
                 set(gca,'xtick',[-2:1]);
-                LogScale('x',10)
+                LogScale('x',10,'exp',true)
             end
             if rr==1 
                 ylabel('ISI_n_+_1 (s)')
                 set(gca,'ytick',[-2:1]);
-                LogScale('y',10)
+                LogScale('y',10,'exp',true)
             end
             %LogScale('xy',10)
 	end
