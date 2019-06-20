@@ -25,7 +25,7 @@ SleepState = bz_LoadStates(basePath,'SleepState');
 lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
     'basepath',basePath,'noPrompts',true);
 
-[celltypes,~,typeidx] = unique(CellClass.label);
+celltypes = CellClass.celltypes;
 %%
 statenames = {'NREMstate','WAKEstate','REMstate'};
 statecolors = {'b','k','r'};
@@ -165,7 +165,7 @@ NiceSave(['CV2Examples'],figfolder,baseName);
 figure
 colormap(histcolors)
 ff=0;
-for cc = 1:spikes.numcells
+for cc = 1:ISIstats.sorts.numclassycells
     cellnum = ISIstats.sorts.NREMstate.CV2byclass(cc);   %%sortrate.NREMstate(cc);
     subplot(6,7,mod(cc-1,42)+1)
     imagesc((ISIstats.ISIhist.logbins),(ISIstats.ISIhist.logbins),(ISIstats.ISIhist.NREMstate.return(:,:,cellnum)))
@@ -178,7 +178,7 @@ for cc = 1:spikes.numcells
     xlim(ISIstats.ISIhist.logbins([1 end]));ylim(ISIstats.ISIhist.logbins([1 end]))
     %xlabel(['FR: ',num2str(round(ISIstats.summstats.NREMstate.meanrate(cellnum),2)),'Hz'])
     xlabel(['CV2: ',num2str(round(ISIstats.summstats.NREMstate.meanCV2(cellnum),2))])
-    if mod(cc,42) == 0 || cc ==spikes.numcells
+    if mod(cc,42) == 0 || cc ==ISIstats.sorts.numclassycells
         ff= ff+1;
         NiceSave(['ISIreturnmap',num2str(ff)],figfolder,baseName);
         figure

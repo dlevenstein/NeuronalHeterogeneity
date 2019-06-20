@@ -2,14 +2,15 @@ reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsAnalysis'];
 
-datasetPath.fCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/BW_CTX';
-datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC';
-regions = {'fCTX','CA1'};
+datasetPath.fCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/BW_CTX';
+datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AG_HPC';
+datasetPath.vCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/YS_CTX';
+regions = {'fCTX','CA1','vCTX'};
 %regions = {'fCTX'};
 %%
 for rr = 1:length(regions)
-    ISIstats.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
-    CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true);
+    [ISIstats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
+    CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
     numcells.(regions{rr}) = length(CellClass.(regions{rr}).UID);
 end
 %
@@ -32,8 +33,14 @@ for rr = 1:length(regions)
         [~,sorts.(regions{rr}).(statenames{ss}).CV2]=...
             sort(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanCV2);
 
-        classnames = unique(CellClass.(regions{rr}).label);
+        
+        %Check for empty cell class entries
+        noclass = cellfun(@isempty,CellClass.(regions{rr}).label);
+        sorts.(regions{rr}).numclassycells = sum(~noclass);
+        %cellclass(noclass)={'none'};
+        classnames = unique(CellClass.(regions{rr}).label(~noclass));
         numclasses = length(classnames);
+
         for cl = 1:numclasses
             inclasscells.(regions{rr}){cl} = ...
                 strcmp(classnames{cl},CellClass.(regions{rr}).label);
@@ -118,16 +125,16 @@ for rr = 1:length(regions)
         hold on
         plot(log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).pI)),...
             ISIstats.(regions{rr}).summstats.(statenames{ss}).meanCV2(CellClass.(regions{rr}).pI),'r.','markersize',4)
-        plot(log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(excells)),...
-            ISIstats.(regions{rr}).summstats.(statenames{ss}).meanCV2(excells),...
-            'o','color',[0.1 0.7 0],'markersize',5,'LineWidth',2)
+%         plot(log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(excells)),...
+%             ISIstats.(regions{rr}).summstats.(statenames{ss}).meanCV2(excells),...
+%             'o','color',[0.1 0.7 0],'markersize',5,'LineWidth',2)
         xlim([-2.2 1.8]); ylim([0.4 1.6])
         LogScale('x',10)
         plot(get(gca,'xlim'),[1 1],'k')
         if rr == 1
         title(statenames{ss})
         end
-        if rr==2
+        if rr==3
             xlabel('FR (Hz)');
         else
             set(gca,'xticklabel',[])
@@ -140,23 +147,27 @@ for rr = 1:length(regions)
 
 
 
-        %cc=1;
-    %     for cc = 1:length(excells)
-    %         subplot(6,6,((cc+1).*6)+2.*ss-0.5)
-    %         colormap(gca,histcolors)
-    %             imagesc(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).return(:,:,excells(cc)))
-    %             set(gca,'ytick',[]);set(gca,'xtick',[])
-    %             axis xy
-    %     end
-    subplot(4,4,ss+8+(rr-1).*4)
+
+    end
+end
+NiceSave('RateandCV2',figfolder,[])
+
+
+%%
+
+figure
+for rr = 1:length(regions)
+    for ss = 1:3
+
+    subplot(4,4,ss+(rr-1).*4)
         plot(log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).pE)),...
             log2(ISIstats.(regions{rr}).summstats.(statenames{ss}).ISICV(CellClass.(regions{rr}).pE)),'k.','markersize',4)
         hold on
         plot(log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).pI)),...
             log2(ISIstats.(regions{rr}).summstats.(statenames{ss}).ISICV(CellClass.(regions{rr}).pI)),'r.','markersize',4)
-        plot(log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(excells)),...
-            log2(ISIstats.(regions{rr}).summstats.(statenames{ss}).ISICV(excells)),...
-            'o','color',[0.1 0.7 0],'markersize',5,'LineWidth',2)
+%         plot(log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(excells)),...
+%             log2(ISIstats.(regions{rr}).summstats.(statenames{ss}).ISICV(excells)),...
+%             'o','color',[0.1 0.7 0],'markersize',5,'LineWidth',2)
 
         xlim([-2.2 1.8]); ylim([-1 5])
         LogScale('x',10);LogScale('y',2);
@@ -164,7 +175,7 @@ for rr = 1:length(regions)
         if rr == 1
             title(statenames{ss})
         end
-        if rr==2
+        if rr==3
             xlabel('FR (Hz)');
         else
             set(gca,'xticklabel',[])
@@ -176,51 +187,8 @@ for rr = 1:length(regions)
         end
     end
 end
-NiceSave('RateandCV2',figfolder,[])
+NiceSave('RateandCV',figfolder,[])
 
-%%
-figure
-for ss = 1:3
-subplot(2,3,ss)
-colormap(histcolors)
-   % subplot(2,3,4)
-        imagesc((ISIstats.(regions{rr}).ISIhist.logbins(1,:)),[1 numcells.(regions{rr})],...
-            ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(sorts.(regions{rr}).(statenames{ss}).ratebyclass,:))
-        hold on
-        plot(log10(1./(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(sorts.(regions{rr}).(statenames{ss}).ratebyclass))),...
-            [1:numcells.(regions{rr})],'k.','markersize',1)
-        plot(ISIstats.(regions{rr}).ISIhist.logbins([1 end]),sum(inclasscells.(regions{rr}){1}).*[1 1]+0.5,'r')
-        LogScale('x',10)
-        xlabel('ISI (s)')
-        xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
-        %colorbar
-      %  legend('1/Mean Firing Rate (s)','location','southeast')
-        ylabel('Cell (Sorted by FR, Type)')
-        %legend('1/Mean Firing Rate (s)','location','southeast')
-        caxis([0 0.1])
-        %title('ISI Distribution (Log Scale)')
-        title(statenames{ss})
-        
-        
-    subplot(2,3,ss+3)
-        imagesc((ISIstats.(regions{rr}).ISIhist.logbins(1,:)),[1 numcells.(regions{rr})],...
-            ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(sorts.(regions{rr}).(statenames{ss}).CV2byclass,:))
-        hold on
-        plot(log10(1./(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(sorts.(regions{rr}).(statenames{ss}).CV2byclass))),...
-            [1:numcells.(regions{rr})],'k.','markersize',1)
-        plot(ISIstats.(regions{rr}).ISIhist.logbins([1 end]),sum(inclasscells.(regions{rr}){1}).*[1 1]+0.5,'r')
-        LogScale('x',10)
-        xlabel('ISI (s)')
-        xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
-        title(statenames{ss})
-        %colorbar
-      %  legend('1/Mean Firing Rate (s)','location','southeast')
-        ylabel('Cell (Sorted by CV2, Type)')
-        %legend('1/Mean Firing Rate (s)','location','southeast')
-        caxis([0 0.1])
-end
-
-NiceSave('ISIdistssorted',figfolder,[])
 
 %%
 %Get 3 random E cells and 1 I cell
@@ -241,11 +209,11 @@ for ss = 1:3
     colormap(gca,statecolormap{ss})
 
        % subplot(2,3,4)
-            imagesc((ISIstats.(regions{rr}).ISIhist.logbins(1,:)),[1 numcells.(regions{rr})],...
+            imagesc((ISIstats.(regions{rr}).ISIhist.logbins(1,:)),[1 sorts.(regions{rr}).numclassycells],...
                 ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(sorts.(regions{rr}).(statenames{ss}).ratebyclass,:))
             hold on
             plot(log10(1./(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(sorts.(regions{rr}).(statenames{ss}).ratebyclass))),...
-                [1:numcells.(regions{rr})],'k.','markersize',1)
+                [1:sorts.(regions{rr}).numclassycells],'k.','markersize',1)
             plot(ISIstats.(regions{rr}).ISIhist.logbins([1 end]),sum(inclasscells.(regions{rr}){1}).*[1 1]+0.5,'r')
             
             plot(meanISIhist.logbins,-meanISIhist.(regions{rr}).(statenames{ss}).pE*5000+...
@@ -253,7 +221,7 @@ for ss = 1:3
                 'color',statecolors{ss},'linewidth',2)
             
             plot(meanISIhist.logbins,-meanISIhist.(regions{rr}).(statenames{ss}).pI*2000+...
-                sum(numcells.(regions{rr})),...
+                sum(sorts.(regions{rr}).numclassycells),...
                 'color',statecolors{ss},'linewidth',2)
             
             xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
@@ -279,8 +247,18 @@ for ss = 1:3
                 
 end
 
+
+end
+
+NiceSave('ISIDists',figfolder,[])
+
+%%
+figure
+for rr = 1:length(regions)
+
+
 for cc = 1:length(classnames)
-    subplot(8,4,4.*cc-1+(rr-1)) %Mean ISIHist
+    subplot(8,4,4.*cc-3+(rr-1)) %Mean ISIHist
     hold on
     for ss = 1:2
         errorshade(meanISIhist.logbins,meanISIhist.(regions{rr}).(statenames{ss}).(classnames{cc}),...
@@ -310,7 +288,7 @@ for cc = 1:length(classnames)
         end
         
 	for ss = 1:3
-        subplot(8,8,24+8*ss-4+cc+(rr-1)*2)    
+        subplot(8,8,20+8*ss-4+cc+(rr-1)*2)    
         colormap(gca,statecolormap{ss})
 
             imagesc(meanreturnhist.(regions{rr}).(statenames{ss}).(classnames{cc}))
@@ -331,9 +309,7 @@ end
 
 end
 
-NiceSave('ISIfig',figfolder,[])
-
-
+NiceSave('ISIReturnMap',figfolder,[])
 %% CV2 figure
 
 figure
@@ -343,11 +319,11 @@ for ss = 1:3
     colormap(gca,statecolormap{ss})
 
        % subplot(2,3,4)
-            imagesc((ISIstats.(regions{rr}).CV2hist.bins(1,:)),[1 numcells.(regions{rr})],...
+            imagesc((ISIstats.(regions{rr}).CV2hist.bins(1,:)),[1 sorts.(regions{rr}).numclassycells],...
                 ISIstats.(regions{rr}).CV2hist.(statenames{ss})(sorts.(regions{rr}).(statenames{ss}).ratebyclass,:))
             hold on
             plot((ISIstats.(regions{rr}).summstats.(statenames{ss}).meanCV2(sorts.(regions{rr}).(statenames{ss}).ratebyclass)),...
-                [1:numcells.(regions{rr})],'k.','markersize',1)
+                [1:sorts.(regions{rr}).numclassycells],'k.','markersize',1)
             plot(ISIstats.(regions{rr}).CV2hist.bins([1 end]),sum(inclasscells.(regions{rr}){1}).*[1 1]+0.5,'r')
             
             plot(meanCV2hist.bins,-meanCV2hist.(regions{rr}).(statenames{ss}).pE*7000+...
@@ -380,9 +356,19 @@ for ss = 1:3
 
                 
 end
+
+end
+
+NiceSave('CV2fig',figfolder,[])
+
+%% CV2 figure
+
+figure
+for rr = 1:length(regions)
+
 for cc = 1:length(classnames)
 	for ss = 1:3
-        subplot(6,4,2+4*ss-4+cc+(rr-1)*12)    
+        subplot(6,4,rr+(ss-1)*4+(cc-1)*12)    
         %colormap(gca,statecolormap{ss})
 
             imagesc(meanISIhist.logbins,ISIstats.(regions{rr}).CV2hist.bins(1,:),...
@@ -393,8 +379,8 @@ for cc = 1:length(classnames)
             
             axis xy
             set(gca,'ytick',[]);set(gca,'xtick',[]);
-            if ss==1 &rr==1
-                title(classnames{cc})
+            if ss==1 & cc==1
+                title(regions{rr})
             elseif ss==3 
                 if rr ==2
                 xlabel('ISI (s)')
@@ -402,12 +388,13 @@ for cc = 1:length(classnames)
                 set(gca,'xtick',[-2:1]);
                 LogScale('x',10)
             end
-            if cc==1 
+            if rr==1 
                 ylabel('CV2')
                 set(gca,'ytick',[0 1 2]);
             end
             ylim([0 2]);
             xlim([-2.5 1.7])
+            xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
             
             switch cc
                 case 1
@@ -420,8 +407,7 @@ for cc = 1:length(classnames)
 end
 end
 
-NiceSave('CV2fig',figfolder,[])
-
+NiceSave('JointCV2ISI',figfolder,[])
 
 %% Normalized ISI figure
 figure

@@ -1,13 +1,13 @@
 
 # Science Paper
-ln -s dl2820@bigpurple.nyumc.org:/gpfs/data/buzsakilab/DL/Datasets/GrosmarkAD/Achilles/Achilles_11012013/ .
-ln -s dl2820@bigpurple.nyumc.org:/gpfs/data/buzsakilab/DL/Datasets/GrosmarkAD/Achilles/Achilles_10252013/ .
-ln -s dl2820@bigpurple.nyumc.org:/gpfs/data/buzsakilab/DL/Datasets/GrosmarkAD/Buddy/Buddy_06272013/ .
-ln -s dl2820@bigpurple.nyumc.org:/gpfs/data/buzsakilab/DL/Datasets/GrosmarkAD/Cicero/Cicero_09102014/ .
-ln -s dl2820@bigpurple.nyumc.org:/gpfs/data/buzsakilab/DL/Datasets/GrosmarkAD/Cicero/Cicero_09012014/ .
-ln -s dl2820@bigpurple.nyumc.org:/gpfs/data/buzsakilab/DL/Datasets/GrosmarkAD/Cicero/Cicero_09172014/ .
-ln -s dl2820@bigpurple.nyumc.org:/gpfs/data/buzsakilab/DL/Datasets/GrosmarkAD/Gatsby/Gatsby_08282013/ .
-ln -s dl2820@bigpurple.nyumc.org:/gpfs/data/buzsakilab/DL/Datasets/GrosmarkAD/Gatsby/Gatsby_08022013/ .
+ln -s /mnt/BigPurple/Database/AGData/Achilles/Achilles_11012013/ .
+ln -s /mnt/BigPurple/Database/AGData/Achilles/Achilles_10252013/ .
+ln -s /mnt/BigPurple/Database/AGData/Buddy/Buddy_06272013/ .
+ln -s /mnt/BigPurple/Database/AGData/Cicero/Cicero_09102014/ .
+ln -s /mnt/BigPurple/Database/AGData/Cicero/Cicero_09012014/ .
+ln -s /mnt/BigPurple/Database/AGData/Cicero/Cicero_09172014/ .
+ln -s /mnt/BigPurple/Database/AGData/Gatsby/Gatsby_08282013/ .
+ln -s /mnt/BigPurple/Database/AGData/Gatsby/Gatsby_08022013/ .
 
 
 
