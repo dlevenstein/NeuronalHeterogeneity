@@ -292,7 +292,7 @@ for cc = 1:length(classnames)
     
         
 	for ss = 1:3
-        subplot(6,5,rr+(ss-1)*5+(cc-1)*15)    
+        subplot(6,6,rr+(ss-1)*6+(cc-1)*18)    
         colormap(gca,statecolormap{ss})
 
             imagesc(meanreturnhist.(regions{rr}).(statenames{ss}).(classnames{cc}))
