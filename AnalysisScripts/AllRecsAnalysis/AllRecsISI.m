@@ -382,7 +382,7 @@ for cc = 1:length(classnames)
             if ss==1 & cc==1
                 title(regions{rr})
             elseif ss==3 
-                if rr ==2
+                if cc ==2
                 xlabel('ISI (s)')
                 end
                 set(gca,'xtick',[-2:1]);
