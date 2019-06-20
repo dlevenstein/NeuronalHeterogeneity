@@ -248,6 +248,37 @@ for ss = 1:3
 end
 
 
+
+% subplot(8,4,4.*cc-3+(rr-1)) %Mean ISIHist
+%     hold on
+%     for ss = 1:2
+%         errorshade(meanISIhist.logbins,meanISIhist.(regions{rr}).(statenames{ss}).(classnames{cc}),...
+%             meanISIhist.(regions{rr}).std.(statenames{ss}).(classnames{cc}),meanISIhist.(regions{rr}).std.(statenames{ss}).(classnames{cc}),...
+%             statecolors{ss},'scalar')
+%     end
+%     for ss = 1:2
+%         
+%         plot(meanISIhist.logbins,meanISIhist.(regions{rr}).(statenames{ss}).(classnames{cc}),...
+%             'color',statecolors{ss},'linewidth',2)
+%     end
+%     
+%         axis tight
+%         yrange = get(gca,'ylim');ylim([0 yrange(2)])
+%         xlim([-3 2.25])
+%         %ylim([0 0.087])
+%         LogScale('x',10)
+%         set(gca,'ytick',[])
+%         if rr == 1
+%             ylabel(classnames{cc})
+%         end
+%         if cc ==2
+%             xlabel('ISI (s)')
+%         else
+%             set(gca,'xticklabel',[])
+%             title(regions{rr})
+%         end
+
+
 end
 
 NiceSave('ISIDists',figfolder,[])
@@ -258,51 +289,29 @@ for rr = 1:length(regions)
 
 
 for cc = 1:length(classnames)
-    subplot(8,4,4.*cc-3+(rr-1)) %Mean ISIHist
-    hold on
-    for ss = 1:2
-        errorshade(meanISIhist.logbins,meanISIhist.(regions{rr}).(statenames{ss}).(classnames{cc}),...
-            meanISIhist.(regions{rr}).std.(statenames{ss}).(classnames{cc}),meanISIhist.(regions{rr}).std.(statenames{ss}).(classnames{cc}),...
-            statecolors{ss},'scalar')
-    end
-    for ss = 1:2
-        
-        plot(meanISIhist.logbins,meanISIhist.(regions{rr}).(statenames{ss}).(classnames{cc}),...
-            'color',statecolors{ss},'linewidth',2)
-    end
     
-        axis tight
-        yrange = get(gca,'ylim');ylim([0 yrange(2)])
-        xlim([-3 2.25])
-        %ylim([0 0.087])
-        LogScale('x',10)
-        set(gca,'ytick',[])
-        if rr == 1
-            ylabel(classnames{cc})
-        end
-        if cc ==2
-            xlabel('ISI (s)')
-        else
-            set(gca,'xticklabel',[])
-            title(regions{rr})
-        end
         
 	for ss = 1:3
-        subplot(8,8,20+8*ss-4+cc+(rr-1)*2)    
+        subplot(6,5,rr+(ss-1)*5+(cc-1)*15)    
         colormap(gca,statecolormap{ss})
 
             imagesc(meanreturnhist.(regions{rr}).(statenames{ss}).(classnames{cc}))
             axis xy
             set(gca,'ytick',[]);set(gca,'xtick',[]);
-            if ss==1
-                title(classnames{cc})
-            elseif ss==3
-                xlabel('ISI_n')
+            if ss==1 & cc==1
+                title(regions{rr})
+            elseif ss==3 
+                if cc ==2
+                xlabel('ISI_n (s)')
+                end
+                %set(gca,'xtick',[-2:1]);
+                %LogScale('x',10)
             end
-            if cc==1 &rr==1
-                ylabel('ISI_n_+_1')
+            if rr==1 
+                ylabel('ISI_n (s)_n_+_1')
+                %set(gca,'ytick',[-2:1]);
             end
-            
+            %LogScale('xy',10)
 	end
 
 end
