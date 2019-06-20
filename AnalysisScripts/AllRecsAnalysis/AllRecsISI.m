@@ -295,7 +295,9 @@ for cc = 1:length(classnames)
         subplot(6,6,rr+(ss-1)*6+(cc-1)*18)    
         colormap(gca,statecolormap{ss})
 
-            imagesc(meanreturnhist.(regions{rr}).(statenames{ss}).(classnames{cc}))
+            imagesc(ISIstats.(regions{rr}).ISIhist.logbins(1,:),...
+                ISIstats.(regions{rr}).ISIhist.logbins(1,:),...
+                meanreturnhist.(regions{rr}).(statenames{ss}).(classnames{cc}))
             axis xy
             set(gca,'ytick',[]);set(gca,'xtick',[]);
             if ss==1 & cc==1
@@ -304,12 +306,13 @@ for cc = 1:length(classnames)
                 if cc ==2
                 xlabel('ISI_n (s)')
                 end
-                %set(gca,'xtick',[-2:1]);
-                %LogScale('x',10)
+                set(gca,'xtick',[-2:1]);
+                LogScale('x',10)
             end
             if rr==1 
-                ylabel('ISI_n (s)_n_+_1')
-                %set(gca,'ytick',[-2:1]);
+                ylabel('ISI_n_+_1 (s)')
+                set(gca,'ytick',[-2:1]);
+                LogScale('y',10)
             end
             %LogScale('xy',10)
 	end
