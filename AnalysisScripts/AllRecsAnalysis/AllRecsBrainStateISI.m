@@ -45,7 +45,7 @@ statecolors = {'k','b','r'};
 figure
  for rr = 1:length(regions)
 for tt = 1:length(celltypes)
-subplot(4,3,tt*3-3+rr)
+subplot(4,3,tt*3-3+rr+6)
     imagesc(ISIbyPSS.(regions{rr}).Xbins(1,:,1),ISIbyPSS.(regions{rr}).Ybins(1,:,1), ISIbyPSS.(regions{rr}).pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
@@ -61,9 +61,10 @@ subplot(4,3,tt*3-3+rr)
    % colorbar
     if tt ==1 
         caxis([0 0.023])
-        title(regions{rr})
+        set(gca,'xticklabel',[])
     elseif tt==2
          caxis([0 0.032])
+         xlabel('PSS')
     end
     xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1))
     if strcmp(regions{rr},'CA1')
@@ -73,29 +74,42 @@ end
 
 
 
-subplot(6,3,10+rr-1)
-    hold on
-    for ss = 1:3
-        errorshade(BShist.(regions{rr}).bins,BShist.(regions{rr}).(states{ss}).PSS,...
-            BShist.(regions{rr}).std.(states{ss}).PSS,BShist.(regions{rr}).std.(states{ss}).PSS,statecolors{ss},'scalar')
-    plot(BShist.(regions{rr}).bins,BShist.(regions{rr}).(states{ss}).PSS,'color',statecolors{ss})
-    end
-    xlabel('PSS (peak norm)')
+% subplot(6,3,10+rr-1)
+%     hold on
+%     for ss = 1:3
+%         errorshade(BShist.(regions{rr}).bins,BShist.(regions{rr}).(states{ss}).PSS,...
+%             BShist.(regions{rr}).std.(states{ss}).PSS,BShist.(regions{rr}).std.(states{ss}).PSS,statecolors{ss},'scalar')
+%     plot(BShist.(regions{rr}).bins,BShist.(regions{rr}).(states{ss}).PSS,'color',statecolors{ss})
+%     end
+%     xlabel('PSS (peak norm)')
+%     
+%     box off
+%     axis tight
+%     xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1))
+%         if strcmp(regions{rr},'CA1') | strcmp(regions{rr},'vCTX')
+%         %xlim([ISIbyPSS.(regions{rr}).Xbins(1,1,1) 1.9])
+%         end
     
-    box off
-    axis tight
-    xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1))
-        if strcmp(regions{rr},'CA1') | strcmp(regions{rr},'vCTX')
-        %xlim([ISIbyPSS.(regions{rr}).Xbins(1,1,1) 1.9])
-        end
-    
-
- subplot(3,3,6+rr)
+scale = 5;
+ subplot(2,3,rr)
+    crameri grayC
     hold on
     imagesc(statehists.(regions{rr}).PSSbins,statehists.(regions{rr}).EMGbins,statehists.(regions{rr}).PSS')
-    
-    xlabel('PSS');ylabel('EMG')
+    for ss = 1:3
+        errorshade(BShist.(regions{rr}).bins,1+scale*BShist.(regions{rr}).(states{ss}).PSS,...
+            scale*BShist.(regions{rr}).std.(states{ss}).PSS,scale*BShist.(regions{rr}).std.(states{ss}).PSS,statecolors{ss},'scalar')
+    plot(BShist.(regions{rr}).bins,1+scale*BShist.(regions{rr}).(states{ss}).PSS,'color',statecolors{ss})
+    end
+    caxis([0 5e-3])
+    title(regions{rr})
+    if rr == 1
+        ylabel('EMG')
+    else
+        set(gca,'yticklabel',[])
+    end
+    set(gca,'xticklabel',[])
     axis tight
+    %colorbar
     xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1)) 
         
 
@@ -108,7 +122,7 @@ figure
    
  for rr = 1:length(regions)
 for tt = 1:length(celltypes)
-subplot(4,3,tt*3-3+rr)
+subplot(4,3,tt*3-3+rr+6)
     imagesc(ISIbytheta.(regions{rr}).Xbins(1,:,1),ISIbytheta.(regions{rr}).Ybins(1,:,1), ISIbytheta.(regions{rr}).pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
@@ -123,43 +137,52 @@ subplot(4,3,tt*3-3+rr)
     else
         set(gca,'yticklabel',[])
     end
+    
     if tt ==1 
         caxis([0 0.025])
-        title(regions{rr})
+        set(gca,'xticklabel',[])
+        %title(regions{rr})
     elseif tt==2
          caxis([0 0.035])
+         xlabel('Theta')
     end
     xlim(ISIbytheta.(regions{rr}).Xbins(1,[1 end],1))
 end 
 
     
     
-subplot(6,3,10+rr-1)
-    hold on
-    for ss = [1 3]
-        errorshade(BShist.(regions{rr}).bins,BShist.(regions{rr}).(states{ss}).thratio,...
-            BShist.(regions{rr}).std.(states{ss}).thratio,BShist.(regions{rr}).std.(states{ss}).thratio,statecolors{ss},'scalar')
-    plot(BShist.(regions{rr}).bins,BShist.(regions{rr}).(states{ss}).thratio,'color',statecolors{ss})
-    end
-    xlabel('Theta Ratio (peak norm)')
-        box off
-    axis tight
-    xlim(ISIbytheta.(regions{rr}).Xbins(1,[1 end],1))
 
     
- subplot(3,3,6+rr)
+scale = 5;
+ subplot(2,3,rr)
+    crameri grayC
     hold on
     imagesc(statehists.(regions{rr}).thetabins,statehists.(regions{rr}).EMGbins,statehists.(regions{rr}).theta')
-    
-    xlabel('Theta Ratio');ylabel('EMG')
+    for ss = [1 3]
+        errorshade(BShist.(regions{rr}).bins,1+scale*BShist.(regions{rr}).(states{ss}).thratio,...
+            scale*BShist.(regions{rr}).std.(states{ss}).thratio,scale*BShist.(regions{rr}).std.(states{ss}).thratio,statecolors{ss},'scalar')
+    plot(BShist.(regions{rr}).bins,1+scale*BShist.(regions{rr}).(states{ss}).thratio,'color',statecolors{ss})
+    end
+    %caxis([0 5e-3])
+    title(regions{rr})
+    set(gca,'xticklabel',[])
+    %xlabel('Theta');
+    if rr == 1
+        ylabel('EMG')
+    else
+        set(gca,'yticklabel',[])
+    end
     axis tight
-    xlim(ISIbytheta.(regions{rr}).Xbins(1,[1 end],1))   
+    %colorbar
+    xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1)) 
     
  end
  NiceSave('ISIbyTheta',figfolder,[])
 
  %%
  figure
+ %cmap = crameri('grayC');
+ colormap(gcf,crameri('grayC'))
   for rr = 1:length(regions)
    subplot(3,3,rr)
     hold on

@@ -74,7 +74,7 @@ end
 %     (BSmetrics.peaks.NREMstate.PSS-BSmetrics.peaks.WAKEstate.PSS);
 
 %% BS metrics histogram by states
-BShist.bins = linspace(-2,2,50);
+BShist.bins = linspace(0,1,50);
 for ss = 1:length(states)
    BShist.(states{ss}).PSS = hist(BSmetrics.PSS(BSmetrics.instatetime.(states{ss})),BShist.bins);
    BShist.(states{ss}).PSS = BShist.(states{ss}).PSS./length(BSmetrics.timestamps);
@@ -111,7 +111,7 @@ ISIStats.allspikes.instate_notTheta = cellfun(@(X) InIntervals(X,double(SleepSta
 %% COnditional Hists
 %[-0.6 1.5] (median normalize)
 [ ISIbyPSS ] = cellfun(@(X,Y,Z,W) ConditionalHist( [Z(W);Z(W)],log10([X(W);Y(W)]),...
-    'Xbounds',[0 1],'numXbins',30,'Ybounds',[-3 2],'numYbins',125,'minX',10),...
+    'Xbounds',[0 1],'numXbins',25,'Ybounds',[-3 2],'numYbins',125,'minX',25),...
     ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
     ISIStats.allspikes.PSS,ISIStats.allspikes.instate_PSS,...
     'UniformOutput',false);
@@ -120,7 +120,7 @@ ISIbyPSS = CollapseStruct( ISIbyPSS,3);
 
 %[-1.5 1.75]
 [ ISIbytheta ] = cellfun(@(X,Y,Z,W) ConditionalHist( [Z(~W);Z(~W)],log10([X(~W);Y(~W)]),...
-    'Xbounds',[0 1],'numXbins',30,'Ybounds',[-3 2],'numYbins',125,'minX',10),...
+    'Xbounds',[0 1],'numXbins',25,'Ybounds',[-3 2],'numYbins',125,'minX',25),...
     ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
     ISIStats.allspikes.thetarat,ISIStats.allspikes.instate_notTheta,...
     'UniformOutput',false);
@@ -142,9 +142,9 @@ end
     
 %% State variable histograms 
 
-statehists.PSSbins = ISIbyPSS.Xbins(1,:,1);
-statehists.thetabins = ISIbytheta.Xbins(1,:,1);
-statehists.EMGbins = linspace(0,1,30);
+statehists.PSSbins = BShist.bins;
+statehists.thetabins = BShist.bins;
+statehists.EMGbins = BShist.bins;
 statehists.PSS = hist3([BSmetrics.PSS BSmetrics.EMG],{statehists.PSSbins,statehists.EMGbins});
 statehists.PSS = statehists.PSS./sum(statehists.PSS(:));
 statehists.theta = hist3([BSmetrics.thratio(~BSmetrics.instatetime.NREMstate)...
