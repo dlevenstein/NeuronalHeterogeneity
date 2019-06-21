@@ -50,29 +50,28 @@ cellcolor = {'k','r'};
 BSmetrics.timestamps = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.t_clus;
 BSmetrics.EMG = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.EMG;
 BSmetrics.PSS = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.broadbandSlowWave;
-BSmetrics.PSS = BSmetrics.PSS./mean(BSmetrics.PSS);
 BSmetrics.thratio = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.thratio;
 
 
 for ss = 1:length(states)
    BSmetrics.instatetime.(states{ss}) = InIntervals(BSmetrics.timestamps,SleepState.ints.(states{ss}));
    
-   [N,X] = hist(BSmetrics.thratio(BSmetrics.instatetime.(states{ss})),20);
-   [~,BSmetrics.peaks.(states{ss}).thratio] = max(N);
-   BSmetrics.peaks.(states{ss}).thratio = X(BSmetrics.peaks.(states{ss}).thratio);
-   [N,X] = hist(BSmetrics.PSS(BSmetrics.instatetime.(states{ss})),20);
-   [~,BSmetrics.peaks.(states{ss}).PSS] = max(N);
-   BSmetrics.peaks.(states{ss}).PSS = X(BSmetrics.peaks.(states{ss}).PSS);
+%    [N,X] = hist(BSmetrics.thratio(BSmetrics.instatetime.(states{ss})),20);
+%    [~,BSmetrics.peaks.(states{ss}).thratio] = max(N);
+%    BSmetrics.peaks.(states{ss}).thratio = X(BSmetrics.peaks.(states{ss}).thratio);
+    BSmetrics.peaks.(states{ss}).thratio = median(BSmetrics.thratio(BSmetrics.instatetime.(states{ss})));
+   
+%    [N,X] = hist(BSmetrics.PSS(BSmetrics.instatetime.(states{ss})),20);
+%    [~,BSmetrics.peaks.(states{ss}).PSS] = max(N);
+%    BSmetrics.peaks.(states{ss}).PSS = X(BSmetrics.peaks.(states{ss}).PSS);
+    BSmetrics.peaks.(states{ss}).PSS = median(BSmetrics.PSS(BSmetrics.instatetime.(states{ss})));
+
 end
 
-% BSmetrics.thratio = (BSmetrics.thratio-median(BSmetrics.thratio(BSmetrics.instatetime.WAKEstate)))./...
-%     (median(BSmetrics.thratio(BSmetrics.instatetime.REMstate))-median(BSmetrics.thratio(BSmetrics.instatetime.WAKEstate)));
-% BSmetrics.PSS = (BSmetrics.PSS-median(BSmetrics.PSS(BSmetrics.instatetime.WAKEstate)))./...
-%     (median(BSmetrics.PSS(BSmetrics.instatetime.NREMstate))-median(BSmetrics.PSS(BSmetrics.instatetime.WAKEstate)));
-BSmetrics.thratio = (BSmetrics.thratio-BSmetrics.peaks.WAKEstate.thratio)./...
-    (BSmetrics.peaks.REMstate.thratio-BSmetrics.peaks.WAKEstate.thratio);
-BSmetrics.PSS = (BSmetrics.PSS-BSmetrics.peaks.WAKEstate.PSS)./...
-    (BSmetrics.peaks.NREMstate.PSS-BSmetrics.peaks.WAKEstate.PSS);
+% BSmetrics.thratio = (BSmetrics.thratio-BSmetrics.peaks.WAKEstate.thratio)./...
+%     (BSmetrics.peaks.REMstate.thratio-BSmetrics.peaks.WAKEstate.thratio);
+% BSmetrics.PSS = (BSmetrics.PSS-BSmetrics.peaks.WAKEstate.PSS)./...
+%     (BSmetrics.peaks.NREMstate.PSS-BSmetrics.peaks.WAKEstate.PSS);
 
 %% BS metrics histogram by states
 BShist.bins = linspace(-2,2,50);
@@ -110,16 +109,18 @@ ISIStats.allspikes.instate_notTheta = cellfun(@(X) InIntervals(X,double(SleepSta
 
 
 %% COnditional Hists
+%[-0.6 1.5] (median normalize)
 [ ISIbyPSS ] = cellfun(@(X,Y,Z,W) ConditionalHist( [Z(W);Z(W)],log10([X(W);Y(W)]),...
-    'Xbounds',[-1 1.5],'numXbins',30,'Ybounds',[-3 2],'numYbins',125,'minX',10),...
+    'Xbounds',[0 1],'numXbins',30,'Ybounds',[-3 2],'numYbins',125,'minX',10),...
     ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
     ISIStats.allspikes.PSS,ISIStats.allspikes.instate_PSS,...
     'UniformOutput',false);
 ISIbyPSS = cat(1,ISIbyPSS{:});
 ISIbyPSS = CollapseStruct( ISIbyPSS,3);
 
+%[-1.5 1.75]
 [ ISIbytheta ] = cellfun(@(X,Y,Z,W) ConditionalHist( [Z(~W);Z(~W)],log10([X(~W);Y(~W)]),...
-    'Xbounds',[-1.5 1.75],'numXbins',30,'Ybounds',[-3 2],'numYbins',125,'minX',10),...
+    'Xbounds',[0 1],'numXbins',30,'Ybounds',[-3 2],'numYbins',125,'minX',10),...
     ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
     ISIStats.allspikes.thetarat,ISIStats.allspikes.instate_notTheta,...
     'UniformOutput',false);

@@ -157,3 +157,35 @@ subplot(6,3,10+rr-1)
     
  end
  NiceSave('ISIbyTheta',figfolder,[])
+
+ %%
+ figure
+  for rr = 1:length(regions)
+   subplot(3,3,rr)
+    hold on
+    imagesc(statehists.(regions{rr}).PSSbins,statehists.(regions{rr}).thetabins,statehists.(regions{rr}).PSSvtheta')
+    
+    xlabel('PSS');ylabel('Theta')
+    title(regions{rr})
+    axis tight
+    %xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1)) 
+    
+  subplot(3,3,3+rr)
+    hold on
+    imagesc(statehists.(regions{rr}).PSSbins,statehists.(regions{rr}).EMGbins,statehists.(regions{rr}).PSS')
+    
+    xlabel('PSS');ylabel('EMG')
+    axis tight
+    %xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1)) 
+        
+ 
+  subplot(3,3,6+rr)
+    hold on
+    imagesc(statehists.(regions{rr}).thetabins,statehists.(regions{rr}).EMGbins,statehists.(regions{rr}).theta')
+    
+    xlabel('Theta Ratio');ylabel('EMG')
+    axis tight
+    %xlim(ISIbytheta.(regions{rr}).Xbins(1,[1 end],1))   
+  end
+  
+   NiceSave('StateSpace',figfolder,[])
