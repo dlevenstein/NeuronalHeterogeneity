@@ -22,7 +22,15 @@ for rr = 1:length(regions)
 
     statehists.(regions{rr}) = bz_CollapseStruct(BrainStateandSpikingAll.statehists,3,'mean',true);
     celltypes = fieldnames(ISIbyPSS.(regions{rr}).celltypeidx);
-
+    
+    %How many cells are contributing?
+    nspkthresh = 50;
+    ncellthresh = 200;
+    %sum(ISIbytheta.(regions{rr}).Xhist>nspkthresh,3)
+    %sum(ISIbyPSS.(regions{rr}).Xhist>nspkthresh,3)
+    ISIbyPSS.(regions{rr}).pYX(sum(ISIbyPSS.(regions{rr}).Xhist>nspkthresh,3)<ncellthresh,:,:)=nan;
+    ISIbytheta.(regions{rr}).pYX(sum(ISIbytheta.(regions{rr}).Xhist>nspkthresh,3)<ncellthresh,:,:)=nan;
+    
     for tt = 1:length(celltypes)
         ISIbyPSS.(regions{rr}).pop.(celltypes{tt}) = nanmean(ISIbyPSS.(regions{rr}).pYX(:,:,ISIbyPSS.(regions{rr}).celltypeidx.(celltypes{tt})),3);
         ISIbytheta.(regions{rr}).pop.(celltypes{tt}) = nanmean(ISIbytheta.(regions{rr}).pYX(:,:,ISIbytheta.(regions{rr}).celltypeidx.(celltypes{tt})),3);
@@ -60,13 +68,14 @@ subplot(4,3,tt*3-3+rr+6)
     %title((celltypes{tt}))
    % colorbar
     if tt ==1 
-        caxis([0 0.023])
+        %caxis([0 0.023])
         set(gca,'xticklabel',[])
     elseif tt==2
-         caxis([0 0.032])
+         %caxis([0 0.032])
          xlabel('PSS')
     end
-    xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1))
+        xlim([0 1]) 
+    set(gca,'xtick',[0 1]);
     if strcmp(regions{rr},'CA1')
        % xlim([ISIbyPSS.(regions{rr}).Xbins(1,1,1) 1.9])
     end
@@ -101,16 +110,20 @@ scale = 5;
     plot(BShist.(regions{rr}).bins,1+scale*BShist.(regions{rr}).(states{ss}).PSS,'color',statecolors{ss})
     end
     caxis([0 5e-3])
+    set(gca,'xtick',[0 1])
+    set(gca,'ytick',[0 1])
     title(regions{rr})
     if rr == 1
         ylabel('EMG')
     else
         set(gca,'yticklabel',[])
     end
-    set(gca,'xticklabel',[])
+   % set(gca,'xticklabel',[])
     axis tight
     %colorbar
-    xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1)) 
+    %xlabel('PSS')
+    xlim([0 1]) 
+    set(gca,'xtick',[0 1])
         
 
 end
@@ -139,14 +152,15 @@ subplot(4,3,tt*3-3+rr+6)
     end
     
     if tt ==1 
-        caxis([0 0.025])
+        %caxis([0 0.025])
         set(gca,'xticklabel',[])
         %title(regions{rr})
     elseif tt==2
-         caxis([0 0.035])
+         %caxis([0 0.035])
          xlabel('Theta')
     end
-    xlim(ISIbytheta.(regions{rr}).Xbins(1,[1 end],1))
+        xlim([0 1]) 
+    set(gca,'xtick',[0 1])
 end 
 
     
@@ -174,7 +188,8 @@ scale = 5;
     end
     axis tight
     %colorbar
-    xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1)) 
+        xlim([0 1]) 
+    set(gca,'xtick',[0 1]);set(gca,'ytick',[0 1])
     
  end
  NiceSave('ISIbyTheta',figfolder,[])
@@ -190,7 +205,9 @@ scale = 5;
     
     xlabel('PSS');ylabel('Theta')
     title(regions{rr})
-    axis tight
+        xlim([0 1]) ;ylim([0 1])
+    set(gca,'xtick',[0 1]);set(gca,'ytick',[0 1])
+    
     %xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1)) 
     
   subplot(3,3,3+rr)
@@ -198,7 +215,8 @@ scale = 5;
     imagesc(statehists.(regions{rr}).PSSbins,statehists.(regions{rr}).EMGbins,statehists.(regions{rr}).PSS')
     
     xlabel('PSS');ylabel('EMG')
-    axis tight
+        xlim([0 1]) ;ylim([0 1])
+    set(gca,'xtick',[0 1]);set(gca,'ytick',[0 1])
     %xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1)) 
         
  
@@ -207,7 +225,8 @@ scale = 5;
     imagesc(statehists.(regions{rr}).thetabins,statehists.(regions{rr}).EMGbins,statehists.(regions{rr}).theta')
     
     xlabel('Theta Ratio');ylabel('EMG')
-    axis tight
+        xlim([0 1]) ;ylim([0 1])
+    set(gca,'xtick',[0 1]);set(gca,'ytick',[0 1])
     %xlim(ISIbytheta.(regions{rr}).Xbins(1,[1 end],1))   
   end
   
