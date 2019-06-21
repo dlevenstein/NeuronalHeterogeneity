@@ -43,14 +43,14 @@ wins = 1:12;
 swins = 1:25;
 
 
-    %% Set up for parallel in cluster
-    pc = parcluster('local');
-    % store temporary files in the 'scratch' drive on the cluster, labeled by job ID
-    pc.JobStorageLocation = strcat(getenv('SCRATCH'), '/', getenv('SLURM_JOB_ID'));
-    % enable MATLAB to utilize the multiple cores allocated in the job script
-    % SLURM_NTASKS_PER_NODE is a variable set in the job script by the flag --tasks-per-node
-    % we use SLURM_NTASKS_PER_NODE - 1, because one of these tasks is the original MATLAB script itself
-    parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1);
+%     %% Set up for parallel in cluster
+%     pc = parcluster('local');
+%     % store temporary files in the 'scratch' drive on the cluster, labeled by job ID
+%     pc.JobStorageLocation = strcat(getenv('SCRATCH'), '/', getenv('SLURM_JOB_ID'));
+%     % enable MATLAB to utilize the multiple cores allocated in the job script
+%     % SLURM_NTASKS_PER_NODE is a variable set in the job script by the flag --tasks-per-node
+%     % we use SLURM_NTASKS_PER_NODE - 1, because one of these tasks is the original MATLAB script itself
+%     parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1);
 
 %% Get the metrics (PSS, theta)
 for ww = 1:length(wins)
@@ -59,6 +59,7 @@ for ww = 1:length(wins)
     
     %%
     parfor ss = 1:length(swins)
+    %for ss = 1:length(swins)
         %SleepScoreLFP
 [SleepScoreMetrics_IRASA(ww,ss),StatePlotMaterials_IRASA(ww,ss)] = ClusterStates_GetMetrics(...
                                            basePath,SleepScoreLFP,EMGFromLFP,true,...
@@ -106,7 +107,7 @@ dipmap.swins = swins;
 
 figure
 
-subplot(4,3,1)
+subplot(4,4,1)
     imagesc(wins,swins,dipmap.SW')
     hold all
     plot(wins(10),swins(10),'k+')
@@ -118,10 +119,22 @@ subplot(4,3,1)
 
 
     
-subplot(4,3,3)
+subplot(4,4,3)
     imagesc(wins,swins,dipmap.TH')
     hold all
-        plot(wins(2),swins(15),'r+')
+        %plot(wins(2),swins(15),'r+')
+        plot(wins(10),swins(10),'k+')
+    
+    xlabel('Win size (s)'); ylabel('Smooth window (s)')
+    axis xy
+    colorbar
+    caxis([0 0.065])
+    title('Bimodality: Theta IRASA')
+    
+subplot(4,4,4)
+    imagesc(wins,swins,dipmap.TH_IRASA')
+    hold all
+        %plot(wins(2),swins(15),'r+')
         plot(wins(10),swins(10),'k+')
     
     xlabel('Win size (s)'); ylabel('Smooth window (s)')
@@ -130,7 +143,7 @@ subplot(4,3,3)
     caxis([0 0.065])
     title('Bimodality: Theta')
 
-subplot(4,3,2)
+subplot(4,4,2)
     imagesc(wins,swins,dipmap.SW_IRASA')
     hold all
         plot(wins(2),swins(15),'r+')

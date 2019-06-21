@@ -179,7 +179,7 @@ scale = 5;
     end
     %caxis([0 5e-3])
     title(regions{rr})
-    set(gca,'xticklabel',[])
+   % set(gca,'xticklabel',[])
     %xlabel('Theta');
     if rr == 1
         ylabel('EMG')

@@ -247,7 +247,7 @@ subplot(3,3,8)
     axis tight
     
     
-NiceSave('ISIbyStateVars',figfolder,baseName,'includeDate',true)
+NiceSave('ISIbyStateVars',figfolder,baseName)
 
 
 %%
