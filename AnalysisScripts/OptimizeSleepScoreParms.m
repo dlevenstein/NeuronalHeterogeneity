@@ -43,14 +43,14 @@ wins = 1:12;
 swins = 1:25;
 
 
-%     %% Set up for parallel in cluster
-%     pc = parcluster('local');
-%     % store temporary files in the 'scratch' drive on the cluster, labeled by job ID
-%     pc.JobStorageLocation = strcat(getenv('SCRATCH'), '/', getenv('SLURM_JOB_ID'));
-%     % enable MATLAB to utilize the multiple cores allocated in the job script
-%     % SLURM_NTASKS_PER_NODE is a variable set in the job script by the flag --tasks-per-node
-%     % we use SLURM_NTASKS_PER_NODE - 1, because one of these tasks is the original MATLAB script itself
-%     parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1);
+    %% Set up for parallel in cluster
+    pc = parcluster('local');
+    % store temporary files in the 'scratch' drive on the cluster, labeled by job ID
+    pc.JobStorageLocation = strcat(getenv('SCRATCH'), '/', getenv('SLURM_JOB_ID'));
+    % enable MATLAB to utilize the multiple cores allocated in the job script
+    % SLURM_NTASKS_PER_NODE is a variable set in the job script by the flag --tasks-per-node
+    % we use SLURM_NTASKS_PER_NODE - 1, because one of these tasks is the original MATLAB script itself
+    parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1);
 
 %% Get the metrics (PSS, theta)
 for ww = 1:length(wins)
