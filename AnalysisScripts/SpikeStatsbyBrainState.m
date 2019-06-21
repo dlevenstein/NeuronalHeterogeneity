@@ -1,4 +1,4 @@
-function [BShist,ISIbyPSS,ISIbytheta ] = SpikeStatsbyBrainState(basePath,figfolder)
+function [BShist,ISIbyPSS,ISIbytheta,statehists ] = SpikeStatsbyBrainState(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -29,7 +29,11 @@ states{4} = 'ALL';
 SleepState.ints.ALL = [0 Inf];
 statecolors = {'k','b','r',[0.6 0.6 0.6]};
 
+try
 celltypes = CellClass.celltypes;
+catch
+    celltypes = unique(CellClass.label);
+end
 cellcolor = {'k','r'};
 
 
@@ -44,21 +48,40 @@ cellcolor = {'k','r'};
 
 %% Normalize the brain state metrics
 BSmetrics.timestamps = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.t_clus;
+BSmetrics.EMG = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.EMG;
 BSmetrics.PSS = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.broadbandSlowWave;
 BSmetrics.PSS = BSmetrics.PSS./mean(BSmetrics.PSS);
 BSmetrics.thratio = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.thratio;
-BSmetrics.thratio = BSmetrics.thratio./mean(BSmetrics.thratio);
 
-%% BS metrics histogram by states
-BShist.bins = linspace(0,3,30);
+
 for ss = 1:length(states)
    BSmetrics.instatetime.(states{ss}) = InIntervals(BSmetrics.timestamps,SleepState.ints.(states{ss}));
+   
+   [N,X] = hist(BSmetrics.thratio(BSmetrics.instatetime.(states{ss})),20);
+   [~,BSmetrics.peaks.(states{ss}).thratio] = max(N);
+   BSmetrics.peaks.(states{ss}).thratio = X(BSmetrics.peaks.(states{ss}).thratio);
+   [N,X] = hist(BSmetrics.PSS(BSmetrics.instatetime.(states{ss})),20);
+   [~,BSmetrics.peaks.(states{ss}).PSS] = max(N);
+   BSmetrics.peaks.(states{ss}).PSS = X(BSmetrics.peaks.(states{ss}).PSS);
+end
+
+% BSmetrics.thratio = (BSmetrics.thratio-median(BSmetrics.thratio(BSmetrics.instatetime.WAKEstate)))./...
+%     (median(BSmetrics.thratio(BSmetrics.instatetime.REMstate))-median(BSmetrics.thratio(BSmetrics.instatetime.WAKEstate)));
+% BSmetrics.PSS = (BSmetrics.PSS-median(BSmetrics.PSS(BSmetrics.instatetime.WAKEstate)))./...
+%     (median(BSmetrics.PSS(BSmetrics.instatetime.NREMstate))-median(BSmetrics.PSS(BSmetrics.instatetime.WAKEstate)));
+BSmetrics.thratio = (BSmetrics.thratio-BSmetrics.peaks.WAKEstate.thratio)./...
+    (BSmetrics.peaks.REMstate.thratio-BSmetrics.peaks.WAKEstate.thratio);
+BSmetrics.PSS = (BSmetrics.PSS-BSmetrics.peaks.WAKEstate.PSS)./...
+    (BSmetrics.peaks.NREMstate.PSS-BSmetrics.peaks.WAKEstate.PSS);
+
+%% BS metrics histogram by states
+BShist.bins = linspace(-2,2,50);
+for ss = 1:length(states)
    BShist.(states{ss}).PSS = hist(BSmetrics.PSS(BSmetrics.instatetime.(states{ss})),BShist.bins);
    BShist.(states{ss}).PSS = BShist.(states{ss}).PSS./length(BSmetrics.timestamps);
    BShist.(states{ss}).thratio = hist(BSmetrics.thratio(BSmetrics.instatetime.(states{ss})),BShist.bins);
    BShist.(states{ss}).thratio = BShist.(states{ss}).thratio./length(BSmetrics.timestamps);
 end
-
 
 
 %% Get SleepScoreParams at each spike time
@@ -88,7 +111,7 @@ ISIStats.allspikes.instate_notTheta = cellfun(@(X) InIntervals(X,double(SleepSta
 
 %% COnditional Hists
 [ ISIbyPSS ] = cellfun(@(X,Y,Z,W) ConditionalHist( [Z(W);Z(W)],log10([X(W);Y(W)]),...
-    'Xbounds',[0.1 2.2],'numXbins',30,'Ybounds',[-3 2],'numYbins',125,'minX',50),...
+    'Xbounds',[-1 1.5],'numXbins',30,'Ybounds',[-3 2],'numYbins',125,'minX',10),...
     ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
     ISIStats.allspikes.PSS,ISIStats.allspikes.instate_PSS,...
     'UniformOutput',false);
@@ -96,7 +119,7 @@ ISIbyPSS = cat(1,ISIbyPSS{:});
 ISIbyPSS = CollapseStruct( ISIbyPSS,3);
 
 [ ISIbytheta ] = cellfun(@(X,Y,Z,W) ConditionalHist( [Z(~W);Z(~W)],log10([X(~W);Y(~W)]),...
-    'Xbounds',[0.2 2.6],'numXbins',30,'Ybounds',[-3 2],'numYbins',125,'minX',50),...
+    'Xbounds',[-1.5 1.75],'numXbins',30,'Ybounds',[-3 2],'numYbins',125,'minX',10),...
     ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
     ISIStats.allspikes.thetarat,ISIStats.allspikes.instate_notTheta,...
     'UniformOutput',false);
@@ -115,6 +138,21 @@ end
         ISIbyPSS.celltypeidx.pI = false(size(CellClass.pE));
         ISIbytheta.celltypeidx.pI = false(size(CellClass.pE));
     end
+    
+%% State variable histograms 
+
+statehists.PSSbins = ISIbyPSS.Xbins(1,:,1);
+statehists.thetabins = ISIbytheta.Xbins(1,:,1);
+statehists.EMGbins = linspace(0,1,30);
+statehists.PSS = hist3([BSmetrics.PSS BSmetrics.EMG],{statehists.PSSbins,statehists.EMGbins});
+statehists.PSS = statehists.PSS./sum(statehists.PSS(:));
+statehists.theta = hist3([BSmetrics.thratio(~BSmetrics.instatetime.NREMstate)...
+    BSmetrics.EMG(~BSmetrics.instatetime.NREMstate)],...
+    {statehists.thetabins,statehists.EMGbins});
+statehists.theta = statehists.theta./sum(statehists.theta(:));
+statehists.PSSvtheta = hist3([BSmetrics.PSS BSmetrics.thratio],...
+    {statehists.PSSbins,statehists.thetabins});
+statehists.PSSvtheta = statehists.PSSvtheta./sum(statehists.PSSvtheta(:));
 %%
 figure
    
@@ -174,12 +212,37 @@ subplot(6,3,11)
 
 subplot(3,3,3)
     hold on
+    imagesc(statehists.PSSbins,statehists.thetabins,statehists.PSSvtheta')
     for ss = 1:3
         plot(BSmetrics.PSS(BSmetrics.instatetime.(states{ss})),...
             BSmetrics.thratio(BSmetrics.instatetime.(states{ss})),'.','color',statecolors{ss},...
             'markersize',1)
     end
     xlabel('PSS');ylabel('Theta Ratio')
+    axis tight
+    
+    
+subplot(3,3,7)
+    hold on
+    imagesc(statehists.PSSbins,statehists.EMGbins,statehists.PSS')
+    for ss = 1:3
+        plot(BSmetrics.PSS(BSmetrics.instatetime.(states{ss})),...
+            BSmetrics.EMG(BSmetrics.instatetime.(states{ss})),'.','color',statecolors{ss},...
+            'markersize',1)
+    end
+    xlabel('PSS');ylabel('EMG')
+    axis tight
+    
+    
+subplot(3,3,8)
+    hold on
+    imagesc(statehists.thetabins,statehists.EMGbins,statehists.theta')
+    for ss = [1 3]
+        plot(BSmetrics.thratio(BSmetrics.instatetime.(states{ss})),...
+            BSmetrics.EMG(BSmetrics.instatetime.(states{ss})),'.','color',statecolors{ss},...
+            'markersize',1)
+    end
+    xlabel('Theta Ratio');ylabel('EMG')
     axis tight
     
     

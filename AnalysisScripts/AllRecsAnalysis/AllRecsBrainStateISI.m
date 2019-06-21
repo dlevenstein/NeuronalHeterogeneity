@@ -13,19 +13,20 @@ for rr = 1:length(regions)
     BrainStateandSpikingAll = bz_CollapseStruct(BrainStateandSpikingAll);
 
 
-%%
-ISIbyPSS.(regions{rr}) = bz_CollapseStruct(BrainStateandSpikingAll.ISIbyPSS,'match','justcat',true);
-ISIbytheta.(regions{rr}) = bz_CollapseStruct(BrainStateandSpikingAll.ISIbytheta,'match','justcat',true);
-BShist.(regions{rr}) = bz_CollapseStruct(BrainStateandSpikingAll.BShist,1,'mean',true);
-BShist.(regions{rr}).std = bz_CollapseStruct(BrainStateandSpikingAll.BShist,1,'std',true);
-BShist_all.(regions{rr}) = bz_CollapseStruct(BrainStateandSpikingAll.BShist,1,'justcat',true);
 
-celltypes = fieldnames(ISIbyPSS.(regions{rr}).celltypeidx);
+    ISIbyPSS.(regions{rr}) = bz_CollapseStruct(BrainStateandSpikingAll.ISIbyPSS,'match','justcat',true);
+    ISIbytheta.(regions{rr}) = bz_CollapseStruct(BrainStateandSpikingAll.ISIbytheta,'match','justcat',true);
+    BShist.(regions{rr}) = bz_CollapseStruct(BrainStateandSpikingAll.BShist,1,'mean',true);
+    BShist.(regions{rr}).std = bz_CollapseStruct(BrainStateandSpikingAll.BShist,1,'std',true);
+    BShist_all.(regions{rr}) = bz_CollapseStruct(BrainStateandSpikingAll.BShist,1,'justcat',true);
 
-for tt = 1:length(celltypes)
-    ISIbyPSS.(regions{rr}).pop.(celltypes{tt}) = nanmean(ISIbyPSS.(regions{rr}).pYX(:,:,ISIbyPSS.(regions{rr}).celltypeidx.(celltypes{tt})),3);
-    ISIbytheta.(regions{rr}).pop.(celltypes{tt}) = nanmean(ISIbytheta.(regions{rr}).pYX(:,:,ISIbytheta.(regions{rr}).celltypeidx.(celltypes{tt})),3);
-end
+    statehists.(regions{rr}) = bz_CollapseStruct(BrainStateandSpikingAll.statehists,3,'mean',true);
+    celltypes = fieldnames(ISIbyPSS.(regions{rr}).celltypeidx);
+
+    for tt = 1:length(celltypes)
+        ISIbyPSS.(regions{rr}).pop.(celltypes{tt}) = nanmean(ISIbyPSS.(regions{rr}).pYX(:,:,ISIbyPSS.(regions{rr}).celltypeidx.(celltypes{tt})),3);
+        ISIbytheta.(regions{rr}).pop.(celltypes{tt}) = nanmean(ISIbytheta.(regions{rr}).pYX(:,:,ISIbytheta.(regions{rr}).celltypeidx.(celltypes{tt})),3);
+    end
 end
 %%
 figure
@@ -66,7 +67,7 @@ subplot(4,3,tt*3-3+rr)
     end
     xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1))
     if strcmp(regions{rr},'CA1')
-        xlim([ISIbyPSS.(regions{rr}).Xbins(1,1,1) 1.9])
+       % xlim([ISIbyPSS.(regions{rr}).Xbins(1,1,1) 1.9])
     end
 end 
 
@@ -79,16 +80,24 @@ subplot(6,3,10+rr-1)
             BShist.(regions{rr}).std.(states{ss}).PSS,BShist.(regions{rr}).std.(states{ss}).PSS,statecolors{ss},'scalar')
     plot(BShist.(regions{rr}).bins,BShist.(regions{rr}).(states{ss}).PSS,'color',statecolors{ss})
     end
-    xlabel('PSS')
+    xlabel('PSS (peak norm)')
     
     box off
     axis tight
     xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1))
-        if strcmp(regions{rr},'CA1')
-        xlim([ISIbyPSS.(regions{rr}).Xbins(1,1,1) 1.9])
-    end
+        if strcmp(regions{rr},'CA1') | strcmp(regions{rr},'vCTX')
+        %xlim([ISIbyPSS.(regions{rr}).Xbins(1,1,1) 1.9])
+        end
     
 
+ subplot(3,3,6+rr)
+    hold on
+    imagesc(statehists.(regions{rr}).PSSbins,statehists.(regions{rr}).EMGbins,statehists.(regions{rr}).PSS')
+    
+    xlabel('PSS');ylabel('EMG')
+    axis tight
+    xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1)) 
+        
 
 end
  NiceSave('ISIbyPSS',figfolder,[])
@@ -132,10 +141,19 @@ subplot(6,3,10+rr-1)
             BShist.(regions{rr}).std.(states{ss}).thratio,BShist.(regions{rr}).std.(states{ss}).thratio,statecolors{ss},'scalar')
     plot(BShist.(regions{rr}).bins,BShist.(regions{rr}).(states{ss}).thratio,'color',statecolors{ss})
     end
-    xlabel('Theta Ratio')
+    xlabel('Theta Ratio (peak norm)')
         box off
     axis tight
     xlim(ISIbytheta.(regions{rr}).Xbins(1,[1 end],1))
 
+    
+ subplot(3,3,6+rr)
+    hold on
+    imagesc(statehists.(regions{rr}).thetabins,statehists.(regions{rr}).EMGbins,statehists.(regions{rr}).theta')
+    
+    xlabel('Theta Ratio');ylabel('EMG')
+    axis tight
+    xlim(ISIbytheta.(regions{rr}).Xbins(1,[1 end],1))   
+    
  end
  NiceSave('ISIbyTheta',figfolder,[])
