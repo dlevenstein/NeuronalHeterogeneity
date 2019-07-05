@@ -82,14 +82,18 @@ dipmap.TH_IRASA = nan(length(wins),length(swins));
 for ww = 1:length(wins)
     for ss = 1:length(swins)
         try
-        dipmap.SW(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics(ww,ss).broadbandSlowWave));
-        dipmap.TH(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics(ww,ss).thratio));
+%         dipmap.SW(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics(ww,ss).broadbandSlowWave));
+%         dipmap.TH(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics(ww,ss).thratio));
+            dipmap.SW(ww,ss) = SleepScoreMetrics(ww,ss).SWdiptest;
+            dipmap.TH(ww,ss) = SleepScoreMetrics(ww,ss).THdiptest;
         catch
         end
         
         try
-        dipmap.SW_IRASA(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics_IRASA(ww,ss).broadbandSlowWave));
-        dipmap.TH_IRASA(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics_IRASA(ww,ss).thratio));
+       % dipmap.SW_IRASA(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics_IRASA(ww,ss).broadbandSlowWave));
+        %dipmap.TH_IRASA(ww,ss) = bz_hartigansdiptest(sort(SleepScoreMetrics_IRASA(ww,ss).thratio));
+            dipmap.SW_IRASA(ww,ss) = SleepScoreMetrics_IRASA(ww,ss).SWdiptest;
+            dipmap.TH_IRASA(ww,ss) = SleepScoreMetrics_IRASA(ww,ss).THdiptest;
         catch  
         end
     end
@@ -128,7 +132,7 @@ subplot(4,4,3)
     xlabel('Win size (s)'); ylabel('Smooth window (s)')
     axis xy
     colorbar
-    caxis([0 0.065])
+    caxis([0 0.01])
     title('Bimodality: Theta IRASA')
     
 subplot(4,4,4)
@@ -140,7 +144,7 @@ subplot(4,4,4)
     xlabel('Win size (s)'); ylabel('Smooth window (s)')
     axis xy
     colorbar
-    caxis([0 0.065])
+    caxis([0 0.01])
     title('Bimodality: Theta')
 
 subplot(4,4,2)
