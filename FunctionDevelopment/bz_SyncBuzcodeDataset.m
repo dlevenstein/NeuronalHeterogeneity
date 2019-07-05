@@ -18,5 +18,10 @@ rsync -auvzP --exclude=Old --exclude=Zip /mnt/proraidDL/Database/AGData dl2820@b
 
 %BW to server
 rsync -auvzP --exclude=c3po --exclude=*_ACC /mnt/proraidDL/Database/BWData dl2820@bigpurple.nyumc.org:/gpfs/data/buzsakilab/DL/Database/
+
+
+%AP from NYUshare (L/K to keep softlinks on send/recieve)
+rsync -auvzPLK --exclude=*raw* --exclude=CluSAV --exclude=Analysis --exclude=*dat --exclude=*.clu* --exclude=*.fet.* --exclude=*.res.* --exclude=*.spk.* --exclude=*.m1m2.* --exclude=*.alg.* --exclude=*.mm.* /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onNYUShare/AP_THAL/ /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL/
+%/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL/
 end
 
