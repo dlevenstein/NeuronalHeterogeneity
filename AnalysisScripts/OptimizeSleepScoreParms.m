@@ -193,7 +193,7 @@ subplot(4,1,3)
 subplot(4,1,4)
     imagesc(SleepScoreMetrics_IRASA(2,15).t_clus,...
         log2(StatePlotMaterials_IRASA(2,15).thFFTfreqs),...
-        log10(StatePlotMaterials_IRASA(2,15).thFFTspec))
+        (StatePlotMaterials_IRASA(2,15).thFFTspec))
     axis xy
         hold all
         plot(SleepScoreMetrics(10,10).t_clus,...
@@ -202,7 +202,7 @@ subplot(4,1,4)
             bz_NormToRange(SleepScoreMetrics_IRASA(2,15).thratio),'r')
 
     xlim(xwin)
-    SpecColorRange(log10(StatePlotMaterials(2,15).thFFTspec),[1.5 1.5])
+    SpecColorRange((StatePlotMaterials(2,15).thFFTspec),[1.5 1.5])
     LogScale('y',2)
     bz_ScaleBar('s')
     ylabel('Theta (f, Hz)')
