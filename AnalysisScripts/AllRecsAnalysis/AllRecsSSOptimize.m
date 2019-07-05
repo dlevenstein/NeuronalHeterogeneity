@@ -31,10 +31,19 @@ subplot(4,4,1)
     xlabel('Win size (s)'); ylabel('Smooth window (s)')
     axis xy
     colorbar
-    caxis([0 0.04])
+    caxis([0 0.06])
     title('Bimodality: Linear Fit')
 
-   
+subplot(4,4,2)
+    imagesc(dipmap.wins,dipmap.swins,dipmap.SW_IRASA')
+    hold all
+        plot(dipmap.wins(2),dipmap.swins(15),'r+')
+    
+    xlabel('Win size (s)'); ylabel('Smooth window (s)')
+    axis xy
+    colorbar
+    caxis([0 0.06])
+    title('Bimodality: IRASA') 
     
 subplot(4,4,3)
     imagesc(dipmap.wins,dipmap.swins,dipmap.TH')
@@ -58,16 +67,7 @@ subplot(4,4,4)
     caxis([0 0.0075])
     title('Bimodality: Theta IRASA')
 
-subplot(4,4,2)
-    imagesc(dipmap.wins,dipmap.swins,dipmap.SW_IRASA')
-    hold all
-        plot(dipmap.wins(2),dipmap.swins(15),'r+')
-    
-    xlabel('Win size (s)'); ylabel('Smooth window (s)')
-    axis xy
-    colorbar
-    caxis([0 0.04])
-    title('Bimodality: IRASA')
+
     
     
  NiceSave('WinIRASAOptimization',figfolder,[])
