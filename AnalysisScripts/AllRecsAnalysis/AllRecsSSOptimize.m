@@ -24,7 +24,7 @@ examples = [10 10; 2 15];
 
 figure
 
-subplot(4,3,1)
+subplot(4,4,1)
     imagesc(dipmap.wins,dipmap.swins,dipmap.SW')
     hold all
     plot(dipmap.wins(10),dipmap.swins(10),'k+')
@@ -36,10 +36,9 @@ subplot(4,3,1)
 
    
     
-subplot(4,3,3)
+subplot(4,4,3)
     imagesc(dipmap.wins,dipmap.swins,dipmap.TH')
     hold all
-        plot(dipmap.wins(2),dipmap.swins(15),'r+')
         plot(dipmap.wins(10),dipmap.swins(10),'k+')
     
     xlabel('Win size (s)'); ylabel('Smooth window (s)')
@@ -47,8 +46,19 @@ subplot(4,3,3)
     colorbar
     caxis([0 0.0075])
     title('Bimodality: Theta')
+    
+subplot(4,4,4)
+    imagesc(dipmap.wins,dipmap.swins,dipmap.TH_IRASA')
+    hold all
+        plot(dipmap.wins(2),dipmap.swins(15),'r+')
+    
+    xlabel('Win size (s)'); ylabel('Smooth window (s)')
+    axis xy
+    colorbar
+    caxis([0 0.0075])
+    title('Bimodality: Theta IRASA')
 
-subplot(4,3,2)
+subplot(4,4,2)
     imagesc(dipmap.wins,dipmap.swins,dipmap.SW_IRASA')
     hold all
         plot(dipmap.wins(2),dipmap.swins(15),'r+')
