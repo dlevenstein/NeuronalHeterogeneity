@@ -58,7 +58,7 @@ for ww = 1:length(wins)
     
     
     %%
-    parfor ss = 1:length(swins)
+    for ss = 1:length(swins)
     %for ss = 1:length(swins)
         %SleepScoreLFP
 [SleepScoreMetrics_IRASA(ww,ss),StatePlotMaterials_IRASA(ww,ss)] = ClusterStates_GetMetrics(...
