@@ -56,6 +56,46 @@ sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gat
 
 
 
-
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse12/Mouse12-120806
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse12/Mouse12-120807
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse12/Mouse12-120808
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse12/Mouse12-120809
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse12/Mouse12-120810
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse17/Mouse17-130125
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse17/Mouse17-130128
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse17/Mouse17-130129
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse17/Mouse17-130130
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse17/Mouse17-130131
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse17/Mouse17-130201
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse17/Mouse17-130202
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse17/Mouse17-130203
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse17/Mouse17-130204
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse20/Mouse20-130514
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse20/Mouse20-130515
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse20/Mouse20-130516
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse20/Mouse20-130517
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse20/Mouse20-130520
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse24/Mouse24-131213
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse24/Mouse24-131216
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse24/Mouse24-131217
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse24/Mouse24-131218
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse25/Mouse25-140123
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse25/Mouse25-140124
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse25/Mouse25-140128
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse25/Mouse25-140129
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse25/Mouse25-140130
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse25/Mouse25-140131
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse25/Mouse25-140203
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse25/Mouse25-140204
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse25/Mouse25-140205
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse25/Mouse25-140206
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse28/Mouse28-140310
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse28/Mouse28-140311
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse28/Mouse28-140312
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse28/Mouse28-140313
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse28/Mouse28-140314
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse28/Mouse28-140317
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse28/Mouse28-140318
+sbatch ./SSOptimizejob.bash  /gpfs/data/buzsakilab/DL/Database/APData/Mouse32/Mouse32-140822
 
 
