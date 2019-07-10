@@ -79,6 +79,8 @@ dipmap.TH = nan(length(wins),length(swins));
 dipmap.SW_IRASA = nan(length(wins),length(swins));
 dipmap.TH_IRASA = nan(length(wins),length(swins));
 
+dipmap.bins = linspace(0,1,20);
+
 for ww = 1:length(wins)
     for ss = 1:length(swins)
         try
@@ -96,6 +98,23 @@ for ww = 1:length(wins)
             dipmap.TH_IRASA(ww,ss) = SleepScoreMetrics_IRASA(ww,ss).THdiptest;
         catch  
         end
+        
+        dipmap.SWhist = hist(SleepScoreMetrics(10,10).broadbandSlowWave,dipmap.bins);
+        dipmap.THhist = hist(SleepScoreMetrics(10,10).thratio,dipmap.bins);
+        dipmap.SWhist_IRASA = hist(SleepScoreMetrics_IRASA(2,15).broadbandSlowWave,dipmap.bins);
+        dipmap.THhist_IRASA = hist(SleepScoreMetrics_IRASA(2,15).thratio,dipmap.bins);
+        
+        dipmap.THhist_used = interp1(SleepScoreMetrics(10,10).histsandthreshs.THhistbins,...
+            SleepScoreMetrics(10,10).histsandthreshs.THhist,dipmap.bins);
+        dipmap.THhist_IRASA_used = interp1(SleepScoreMetrics_IRASA(2,15).histsandthreshs.THhistbins,...
+            SleepScoreMetrics_IRASA(2,15).histsandthreshs.THhist,dipmap.bins);
+        
+        dipmap.SWhist = dipmap.SWhist./sum(dipmap.SWhist);
+        dipmap.THhist = dipmap.THhist./sum(dipmap.THhist);
+        dipmap.SWhist_IRASA = dipmap.SWhist_IRASA./sum(dipmap.SWhist_IRASA);
+        dipmap.THhist_IRASA = dipmap.THhist_IRASA./sum(dipmap.THhist_IRASA);
+        dipmap.THhist_used = dipmap.THhist_used./nansum(dipmap.THhist_used);
+        dipmap.THhist_IRASA_used = dipmap.THhist_IRASA_used./nansum(dipmap.THhist_IRASA_used);
     end
 end
 
@@ -206,7 +225,8 @@ subplot(4,1,4)
             bz_NormToRange(SleepScoreMetrics_IRASA(2,15).thratio),'r')
 
     xlim(xwin)
-    SpecColorRange((StatePlotMaterials(2,15).thFFTspec),[1.5 1.5])
+    %SpecColorRange((StatePlotMaterials(2,15).thFFTspec),[1.5 1.5])
+    %colorbar
     LogScale('y',2)
     bz_ScaleBar('s')
     ylabel('Theta (f, Hz)')

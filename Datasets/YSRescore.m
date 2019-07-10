@@ -29,12 +29,15 @@ function [] = RescoreYS(basePath,figfolder)
 baseName = bz_BasenameFromBasepath(basePath);
 
 %%
-load(fullfile(basePath,[baseName,'.SleepScoreLFP.LFP.mat']))
+lfpfile = fullfile(basePath,[baseName,'.SleepScoreLFP.LFP.mat']);
+if exist(lfpfile,'file')
+    load(lfpfile)
 
-
-%%
-%Keep yuta's time window
-scoretime = [SleepScoreLFP.t(1)-(1./SleepScoreLFP.sf) SleepScoreLFP.t(end)];
+    %Keep yuta's time window
+    scoretime = [SleepScoreLFP.t(1) SleepScoreLFP.t(end)];
+else
+    scoretime = [0 Inf];
+end
 %%
 SleepScoreMaster(basePath,'overwrite',true,'scoretime',scoretime)
 
