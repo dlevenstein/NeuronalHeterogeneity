@@ -1,50 +1,50 @@
 #to set up links, use ./links in terminal
 
 
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse12/Mouse12-120806/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse12/Mouse12-120807/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse12/Mouse12-120808/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse12/Mouse12-120809/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse12/Mouse12-120810/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse12/Mouse12-120806/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse12/Mouse12-120807/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse12/Mouse12-120808/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse12/Mouse12-120809/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse12/Mouse12-120810/ .
 
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse17/Mouse17-130125/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse17/Mouse17-130128/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse17/Mouse17-130129/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse17/Mouse17-130130/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse17/Mouse17-130131/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse17/Mouse17-130201/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse17/Mouse17-130202/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse17/Mouse17-130203/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse17/Mouse17-130204/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse17/Mouse17-130125/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse17/Mouse17-130128/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse17/Mouse17-130129/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse17/Mouse17-130130/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse17/Mouse17-130131/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse17/Mouse17-130201/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse17/Mouse17-130202/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse17/Mouse17-130203/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse17/Mouse17-130204/ .
 
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse20/Mouse20-130514/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse20/Mouse20-130515/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse20/Mouse20-130516/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse20/Mouse20-130517/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse20/Mouse20-130520/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse20/Mouse20-130514/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse20/Mouse20-130515/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse20/Mouse20-130516/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse20/Mouse20-130517/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse20/Mouse20-130520/ .
 
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse24/Mouse24-131213/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse24/Mouse24-131216/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse24/Mouse24-131217/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse24/Mouse24-131218/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse24/Mouse24-131213/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse24/Mouse24-131216/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse24/Mouse24-131217/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse24/Mouse24-131218/ .
 
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse25/Mouse25-140123/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse25/Mouse25-140124/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse25/Mouse25-140128/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse25/Mouse25-140129/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse25/Mouse25-140130/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse25/Mouse25-140131/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse25/Mouse25-140203/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse25/Mouse25-140204/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse25/Mouse25-140205/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse25/Mouse25-140206/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse25/Mouse25-140123/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse25/Mouse25-140124/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse25/Mouse25-140128/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse25/Mouse25-140129/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse25/Mouse25-140130/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse25/Mouse25-140131/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse25/Mouse25-140203/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse25/Mouse25-140204/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse25/Mouse25-140205/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse25/Mouse25-140206/ .
 
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse28/Mouse28-140310/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse28/Mouse28-140311/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse28/Mouse28-140312/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse28/Mouse28-140313/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse28/Mouse28-140314/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse28/Mouse28-140317/ .
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse28/Mouse28-140318/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse28/Mouse28-140310/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse28/Mouse28-140311/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse28/Mouse28-140312/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse28/Mouse28-140313/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse28/Mouse28-140314/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse28/Mouse28-140317/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse28/Mouse28-140318/ .
 
-ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/PeyracheA/Mouse32/Mouse32-140822/ .
+ln -s /mnt/BigPurple/Database/APData/Mouse32/Mouse32-140822/ .

@@ -28,6 +28,12 @@ function [] = RescoreYS(basePath,figfolder)
 %figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
+%% Rename StateScoreFigures Folder
+ssffolder = fullfile(basePath,'StateScoreFigures');
+ssffolder_new = fullfile(basePath,'StateScoreFigures_old');
+if exist(ssffolder)
+    movefile(ssffolder,ssffolder_new)
+end
 %%
 lfpfile = fullfile(basePath,[baseName,'.SleepScoreLFP.LFP.mat']);
 if exist(lfpfile,'file')
@@ -39,5 +45,5 @@ else
     scoretime = [0 Inf];
 end
 %%
-SleepScoreMaster(basePath,'overwrite',true,'scoretime',scoretime)
+SleepScoreMaster(basePath,'overwrite',false,'scoretime',scoretime)
 
