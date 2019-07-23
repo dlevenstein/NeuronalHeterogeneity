@@ -29,11 +29,11 @@ function [] = RescoreYS(basePath,figfolder)
 baseName = bz_BasenameFromBasepath(basePath);
 
 %% Rename StateScoreFigures Folder
-ssffolder = fullfile(basePath,'StateScoreFigures');
-ssffolder_new = fullfile(basePath,'StateScoreFigures_old');
-if exist(ssffolder)
-    movefile(ssffolder,ssffolder_new)
-end
+% ssffolder = fullfile(basePath,'StateScoreFigures');
+% ssffolder_new = fullfile(basePath,'StateScoreFigures_old');
+% if exist(ssffolder)
+%     movefile(ssffolder,ssffolder_new)
+% end
 %%
 lfpfile = fullfile(basePath,[baseName,'.SleepScoreLFP.LFP.mat']);
 if exist(lfpfile,'file')
