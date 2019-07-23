@@ -12,12 +12,40 @@ OptimizeSleepScoreParmsAll = bz_CollapseStruct(OptimizeSleepScoreParmsAll);
 thisregion = 'vCTX';
 
 %%
-dipmap = bz_CollapseStruct(OptimizeSleepScoreParmsAll.dipmap,3,'mean',true);
+dipmap = bz_CollapseStruct(OptimizeSleepScoreParmsAll.dipmap,3,'median',true);
+dipmap_all = bz_CollapseStruct(OptimizeSleepScoreParmsAll.dipmap,1,'justcat',true);
 
 %%
 dipmap.wins = 1:12;
 dipmap.swins = 1:25;
 
+%%
+figure
+subplot(3,2,1)
+imagesc(dipmap_all.SWhist)
+caxis([0 0.3])
+colorbar
+subplot(3,2,3)
+imagesc(dipmap_all.SWhist_IRASA)
+colorbar
+caxis([0 0.3])
+subplot(3,2,5)
+plot(dipmap.bins,dipmap.SWhist)
+hold on
+plot(dipmap.bins,dipmap.SWhist_IRASA)
+
+subplot(3,2,2)
+imagesc(dipmap_all.THhist_used)
+caxis([0 0.25])
+colorbar
+subplot(3,2,4)
+imagesc(dipmap_all.THhist_IRASA_used)
+colorbar
+caxis([0 0.25])
+subplot(3,2,6)
+plot(dipmap.bins,dipmap.THhist_used)
+hold on
+plot(dipmap.bins,dipmap.THhist_IRASA_used)
 %%
 
 examples = [10 10; 2 15];
