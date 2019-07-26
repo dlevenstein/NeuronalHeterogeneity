@@ -528,6 +528,7 @@ for cc = 1:length(classnames)
                 case 2
                     caxis([0.5e-4 1.8e-3])
             end
+             caxis([0 max([meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).norm(:,1);0])])
             
     end
 end
