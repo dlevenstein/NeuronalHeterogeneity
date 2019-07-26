@@ -33,6 +33,14 @@ rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onP
 rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AG_HPC/ /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onCluster/AG_HPC/
 rsync -auvzPLK --exclude=UnitSummary --exclude=revisions_cell_metrics --exclude=rez.mat /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/YS_CTX/ /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onCluster/YS_CTX/
 
+%Everythign to NYUshare
+rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL/ /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onNYUShare/AP_THAL/
+rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/BW_CTX/ /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onNYUShare/BW_CTX/
+rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AG_HPC/ /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onNYUShare/AG_HPC/
+rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/YS_CTX/ /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onNYUShare/YS_CTX/
+
+
+
 %AP to NYUShare
 rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL/ /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onNYUShare/AP_THAL/ 
 

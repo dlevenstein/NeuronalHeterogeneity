@@ -22,6 +22,23 @@ function [] = APGetCellClass(basePath,figfolder)
 baseName = bz_BasenameFromBasepath(basePath);
 
 %% Make the spikes file
+SpikeDataFile = fullfile(basePath,'Analysis','SpikeData.mat');
+load(SpikeDataFile);
+loadcells = [shank cellIx];
+%%
+spikes = bz_GetSpikes('basepath',basePath,'saveMat',true,'forceReload',true,...
+    'onlyLoad',loadcells);
 
-spikes = bz_GetSpikes('basepath',basePath,'saveMat',true);
+if length(spikes.UID) ~= length(spikes.region)
+    keyboard
+end
 
+%%
+thalcells = spikes.UID(strcmp(spikes.region,'THAL'));
+
+ignorecells = spikes.UID(~strcmp(spikes.region,'THAL')); %spikes.UID(strcmp(spikes.region,'SUB') | strcmp(spikes.region,'HPC'));
+
+%%
+bz_CellClassification(basePath,'keepKnown',true,...
+    'knownE',thalcells,...
+    'ignorecells',ignorecells,'forceReload',true)

@@ -5,7 +5,8 @@ figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyBrainState'];
 datasetPath.fCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/BW_CTX';
 datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AG_HPC';
 datasetPath.vCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/YS_CTX';
-regions = {'vCTX','fCTX','CA1'};
+datasetPath.THAL = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL';
+regions = {'THAL','vCTX','fCTX','CA1'};
 
 for rr = 1:length(regions)
     [ISIstats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
@@ -39,21 +40,21 @@ end
 %%
 figure
 for rr = 1:length(regions)
-subplot(3,2,rr*2-1)
+subplot(4,2,rr*2-1)
 imagesc(BShist_all.(regions{rr}).bins(1,:),[0 1],BShist_all.(regions{rr}).ALL.PSS)
 xlabel('PSS metric (Mean Norm)');ylabel(regions{rr})
-subplot(3,2,rr*2)
+subplot(4,2,rr*2)
 imagesc(BShist_all.(regions{rr}).bins(1,:),[0 1],BShist_all.(regions{rr}).ALL.thratio)
 xlabel('Theta metric (Mean Norm)');
 end
 %%
 states = {'WAKEstate','NREMstate','REMstate'};
-statecolors = {'k','b','r'};
+statecolors = {[0 0 0],[0 0 1],[1 0 0]};
 %% ISI by PSS
 figure
  for rr = 1:length(regions)
 for tt = 1:length(celltypes)
-subplot(4,3,tt*3-3+rr+6)
+subplot(4,4,tt*4-4+rr+8)
     imagesc(ISIbyPSS.(regions{rr}).Xbins(1,:,1),ISIbyPSS.(regions{rr}).Ybins(1,:,1), ISIbyPSS.(regions{rr}).pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
@@ -100,10 +101,21 @@ end
 %         end
     
 scale = 5;
- subplot(2,3,rr)
-    crameri grayC
+imagescale = 200;
+ subplot(2,4,rr)
+    %crameri grayC
     hold on
-    imagesc(statehists.(regions{rr}).PSSbins,statehists.(regions{rr}).EMGbins,statehists.(regions{rr}).PSS')
+    %imagesc(statehists.(regions{rr}).PSSbins,statehists.(regions{rr}).EMGbins,statehists.(regions{rr}).PSS')
+
+    for ss = 1:3
+        plotcolor = cat(3,statecolors{ss}(1).*ones(size(statehists.(regions{rr}).(states{ss}).PSS))',...
+            statecolors{ss}(2).*ones(size(statehists.(regions{rr}).(states{ss}).PSS))',...
+            statecolors{ss}(3).*ones(size(statehists.(regions{rr}).(states{ss}).PSS))');
+        h = image(statehists.(regions{rr}).PSSbins,statehists.(regions{rr}).EMGbins,plotcolor);
+        set(h,'AlphaData',imagescale*statehists.(regions{rr}).(states{ss}).PSS')
+    end
+
+    axis tight
     for ss = 1:3
         errorshade(BShist.(regions{rr}).bins,1+scale*BShist.(regions{rr}).(states{ss}).PSS,...
             scale*BShist.(regions{rr}).std.(states{ss}).PSS,scale*BShist.(regions{rr}).std.(states{ss}).PSS,statecolors{ss},'scalar')
@@ -135,7 +147,7 @@ figure
    
  for rr = 1:length(regions)
 for tt = 1:length(celltypes)
-subplot(4,3,tt*3-3+rr+6)
+subplot(4,4,tt*4-4+rr+8)
     imagesc(ISIbytheta.(regions{rr}).Xbins(1,:,1),ISIbytheta.(regions{rr}).Ybins(1,:,1), ISIbytheta.(regions{rr}).pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
@@ -168,10 +180,17 @@ end
 
     
 scale = 5;
- subplot(2,3,rr)
-    crameri grayC
+ subplot(2,4,rr)
+    %crameri grayC
     hold on
-    imagesc(statehists.(regions{rr}).thetabins,statehists.(regions{rr}).EMGbins,statehists.(regions{rr}).theta')
+    for ss = [1 3]
+        plotcolor = cat(3,statecolors{ss}(1).*ones(size(statehists.(regions{rr}).(states{ss}).theta))',...
+            statecolors{ss}(2).*ones(size(statehists.(regions{rr}).(states{ss}).theta))',...
+            statecolors{ss}(3).*ones(size(statehists.(regions{rr}).(states{ss}).theta))');
+        h = image(statehists.(regions{rr}).thetabins,statehists.(regions{rr}).EMGbins,plotcolor);
+        set(h,'AlphaData',200*statehists.(regions{rr}).(states{ss}).theta')
+    end
+    
     for ss = [1 3]
         errorshade(BShist.(regions{rr}).bins,1+scale*BShist.(regions{rr}).(states{ss}).thratio,...
             scale*BShist.(regions{rr}).std.(states{ss}).thratio,scale*BShist.(regions{rr}).std.(states{ss}).thratio,statecolors{ss},'scalar')
@@ -199,9 +218,15 @@ scale = 5;
  %cmap = crameri('grayC');
  colormap(gcf,crameri('grayC'))
   for rr = 1:length(regions)
-   subplot(3,3,rr)
+   subplot(3,4,rr)
     hold on
-    imagesc(statehists.(regions{rr}).PSSbins,statehists.(regions{rr}).thetabins,statehists.(regions{rr}).PSSvtheta')
+    for ss = 1:3
+        plotcolor = cat(3,statecolors{ss}(1).*ones(size(statehists.(regions{rr}).(states{ss}).PSSvtheta))',...
+            statecolors{ss}(2).*ones(size(statehists.(regions{rr}).(states{ss}).PSSvtheta))',...
+            statecolors{ss}(3).*ones(size(statehists.(regions{rr}).(states{ss}).PSSvtheta))');
+        h = image(statehists.(regions{rr}).PSSbins,statehists.(regions{rr}).thetabins,plotcolor);
+        set(h,'AlphaData',imagescale*statehists.(regions{rr}).(states{ss}).PSSvtheta')
+    end
     
     xlabel('PSS');ylabel('Theta')
     title(regions{rr})
@@ -210,9 +235,15 @@ scale = 5;
     
     %xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1)) 
     
-  subplot(3,3,3+rr)
+  subplot(3,4,4+rr)
     hold on
-    imagesc(statehists.(regions{rr}).PSSbins,statehists.(regions{rr}).EMGbins,statehists.(regions{rr}).PSS')
+    for ss = 1:3
+        plotcolor = cat(3,statecolors{ss}(1).*ones(size(statehists.(regions{rr}).(states{ss}).PSS))',...
+            statecolors{ss}(2).*ones(size(statehists.(regions{rr}).(states{ss}).PSS))',...
+            statecolors{ss}(3).*ones(size(statehists.(regions{rr}).(states{ss}).PSS))');
+        h = image(statehists.(regions{rr}).PSSbins,statehists.(regions{rr}).EMGbins,plotcolor);
+        set(h,'AlphaData',imagescale*statehists.(regions{rr}).(states{ss}).PSS')
+    end
     
     xlabel('PSS');ylabel('EMG')
         xlim([0 1]) ;ylim([0 1])
@@ -220,9 +251,15 @@ scale = 5;
     %xlim(ISIbyPSS.(regions{rr}).Xbins(1,[1 end],1)) 
         
  
-  subplot(3,3,6+rr)
+  subplot(3,4,8+rr)
     hold on
-    imagesc(statehists.(regions{rr}).thetabins,statehists.(regions{rr}).EMGbins,statehists.(regions{rr}).theta')
+    for ss = [1 3]
+        plotcolor = cat(3,statecolors{ss}(1).*ones(size(statehists.(regions{rr}).(states{ss}).theta))',...
+            statecolors{ss}(2).*ones(size(statehists.(regions{rr}).(states{ss}).theta))',...
+            statecolors{ss}(3).*ones(size(statehists.(regions{rr}).(states{ss}).theta))');
+        h = image(statehists.(regions{rr}).thetabins,statehists.(regions{rr}).EMGbins,plotcolor);
+        set(h,'AlphaData',200*statehists.(regions{rr}).(states{ss}).theta')
+    end
     
     xlabel('Theta Ratio');ylabel('EMG')
         xlim([0 1]) ;ylim([0 1])
