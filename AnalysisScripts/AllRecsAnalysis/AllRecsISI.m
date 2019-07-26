@@ -414,11 +414,12 @@ for cc = 1:length(classnames)
             xlim([-2.5 1.7])
             xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
             
+            caxis([0 max([meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).log(:,1);0])])
             switch cc
                 case 1
-                    caxis([0.5e-4 1.05e-3])
+                   % caxis([0.5e-4 1.05e-3])
                 case 2
-                    caxis([0.5e-4 1.8e-3])
+                   % caxis([0.5e-4 1.8e-3])
             end
             
     end
