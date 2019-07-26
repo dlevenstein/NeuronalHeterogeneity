@@ -13,9 +13,11 @@ cc =2;
 shortthresh = 0.05;
 longthresh = 2;
 [shorthist,shortbins] = hist(ISIStats.allspikes.ISIs{cc}(ISIStats.allspikes.ISIs{cc}<=shortthresh),100);
+shorthist = shorthist./length(ISIStats.allspikes.ISIs{cc});
 [longhist,longbins] = hist(ISIStats.allspikes.ISIs{cc}(ISIStats.allspikes.ISIs{cc}<longthresh),200);
 timehist = longhist.*longbins;
-timehist = timehist./sum(timehist);
+timehist = timehist./sum(ISIStats.allspikes.ISIs{cc});
+longhist = longhist./length(ISIStats.allspikes.ISIs{cc});
 
 figure
 subplot(3,2,1)
