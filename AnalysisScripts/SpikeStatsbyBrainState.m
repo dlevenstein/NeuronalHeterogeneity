@@ -27,7 +27,7 @@ ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 states = fieldnames(SleepState.ints);
 states{4} = 'ALL';
 SleepState.ints.ALL = [0 Inf];
-statecolors = {'k','b','r',[0.6 0.6 0.6]};
+statecolors = {[0 0 0],[0 0 1],[1 0 0],[0.6 0.6 0.6]};
 
 try
 celltypes = CellClass.celltypes;
@@ -141,19 +141,26 @@ end
     end
     
 %% State variable histograms 
-
 statehists.PSSbins = BShist.bins;
 statehists.thetabins = BShist.bins;
 statehists.EMGbins = BShist.bins;
-statehists.PSS = hist3([BSmetrics.PSS BSmetrics.EMG],{statehists.PSSbins,statehists.EMGbins});
-statehists.PSS = statehists.PSS./sum(statehists.PSS(:));
-statehists.theta = hist3([BSmetrics.thratio(~BSmetrics.instatetime.NREMstate)...
-    BSmetrics.EMG(~BSmetrics.instatetime.NREMstate)],...
-    {statehists.thetabins,statehists.EMGbins});
-statehists.theta = statehists.theta./sum(statehists.theta(:));
-statehists.PSSvtheta = hist3([BSmetrics.PSS BSmetrics.thratio],...
-    {statehists.PSSbins,statehists.thetabins});
-statehists.PSSvtheta = statehists.PSSvtheta./sum(statehists.PSSvtheta(:));
+
+for ss = 1:length(states)
+    statehists.(states{ss}).PSS = hist3([BSmetrics.PSS(BSmetrics.instatetime.(states{ss})) BSmetrics.EMG(BSmetrics.instatetime.(states{ss}))],...
+        {statehists.PSSbins,statehists.EMGbins});
+    statehists.(states{ss}).theta = hist3([BSmetrics.thratio(BSmetrics.instatetime.(states{ss}))...
+        BSmetrics.EMG(BSmetrics.instatetime.(states{ss}))],...
+        {statehists.thetabins,statehists.EMGbins});
+    statehists.(states{ss}).PSSvtheta = hist3([BSmetrics.PSS(BSmetrics.instatetime.(states{ss})) BSmetrics.thratio(BSmetrics.instatetime.(states{ss}))],...
+        {statehists.PSSbins,statehists.thetabins});
+end
+for ss = 1:length(states)
+    statehists.(states{ss}).PSS = statehists.(states{ss}).PSS./sum(statehists.ALL.PSS(:));
+    statehists.(states{ss}).theta = statehists.(states{ss}).theta./sum(statehists.ALL.theta(:));
+    statehists.(states{ss}).PSSvtheta = statehists.(states{ss}).PSSvtheta./sum(statehists.ALL.PSSvtheta(:));
+
+end
+
 %%
 figure
    
@@ -213,11 +220,17 @@ subplot(6,3,11)
 
 subplot(3,3,3)
     hold on
-    imagesc(statehists.PSSbins,statehists.thetabins,statehists.PSSvtheta')
+    %imagesc(statehists.PSSbins,statehists.thetabins,statehists.(states{ss}).PSSvtheta')
     for ss = 1:3
+        plotcolor = cat(3,statecolors{ss}(1).*ones(size(statehists.(states{ss}).PSSvtheta))',...
+            statecolors{ss}(2).*ones(size(statehists.(states{ss}).PSSvtheta))',...
+            statecolors{ss}(3).*ones(size(statehists.(states{ss}).PSSvtheta))');
+        h = image(statehists.PSSbins,statehists.thetabins,plotcolor);
+        set(h,'AlphaData',200*statehists.(states{ss}).PSSvtheta')
+
         plot(BSmetrics.PSS(BSmetrics.instatetime.(states{ss})),...
             BSmetrics.thratio(BSmetrics.instatetime.(states{ss})),'.','color',statecolors{ss},...
-            'markersize',1)
+            'markersize',0.1)
     end
     xlabel('PSS');ylabel('Theta Ratio')
     axis tight
@@ -225,8 +238,14 @@ subplot(3,3,3)
     
 subplot(3,3,7)
     hold on
-    imagesc(statehists.PSSbins,statehists.EMGbins,statehists.PSS')
+    %imagesc(statehists.PSSbins,statehists.EMGbins,statehists.PSS')
     for ss = 1:3
+        plotcolor = cat(3,statecolors{ss}(1).*ones(size(statehists.(states{ss}).PSS))',...
+            statecolors{ss}(2).*ones(size(statehists.(states{ss}).PSS))',...
+            statecolors{ss}(3).*ones(size(statehists.(states{ss}).PSS))');
+        h = image(statehists.PSSbins,statehists.EMGbins,plotcolor);
+        set(h,'AlphaData',200*statehists.(states{ss}).PSS')
+        
         plot(BSmetrics.PSS(BSmetrics.instatetime.(states{ss})),...
             BSmetrics.EMG(BSmetrics.instatetime.(states{ss})),'.','color',statecolors{ss},...
             'markersize',1)
@@ -237,8 +256,14 @@ subplot(3,3,7)
     
 subplot(3,3,8)
     hold on
-    imagesc(statehists.thetabins,statehists.EMGbins,statehists.theta')
+    %imagesc(statehists.thetabins,statehists.EMGbins,statehists.theta')
     for ss = [1 3]
+        plotcolor = cat(3,statecolors{ss}(1).*ones(size(statehists.(states{ss}).theta))',...
+            statecolors{ss}(2).*ones(size(statehists.(states{ss}).theta))',...
+            statecolors{ss}(3).*ones(size(statehists.(states{ss}).theta))');
+        h = image(statehists.thetabins,statehists.EMGbins,plotcolor);
+        set(h,'AlphaData',200*statehists.(states{ss}).theta')
+        
         plot(BSmetrics.thratio(BSmetrics.instatetime.(states{ss})),...
             BSmetrics.EMG(BSmetrics.instatetime.(states{ss})),'.','color',statecolors{ss},...
             'markersize',1)
@@ -250,6 +275,4 @@ subplot(3,3,8)
 NiceSave('ISIbyStateVars',figfolder,baseName)
 
 
-%%
-figure
 

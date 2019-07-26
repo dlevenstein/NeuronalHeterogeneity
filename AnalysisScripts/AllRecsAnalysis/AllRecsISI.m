@@ -5,7 +5,8 @@ figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsAnalysis'];
 datasetPath.fCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/BW_CTX';
 datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AG_HPC';
 datasetPath.vCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/YS_CTX';
-regions = {'vCTX','fCTX','CA1'};
+datasetPath.THAL = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL';
+regions = {'THAL','vCTX','fCTX','CA1'};
 %regions = {'fCTX'};
 %%
 for rr = 1:length(regions)
@@ -97,6 +98,11 @@ end
 %% CV2-rate correlation
 for rr = 1:length(regions)
     for cl = 1:numclasses 
+        if ~any(CellClass.(regions{rr}).(classnames{cl}))
+            rateCV2corr.(regions{rr}).(statenames{ss}).(classnames{cl}).rho = [];
+            rateCV2corr.(regions{rr}).(statenames{ss}).(classnames{cl}).p = [];
+            continue
+        end
         for ss = 1:length(statenames)
         [rateCV2corr.(regions{rr}).(statenames{ss}).(classnames{cl}).rho,rateCV2corr.(regions{rr}).(statenames{ss}).(classnames{cl}).p]=...
             corr(log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).(classnames{cl})))',...
