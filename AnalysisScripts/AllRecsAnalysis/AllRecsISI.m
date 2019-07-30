@@ -429,6 +429,51 @@ end
 
 NiceSave('JointCV2ISI',figfolder,[])
 
+%% Interneuron Figure
+
+figure
+for rr = 2:length(regions)
+for ss = 1:3
+    subplot(6,4,ss*4-3+(rr-1))
+    colormap(gca,statecolormap{ss})
+
+       % subplot(2,3,4)
+            imagesc((ISIstats.(regions{rr}).ISIhist.logbins(1,:)),[1 length(sorts.(regions{rr}).(statenames{ss}).ratepI)],...
+                ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(sorts.(regions{rr}).(statenames{ss}).ratepI,:))
+            hold on
+            plot(log10(1./(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(sorts.(regions{rr}).(statenames{ss}).ratepI))),...
+                [1:length(sorts.(regions{rr}).(statenames{ss}).ratepI)],'k.','markersize',1)
+            
+            
+            plot(meanISIhist.logbins,-meanISIhist.(regions{rr}).(statenames{ss}).pI*2000+...
+                length(sorts.(regions{rr}).(statenames{ss}).ratepI),...
+                'color',statecolors{ss},'linewidth',2)
+            
+            xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
+            xlim([-3 1.9])
+            LogScale('x',10,'exp',true)
+            if ss==3
+                xlabel('ISI (s)')
+            else
+                set(gca,'xticklabels',[])
+            end
+            %colorbar
+          %  legend('1/Mean Firing Rate (s)','location','southeast')
+          if rr ==1
+            ylabel({statenames{ss},'Cell'})
+          end
+            set(gca,'yticklabel',[])
+            %legend('1/Mean Firing Rate (s)','location','southeast')
+            caxis([0 0.1])
+            %title('ISI Distribution (Log Scale)')
+            if ss==1
+                title(regions{rr})
+            end
+
+                
+end
+end
+NiceSave('InterNeuron',figfolder,[])
 %% CTX WAKE Figure
 
 actrange = [0.01 0.05 ; 0.05 0.12; 0.08 0.2];
@@ -446,9 +491,8 @@ for rr = 1:3
             find(inclasscells.(regions{rr}){1}),'stable');
 
 end
-%% 
-figure
 
+figure
 for rr = 1:3
 
 	ss = 1; cc = 1;
