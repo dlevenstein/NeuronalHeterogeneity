@@ -465,7 +465,12 @@ for ss = 1:3
         if ss==1
             title(regions{rr})
         end
+        if rr == 1
+            ylabel('p(ISI)');
+        end
+        xlim([-3 1.9])
         LogScale('x',10,'exp',true)
+        set(gca,'ytick',[])
             if ss==3
                 xlabel('ISI (s)')
             else
