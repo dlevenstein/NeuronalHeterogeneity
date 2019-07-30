@@ -17,22 +17,17 @@ end
 
 %%
 statenames = fieldnames(ISIstats.(regions{1}).summstats);
-statecolors = {[0 0 0],[0 0 1],[1 0 0]};
+statecolors = {'k','b','r'};
 numstates = length(statenames);
 
 
 %%
-sorttypes = {'rate','ISICV','CV2'};
-numperciles = 5;
+sorttypes = {'rate'};
 %Make the cell-type specific sortings
 for rr = 1:length(regions)
     for ss = 1:length(statenames)
         [~,sorts.(regions{rr}).(statenames{ss}).rate]=...
             sort(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate);
-        [~,sorts.(regions{rr}).(statenames{ss}).ISICV]=...
-            sort(ISIstats.(regions{rr}).summstats.(statenames{ss}).ISICV);
-        [~,sorts.(regions{rr}).(statenames{ss}).CV2]=...
-            sort(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanCV2);
 
         
         %Check for empty cell class entries
@@ -53,59 +48,32 @@ for rr = 1:length(regions)
 
                 if cl==1
                     sorts.(regions{rr}).(statenames{ss}).([sorttypes{tt},'byclass'])=[];
-                   
                 end
             sorts.(regions{rr}).(statenames{ss}).([sorttypes{tt},'byclass']) = ...
                 [sorts.(regions{rr}).(statenames{ss}).([sorttypes{tt},'byclass']),...
                 sorts.(regions{rr}).(statenames{ss}).([sorttypes{tt},classnames{cl}])];
             end
 
-        end
-        
+        end  
     end
 end
-
-%Add pE sextiles to classes
-
 
 %Calculate mean ISI dists by state and cell type
 meanISIhist.logbins = ISIstats.(regions{1}).ISIhist.logbins(1,:);
 meanCV2hist.bins = ISIstats.(regions{1}).CV2hist.bins(1,:);
-
 for rr = 1:length(regions)
     for ss = 1:length(statenames)
-        
-        noclass = cellfun(@isempty,CellClass.(regions{rr}).label);
-        classnames = unique(CellClass.(regions{rr}).label(~noclass));
-        percilenames = {};
-        [percidx,edg] = discretize(1:length(sorts.(regions{rr}).(statenames{ss}).ratepE),...
-            linspace(1,length(sorts.(regions{rr}).(statenames{ss}).ratepE),numperciles+1));
-        for pp = 1:numperciles
-            classnames = [classnames,['P',num2str(pp)]];
-            percilenames = [percilenames ['P',num2str(pp)]];
-            CellClass.(regions{rr}).(['P',num2str(pp)]) = sorts.(regions{rr}).(statenames{ss}).ratepE(percidx==pp);
-        end
-        
-        
        for cc = 1:length(classnames)
            meanISIhist.(regions{rr}).(statenames{ss}).(classnames{cc}) = ...
                nanmean(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(CellClass.(regions{rr}).(classnames{cc}),:),1);
            meanISIhist.(regions{rr}).std.(statenames{ss}).(classnames{cc}) = ...
                nanstd(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(CellClass.(regions{rr}).(classnames{cc}),:),[],1);
 
-           meannormISIhist.(regions{rr}).(statenames{ss}).(classnames{cc}) = ...
-               nanmean(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).meannorm(CellClass.(regions{rr}).(classnames{cc}),:),1);
-           
            meanreturnhist.(regions{rr}).(statenames{ss}).(classnames{cc}) = ...
                nanmean(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).return(:,:,CellClass.(regions{rr}).(classnames{cc})),3);
            meanreturnhist.(regions{rr}).std.(statenames{ss}).(classnames{cc}) = ...
                nanstd(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).return(:,:,CellClass.(regions{rr}).(classnames{cc})),[],3);
             
-           meanCV2hist.(regions{rr}).(statenames{ss}).(classnames{cc}) = ...
-               nanmean(ISIstats.(regions{rr}).CV2hist.(statenames{ss})(CellClass.(regions{rr}).(classnames{cc}),:),1);
-           meanCV2hist.(regions{rr}).std.(statenames{ss}).(classnames{cc}) = ...
-               nanstd(ISIstats.(regions{rr}).CV2hist.(statenames{ss})(CellClass.(regions{rr}).(classnames{cc}),:),[],1);
-           
            meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).log = ...
                squeeze(nanmean(ISIstats.(regions{rr}).Jointhist.(statenames{ss}).log(CellClass.(regions{rr}).(classnames{cc}),:,:),1));
            meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).norm = ...
@@ -447,33 +415,6 @@ end
 end
 
 NiceSave('JointCV2ISI',figfolder,[])
-
-
-%% FR %Ile FIgure
-figure
-for rr = 1:length(regions)
-for ss = 1:3
-    pcolor = makeColorMap([0.7 0.7 0.7],statecolors{ss},numperciles);
-
-    subplot(5,4,(rr-1)+(ss-1)*4+1)
-        hold on
-        for cc = 1:length(percilenames)
-            plot(meanISIhist.logbins,meanISIhist.(regions{rr}).(statenames{ss}).(percilenames{cc}),...
-                'linewidth',1,'color',pcolor(cc,:))
-        end
-        axis tight
-        if ss==1
-            title(regions{rr})
-        end
-        LogScale('x',10,'exp',true)
-            if ss==3
-                xlabel('ISI (s)')
-            else
-                set(gca,'xticklabels',[])
-            end
-end
-end
-NiceSave('Percentiles',figfolder,[])
 
 %% Interneuron Figure
 
