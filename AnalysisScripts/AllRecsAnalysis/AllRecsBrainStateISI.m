@@ -288,7 +288,7 @@ scale = 5;
      
      for ww = 1:2
 for tt = 1:length(celltypes)
-subplot(6,4,tt*4-4+rr+8+(ww-1)*8)
+subplot(5,4,tt*4-4+rr+4+(ww-1)*8)
     imagesc(ISIbytheta.(regions{rr}).Xbins(1,:,1),ISIbytheta.(regions{rr}).Ybins(1,:,1), ISIbytheta.(regions{rr}).(WAKEREM{ww}).pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
@@ -297,7 +297,7 @@ subplot(6,4,tt*4-4+rr+8+(ww-1)*8)
     %ylabel({(celltypes{tt}),'ISI (s)'});xlabel('Theta Ratio')
     %title((celltypes{tt}))
    % colorbar
-    if rr ==1
+    if rr ==3
     ylabel({(celltypes{tt}),'ISI (s)'});
     LogScale('y',10,'exp',true)
     else
@@ -321,7 +321,7 @@ end
 
     
 scale = 5;
- subplot(3,4,rr)
+ subplot(5,4,rr)
     %crameri grayC
     hold on
     for ss = [1 3]
@@ -341,7 +341,7 @@ scale = 5;
     title(regions{rr})
    % set(gca,'xticklabel',[])
     %xlabel('Theta');
-    if rr == 1
+    if rr == 3
         ylabel('EMG')
     else
         set(gca,'yticklabel',[])
