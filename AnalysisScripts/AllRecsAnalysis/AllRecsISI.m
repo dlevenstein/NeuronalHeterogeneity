@@ -478,6 +478,27 @@ for ss = 1:3
             end
 end
 end
+
+
+for rr=1:length(regions)
+    subplot(4,4,rr+12)
+        plot(log10(ISIstats.(regions{rr}).summstats.(plotstates{ss}).meanrate(CellClass.(regions{rr}).pE)),...
+            log10(ISIstats.(regions{rr}).summstats.(plotstates2{ss}).meanrate(CellClass.(regions{rr}).pE)),...
+            'k.','markersize',2)
+        hold on
+        plot(log10(ISIstats.(regions{rr}).summstats.(plotstates{ss}).meanrate(CellClass.(regions{rr}).pI)),...
+            log10(ISIstats.(regions{rr}).summstats.(plotstates2{ss}).meanrate(CellClass.(regions{rr}).pI)),...
+            'r.','markersize',2)
+        %plot(log10([0.03 30]),log10([0.03 30]),'k')
+        xlabel([plotstates{ss},' Rate']);ylabel([plotstates2{ss},' Rate'])
+        %axis tight
+        title(regions{rr})
+        xlim([-2 2]);ylim([-2 2])
+        LogScale('xy',10)
+        UnityLine('linetype','-')
+end
+
+
 NiceSave('Percentiles',figfolder,[])
 %%
 
@@ -826,7 +847,8 @@ for ss=1:3
             'r.','markersize',2)
         %plot(log10([0.03 30]),log10([0.03 30]),'k')
         xlabel([plotstates{ss},' Rate']);ylabel([plotstates2{ss},' Rate'])
-        axis tight
+        %axis tight
+        xlim([-2 2]);ylim([-2 2])
         LogScale('xy',10)
         UnityLine('linetype','-')
 end
