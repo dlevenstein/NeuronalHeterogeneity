@@ -523,7 +523,7 @@ for rr = 1:3
 
                 
 end
-%NiceSave('ThCTX_WAKE',figfolder,[])
+NiceSave('ThCTX_WAKE',figfolder,[])
 
 %% Normalized ISI figure
 figure
