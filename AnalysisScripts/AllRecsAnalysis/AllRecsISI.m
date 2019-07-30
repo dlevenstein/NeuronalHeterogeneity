@@ -481,6 +481,7 @@ end
 
 
 for rr=1:length(regions)
+    ss= 1;
     subplot(4,4,rr+12)
         plot(log10(ISIstats.(regions{rr}).summstats.(plotstates{ss}).meanrate(CellClass.(regions{rr}).pE)),...
             log10(ISIstats.(regions{rr}).summstats.(plotstates2{ss}).meanrate(CellClass.(regions{rr}).pE)),...
@@ -494,7 +495,7 @@ for rr=1:length(regions)
         %axis tight
         title(regions{rr})
         xlim([-2 2]);ylim([-2 2])
-        LogScale('xy',10)
+        LogScale('xy',10,'exp',true)
         UnityLine('linetype','-')
 end
 
