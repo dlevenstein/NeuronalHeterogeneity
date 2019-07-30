@@ -32,9 +32,19 @@ for rr = 1:length(regions)
     ISIbyPSS.(regions{rr}).pYX(sum(ISIbyPSS.(regions{rr}).Xhist>nspkthresh,3)<ncellthresh,:,:)=nan;
     ISIbytheta.(regions{rr}).pYX(sum(ISIbytheta.(regions{rr}).Xhist>nspkthresh,3)<ncellthresh,:,:)=nan;
     
+    if rr ==4
+       ISIbytheta.(regions{rr}).WAKE.pYX(sum(ISIbytheta.(regions{rr}).WAKE.Xhist>nspkthresh,3)<ncellthresh,:,:)=nan;
+       ISIbytheta.(regions{rr}).REM.pYX(sum(ISIbytheta.(regions{rr}).REM.Xhist>nspkthresh,3)<ncellthresh,:,:)=nan;
+    end
+    
     for tt = 1:length(celltypes)
         ISIbyPSS.(regions{rr}).pop.(celltypes{tt}) = nanmean(ISIbyPSS.(regions{rr}).pYX(:,:,ISIbyPSS.(regions{rr}).celltypeidx.(celltypes{tt})),3);
         ISIbytheta.(regions{rr}).pop.(celltypes{tt}) = nanmean(ISIbytheta.(regions{rr}).pYX(:,:,ISIbytheta.(regions{rr}).celltypeidx.(celltypes{tt})),3);
+        
+        if rr ==4
+        ISIbytheta.(regions{rr}).WAKE.pop.(celltypes{tt}) = nanmean(ISIbytheta.(regions{rr}).WAKE.pYX(:,:,ISIbytheta.(regions{rr}).celltypeidx.(celltypes{tt})),3);
+        ISIbytheta.(regions{rr}).REM.pop.(celltypes{tt}) = nanmean(ISIbytheta.(regions{rr}).REM.pYX(:,:,ISIbytheta.(regions{rr}).celltypeidx.(celltypes{tt})),3);
+        end
     end
 end
 %%
@@ -213,7 +223,7 @@ scale = 5;
  end
  NiceSave('ISIbyTheta',figfolder,[])
 
- %%
+ %% All State Variables
  figure
  %cmap = crameri('grayC');
  colormap(gcf,crameri('grayC'))
@@ -268,3 +278,78 @@ scale = 5;
   end
   
    NiceSave('StateSpace',figfolder,[])
+
+   
+   %% HPC WAKE
+   WAKEREM = {'WAKE','REM'};
+   figure
+   
+ for rr = 4
+     
+     for ww = 1:2
+for tt = 1:length(celltypes)
+subplot(6,4,tt*4-4+rr+8+(ww-1)*8)
+    imagesc(ISIbytheta.(regions{rr}).Xbins(1,:,1),ISIbytheta.(regions{rr}).Ybins(1,:,1), ISIbytheta.(regions{rr}).(WAKEREM{ww}).pop.(celltypes{tt})')
+    %hold on
+    %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
+    axis xy
+    %LogScale('y',10)
+    %ylabel({(celltypes{tt}),'ISI (s)'});xlabel('Theta Ratio')
+    %title((celltypes{tt}))
+   % colorbar
+    if rr ==1
+    ylabel({(celltypes{tt}),'ISI (s)'});
+    LogScale('y',10,'exp',true)
+    else
+        set(gca,'yticklabel',[])
+    end
+    
+    if tt ==1 
+        %caxis([0 0.025])
+        set(gca,'xticklabel',[])
+        %title(regions{rr})
+    elseif tt==2
+         %caxis([0 0.035])
+         xlabel('Theta')
+    end
+        xlim([0 1]) 
+    set(gca,'xtick',[0 1])
+end 
+     end
+    
+    
+
+    
+scale = 5;
+ subplot(3,4,rr)
+    %crameri grayC
+    hold on
+    for ss = [1 3]
+        plotcolor = cat(3,statecolors{ss}(1).*ones(size(statehists.(regions{rr}).(states{ss}).theta))',...
+            statecolors{ss}(2).*ones(size(statehists.(regions{rr}).(states{ss}).theta))',...
+            statecolors{ss}(3).*ones(size(statehists.(regions{rr}).(states{ss}).theta))');
+        h = image(statehists.(regions{rr}).thetabins,statehists.(regions{rr}).EMGbins,plotcolor);
+        set(h,'AlphaData',200*statehists.(regions{rr}).(states{ss}).theta')
+    end
+    
+    for ss = [1 3]
+        errorshade(BShist.(regions{rr}).bins,1+scale*BShist.(regions{rr}).(states{ss}).thratio,...
+            scale*BShist.(regions{rr}).std.(states{ss}).thratio,scale*BShist.(regions{rr}).std.(states{ss}).thratio,statecolors{ss},'scalar')
+    plot(BShist.(regions{rr}).bins,1+scale*BShist.(regions{rr}).(states{ss}).thratio,'color',statecolors{ss})
+    end
+    %caxis([0 5e-3])
+    title(regions{rr})
+   % set(gca,'xticklabel',[])
+    %xlabel('Theta');
+    if rr == 1
+        ylabel('EMG')
+    else
+        set(gca,'yticklabel',[])
+    end
+    axis tight
+    %colorbar
+        xlim([0 1]) 
+    set(gca,'xtick',[0 1]);set(gca,'ytick',[0 1])
+    
+ end
+ NiceSave('ISIbyTheta_WAKEREM',figfolder,[])
