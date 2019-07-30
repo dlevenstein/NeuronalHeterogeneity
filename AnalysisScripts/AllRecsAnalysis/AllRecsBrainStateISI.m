@@ -288,7 +288,7 @@ scale = 5;
      
      for ww = 1:2
 for tt = 1%:length(celltypes)
-subplot(4,4,tt*4-4+rr+4+(ww-1)*4)
+subplot(4,3,tt*3-3+rr+3+(ww-1)*3)
     imagesc(ISIbytheta.(regions{rr}).Xbins(1,:,1),ISIbytheta.(regions{rr}).Ybins(1,:,1), ISIbytheta.(regions{rr}).(WAKEREM{ww}).pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
@@ -305,11 +305,11 @@ subplot(4,4,tt*4-4+rr+4+(ww-1)*4)
         set(gca,'yticklabel',[])
     end
     
-    if tt ==1 
+    if ww ==1 
         %caxis([0 0.025])
         set(gca,'xticklabel',[])
         %title(regions{rr})
-    elseif tt==2
+    elseif ww==2
          %caxis([0 0.035])
          xlabel('Theta')
     end
@@ -322,7 +322,7 @@ end
 
     
 scale = 5;
- subplot(4,4,rr)
+ subplot(3,3,1)
     %crameri grayC
     hold on
     for ss = [1 3]
