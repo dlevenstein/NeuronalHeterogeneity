@@ -430,6 +430,23 @@ end
 NiceSave('JointCV2ISI',figfolder,[])
 
 %% CTX WAKE Figure
+
+actrange = [0.01 0.05 ; 0.05 0.12; 0.08 0.2];
+actrange = [0.01 0.2 ; 0.01 0.2; 0.01 0.2];
+for rr = 1:3
+    actStateBins = 10.^(ISIstats.(regions{rr}).ISIhist.logbins(1,:)) > actrange(rr,1) & ...
+        10.^(ISIstats.(regions{rr}).ISIhist.logbins(1,:)) < actrange(rr,2);
+    actStatePower = max(ISIstats.(regions{rr}).ISIhist.WAKEstate.log(:,actStateBins),[],2);
+        
+        [~,sortAct]=...
+            sort(actStatePower);
+        
+        sorts.(regions{rr}).actWAKE = ...
+            intersect(sortAct,...
+            find(inclasscells.(regions{rr}){1}),'stable');
+
+end
+%% 
 figure
 
 for rr = 1:3
@@ -464,9 +481,49 @@ for rr = 1:3
             
             caxis([0 max([meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).log(:,1);0])])
 
-    
+
+    subplot(5,4,(rr-1)*4+3) 
+    colormap(gca,statecolormap{ss})
+
+       % subplot(2,3,4)
+            imagesc((ISIstats.(regions{rr}).ISIhist.logbins(1,:)),[1 sum(inclasscells.(regions{rr}){1})],...
+                ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(sorts.(regions{rr}).actWAKE,:))
+            hold on
+%             plot(log10(1./(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(sorts.(regions{rr}).(statenames{ss}).ratebyclass))),...
+%                 [1:sorts.(regions{rr}).numclassycells],'k.','markersize',1)
+
+            
+            plot(meanISIhist.logbins,-meanISIhist.(regions{rr}).(statenames{ss}).pE*5000+...
+                sum(inclasscells.(regions{rr}){1})+0.5,...
+                'color',statecolors{ss},'linewidth',2)
+            
+
+            
+            xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
+            xlim([-3 1.9])
+            xlim([-2.75 1.75])
+            LogScale('x',10,'exp',true)
+            if rr==3
+                xlabel('ISI (s)')
+            else
+                set(gca,'xticklabels',[])
+            end
+            %colorbar
+          %  legend('1/Mean Firing Rate (s)','location','southeast')
+         
+            ylabel({(regions{rr}),'(Sort by', '10-200ms Peak)'})
+          
+            set(gca,'yticklabel',[])
+            %legend('1/Mean Firing Rate (s)','location','southeast')
+            caxis([0 0.1])
+            %title('ISI Distribution (Log Scale)')
+%             if ss==1
+%                 title(regions{rr})
+%             end
+
+                
 end
-NiceSave('ThCTX_WAKE',figfolder,[])
+%NiceSave('ThCTX_WAKE',figfolder,[])
 
 %% Normalized ISI figure
 figure
