@@ -287,8 +287,8 @@ scale = 5;
  for rr = 4
      
      for ww = 1:2
-for tt = 1:length(celltypes)
-subplot(6,4,tt*4-4+rr+8+(ww-1)*8)
+for tt = 1%:length(celltypes)
+subplot(4,4,tt*4-4+rr+4+(ww-1)*4)
     imagesc(ISIbytheta.(regions{rr}).Xbins(1,:,1),ISIbytheta.(regions{rr}).Ybins(1,:,1), ISIbytheta.(regions{rr}).(WAKEREM{ww}).pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
