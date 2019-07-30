@@ -13,6 +13,8 @@ thisregion = 'vCTX';
 
 %%
 dipmap = bz_CollapseStruct(OptimizeSleepScoreParmsAll.dipmap,3,'median',true);
+dipmap = bz_CollapseStruct(OptimizeSleepScoreParmsAll.dipmap,3,'mean',true);
+
 dipmap_all = bz_CollapseStruct(OptimizeSleepScoreParmsAll.dipmap,1,'justcat',true);
 
 %%
@@ -46,6 +48,8 @@ subplot(3,2,6)
 plot(dipmap.bins,dipmap.THhist_used)
 hold on
 plot(dipmap.bins,dipmap.THhist_IRASA_used)
+
+ NiceSave('Comparison',figfolder,[])
 %%
 
 examples = [10 10; 2 15];
