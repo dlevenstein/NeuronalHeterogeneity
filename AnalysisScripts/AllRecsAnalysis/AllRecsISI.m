@@ -231,7 +231,8 @@ for ss = 1:3
                 'color',statecolors{ss},'linewidth',2)
             
             xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
-            LogScale('x',10)
+            xlim([-3 1.9])
+            LogScale('x',10,'exp',true)
             if ss==3
                 xlabel('ISI (s)')
             else
@@ -427,6 +428,45 @@ end
 end
 
 NiceSave('JointCV2ISI',figfolder,[])
+
+%% CTX WAKE Figure
+figure
+
+for rr = 1:3
+
+	ss = 1; cc = 1;
+        subplot(6,4,(rr-1)*4+1)    
+        %colormap(gca,statecolormap{ss})
+
+            imagesc(meanISIhist.logbins,ISIstats.(regions{rr}).CV2hist.bins(1,:),...
+                meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).log')
+            hold on
+            plot(meanISIhist.logbins,meanISIhist.(regions{rr}).(statenames{ss}).(classnames{cc})*25,...
+                'color',statecolors{ss},'linewidth',1)
+            
+            axis xy
+            %set(gca,'ytick',[]);%set(gca,'xtick',[]);
+             ylabel({(regions{rr}),'CV2'})
+             set(gca,'xticklabel',[]);
+             set(gca,'ytick',[0 1 2]);
+            xlim([-2.75 1.75])
+            if rr ==3
+                xlabel('ISI (s)')
+                %set(gca,'xtick',[-2:1]);
+                LogScale('x',10,'exp',true)
+            end
+            if rr==1 
+                title('WAKE')
+            end
+            ylim([0 2]);
+            
+            %xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
+            
+            caxis([0 max([meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).log(:,1);0])])
+
+    
+end
+NiceSave('ThCTX_WAKE',figfolder,[])
 
 %% Normalized ISI figure
 figure
