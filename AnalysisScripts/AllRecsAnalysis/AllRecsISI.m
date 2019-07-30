@@ -84,6 +84,8 @@ for rr = 1:length(regions)
             classnames = [classnames,['P',num2str(pp)]];
             percilenames = [percilenames ['P',num2str(pp)]];
             CellClass.(regions{rr}).(['P',num2str(pp)]) = sorts.(regions{rr}).(statenames{ss}).ratepE(percidx==pp);
+            
+            meanpercrate.(regions{rr}).(statenames{ss})(pp) = mean(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).(['P',num2str(pp)])));
         end
         
         
@@ -404,7 +406,7 @@ NiceSave('CV2fig',figfolder,[])
 figure
 for rr = 1:length(regions)
 
-for cc = 1:length(classnames)
+for cc = 1:2
 	for ss = 1:3
         subplot(6,4,rr+(ss-1)*4+(cc-1)*12)    
         %colormap(gca,statecolormap{ss})
@@ -507,12 +509,16 @@ for ss = 1:3
    figure
 for rr = 1:length(regions)
    for cc = 1:length(percilenames)
+       
+       %[~,idx] = min(abs(10.^meanISIhist.logbins - 1./meanpercrate.(regions{rr}).(statenames{ss})(cc)));
+       
         subplot(length(percilenames),4,(cc-1)*4+rr)    
         %colormap(gca,statecolormap{ss})
 
             imagesc(meanISIhist.logbins,ISIstats.(regions{rr}).CV2hist.bins(1,:),...
                 meanJointhist.(regions{rr}).(statenames{ss}).(percilenames{cc}).log')
             hold on
+            plot(log10(1./meanpercrate.(regions{rr}).(statenames{ss})(cc)),ISIstats.(regions{rr}).CV2hist.bins(1,1),'r+')
             plot(meanISIhist.logbins,meanISIhist.(regions{rr}).(statenames{ss}).(percilenames{cc})*25,...
                 'color',statecolors{ss},'linewidth',1)
             
@@ -535,7 +541,7 @@ for rr = 1:length(regions)
             xlim([-2.5 1.7])
             xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
             
-            caxis([0 max([meanJointhist.(regions{rr}).(statenames{ss}).(percilenames{cc}).log(:,1);0])])
+            caxis([0 max([meanJointhist.(regions{rr}).(statenames{ss}).(percilenames{cc}).log(10:end,1);0])])
 
     end
 end
