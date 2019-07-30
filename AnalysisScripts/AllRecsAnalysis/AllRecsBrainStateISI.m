@@ -288,7 +288,7 @@ scale = 5;
      
      for ww = 1:2
 for tt = 1:length(celltypes)
-subplot(5,4,tt*4-4+rr+4+(ww-1)*8)
+subplot(6,4,tt*4-4+rr+8+(ww-1)*8)
     imagesc(ISIbytheta.(regions{rr}).Xbins(1,:,1),ISIbytheta.(regions{rr}).Ybins(1,:,1), ISIbytheta.(regions{rr}).(WAKEREM{ww}).pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
@@ -296,8 +296,9 @@ subplot(5,4,tt*4-4+rr+4+(ww-1)*8)
     %LogScale('y',10)
     %ylabel({(celltypes{tt}),'ISI (s)'});xlabel('Theta Ratio')
     %title((celltypes{tt}))
-   % colorbar
-    if rr ==3
+   %colorbar
+   %caxis([0 0.022])
+    if rr ==4
     ylabel({(celltypes{tt}),'ISI (s)'});
     LogScale('y',10,'exp',true)
     else
@@ -321,7 +322,7 @@ end
 
     
 scale = 5;
- subplot(5,4,rr)
+ subplot(4,4,rr)
     %crameri grayC
     hold on
     for ss = [1 3]
@@ -329,7 +330,7 @@ scale = 5;
             statecolors{ss}(2).*ones(size(statehists.(regions{rr}).(states{ss}).theta))',...
             statecolors{ss}(3).*ones(size(statehists.(regions{rr}).(states{ss}).theta))');
         h = image(statehists.(regions{rr}).thetabins,statehists.(regions{rr}).EMGbins,plotcolor);
-        set(h,'AlphaData',200*statehists.(regions{rr}).(states{ss}).theta')
+        set(h,'AlphaData',500*statehists.(regions{rr}).(states{ss}).theta')
     end
     
     for ss = [1 3]
@@ -338,10 +339,11 @@ scale = 5;
     plot(BShist.(regions{rr}).bins,1+scale*BShist.(regions{rr}).(states{ss}).thratio,'color',statecolors{ss})
     end
     %caxis([0 5e-3])
+    %colorbar
     title(regions{rr})
    % set(gca,'xticklabel',[])
     %xlabel('Theta');
-    if rr == 3
+    if rr == 4
         ylabel('EMG')
     else
         set(gca,'yticklabel',[])
