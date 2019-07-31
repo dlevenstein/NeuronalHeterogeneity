@@ -10,7 +10,7 @@ regions = {'THAL','vCTX','fCTX','CA1'};
 
 %%
 for rr = 1:length(regions)
-    [ISIstats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
+    [~,baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true);
 
     [SpikeStatsbyRateAll,baseNames] = GetMatResults(figfolder,'SpikeStatsbyRate','baseNames',baseNames);
     SpikeStatsbyRateAll = bz_CollapseStruct(SpikeStatsbyRateAll);
@@ -44,6 +44,7 @@ for rr = 1:length(regions)
 
 end
 %% Figure: CSPKRWATE
+for rr = 1:length(regions)
 for tt=1:2
 figure
 for ss = 1:3
@@ -130,13 +131,14 @@ subplot(4,3,ss+6)
 %end
 end 
 
- NiceSave(['ISIbycBinRate_',(celltypes{tt})],figfolder,thisregion)
+ NiceSave(['ISIbycBinRate_',(celltypes{tt})],figfolder,(regions{rr}))
+end
 end
 
 
 
-
 %% Figure: SpikeRate
+for rr = 1:length(regions)
 for tt=1:2
 figure
 for ss = 1:3
@@ -206,6 +208,39 @@ subplot(4,3,ss+6)
      end
     
 end 
- NiceSave(['ISIbyRate.(regions{rr})_',(celltypes{tt})],figfolder,thisregion)
+ NiceSave(['ISIbyRate_',(celltypes{tt})],figfolder,(regions{rr}))
 
 end
+end
+
+
+%% Figure: Excitatory Cells Compare
+tt = 1
+figure
+for rr = 1:length(regions)
+    for ss = 1:length(states)
+subplot(4,4,rr + (ss-1)*4)
+    imagesc(CV2byCspkRate.(regions{rr}).(states{ss}).Xbins(1,:,1),[1 sum(ISIbyCspkRate.(regions{rr}).celltypeidx.(celltypes{tt}))],...
+        squeeze(CV2byCspkRate.(regions{rr}).(states{ss}).pX(:,:,Cellmeanrate.(regions{rr}).sorts.(states{ss}).(celltypes{tt})))')
+    hold on
+    plot(log10(Cellmeanrate.(regions{rr}).(states{ss})(Cellmeanrate.(regions{rr}).sorts.(states{ss}).(celltypes{tt}))),[1:sum(ISIbyCspkRate.(regions{rr}).celltypeidx.(celltypes{tt}))],'w')
+    axis xy
+    LogScale('x',10)
+    if rr==1
+    ylabel({(states{ss}),'Cell'});
+    end
+    xlabel('Rate')
+    %title((celltypes{tt}))
+    %colorbar
+    if ss == 1
+        title((regions{rr}))
+    end
+    if tt ==1 
+        caxis([0 0.1])
+    elseif tt==2
+         caxis([0 0.15])
+    end
+    end
+end
+
+ NiceSave(['RateDist_',(celltypes{tt})],figfolder,[])
