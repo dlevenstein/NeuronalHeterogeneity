@@ -1,5 +1,5 @@
-%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
+reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+%reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyRate'];
 
 %datasetPath.fCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/BW_CTX';

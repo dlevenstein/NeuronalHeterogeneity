@@ -44,9 +44,15 @@ cellcolor = {'k','r'};
 
 ISIrate.dt = 0.002;
 ISIrate.timestamps = [0:ISIrate.dt:max(cat(1,spikes.times{:}))]';
-ISIrate.ISI = cellfun(@(X,Y) interp1(X,Y,ISIrate.timestamps,'next'),...
-    ISIStats.allspikes.times,ISIStats.allspikes.ISIs,'UniformOutput',false);
+
+%Bug Fix two spikes same time
+[~,ISIStats.allspikes.unique] = cellfun(@(X) unique(X),ISIStats.allspikes.times,'UniformOutput',false);
+
+ISIrate.ISI = cellfun(@(X,Y,Z) interp1(X(Z),Y(Z),ISIrate.timestamps,'next'),...
+    ISIStats.allspikes.times,ISIStats.allspikes.ISIs,ISIStats.allspikes.unique,'UniformOutput',false);
 ISIrate.ISI = cat(2,ISIrate.ISI{:});
+
+
 %% ISI occupancy
 % 
 ISIoccupancy.bins = linspace(0,20,100);
