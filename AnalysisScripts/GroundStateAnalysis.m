@@ -3,11 +3,11 @@ function [ ISIoccupancy ] = GroundStateAnalysis( basePath,figfolder )
 %   Detailed explanation goes here
 %% Load Header
 %Initiate Paths
-reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
-basePath = [reporoot,'Datasets/onDesktop/AG_HPC/Achilles_10252013'];
+%basePath = [reporoot,'Datasets/onDesktop/AG_HPC/Achilles_10252013'];
 %basePath = pwd;
 %figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
@@ -23,7 +23,11 @@ states = fieldnames(SleepState.ints);
 %SleepState.ints.ALL = [0 Inf];
 statecolors = {'k','b','r',[0.6 0.6 0.6]};
 
-[celltypes,~,typeidx] = unique(CellClass.label);
+try
+    celltypes = CellClass.celltypes;
+catch
+    celltypes = unique(CellClass.label);
+end
 cellcolor = {'k','r'};
 
 
@@ -98,7 +102,7 @@ subplot(3,2,ss*2-1)
 
     hold on
     plot(log10(1./ISIStats.summstats.(state).meanrate(ISIStats.sorts.(state).ratebyclass)),...
-        [1:spikes.numcells],'.')
+        [1:length(ISIStats.sorts.(state).ratebyclass)],'.')
     LogScale('x',10)
     ColorbarWithAxis([0 0.05],'P_t(log(ISI))')
     xlabel('ISI')

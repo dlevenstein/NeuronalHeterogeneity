@@ -31,7 +31,11 @@ states{4} = 'ALL';
 SleepState.ints.ALL = [0 Inf];
 statecolors = {'k','b','r',[0.6 0.6 0.6]};
 
-[celltypes,~,typeidx] = unique(CellClass.label);
+try
+    celltypes = CellClass.celltypes;
+catch
+    celltypes = unique(CellClass.label);
+end
 cellcolor = {'k','r'};
 
 
@@ -194,6 +198,7 @@ subplot(6,6,ss+(tt-1)*3+6)
 end
 
 for tt = 1:length(celltypes)
+    if ~any(CellClass.(celltypes{tt}));continue;end
 subplot(6,6,ss+(tt-1)*3+12)
     imagesc(CV2byRate.(state).Xbins(1,:,1),[0 1], squeeze(CV2byRate.(state).pX(:,:,ISIStats.sorts.(state).(['rate',celltypes{tt}])))')
     %hold on
@@ -258,6 +263,7 @@ subplot(6,6,ss+(tt-1)*3+6)
 end 
 
 for tt = 1:length(celltypes)
+    if ~any(CellClass.(celltypes{tt}));continue;end
 subplot(6,6,ss+(tt-1)*3+12)
     imagesc(CV2byCspkRate.(state).Xbins(1,:,1),[1 sum(CellClass.(celltypes{tt}))], squeeze(CV2byCspkRate.(state).pX(:,:,ISIStats.sorts.(state).(['rate',celltypes{tt}])))')
     hold on
