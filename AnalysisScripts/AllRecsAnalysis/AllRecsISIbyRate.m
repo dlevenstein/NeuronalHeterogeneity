@@ -219,7 +219,7 @@ tt = 1
 figure
 for rr = 1:length(regions)
     for ss = 1:length(states)
-subplot(4,4,rr + (ss-1)*4)
+subplot(3,4,rr + (ss-1)*4)
     imagesc(CV2byCspkRate.(regions{rr}).(states{ss}).Xbins(1,:,1),[1 sum(ISIbyCspkRate.(regions{rr}).celltypeidx.(celltypes{tt}))],...
         squeeze(CV2byCspkRate.(regions{rr}).(states{ss}).pX(:,:,Cellmeanrate.(regions{rr}).sorts.(states{ss}).(celltypes{tt})))')
     hold on
@@ -240,7 +240,12 @@ subplot(4,4,rr + (ss-1)*4)
     elseif tt==2
          caxis([0 0.15])
     end
+    
+    set(gca,'yticklabel',[])
+    
+    
     end
+    
 end
 
  NiceSave(['RateDist_',(celltypes{tt})],figfolder,[])
