@@ -2,42 +2,47 @@ reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyRate'];
 
-%datasetPath.fCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/BW_CTX';
-%datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onDesktop/AG_HPC';
-%regions = {'fCTX','CA1'};
-%datasetPath = figfolder;
-
-[SpikeStatsbyRateAll,baseNames] = GetMatResults(figfolder,'SpikeStatsbyRate','select',true);
-SpikeStatsbyRateAll = bz_CollapseStruct(SpikeStatsbyRateAll);
-thisregion = 'fCTX';
+datasetPath.fCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/BW_CTX';
+datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AG_HPC';
+datasetPath.vCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/YS_CTX';
+datasetPath.THAL = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL';
+regions = {'THAL','vCTX','fCTX','CA1'};
 
 %%
-ISIbyCspkRate = bz_CollapseStruct(SpikeStatsbyRateAll.ISIbyCspkRate,'match','justcat',true);
-CV2byCspkRate = bz_CollapseStruct(SpikeStatsbyRateAll.CV2byCspkRate,'match','justcat',true);
-binCV2byCspkRate = bz_CollapseStruct(SpikeStatsbyRateAll.binCV2byCspkRate,'match','justcat',true);
-ISIbyRate = bz_CollapseStruct(SpikeStatsbyRateAll.ISIbyRate,'match','justcat',true);
-CV2byRate = bz_CollapseStruct(SpikeStatsbyRateAll.CV2byRate,'match','justcat',true);
-Cellmeanrate = bz_CollapseStruct(SpikeStatsbyRateAll.Cellmeanrate,'match','justcat',true);
+for rr = 1:length(regions)
+    [ISIstats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
 
-states = {'WAKEstate','NREMstate','REMstate'};
-statecolors = {'k','b','r'};
+    [SpikeStatsbyRateAll,baseNames] = GetMatResults(figfolder,'SpikeStatsbyRate','baseNames',baseNames);
+    SpikeStatsbyRateAll = bz_CollapseStruct(SpikeStatsbyRateAll);
+    %thisregion = 'fCTX';
 
-celltypes = fieldnames(ISIbyCspkRate.celltypeidx);
-for ss = 1:length(states)
-for tt = 1:length(celltypes)
-    ISIbyCspkRate.(states{ss}).pop.(celltypes{tt}) = nanmean(ISIbyCspkRate.(states{ss}).pYX(:,:,ISIbyCspkRate.celltypeidx.(celltypes{tt})),3);
-    CV2byCspkRate.(states{ss}).pop.(celltypes{tt}) = nanmean(CV2byCspkRate.(states{ss}).pYX(:,:,CV2byCspkRate.celltypeidx.(celltypes{tt})),3);
-    binCV2byCspkRate.(states{ss}).pop.(celltypes{tt}) = nanmean(binCV2byCspkRate.(states{ss}).pYX(:,:,binCV2byCspkRate.celltypeidx.(celltypes{tt})),3);
+    %%
+    ISIbyCspkRate.(regions{rr}) = bz_CollapseStruct(SpikeStatsbyRateAll.ISIbyCspkRate,'match','justcat',true);
+    CV2byCspkRate.(regions{rr}) = bz_CollapseStruct(SpikeStatsbyRateAll.CV2byCspkRate,'match','justcat',true);
+    binCV2byCspkRate.(regions{rr}) = bz_CollapseStruct(SpikeStatsbyRateAll.binCV2byCspkRate,'match','justcat',true);
+    ISIbyRate.(regions{rr}) = bz_CollapseStruct(SpikeStatsbyRateAll.ISIbyRate,'match','justcat',true);
+    CV2byRate.(regions{rr}) = bz_CollapseStruct(SpikeStatsbyRateAll.CV2byRate,'match','justcat',true);
+    Cellmeanrate.(regions{rr}) = bz_CollapseStruct(SpikeStatsbyRateAll.Cellmeanrate,'match','justcat',true);
 
-    ISIbyRate.(states{ss}).pop.(celltypes{tt}) = nanmean(ISIbyRate.(states{ss}).XYprob(:,:,ISIbyRate.celltypeidx.(celltypes{tt})),3);
-    CV2byRate.(states{ss}).pop.(celltypes{tt}) = nanmean(CV2byRate.(states{ss}).XYprob(:,:,CV2byRate.celltypeidx.(celltypes{tt})),3);
+    states = {'WAKEstate','NREMstate','REMstate'};
+    statecolors = {'k','b','r'};
 
-    [~,Cellmeanrate.sorts.(states{ss}).(celltypes{tt})] = sort(Cellmeanrate.(states{ss}));
-    Cellmeanrate.sorts.(states{ss}).(celltypes{tt})(ismember(Cellmeanrate.sorts.(states{ss}).(celltypes{tt}),find(~ISIbyCspkRate.celltypeidx.(celltypes{tt}))))=[];
+    celltypes = fieldnames(ISIbyCspkRate.(regions{rr}).celltypeidx);
+    for ss = 1:length(states)
+    for tt = 1:length(celltypes)
+        ISIbyCspkRate.(regions{rr}).(states{ss}).pop.(celltypes{tt}) = nanmean(ISIbyCspkRate.(regions{rr}).(states{ss}).pYX(:,:,ISIbyCspkRate.(regions{rr}).celltypeidx.(celltypes{tt})),3);
+        CV2byCspkRate.(regions{rr}).(states{ss}).pop.(celltypes{tt}) = nanmean(CV2byCspkRate.(regions{rr}).(states{ss}).pYX(:,:,CV2byCspkRate.(regions{rr}).celltypeidx.(celltypes{tt})),3);
+        binCV2byCspkRate.(regions{rr}).(states{ss}).pop.(celltypes{tt}) = nanmean(binCV2byCspkRate.(regions{rr}).(states{ss}).pYX(:,:,binCV2byCspkRate.(regions{rr}).celltypeidx.(celltypes{tt})),3);
+
+        ISIbyRate.(regions{rr}).(states{ss}).pop.(celltypes{tt}) = nanmean(ISIbyRate.(regions{rr}).(states{ss}).XYprob(:,:,ISIbyRate.(regions{rr}).celltypeidx.(celltypes{tt})),3);
+        CV2byRate.(regions{rr}).(states{ss}).pop.(celltypes{tt}) = nanmean(CV2byRate.(regions{rr}).(states{ss}).XYprob(:,:,CV2byRate.(regions{rr}).celltypeidx.(celltypes{tt})),3);
+
+        [~,Cellmeanrate.(regions{rr}).sorts.(states{ss}).(celltypes{tt})] = sort(Cellmeanrate.(regions{rr}).(states{ss}));
+        Cellmeanrate.(regions{rr}).sorts.(states{ss}).(celltypes{tt})(ismember(Cellmeanrate.(regions{rr}).sorts.(states{ss}).(celltypes{tt}),find(~ISIbyCspkRate.(regions{rr}).celltypeidx.(celltypes{tt}))))=[];
+    end
+    end
+
 end
-end
-
-
 %% Figure: CSPKRWATE
 for tt=1:2
 figure
@@ -45,7 +50,7 @@ for ss = 1:3
     state = states{ss};
 %for tt = 1:length(celltypes)
 subplot(4,3,ss)
-    imagesc(ISIbyCspkRate.(state).Xbins(1,:,1),ISIbyCspkRate.(state).Ybins(1,:,1), ISIbyCspkRate.(state).pop.(celltypes{tt})')
+    imagesc(ISIbyCspkRate.(regions{rr}).(state).Xbins(1,:,1),ISIbyCspkRate.(regions{rr}).(state).Ybins(1,:,1), ISIbyCspkRate.(regions{rr}).(state).pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
     axis xy
@@ -67,7 +72,7 @@ subplot(4,3,ss)
 
 %for tt = 1:length(celltypes)
 subplot(4,3,ss+3)
-    imagesc(CV2byCspkRate.(state).Xbins(1,:,1),CV2byCspkRate.(state).Ybins(1,:,1), CV2byCspkRate.(state).pop.(celltypes{tt})')
+    imagesc(CV2byCspkRate.(regions{rr}).(state).Xbins(1,:,1),CV2byCspkRate.(regions{rr}).(state).Ybins(1,:,1), CV2byCspkRate.(regions{rr}).(state).pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
     axis xy
@@ -86,10 +91,10 @@ subplot(4,3,ss+3)
 
 %for tt = 1:length(celltypes)
 subplot(4,3,ss+9)
-    imagesc(CV2byCspkRate.(state).Xbins(1,:,1),[1 sum(ISIbyCspkRate.celltypeidx.(celltypes{tt}))],...
-        squeeze(CV2byCspkRate.(state).pX(:,:,Cellmeanrate.sorts.(states{ss}).(celltypes{tt})))')
+    imagesc(CV2byCspkRate.(regions{rr}).(state).Xbins(1,:,1),[1 sum(ISIbyCspkRate.(regions{rr}).celltypeidx.(celltypes{tt}))],...
+        squeeze(CV2byCspkRate.(regions{rr}).(state).pX(:,:,Cellmeanrate.(regions{rr}).sorts.(states{ss}).(celltypes{tt})))')
     hold on
-    plot(log10(Cellmeanrate.(states{ss})(Cellmeanrate.sorts.(states{ss}).(celltypes{tt}))),[1:sum(ISIbyCspkRate.celltypeidx.(celltypes{tt}))],'w')
+    plot(log10(Cellmeanrate.(regions{rr}).(states{ss})(Cellmeanrate.(regions{rr}).sorts.(states{ss}).(celltypes{tt}))),[1:sum(ISIbyCspkRate.(regions{rr}).celltypeidx.(celltypes{tt}))],'w')
     axis xy
     LogScale('x',10)
     if ss==1
@@ -108,7 +113,7 @@ subplot(4,3,ss+9)
 
 %for tt = 1:length(celltypes)
 subplot(4,3,ss+6)
-    imagesc(binCV2byCspkRate.(state).Xbins(1,:,1),binCV2byCspkRate.(state).Ybins(1,:,1), binCV2byCspkRate.(state).pop.(celltypes{tt})')
+    imagesc(binCV2byCspkRate.(regions{rr}).(state).Xbins(1,:,1),binCV2byCspkRate.(regions{rr}).(state).Ybins(1,:,1), binCV2byCspkRate.(regions{rr}).(state).pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
     axis xy
@@ -138,7 +143,7 @@ for ss = 1:3
     state = states{ss};
 %for tt = 1:length(celltypes)
 subplot(4,3,ss)
-    imagesc(ISIbyRate.(state).Xbins(1,:,1),ISIbyRate.(state).Ybins(1,:,1), ISIbyRate.(state).pop.(celltypes{tt})')
+    imagesc(ISIbyRate.(regions{rr}).(state).Xbins(1,:,1),ISIbyRate.(regions{rr}).(state).Ybins(1,:,1), ISIbyRate.(regions{rr}).(state).pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
     axis xy
@@ -161,7 +166,7 @@ subplot(4,3,ss)
 
 %for tt = 1:length(celltypes)
 subplot(4,3,ss+3)
-    imagesc(CV2byRate.(state).Xbins(1,:,1),CV2byRate.(state).Ybins(1,:,1), CV2byRate.(state).pop.(celltypes{tt})')
+    imagesc(CV2byRate.(regions{rr}).(state).Xbins(1,:,1),CV2byRate.(regions{rr}).(state).Ybins(1,:,1), CV2byRate.(regions{rr}).(state).pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
     axis xy
@@ -181,10 +186,10 @@ subplot(4,3,ss+3)
 
 %for tt = 1:length(celltypes)
 subplot(4,3,ss+6)
-    imagesc(CV2byRate.(state).Xbins(1,:,1),[1 sum(ISIbyRate.celltypeidx.(celltypes{tt}))],...
-        squeeze(CV2byRate.(state).pX(:,:,Cellmeanrate.sorts.(states{ss}).(celltypes{tt})))')
+    imagesc(CV2byRate.(regions{rr}).(state).Xbins(1,:,1),[1 sum(ISIbyRate.(regions{rr}).celltypeidx.(celltypes{tt}))],...
+        squeeze(CV2byRate.(regions{rr}).(state).pX(:,:,Cellmeanrate.(regions{rr}).sorts.(states{ss}).(celltypes{tt})))')
     hold on
-    plot((Cellmeanrate.(states{ss})(Cellmeanrate.sorts.(states{ss}).(celltypes{tt}))),[1:sum(ISIbyRate.celltypeidx.(celltypes{tt}))],'w')
+    plot((Cellmeanrate.(regions{rr}).(states{ss})(Cellmeanrate.(regions{rr}).sorts.(states{ss}).(celltypes{tt}))),[1:sum(ISIbyRate.(regions{rr}).celltypeidx.(celltypes{tt}))],'w')
     axis xy
     %LogScale('y',10)
     if ss==1
@@ -201,6 +206,6 @@ subplot(4,3,ss+6)
      end
     
 end 
- NiceSave(['ISIbyRate_',(celltypes{tt})],figfolder,thisregion)
+ NiceSave(['ISIbyRate.(regions{rr})_',(celltypes{tt})],figfolder,thisregion)
 
 end
