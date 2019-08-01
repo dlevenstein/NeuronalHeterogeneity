@@ -197,8 +197,8 @@ colormap(gca,statecolormap{ss})
     %alpha(s,single(ISIoccupancy.(regions{rr}).(state).loghist(:,sorts.(regions{rr}).(statenames{ss}).medISIbyclass)'~=0))
 
     hold on
-%     plot(log10(1./ISIstats.(regions{rr}).summstats.(state).meanrate(sorts.(regions{rr}).(statenames{ss}).medISIbyclass)),...
-%         [1:length(sorts.(regions{rr}).(statenames{ss}).medISIbyclass)],'k.','markersize',4)
+    plot(log10(OccupancyStats.(regions{rr}).(statenames{ss}).median(sorts.(regions{rr}).(statenames{ss}).medISIbyclass)),...
+        [1:length(sorts.(regions{rr}).(statenames{ss}).medISIbyclass)],'k.','markersize',4)
     LogScale('x',10)
     %caxis([0 0.05])
     %ColorbarWithAxis([0 0.05],'P_t(log(ISI))')
@@ -218,3 +218,4 @@ colormap(gca,statecolormap{ss})
 end
 end
 
+NiceSave('ISIDist_MedOccupancysort',figfolder,[])

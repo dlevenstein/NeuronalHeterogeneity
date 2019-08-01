@@ -92,6 +92,11 @@ for ss = 1:3
     
     [~,OccupancyStats.sorts.(state).mean] = sort(OccupancyStats.(state).mean);
     [~,OccupancyStats.sorts.(state).median] = sort(OccupancyStats.(state).median);
+    
+    %% MedianOccupancy Normalization
+    ISIoccupancy.(state).mednormhist = hist(log10(ISIrate.ISI(ISIrate.instate,:)./OccupancyStats.(state).median),...
+        ISIoccupancy.logbins);
+    ISIoccupancy.(state).mednormhist = ISIoccupancy.(state).mednormhist./length(ISIrate.timestamps(ISIrate.instate));
 end
 
 %%
