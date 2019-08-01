@@ -61,11 +61,12 @@ for ss = 1:3
     state = states{ss};
 %     ISIStats.allspikes.instate = cellfun(@(X) InIntervals(X,double(SleepState.ints.(state))),...
 %         ISIStats.allspikes.times,'UniformOutput',false);
-    ISIrate.instate = InIntervals(ISIrate.timestamps,SleepState.ints.(state));
-
+    ISIrate.instate = InIntervals(ISIrate.timestamps,SleepState.ints.(state));    
+    
     if sum(ISIrate.instate)==0
         ISIoccupancy.(state).hist = nan(length(ISIoccupancy.bins),spikes.numcells);
         ISIoccupancy.(state).loghist = nan(length(ISIoccupancy.logbins),spikes.numcells);
+        ISIoccupancy.(state).normhist = nan(length(ISIoccupancy.logbins),spikes.numcells);
        continue 
     end
     %% Calculate occupancy histogram
@@ -78,6 +79,10 @@ for ss = 1:3
     ISIoccupancy.(state).loghist = hist(log10(ISIrate.ISI(ISIrate.instate,:)),ISIoccupancy.logbins);
     ISIoccupancy.(state).loghist = ISIoccupancy.(state).loghist./length(ISIrate.timestamps(ISIrate.instate));
     %ISIoccupancy.(state).loghist(ISIoccupancy.(state).loghist==0)=nan;
+    
+    ISIoccupancy.(state).normhist = hist(log10(ISIrate.ISI(ISIrate.instate,:)./ISIStats.summstats.(state).meanISI),...
+        ISIoccupancy.logbins);
+    ISIoccupancy.(state).normhist = ISIoccupancy.(state).normhist./length(ISIrate.timestamps(ISIrate.instate));
     
     %% Calculate occupancy statistics
     OccupancyStats.(state).mean = mean(ISIrate.ISI(ISIrate.instate,:));
@@ -108,6 +113,23 @@ subplot(3,2,ss*2-1)
 
     hold on
     plot(log10(1./ISIStats.summstats.(state).meanrate(ISIStats.sorts.(state).ratebyclass)),...
+        [1:length(ISIStats.sorts.(state).ratebyclass)],'.')
+    LogScale('x',10)
+    ColorbarWithAxis([0 0.05],'P_t(log(ISI))')
+    xlabel('ISI')
+    ylabel(state)
+% subplot(2,1,2)
+%     imagesc(ISIoccupancy.bins,[1 spikes.numcells],...
+%         ISIoccupancy.(state).hist(:,ISIStats.sorts.(state).ratebyclass)')
+
+
+subplot(3,2,ss*2)
+    s = imagesc(ISIoccupancy.logbins,[1 spikes.numcells],...
+        (ISIoccupancy.(state).normhist(:,ISIStats.sorts.(state).ratebyclass))');
+    alpha(s,single(ISIoccupancy.(state).normhist(:,ISIStats.sorts.(state).ratebyclass)'~=0))
+
+    hold on
+    plot(log10(1),...
         [1:length(ISIStats.sorts.(state).ratebyclass)],'.')
     LogScale('x',10)
     ColorbarWithAxis([0 0.05],'P_t(log(ISI))')

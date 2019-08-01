@@ -506,6 +506,37 @@ end
 NiceSave('Percentiles',figfolder,[])
 
 %%
+figure
+for rr = 1:length(regions)
+for ss = 1:3
+    pcolor = makeColorMap([0.7 0.7 0.7],statecolors{ss},numperciles);
+
+    subplot(5,4,(rr-1)+(ss-1)*4+1)
+        hold on
+        for cc = 1:length(percilenames)
+            plot(meanISIhist.logbins,meannormISIhist.(regions{rr}).(statenames{ss}).(percilenames{cc}),...
+                'linewidth',1,'color',pcolor(cc,:))
+        end
+        axis tight
+        if ss==1
+            title(regions{rr})
+        end
+        if rr == 1
+            ylabel('p(ISI)');
+        end
+        xlim([-3 1.9])
+        LogScale('x',10,'exp',true)
+        set(gca,'ytick',[])
+            if ss==3
+                xlabel('ISI (s)')
+            else
+                set(gca,'xticklabels',[])
+            end
+end
+end
+
+
+%%
 for ss = 1:3
    figure
 for rr = 1:length(regions)
@@ -521,7 +552,7 @@ for rr = 1:length(regions)
             hold on
             plot(log10(1./meanpercrate.(regions{rr}).(statenames{ss})(cc)),ISIstats.(regions{rr}).CV2hist.bins(1,1),'r+')
             plot(meanISIhist.logbins,meanISIhist.(regions{rr}).(statenames{ss}).(percilenames{cc})*25,...
-                'color',statecolors{ss},'linewidth',1)
+                'color',statecolors{ss},'linewidth',0.5)
             
             axis xy
             xlim([-3 1.9])
