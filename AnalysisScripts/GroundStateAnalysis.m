@@ -1,4 +1,4 @@
-function [ ISIoccupancy ] = GroundStateAnalysis( basePath,figfolder )
+function [ ISIoccupancy,OccupancyStats ] = GroundStateAnalysis( basePath,figfolder )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %% Load Header
@@ -85,19 +85,22 @@ for ss = 1:3
     ISIoccupancy.(state).normhist = ISIoccupancy.(state).normhist./length(ISIrate.timestamps(ISIrate.instate));
     
     %% Calculate occupancy statistics
-    OccupancyStats.(state).mean = mean(ISIrate.ISI(ISIrate.instate,:));
+    OccupancyStats.(state).median = nanmedian(ISIrate.ISI(ISIrate.instate,:));
     OccupancyStats.(state).std = std(ISIrate.ISI(ISIrate.instate,:));
-    OccupancyStats.(state).meanlog = mean(log10(ISIrate.ISI(ISIrate.instate,:)));
-    OccupancyStats.(state).stdlog = std(log10(ISIrate.ISI(ISIrate.instate,:)));
+    OccupancyStats.(state).mean = nanmean(log10(ISIrate.ISI(ISIrate.instate,:)));
+    %OccupancyStats.(state).stdlog = std(log10(ISIrate.ISI(ISIrate.instate,:)));
+    
+    [~,OccupancyStats.sorts.(state).mean] = sort(OccupancyStats.(state).mean);
+    [~,OccupancyStats.sorts.(state).median] = sort(OccupancyStats.(state).median);
 end
 
 %%
-figure
-subplot(2,2,1)
-plot(OccupancyStats.NREMstate.mean,OccupancyStats.WAKEstate.mean,'.')
-
-subplot(2,2,2)
-plot(OccupancyStats.NREMstate.mean,OccupancyStats.NREMstate.std,'.')
+% figure
+% subplot(2,2,1)
+% plot(OccupancyStats.NREMstate.mean,OccupancyStats.WAKEstate.mean,'.')
+% 
+% subplot(2,2,2)
+% plot(OccupancyStats.NREMstate.mean,OccupancyStats.NREMstate.std,'.')
 %%
 %cmap = [1 1 1;colormap(parula)];
 
