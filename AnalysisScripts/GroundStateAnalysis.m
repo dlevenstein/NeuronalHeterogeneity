@@ -133,7 +133,7 @@ subplot(3,2,ss*2-1)
 
 subplot(3,2,ss*2)
     s = imagesc(ISIoccupancy.logbins,[1 spikes.numcells],...
-        (ISIoccupancy.(state).normhist(:,ISIStats.sorts.(state).ratebyclass))');
+        (ISIoccupancy.(state).mednormhist(:,ISIStats.sorts.(state).ratebyclass))');
     alpha(s,single(ISIoccupancy.(state).normhist(:,ISIStats.sorts.(state).ratebyclass)'~=0))
 
     hold on

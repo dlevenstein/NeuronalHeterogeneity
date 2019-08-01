@@ -8,7 +8,7 @@ datasetPath.vCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Dataset
 datasetPath.THAL = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL';
 regions = {'THAL','vCTX','fCTX','CA1'};
 %regions = {'fCTX'};
-%%
+%
 for rr = 1:length(regions)
     [ISIstats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
     CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
