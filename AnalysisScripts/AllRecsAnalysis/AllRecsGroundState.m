@@ -155,7 +155,7 @@ subplot(3,4,(ss-1)*4+rr)
     alpha(s,single(ISIoccupancy.(regions{rr}).(state).normhist(:,sorts.(regions{rr}).(statenames{ss}).ratebyclass)'~=0))
 
     hold on
-    plot(log10(1./ISIstats.(regions{rr}).summstats.(state).meanrate(sorts.(regions{rr}).(statenames{ss}).ratebyclass)),...
+    plot(0*log10(1./ISIstats.(regions{rr}).summstats.(state).meanrate(sorts.(regions{rr}).(statenames{ss}).ratebyclass)),...
         [1:length(sorts.(regions{rr}).(statenames{ss}).medISIbyclass)],'.')
     LogScale('x',10)
     caxis([0 0.05])
