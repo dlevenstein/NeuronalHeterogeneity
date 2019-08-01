@@ -175,6 +175,7 @@ subplot(3,4,(ss-1)*4+rr)
 %         ISIoccupancy.(state).hist(:,ISIStats.sorts.(state).ratebyclass)')
 end
 end
+NiceSave('ISIOccupancy_MeanNorm',figfolder,[])
 
 %% Median Occupancy Sort
 histcolors = flipud(gray);
