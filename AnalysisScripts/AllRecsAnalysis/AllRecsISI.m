@@ -76,7 +76,8 @@ for rr = 1:length(regions)
     for ss = 1:length(statenames)
         
         noclass = cellfun(@isempty,CellClass.(regions{rr}).label);
-        classnames = unique(CellClass.(regions{rr}).label(~noclass));
+        %classnames = unique(CellClass.(regions{rr}).label(~noclass));
+        classnames = {'pE','pI'};
         percilenames = {};
         [percidx,edg] = discretize(1:length(sorts.(regions{rr}).(statenames{ss}).ratepE),...
             linspace(1,length(sorts.(regions{rr}).(statenames{ss}).ratepE),numperciles+1));
@@ -316,7 +317,7 @@ figure
 for rr = 1:length(regions)
 
 
-for cc = 1:length(classnames)
+for cc = 1:2
     
         
 	for ss = 1:3
@@ -485,15 +486,15 @@ end
 for rr=1:length(regions)
     ss= 1;
     subplot(4,4,rr+12)
-        plot(log10(ISIstats.(regions{rr}).summstats.(plotstates{ss}).meanrate(CellClass.(regions{rr}).pE)),...
-            log10(ISIstats.(regions{rr}).summstats.(plotstates2{ss}).meanrate(CellClass.(regions{rr}).pE)),...
+        plot(log10(ISIstats.(regions{rr}).summstats.WAKEstate.meanrate(CellClass.(regions{rr}).pE)),...
+            log10(ISIstats.(regions{rr}).summstats.NREMstate.meanrate(CellClass.(regions{rr}).pE)),...
             'k.','markersize',2)
         hold on
-        plot(log10(ISIstats.(regions{rr}).summstats.(plotstates{ss}).meanrate(CellClass.(regions{rr}).pI)),...
-            log10(ISIstats.(regions{rr}).summstats.(plotstates2{ss}).meanrate(CellClass.(regions{rr}).pI)),...
+        plot(log10(ISIstats.(regions{rr}).summstats.WAKEstate.meanrate(CellClass.(regions{rr}).pI)),...
+            log10(ISIstats.(regions{rr}).summstats.NREMstate.meanrate(CellClass.(regions{rr}).pI)),...
             'r.','markersize',2)
         %plot(log10([0.03 30]),log10([0.03 30]),'k')
-        xlabel([plotstates{ss},' Rate']);ylabel([plotstates2{ss},' Rate'])
+        xlabel(['WAKE Rate']);ylabel(['NREM Rate'])
         %axis tight
         title(regions{rr})
         xlim([-2 2]);ylim([-2 2])
@@ -503,6 +504,52 @@ end
 
 
 NiceSave('Percentiles',figfolder,[])
+
+%%
+for ss = 1:3
+   figure
+for rr = 1:length(regions)
+   for cc = 1:length(percilenames)
+       
+       [~,idx] = min(abs(10.^meanISIhist.logbins - 1./meanpercrate.(regions{rr}).(statenames{ss})(cc)));
+       
+        subplot(length(percilenames),6,(cc-1)*6+rr)    
+        colormap(gca,statecolormap{ss})
+
+            imagesc(meanISIhist.logbins,ISIstats.(regions{rr}).CV2hist.bins(1,:),...
+                meanreturnhist.(regions{rr}).(statenames{ss}).(percilenames{cc})')
+            hold on
+            plot(log10(1./meanpercrate.(regions{rr}).(statenames{ss})(cc)),ISIstats.(regions{rr}).CV2hist.bins(1,1),'r+')
+            plot(meanISIhist.logbins,meanISIhist.(regions{rr}).(statenames{ss}).(percilenames{cc})*25,...
+                'color',statecolors{ss},'linewidth',1)
+            
+            axis xy
+            xlim([-3 1.9])
+            set(gca,'ytick',[]);set(gca,'xticklabel',[]);
+            if cc==1
+                title(regions{rr})
+            end
+            if cc==length(percilenames) 
+                xlabel('ISI (s)')
+        
+                LogScale('x',10,'exp',true)
+            end
+            if rr==1 
+                ylabel('ISI_n_+_1 (s)')
+        
+                LogScale('x',10,'exp',true)
+            end
+            ylim([0 2]);
+            xlim([-2.5 1.7])
+            xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
+            
+            caxis([0 1.75*meanreturnhist.(regions{rr}).(statenames{ss}).(percilenames{cc})(idx,idx)])
+
+    end
+end
+NiceSave(['PercentilesReturn_',(statenames{ss})],figfolder,[])
+
+end
 %%
 
 for ss = 1:3
