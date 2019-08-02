@@ -494,14 +494,14 @@ subplot(5,4,(rr-1)+17)
         if rr == 1
             ylabel('P(ISI)');
         end
-        xlim([-3 1.9])
+        %xlim([-3 1.9])
         LogScale('x',10,'exp',true)
         set(gca,'ytick',[])
-            if ss==3
+            %if ss==3
                 xlabel('norm ISI (medOcc)')
-            else
-                set(gca,'xticklabels',[])
-            end    
+            %else
+             %   set(gca,'xticklabels',[])
+            %end    
 end
 end
 NiceSave('normISIdistMedOccPercile',figfolder,[])
@@ -550,14 +550,14 @@ subplot(5,4,(rr-1)+17)
         if rr == 1
             ylabel('P_t(ISI)');
         end
-        xlim([-3 1.9])
+        %xlim([-3 1.9])
         LogScale('x',10,'exp',true)
         set(gca,'ytick',[])
-            if ss==3
+            %if ss==3
                 xlabel('norm ISI (medOcc)')
-            else
-                set(gca,'xticklabels',[])
-            end
+           % else
+              %  set(gca,'xticklabels',[])
+           % end
 
 end
 
