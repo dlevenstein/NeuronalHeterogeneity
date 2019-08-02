@@ -32,13 +32,18 @@ numstates = length(statenames);
 
 
 %% Sorts for plot
-sorttypes = {'rate','medISI'};
+sorttypes = {'rate','medISI','MTOrat'};
 %tt =1
 %Make the cell-type specific sortings
 %sorttypes = {'rate','ISICV','CV2'};
 %Make the cell-type specific sortings
 for rr = 1:length(regions)
     for ss = 1:3
+        
+        OccupancyStats.(regions{rr}).(statenames{ss}).MTORatio = ...
+            ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate./...
+            (1./OccupancyStats.(regions{rr}).(statenames{ss}).median);
+        
         [~,sorts.(regions{rr}).(statenames{ss}).rate]=...
             sort(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate);
         [~,sorts.(regions{rr}).(statenames{ss}).ISICV]=...
@@ -47,6 +52,8 @@ for rr = 1:length(regions)
             sort(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanCV2);
         [~,sorts.(regions{rr}).(statenames{ss}).medISI]=...
             sort(1./OccupancyStats.(regions{rr}).(statenames{ss}).median);
+        [~,sorts.(regions{rr}).(statenames{ss}).MTOrat]=...
+            sort(OccupancyStats.(regions{rr}).(statenames{ss}).MTORatio);
         
         noclass = cellfun(@isempty,CellClass.(regions{rr}).label);
         sorts.(regions{rr}).numclassycells = sum(~noclass);
@@ -555,3 +562,34 @@ subplot(5,4,(rr-1)+17)
 end
 
 NiceSave('occISIdistMedOccPercile',figfolder,[])
+
+
+%% Excells
+figure
+for rr =1:4
+[~,excell(1)] = find(log10(OccupancyStats.(regions{rr}).WAKEstate.MTORatio)<0.3 & CellClass.(regions{rr}).pE,...
+    1,'last')
+[~,excell(2)] = find(log10(OccupancyStats.(regions{rr}).WAKEstate.MTORatio)>0.8 & CellClass.(regions{rr}).pE,...
+    1,'last')
+%excell = [108 112];
+
+
+for ss = 1:3
+    for ee = 1:2
+        log10(OccupancyStats.(regions{rr}).(statenames{ss}).MTORatio(excell(ee)))
+    subplot(6,4,(ss-1)*4+rr+(ee-1)*12)
+plot((ISIstats.(regions{rr}).ISIhist.logbins(1,:)),...
+                ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(excell(ee),:),'linewidth',2,'color',statecolors{ss})
+            hold on
+            box off
+            plot(log10(OccupancyStats.(regions{rr}).(statenames{ss}).median(excell(ee))),0,'+')
+            plot(log10(1./ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(excell(ee))),0,'+')
+            xlim([-2.75 2])
+                        LogScale('x',10,'exp',true)
+            
+                xlabel('ISI (s)')
+    end
+end
+end
+
+NiceSave('ExampleISIs',figfolder,[])
