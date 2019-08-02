@@ -446,11 +446,16 @@ for ss=1:3
         %plot(log10([0.03 30]),log10([0.03 30]),'k')
         xlabel([plotstates{ss},' MTO Rate']);ylabel([plotstates2{ss},' MTO Rate'])
         %axis tight
-        xlim([-2.5 2]);ylim([-2.5 2])
+        xlim([-3 2]);ylim([-3 2])
         LogScale('xy',10,'exp',true)
         UnityLine('linetype','-')
+                if ss==1
+            title(regions{rr})
+        end
 end
 end
+
+NiceSave('MTOAcrossStates',figfolder,[])
 %%
 %%
 figure
@@ -475,7 +480,7 @@ for ss = 1:3
         LogScale('x',10,'exp',true)
         set(gca,'ytick',[])
             if ss==3
-                xlabel('norm ISI (medOcc)')
+                xlabel('norm ISI (MTO^-^1)')
             else
                 set(gca,'xticklabels',[])
             end
@@ -498,7 +503,7 @@ subplot(5,4,(rr-1)+17)
         LogScale('x',10,'exp',true)
         set(gca,'ytick',[])
             %if ss==3
-                xlabel('norm ISI (medOcc)')
+                xlabel('norm ISI (MTO^-^1)')
             %else
              %   set(gca,'xticklabels',[])
             %end    
@@ -530,7 +535,7 @@ for ss = 1:3
         LogScale('x',10,'exp',true)
         set(gca,'ytick',[])
             if ss==3
-                xlabel('norm ISI (medOcc)')
+                xlabel('norm ISI (MTO^-^1)')
             else
                 set(gca,'xticklabels',[])
             end
@@ -554,7 +559,7 @@ subplot(5,4,(rr-1)+17)
         LogScale('x',10,'exp',true)
         set(gca,'ytick',[])
             %if ss==3
-                xlabel('norm ISI (medOcc)')
+                xlabel('norm ISI (MTO^-^1)')
            % else
               %  set(gca,'xticklabels',[])
            % end
