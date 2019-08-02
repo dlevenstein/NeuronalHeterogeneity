@@ -387,7 +387,7 @@ for ss = 1:3
             end
 end
 end
-
+NiceSave('ISIdistMedOccPercile',figfolder,[])
 %%
 figure
 for rr = 1:length(regions)
@@ -440,6 +440,7 @@ subplot(5,4,(rr-1)+17)
             end    
 end
 end
+NiceSave('normISIdistMedOccPercile',figfolder,[])
 
 %%
 figure
@@ -495,3 +496,5 @@ subplot(5,4,(rr-1)+17)
             end
 
 end
+
+NiceSave('occISIdistMedOccPercile',figfolder,[])
