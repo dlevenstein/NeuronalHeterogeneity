@@ -578,13 +578,16 @@ for ss = 1:3
     for ee = 1:2
         log10(OccupancyStats.(regions{rr}).(statenames{ss}).MTORatio(excell(ee)))
     subplot(6,4,(ss-1)*4+rr+(ee-1)*12)
+    hold on
 plot((ISIstats.(regions{rr}).ISIhist.logbins(1,:)),...
                 ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(excell(ee),:),'linewidth',2,'color',statecolors{ss})
-            hold on
+plot((ISIoccupancy.(regions{rr}).logbins(1,:)),...
+                ISIoccupancy.(regions{rr}).(statenames{ss}).loghist(:,excell(ee)),':','linewidth',1,'color',statecolors{ss})
+            
             box off
             plot(log10(OccupancyStats.(regions{rr}).(statenames{ss}).median(excell(ee))),0,'+')
             plot(log10(1./ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(excell(ee))),0,'+')
-            xlim([-2.75 2])
+            xlim([-2.75 2.25])
                         LogScale('x',10,'exp',true)
             
                 xlabel('ISI (s)')
