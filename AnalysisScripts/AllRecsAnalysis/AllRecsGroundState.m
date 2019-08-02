@@ -30,6 +30,7 @@ statenames = fieldnames(ISIstats.(regions{1}).summstats);
 statecolors = {[0 0 0],[0 0 1],[1 0 0]};
 numstates = length(statenames);
 
+
 %% Sorts for plot
 sorttypes = {'rate','medISI'};
 %tt =1
@@ -73,7 +74,63 @@ for rr = 1:length(regions)
     end
 end
 
-%% Rate Sort
+
+%% Calculate mean ISI/occupancy dists by state and cell type
+meanISIhist.logbins = ISIstats.(regions{1}).ISIhist.logbins(1,:);
+meannormISIhist.bins = normISIhist.(regions{1}).bins(1,:);
+meannormOcc.bins = ISIoccupancy.(regions{rr}).logbins(1,:);
+numperciles = 6;
+
+for rr = 1:length(regions)
+    for ss = 1:3
+        
+        noclass = cellfun(@isempty,CellClass.(regions{rr}).label);
+        %classnames = unique(CellClass.(regions{rr}).label(~noclass));
+        classnames = {'pE','pI'};
+        percilenames = {};
+        [percidx,edg] = discretize(1:length(sorts.(regions{rr}).(statenames{ss}).medISIpE),...
+            linspace(1,length(sorts.(regions{rr}).(statenames{ss}).medISIpE),numperciles+1));
+        for pp = 1:numperciles
+            classnames = [classnames,['P',num2str(pp)]];
+            percilenames = [percilenames ['P',num2str(pp)]];
+            CellClass.(regions{rr}).(['P',num2str(pp)]) = sorts.(regions{rr}).(statenames{ss}).medISIpE(percidx==pp);
+            
+            meanpercmedISI.(regions{rr}).(statenames{ss})(pp) = mean(1./OccupancyStats.(regions{rr}).(statenames{ss}).median(CellClass.(regions{rr}).(['P',num2str(pp)])));
+        end
+        
+        
+       for cc = 1:length(classnames)
+           meanISIhist.(regions{rr}).(statenames{ss}).(classnames{cc}) = ...
+               nanmean(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(CellClass.(regions{rr}).(classnames{cc}),:),1);
+           meanISIhist.(regions{rr}).std.(statenames{ss}).(classnames{cc}) = ...
+               nanstd(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(CellClass.(regions{rr}).(classnames{cc}),:),[],1);
+
+           meannormISIhist.(regions{rr}).(statenames{ss}).(classnames{cc}) = ...
+               nanmean(normISIhist.(regions{rr}).(statenames{ss}).mednorm(CellClass.(regions{rr}).(classnames{cc}),:),1);
+           meannormISIhist.(regions{rr}).std.(statenames{ss}).(classnames{cc}) = ...
+               nanstd(normISIhist.(regions{rr}).(statenames{ss}).mednorm(CellClass.(regions{rr}).(classnames{cc}),:),[],1);
+           
+           meannormOcc.(regions{rr}).(statenames{ss}).(classnames{cc}) = ...
+               nanmean(ISIoccupancy.(regions{rr}).(statenames{ss}).mednormhist(:,CellClass.(regions{rr}).(classnames{cc})),2);
+           meannormOcc.(regions{rr}).std.(statenames{ss}).(classnames{cc}) = ...
+               nanstd(ISIoccupancy.(regions{rr}).(statenames{ss}).mednormhist(:,CellClass.(regions{rr}).(classnames{cc})),[],2);
+           
+           meanreturnhist.(regions{rr}).(statenames{ss}).(classnames{cc}) = ...
+               nanmean(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).return(:,:,CellClass.(regions{rr}).(classnames{cc})),3);
+           meanreturnhist.(regions{rr}).std.(statenames{ss}).(classnames{cc}) = ...
+               nanstd(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).return(:,:,CellClass.(regions{rr}).(classnames{cc})),[],3);
+           
+           meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).log = ...
+               squeeze(nanmean(ISIstats.(regions{rr}).Jointhist.(statenames{ss}).log(CellClass.(regions{rr}).(classnames{cc}),:,:),1));
+           meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).norm = ...
+               squeeze(nanmean(ISIstats.(regions{rr}).Jointhist.(statenames{ss}).norm(CellClass.(regions{rr}).(classnames{cc}),:,:),1));
+       
+       end
+    end
+end
+
+
+%% Figure: Rate Sort Occupancy
 figure
 %colormap(cmap)
 for rr = 1:length(regions)
@@ -257,7 +314,7 @@ end
 
 NiceSave('ISIDist_MedOccupancysort',figfolder,[])
 
-%%
+%% MedOcc-normalized ISI
 figure
 %colormap(cmap)
 for rr = 1:length(regions)
@@ -293,3 +350,148 @@ end
 end
 
 NiceSave('normISIDist',figfolder,[])
+
+
+%% Mean Distributions
+
+%ISI (MedOcc Sextiles)
+%NormISI
+%Occupancy: NormISI
+
+%% FR %Ile FIgure
+figure
+for rr = 1:length(regions)
+for ss = 1:3
+    pcolor = makeColorMap([0.7 0.7 0.7],statecolors{ss},numperciles);
+
+    subplot(5,4,(rr-1)+(ss-1)*4+1)
+        hold on
+        for cc = 1:length(percilenames)
+            plot(meanISIhist.logbins,meanISIhist.(regions{rr}).(statenames{ss}).(percilenames{cc}),...
+                'linewidth',1,'color',pcolor(cc,:))
+        end
+        axis tight
+        if ss==1
+            title(regions{rr})
+        end
+        if rr == 1
+            ylabel('p(ISI)');
+        end
+        xlim([-3 1.9])
+        LogScale('x',10,'exp',true)
+        set(gca,'ytick',[])
+            if ss==3
+                xlabel('ISI (s)')
+            else
+                set(gca,'xticklabels',[])
+            end
+end
+end
+
+%%
+figure
+for rr = 1:length(regions)
+for ss = 1:3
+    pcolor = makeColorMap([0.7 0.7 0.7],statecolors{ss},numperciles);
+
+    subplot(5,4,(rr-1)+(ss-1)*4+1)
+        hold on
+        for cc = 1:length(percilenames)
+            plot(meannormISIhist.bins,meannormISIhist.(regions{rr}).(statenames{ss}).(percilenames{cc}),...
+                'linewidth',1,'color',pcolor(cc,:))
+        end
+        axis tight
+        if ss==1
+            title(regions{rr})
+        end
+        if rr == 1
+            ylabel('p(ISI)');
+        end
+        %xlim([-3 1.9])
+        LogScale('x',10,'exp',true)
+        set(gca,'ytick',[])
+            if ss==3
+                xlabel('norm ISI (medOcc)')
+            else
+                set(gca,'xticklabels',[])
+            end
+            
+subplot(5,4,(rr-1)+17)
+ hold on
+        for ss = 1:3
+           
+            plot(meannormISIhist.bins,meannormISIhist.(regions{rr}).(statenames{ss}).pE,...
+                'linewidth',1,'color',statecolors{ss})
+        end
+        axis tight
+        if ss==1
+            title(regions{rr})
+        end
+        if rr == 1
+            ylabel('p_t(ISI)');
+        end
+        xlim([-3 1.9])
+        LogScale('x',10,'exp',true)
+        set(gca,'ytick',[])
+            if ss==3
+                xlabel('norm ISI (medOcc)')
+            else
+                set(gca,'xticklabels',[])
+            end    
+end
+end
+
+%%
+figure
+for rr = 1:length(regions)
+for ss = 1:3
+    pcolor = makeColorMap([0.7 0.7 0.7],statecolors{ss},numperciles);
+
+            
+    subplot(5,4,(rr-1)+(ss-1)*4+1)
+        hold on
+        for cc = 1:length(percilenames)
+            plot(meannormOcc.bins,meannormOcc.(regions{rr}).(statenames{ss}).(percilenames{cc}),...
+                'linewidth',1,'color',pcolor(cc,:))
+        end
+        axis tight
+        if ss==1
+            title(regions{rr})
+        end
+        if rr == 1
+            ylabel('p_t(ISI)');
+        end
+        xlim([-3 1.9])
+        LogScale('x',10,'exp',true)
+        set(gca,'ytick',[])
+            if ss==3
+                xlabel('norm ISI (medOcc)')
+            else
+                set(gca,'xticklabels',[])
+            end
+end
+
+subplot(5,4,(rr-1)+17)
+ hold on
+        for ss = 1:3
+           
+            plot(meannormOcc.bins,meannormOcc.(regions{rr}).(statenames{ss}).pE,...
+                'linewidth',1,'color',statecolors{ss})
+        end
+        axis tight
+        if ss==1
+            title(regions{rr})
+        end
+        if rr == 1
+            ylabel('p_t(ISI)');
+        end
+        xlim([-3 1.9])
+        LogScale('x',10,'exp',true)
+        set(gca,'ytick',[])
+            if ss==3
+                xlabel('norm ISI (medOcc)')
+            else
+                set(gca,'xticklabels',[])
+            end
+
+end
