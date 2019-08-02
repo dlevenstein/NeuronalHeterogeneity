@@ -348,7 +348,7 @@ colormap(gca,statecolormap{ss})
     %ColorbarWithAxis([0 0.05],'P_t(log(ISI))')
     xlabel('norm ISI (medOcc)')
           if rr ==1
-            ylabel({statenames{ss},'Cell, sorded by medOcc'})
+            ylabel({statenames{ss},'Cell, sorded by MTORate'})
           end
             set(gca,'yticklabel',[])
     if ss==1
@@ -411,7 +411,7 @@ end
 xlim([-4 2]);ylim([-4 2])
 UnityLine
 LogScale('xy',10,'exp',true)
-xlabel('Mean Rate');ylabel('MedOccISI^-^1')
+xlabel('Mean Rate');ylabel('MTO Rate')
 end
 
 NiceSave('ISIdistMedOccPercile',figfolder,[])
@@ -437,7 +437,7 @@ for ss=1:3
     end
 
         %plot(log10([0.03 30]),log10([0.03 30]),'k')
-        xlabel([plotstates{ss},' MTO(ISI)^-^1']);ylabel([plotstates2{ss},' MTO(ISI)^-^1'])
+        xlabel([plotstates{ss},' MTO Rate']);ylabel([plotstates2{ss},' MTO Rate'])
         %axis tight
         xlim([-2.5 2]);ylim([-2.5 2])
         LogScale('xy',10,'exp',true)

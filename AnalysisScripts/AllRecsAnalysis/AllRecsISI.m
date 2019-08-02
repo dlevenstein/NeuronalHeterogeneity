@@ -263,7 +263,7 @@ for ss = 1:3
             %colorbar
           %  legend('1/Mean Firing Rate (s)','location','southeast')
           if rr ==1
-            ylabel({statenames{ss},'Cell'})
+            ylabel({statenames{ss},'Cell, sorted by Rate'})
           end
             set(gca,'yticklabel',[])
             %legend('1/Mean Firing Rate (s)','location','southeast')
