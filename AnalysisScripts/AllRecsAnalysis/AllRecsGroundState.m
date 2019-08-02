@@ -292,4 +292,4 @@ colormap(gca,statecolormap{ss})
 end
 end
 
-NiceSave('ISIDist_MedOccupancysort',figfolder,[])
+NiceSave('normISIDist',figfolder,[])
