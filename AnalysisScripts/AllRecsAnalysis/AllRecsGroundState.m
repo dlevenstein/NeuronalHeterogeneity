@@ -278,40 +278,53 @@ REMhistcolors = makeColorMap([1 1 1],[0.8 0 0]);
 statecolormap = {histcolors,NREMhistcolors,REMhistcolors};
 
 
+
 figure
-%colormap(cmap)
 for rr = 1:length(regions)
 for ss = 1:3
-        state = statenames{ss};
+    subplot(3,4,ss*4-3+(rr-1))
+    colormap(gca,statecolormap{ss})
 
-subplot(3,4,(ss-1)*4+rr)
-colormap(gca,statecolormap{ss})
-    s = imagesc(ISIstats.(regions{rr}).ISIhist.logbins(1,:),[1 length(sorts.(regions{rr}).(statenames{ss}).medISIbyclass)],...
-        (ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(sorts.(regions{rr}).(statenames{ss}).medISIbyclass,:)));
-    %alpha(s,single(ISIoccupancy.(regions{rr}).(state).loghist(:,sorts.(regions{rr}).(statenames{ss}).medISIbyclass)'~=0))
-
-    hold on
-    plot(log10(OccupancyStats.(regions{rr}).(statenames{ss}).median(sorts.(regions{rr}).(statenames{ss}).medISIbyclass)),...
-        [1:length(sorts.(regions{rr}).(statenames{ss}).medISIbyclass)],'k.','markersize',4)
-    LogScale('x',10)
-    %caxis([0 0.05])
-    %ColorbarWithAxis([0 0.05],'P_t(log(ISI))')
-    xlabel('ISI')
+       % subplot(2,3,4)
+            imagesc((ISIstats.(regions{rr}).ISIhist.logbins(1,:)),[1 sorts.(regions{rr}).numclassycells],...
+                ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(sorts.(regions{rr}).(statenames{ss}).medISIbyclass,:))
+            hold on
+            plot(log10((OccupancyStats.(regions{rr}).(statenames{ss}).median(sorts.(regions{rr}).(statenames{ss}).medISIbyclass))),...
+                [1:sorts.(regions{rr}).numclassycells],'k.','markersize',1)
+            plot(ISIstats.(regions{rr}).ISIhist.logbins([1 end]),sum(inclasscells.(regions{rr}){1}).*[1 1]+0.5,'r')
+            
+            plot(meanISIhist.logbins,-meanISIhist.(regions{rr}).(statenames{ss}).pE*5000+...
+                sum(inclasscells.(regions{rr}){1})+0.5,...
+                'color',statecolors{ss},'linewidth',2)
+            
+            plot(meanISIhist.logbins,-meanISIhist.(regions{rr}).(statenames{ss}).pI*2000+...
+                sum(sorts.(regions{rr}).numclassycells),...
+                'color',statecolors{ss},'linewidth',2)
+            
+            xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
+            xlim([-3 1.9])
+            LogScale('x',10,'exp',true)
+            if ss==3
+                xlabel('ISI (s)')
+            else
+                set(gca,'xticklabels',[])
+            end
+            %colorbar
+          %  legend('1/Mean Firing Rate (s)','location','southeast')
           if rr ==1
             ylabel({statenames{ss},'Cell'})
           end
             set(gca,'yticklabel',[])
-    if ss==1
-        title(regions{rr})
-    end
-    caxis([0 0.1])
-    LogScale('x',10,'exp',true)
-% subplot(2,1,2)
-%     imagesc(ISIoccupancy.bins,[1 spikes.numcells],...
-%         ISIoccupancy.(state).hist(:,ISIStats.sorts.(state).ratebyclass)')
-end
-end
+            %legend('1/Mean Firing Rate (s)','location','southeast')
+            caxis([0 0.1])
+            %title('ISI Distribution (Log Scale)')
+            if ss==1
+                title(regions{rr})
+            end
 
+                
+end
+end
 NiceSave('ISIDist_MedOccupancysort',figfolder,[])
 
 %% MedOcc-normalized ISI
@@ -391,8 +404,8 @@ classcolors = {'k','r'};
 subplot(3,4,8+rr)
 hold on
 for cc=1:2
-plot(log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).(classnames{cc}))),...
-    log10(1./OccupancyStats.(regions{rr}).(statenames{ss}).median(CellClass.(regions{rr}).(classnames{cc}))),'.')
+plot(log10(ISIstats.(regions{rr}).summstats.WAKEstate.meanrate(CellClass.(regions{rr}).(classnames{cc}))),...
+    log10(1./OccupancyStats.(regions{rr}).WAKEstate.median(CellClass.(regions{rr}).(classnames{cc}))),'.','color',classcolors{cc})
 
 end
 xlim([-4 2]);ylim([-4 2])
@@ -402,6 +415,36 @@ xlabel('Mean Rate');ylabel('MedOccISI^-^1')
 end
 
 NiceSave('ISIdistMedOccPercile',figfolder,[])
+
+%% GSRate by state
+plotstates = {'WAKEstate','REMstate','WAKEstate'};
+plotstates2 = {'NREMstate','NREMstate','REMstate'};
+
+
+
+figure
+%suptitle(regions{rr})
+%Rate
+for rr = 1:length(regions)
+for ss=1:3
+    subplot(4,4,(ss-1)*4+rr)
+    hold on
+    for cc=1:2
+        plot(log10(1./OccupancyStats.(regions{rr}).(plotstates{ss}).median(CellClass.(regions{rr}).(classnames{cc}))),...
+            log10(1./OccupancyStats.(regions{rr}).(plotstates2{ss}).median(CellClass.(regions{rr}).(classnames{cc}))),...
+            'k.','markersize',2,'color',classcolors{cc})
+        
+    end
+
+        %plot(log10([0.03 30]),log10([0.03 30]),'k')
+        xlabel([plotstates{ss},' MTO(ISI)^-^1']);ylabel([plotstates2{ss},' MTO(ISI)^-^1'])
+        %axis tight
+        xlim([-2.5 2]);ylim([-2.5 2])
+        LogScale('xy',10,'exp',true)
+        UnityLine('linetype','-')
+end
+end
+%%
 %%
 figure
 for rr = 1:length(regions)
