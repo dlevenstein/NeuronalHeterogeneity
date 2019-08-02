@@ -102,7 +102,7 @@ for ss = 1:3
     
     normISIs = cellfun(@(X,Y,Z) X(Y)./Z,ISIStats.allspikes.ISIs,ISIStats.allspikes.instate,...
         num2cell(OccupancyStats.(state).median),'UniformOutput',false);
-    normISIhist.bins = linspace(-3.5,1,100);
+    normISIhist.bins = linspace(-4,1,100);
     normISIhist.(state).mednorm = cellfun(@(X) hist(log10(X),normISIhist.bins),normISIs,'UniformOutput',false);
     normISIhist.(state).mednorm = cellfun(@(X) X./sum(X),normISIhist.(state).mednorm,'UniformOutput',false);
     normISIhist.(state).mednorm = cat(1,normISIhist.(state).mednorm{:});

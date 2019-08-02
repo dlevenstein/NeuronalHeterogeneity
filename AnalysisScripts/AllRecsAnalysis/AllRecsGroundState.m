@@ -21,6 +21,8 @@ for rr = 1:length(regions)
         'justcat',true );
     OccupancyStats.(regions{rr}) = bz_CollapseStruct(GroundStateAll.OccupancyStats,'match',...
         'justcat',true );
+    normISIhist.(regions{rr}) = bz_CollapseStruct(GroundStateAll.normISIhist,'match',...
+        'justcat',true );
 end
 
 %%
@@ -240,6 +242,43 @@ colormap(gca,statecolormap{ss})
     xlabel('ISI')
           if rr ==1
             ylabel({statenames{ss},'Cell'})
+          end
+            set(gca,'yticklabel',[])
+    if ss==1
+        title(regions{rr})
+    end
+    caxis([0 0.1])
+    LogScale('x',10,'exp',true)
+% subplot(2,1,2)
+%     imagesc(ISIoccupancy.bins,[1 spikes.numcells],...
+%         ISIoccupancy.(state).hist(:,ISIStats.sorts.(state).ratebyclass)')
+end
+end
+
+NiceSave('ISIDist_MedOccupancysort',figfolder,[])
+
+%%
+figure
+%colormap(cmap)
+for rr = 1:length(regions)
+for ss = 1:3
+        state = statenames{ss};
+
+subplot(3,4,(ss-1)*4+rr)
+colormap(gca,statecolormap{ss})
+    s = imagesc(normISIhist.(regions{rr}).bins(1,:),[1 length(sorts.(regions{rr}).(statenames{ss}).medISIbyclass)],...
+        (normISIhist.(regions{rr}).(statenames{ss}).mednorm(sorts.(regions{rr}).(statenames{ss}).medISIbyclass,:)));
+    %alpha(s,single(ISIoccupancy.(regions{rr}).(state).loghist(:,sorts.(regions{rr}).(statenames{ss}).medISIbyclass)'~=0))
+
+    hold on
+    plot(0*log10(OccupancyStats.(regions{rr}).(statenames{ss}).median(sorts.(regions{rr}).(statenames{ss}).medISIbyclass)),...
+        [1:length(sorts.(regions{rr}).(statenames{ss}).medISIbyclass)],'k.','markersize',4)
+    LogScale('x',10)
+    %caxis([0 0.05])
+    %ColorbarWithAxis([0 0.05],'P_t(log(ISI))')
+    xlabel('norm ISI (medOcc)')
+          if rr ==1
+            ylabel({statenames{ss},'Cell, sorded by medOcc'})
           end
             set(gca,'yticklabel',[])
     if ss==1
