@@ -482,7 +482,7 @@ for ss = 1:3
             
 subplot(5,4,(rr-1)+17)
  hold on
-        for ss = 1:3
+        for ss = 1:2
            
             plot(meannormISIhist.bins,meannormISIhist.(regions{rr}).(statenames{ss}).pE,...
                 'linewidth',1,'color',statecolors{ss})
@@ -492,7 +492,7 @@ subplot(5,4,(rr-1)+17)
             title(regions{rr})
         end
         if rr == 1
-            ylabel('p_t(ISI)');
+            ylabel('P(ISI)');
         end
         xlim([-3 1.9])
         LogScale('x',10,'exp',true)
@@ -538,7 +538,7 @@ end
 
 subplot(5,4,(rr-1)+17)
  hold on
-        for ss = 1:3
+        for ss = 1:2
            
             plot(meannormOcc.bins,meannormOcc.(regions{rr}).(statenames{ss}).pE,...
                 'linewidth',1,'color',statecolors{ss})
@@ -548,7 +548,7 @@ subplot(5,4,(rr-1)+17)
             title(regions{rr})
         end
         if rr == 1
-            ylabel('p_t(ISI)');
+            ylabel('P_t(ISI)');
         end
         xlim([-3 1.9])
         LogScale('x',10,'exp',true)
@@ -588,6 +588,8 @@ plot((ISIoccupancy.(regions{rr}).logbins(1,:)),...
             plot(log10(OccupancyStats.(regions{rr}).(statenames{ss}).median(excell(ee))),0,'+')
             plot(log10(1./ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(excell(ee))),0,'+')
             xlim([-2.75 2.25])
+            set(gca,'yticklabel',[])
+            %ylabel('P(ISI), P_t(ISI)')
                         LogScale('x',10,'exp',true)
             
                 xlabel('ISI (s)')
