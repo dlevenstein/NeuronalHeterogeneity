@@ -8,7 +8,7 @@ datasetPath.vCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Dataset
 datasetPath.THAL = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL';
 regions = {'THAL','vCTX','fCTX','CA1'};
 %regions = {'fCTX'};
-%
+%%
 for rr = 1:length(regions)
     [ISIstats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
     CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
@@ -160,7 +160,7 @@ subplot(3,4,(ss-1)*4+rr)
     LogScale('x',10)
     caxis([0 0.05])
     %ColorbarWithAxis([0 0.05],'P_t(log(ISI))')
-    xlabel('ISI')
+    xlabel('norm ISI (mean^-^1)')
           if rr ==1
             ylabel({statenames{ss},'Cell'})
           end
@@ -177,6 +177,41 @@ end
 end
 NiceSave('ISIOccupancy_MeanNorm',figfolder,[])
 
+
+%% MedianOccupancy-Normalized
+figure
+%colormap(cmap)
+for rr = 1:length(regions)
+for ss = 1:3
+        state = statenames{ss};
+
+subplot(3,4,(ss-1)*4+rr)
+    s = imagesc(ISIoccupancy.(regions{rr}).logbins(1,:),[1 length(sorts.(regions{rr}).(statenames{ss}).ratebyclass)],...
+        (ISIoccupancy.(regions{rr}).(state).mednormhist(:,sorts.(regions{rr}).(statenames{ss}).ratebyclass))');
+    alpha(s,single(ISIoccupancy.(regions{rr}).(state).mednormhist(:,sorts.(regions{rr}).(statenames{ss}).ratebyclass)'~=0))
+
+    hold on
+    plot(0*log10(1./ISIstats.(regions{rr}).summstats.(state).meanrate(sorts.(regions{rr}).(statenames{ss}).ratebyclass)),...
+        [1:length(sorts.(regions{rr}).(statenames{ss}).medISIbyclass)],'.')
+    LogScale('x',10)
+    caxis([0 0.05])
+    %ColorbarWithAxis([0 0.05],'P_t(log(ISI))')
+    xlabel('norm ISI (medOcc)')
+          if rr ==1
+            ylabel({statenames{ss},'Cell'})
+          end
+            set(gca,'yticklabel',[])
+    if ss==1
+        title(regions{rr})
+    end
+    
+    LogScale('x',10,'exp',true)
+% subplot(2,1,2)
+%     imagesc(ISIoccupancy.bins,[1 spikes.numcells],...
+%         ISIoccupancy.(state).hist(:,ISIStats.sorts.(state).ratebyclass)')
+end
+end
+NiceSave('ISIOccupancy_MedNorm',figfolder,[])
 %% Median Occupancy Sort
 histcolors = flipud(gray);
 NREMhistcolors = makeColorMap([1 1 1],[0 0 0.8]);

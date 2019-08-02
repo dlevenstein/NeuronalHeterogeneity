@@ -1,4 +1,4 @@
-function [ ISIoccupancy,OccupancyStats ] = GroundStateAnalysis( basePath,figfolder )
+function [ ISIoccupancy,OccupancyStats,normISIhist ] = GroundStateAnalysis( basePath,figfolder )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %% Load Header
@@ -56,12 +56,14 @@ ISIrate.ISI = cat(2,ISIrate.ISI{:});
 %% ISI occupancy
 % 
 ISIoccupancy.bins = linspace(0,20,100);
-ISIoccupancy.logbins = linspace(-2.5,2.5,100);
+ISIoccupancy.logbins = linspace(-3,2.5,100);
 for ss = 1:3
     state = states{ss};
 %     ISIStats.allspikes.instate = cellfun(@(X) InIntervals(X,double(SleepState.ints.(state))),...
 %         ISIStats.allspikes.times,'UniformOutput',false);
     ISIrate.instate = InIntervals(ISIrate.timestamps,SleepState.ints.(state));    
+    ISIStats.allspikes.instate = cellfun(@(X) InIntervals(X,SleepState.ints.(state)),...
+        ISIStats.allspikes.times,'UniformOutput',false);    
     
     if sum(ISIrate.instate)==0
         ISIoccupancy.(state).hist = nan(length(ISIoccupancy.bins),spikes.numcells);
@@ -97,6 +99,13 @@ for ss = 1:3
     ISIoccupancy.(state).mednormhist = hist(log10(ISIrate.ISI(ISIrate.instate,:)./OccupancyStats.(state).median),...
         ISIoccupancy.logbins);
     ISIoccupancy.(state).mednormhist = ISIoccupancy.(state).mednormhist./length(ISIrate.timestamps(ISIrate.instate));
+    
+    normISIs = cellfun(@(X,Y,Z) X(Y)./Z,ISIStats.allspikes.ISIs,ISIStats.allspikes.instate,...
+        num2cell(OccupancyStats.(state).median),'UniformOutput',false);
+    normISIhist.bins = linspace(-3.5,1,100);
+    normISIhist.(state).mednorm = cellfun(@(X) hist(log10(X),normISIhist.bins),normISIs,'UniformOutput',false);
+    normISIhist.(state).mednorm = cellfun(@(X) X./sum(X),normISIhist.(state).mednorm,'UniformOutput',false);
+    normISIhist.(state).mednorm = cat(1,normISIhist.(state).mednorm{:});
 end
 
 %%
@@ -141,10 +150,71 @@ subplot(3,2,ss*2)
         [1:length(ISIStats.sorts.(state).ratebyclass)],'.')
     LogScale('x',10)
     ColorbarWithAxis([0 0.05],'P_t(log(ISI))')
-    xlabel('ISI')
+    xlabel('norm ISI (medOcc)')
     ylabel(state)
 % subplot(2,1,2)
 %     imagesc(ISIoccupancy.bins,[1 spikes.numcells],...
 %         ISIoccupancy.(state).hist(:,ISIStats.sorts.(state).ratebyclass)')
 end
 NiceSave(['ISIoccupancy'],figfolder,baseName)
+
+
+%%
+histcolors = flipud(gray);
+NREMhistcolors = makeColorMap([1 1 1],[0 0 0.8]);
+REMhistcolors = makeColorMap([1 1 1],[0.8 0 0]);
+statecolormap = {histcolors,NREMhistcolors,REMhistcolors};
+
+
+figure
+%colormap(cmap)
+for ss = 1:3
+        state = states{ss};
+
+subplot(3,4,(ss-1)*4+1)
+colormap(gca,statecolormap{ss})
+    s = imagesc(ISIStats.ISIhist.logbins(1,:),[1 length(OccupancyStats.sorts.(state).median)],...
+        (ISIStats.ISIhist.(states{ss}).log(OccupancyStats.sorts.(state).median,:)));
+    %alpha(s,single(ISIoccupancy.(state).loghist(:,OccupancyStats.sorts.(state).median)'~=0))
+
+    hold on
+    plot(log10(OccupancyStats.(states{ss}).median(OccupancyStats.sorts.(state).median)),...
+        [1:length(OccupancyStats.sorts.(state).median)],'k.','markersize',4)
+    LogScale('x',10)
+    %caxis([0 0.05])
+    %ColorbarWithAxis([0 0.05],'P_t(log(ISI))')
+    xlabel('ISI')
+
+            set(gca,'yticklabel',[])
+%     if ss==1
+%         title(regions{rr})
+%     end
+    caxis([0 0.1])
+    LogScale('x',10,'exp',true)
+% subplot(2,1,2)
+%     imagesc(ISIoccupancy.bins,[1 spikes.numcells],...
+%         ISIoccupancy.(state).hist(:,ISIStats.sorts.(state).ratebyclass)')
+
+subplot(3,4,(ss-1)*4+2)
+colormap(gca,statecolormap{ss})
+    s = imagesc(normISIhist.bins,[1 length(OccupancyStats.sorts.(state).median)],...
+        (normISIhist.(state).mednorm(OccupancyStats.sorts.(state).median,:)));
+    %alpha(s,single(ISIoccupancy.(state).loghist(:,OccupancyStats.sorts.(state).median)'~=0))
+
+    hold on
+    plot(0*log10(OccupancyStats.(states{ss}).median(OccupancyStats.sorts.(state).median)),...
+        [1:length(OccupancyStats.sorts.(state).median)],'k.','markersize',4)
+    LogScale('x',10)
+    %caxis([0 0.05])
+    %ColorbarWithAxis([0 0.05],'P_t(log(ISI))')
+    xlabel('norm ISI (medOcc)')
+
+            set(gca,'yticklabel',[])
+%     if ss==1
+%         title(regions{rr})
+%     end
+    caxis([0 0.1])
+    LogScale('x',10,'exp',true)
+
+end
+NiceSave(['ISIdists'],figfolder,baseName)
