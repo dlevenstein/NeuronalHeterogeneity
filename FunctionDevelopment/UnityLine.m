@@ -1,6 +1,8 @@
 function [  ] = UnityLine( varargin )
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+%Makes a unity line in a plot
+%Options
+%   'linetype'
+%   'linecolor'
 %%
 p = inputParser;
 addParameter(p,'linetype',':')

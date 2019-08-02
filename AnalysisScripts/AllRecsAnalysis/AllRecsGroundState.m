@@ -386,7 +386,21 @@ for ss = 1:3
                 set(gca,'xticklabels',[])
             end
 end
+
+classcolors = {'k','r'};
+subplot(3,4,8+rr)
+hold on
+for cc=1:2
+plot(log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).(classnames{cc}))),...
+    log10(1./OccupancyStats.(regions{rr}).(statenames{ss}).median(CellClass.(regions{rr}).(classnames{cc}))),'.')
+
 end
+xlim([-4 2]);ylim([-4 2])
+UnityLine
+LogScale('xy',10,'exp',true)
+xlabel('Mean Rate');ylabel('MedOccISI^-^1')
+end
+
 NiceSave('ISIdistMedOccPercile',figfolder,[])
 %%
 figure
