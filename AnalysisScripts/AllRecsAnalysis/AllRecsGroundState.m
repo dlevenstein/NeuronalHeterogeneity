@@ -668,22 +668,27 @@ for cc = 1:2
             axis xy
             ylim([0 2]);
             set(gca,'ytick',[]);%set(gca,'xtick',[]);
-            if ss==1 &rr==1
-                title(classnames{cc})
-            elseif ss==3 
-                if rr ==2
-                xlabel('Norm ISI (log(mean^-^1))')
-                end
+
+            if ss==3 
+            
+                xlabel('Norm ISI (MTO^-^1)')
+            end
                 %set(gca,'xtick',[-2:1]);
                 %LogScale('x',10)
-            end
+            
             if cc==1 
                 ylabel('CV2')
                 set(gca,'ytick',[0 1 2]);
             end
             
-            %xlim([-3 1])
             
+        if ss==1
+            title(regions{rr})
+        end
+        if rr == 1
+            ylabel('CV2');
+        end            %xlim([-3 1])
+            LogScale('x',10,'exp',true)
 %             switch cc
 %                 case 1
 %                     switch rr
@@ -697,13 +702,12 @@ for cc = 1:2
 %                 case 2
 %                     caxis([0.5e-4 1.8e-3])
 %             end
-        colorbar
+        %colorbar
              caxis([0 max([meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).norm(:,2);0])])
             
     end
 end
 end
+NiceSave('JointDist_MTONorm',figfolder,[])
 
 %%
-figure
-imagesc(meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).norm)
