@@ -110,6 +110,7 @@ for ss = 1:3
     CV2s = cellfun(@(X,Y,Z) X(Y),ISIStats.allspikes.CV2,ISIStats.allspikes.instate,'UniformOutput',false);
     
     normISIhist.CV2bins = linspace(0,2,50+1);
+    normISIhist.CV2bins = normISIhist.CV2bins(1:end-1)+0.5.*diff(normISIhist.CV2bins([1 2]));
     normISIhist.(state).jointCV2 = cellfun(@(X,Y) hist3([log10(X),Y],...
         {normISIhist.bins,normISIhist.CV2bins}),normISIs,CV2s,'UniformOutput',false);
     normISIhist.(state).jointCV2 = cellfun(@(X) X./sum(X(:)),normISIhist.(state).jointCV2,...

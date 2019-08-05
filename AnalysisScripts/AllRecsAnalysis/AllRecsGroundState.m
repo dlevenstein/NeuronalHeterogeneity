@@ -130,7 +130,7 @@ for rr = 1:length(regions)
            meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).log = ...
                squeeze(nanmean(ISIstats.(regions{rr}).Jointhist.(statenames{ss}).log(CellClass.(regions{rr}).(classnames{cc}),:,:),1));
            meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).norm = ...
-               squeeze(nanmean(ISIstats.(regions{rr}).Jointhist.(statenames{ss}).norm(CellClass.(regions{rr}).(classnames{cc}),:,:),1));
+               squeeze(nanmean(normISIhist.(regions{rr}).(statenames{ss}).jointCV2(CellClass.(regions{rr}).(classnames{cc}),:,:),1));
        
        end
     end
@@ -648,3 +648,62 @@ end
 
 NiceSave(['MTOPercentiles_',(statenames{ss})],figfolder,[])
 end
+
+%%
+figure
+for rr = 1:length(regions)
+
+
+for cc = 1:2
+	for ss = 1:3
+        subplot(6,4,rr+(ss-1)*4+(cc-1)*12)    
+        %colormap(gca,statecolormap{ss})
+
+            imagesc(meannormISIhist.bins,ISIstats.(regions{rr}).CV2hist.bins(1,:),...
+                meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).norm')
+            hold on
+            plot(meannormISIhist.bins,meannormISIhist.(regions{rr}).(statenames{ss}).(classnames{cc})*25,...
+                'color',statecolors{ss},'linewidth',1)
+            
+            axis xy
+            ylim([0 2]);
+            set(gca,'ytick',[]);%set(gca,'xtick',[]);
+            if ss==1 &rr==1
+                title(classnames{cc})
+            elseif ss==3 
+                if rr ==2
+                xlabel('Norm ISI (log(mean^-^1))')
+                end
+                %set(gca,'xtick',[-2:1]);
+                %LogScale('x',10)
+            end
+            if cc==1 
+                ylabel('CV2')
+                set(gca,'ytick',[0 1 2]);
+            end
+            
+            %xlim([-3 1])
+            
+%             switch cc
+%                 case 1
+%                     switch rr
+%                         case 1
+%                             caxis([0.5e-4 1.2e-3])
+%                         case 2
+%                             if ss == 2; caxis([0.5e-4 0.8e-3])
+%                             else; caxis([0.5e-4 0.6e-3])
+%                             end
+%                     end
+%                 case 2
+%                     caxis([0.5e-4 1.8e-3])
+%             end
+        colorbar
+             caxis([0 max([meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).norm(:,2);0])])
+            
+    end
+end
+end
+
+%%
+figure
+imagesc(meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).norm)
