@@ -106,6 +106,24 @@ for ss = 1:3
     normISIhist.(state).mednorm = cellfun(@(X) hist(log10(X),normISIhist.bins),normISIs,'UniformOutput',false);
     normISIhist.(state).mednorm = cellfun(@(X) X./sum(X),normISIhist.(state).mednorm,'UniformOutput',false);
     normISIhist.(state).mednorm = cat(1,normISIhist.(state).mednorm{:});
+    
+    CV2s = cellfun(@(X,Y,Z) X(Y),ISIStats.allspikes.CV2,ISIStats.allspikes.instate,'UniformOutput',false);
+    
+    normISIhist.CV2bins = linspace(0,2,50+1);
+    normISIhist.(state).jointCV2 = cellfun(@(X,Y) hist3([log10(X),Y],...
+        {normISIhist.bins,normISIhist.CV2bins}),normISIs,CV2s,'UniformOutput',false);
+    normISIhist.(state).jointCV2 = cellfun(@(X) X./sum(X(:)),normISIhist.(state).jointCV2,...
+        'UniformOutput',false);
+    normISIhist.(state).jointCV2 = cat(3,normISIhist.(state).jointCV2{:});
+    normISIhist.(state).jointCV2 = shiftdim(normISIhist.(state).jointCV2,2);
+ 
+    for tt = 1:length(celltypes)
+        inclasscells{tt} = strcmp(celltypes{tt},CellClass.label);
+
+        %Mean distributions
+        meandists.(state).(celltypes{tt}).Jointdist = squeeze(nanmean(normISIhist.(state).jointCV2(inclasscells{tt},:,:),1));
+    end
+    
 end
 
 %%
@@ -215,6 +233,12 @@ colormap(gca,statecolormap{ss})
 %     end
     caxis([0 0.1])
     LogScale('x',10,'exp',true)
+
+for tt = 1:length(celltypes)
+subplot(3,4,(ss-1)*4+2+tt)
+imagesc(normISIhist.bins,normISIhist.CV2bins,meandists.(state).(celltypes{tt}).Jointdist')
+axis xy
+end
 
 end
 NiceSave(['ISIdists'],figfolder,baseName)
