@@ -371,7 +371,43 @@ end
 
 NiceSave('normISIDist',figfolder,[])
 
+%%
+%% MedOcc-normalized ISI
+figure
+%colormap(cmap)
+for rr = 1:length(regions)
+for ss = 1:3
+        state = statenames{ss};
 
+subplot(3,4,(ss-1)*4+rr)
+colormap(gca,statecolormap{ss})
+    s = imagesc(normISIhist.(regions{rr}).bins(1,:),[1 length(sorts.(regions{rr}).(statenames{ss}).MTOratpE)],...
+        (normISIhist.(regions{rr}).(statenames{ss}).mednorm(sorts.(regions{rr}).(statenames{ss}).MTOratpE,:)));
+    %alpha(s,single(ISIoccupancy.(regions{rr}).(state).loghist(:,sorts.(regions{rr}).(statenames{ss}).medISIbyclass)'~=0))
+
+    hold on
+    plot(0*log10(OccupancyStats.(regions{rr}).(statenames{ss}).median(sorts.(regions{rr}).(statenames{ss}).MTOratpE)),...
+        [1:length(sorts.(regions{rr}).(statenames{ss}).MTOratpE)],'k.','markersize',4)
+    LogScale('x',10)
+    %caxis([0 0.05])
+    %ColorbarWithAxis([0 0.05],'P_t(log(ISI))')
+    xlabel('norm ISI (medOcc)')
+          if rr ==1
+            ylabel({statenames{ss},'Cell, sorded by MTORate'})
+          end
+            set(gca,'yticklabel',[])
+    if ss==1
+        title(regions{rr})
+    end
+    caxis([0 0.1])
+    LogScale('x',10,'exp',true)
+% subplot(2,1,2)
+%     imagesc(ISIoccupancy.bins,[1 spikes.numcells],...
+%         ISIoccupancy.(state).hist(:,ISIStats.sorts.(state).ratebyclass)')
+end
+end
+
+NiceSave('normISIDist_MTOratio',figfolder,[])
 %% Mean Distributions
 
 %ISI (MedOcc Sextiles)
