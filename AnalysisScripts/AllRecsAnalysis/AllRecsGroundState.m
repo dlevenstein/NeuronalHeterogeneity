@@ -393,7 +393,7 @@ colormap(gca,statecolormap{ss})
     %ColorbarWithAxis([0 0.05],'P_t(log(ISI))')
     xlabel('norm ISI (medOcc)')
           if rr ==1
-            ylabel({statenames{ss},'Cell, sorded by MTORate'})
+            ylabel({statenames{ss},'Cell, sorded by MTORatio'})
           end
             set(gca,'yticklabel',[])
     if ss==1
