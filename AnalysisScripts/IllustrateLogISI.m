@@ -1,5 +1,8 @@
-basePath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AG_HPC/Cicero_09012014';
-figfolder = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs/Illustrations';
+projectfolder = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+projectfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
+
+basePath = [projectfolder,'Datasets/onProbox/AG_HPC/Cicero_09012014'];
+figfolder = [projectfolder,'AnalysisScripts/AnalysisFigs/Illustrations'];
 baseName = bz_BasenameFromBasepath(basePath);
 %%
 ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
@@ -61,3 +64,56 @@ box off
 axis tight
 
 NiceSave('IllustrateLogISI',figfolder,baseName);
+
+
+%%
+
+rate1ISI = exprnd(1,2500,1);
+rate2ISI = exprnd(50,5000,1);
+
+%%
+linbins = linspace(0,300,100);
+logbins = linspace(-2.5,3,100);
+figure
+subplot(3,2,1)
+hist(rate1ISI,100)
+%xlim(linbins([1 end]))
+box off
+title('2500 Poisson Spikes, Rate: 1')
+
+subplot(3,2,3)
+hist(rate2ISI,linbins)
+xlim(linbins([1 end]))
+box off
+title('5000 Poisson Spikes, Rate: 50')
+
+
+
+subplot(3,2,2)
+hist(log10(rate1ISI),logbins)
+xlim(logbins([1 end]))
+box off
+title('Poisson, Rate: 1')
+
+
+
+subplot(3,2,4)
+hist(log10(rate2ISI),logbins)
+xlim(logbins([1 end]))
+box off
+title('Poisson, Rate: 50')
+
+
+
+subplot(3,2,5)
+hist([rate1ISI;rate2ISI],linbins)
+xlim(linbins([1 end]))
+box off
+
+
+subplot(3,2,6)
+hist(log10([rate1ISI;rate2ISI]),logbins)
+xlim(logbins([1 end]))
+box off
+
+NiceSave('SimulateLogISI',figfolder,[]);
