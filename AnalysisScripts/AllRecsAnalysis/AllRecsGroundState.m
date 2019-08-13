@@ -492,7 +492,34 @@ end
 end
 
 NiceSave('MTOAcrossStates',figfolder,[])
+%% Simulate: Poisson MTO-norm ISI/occupancy dists
+dt = 0.005;
+[ s ] = PoissonRateSpikeBins(1,dt,10000000);
+timestamps = [1:length(s)]*dt;
+stimes = timestamps(s);
+ISIs = diff(stimes);
+stimes(1) = [];
+
+ISIrate = interp1(stimes,ISIs,timestamps,'next');
+
+logbins = linspace(-3,1,101);
+poissISIoccupancy = hist(log10(ISIrate),logbins);
+
+MTO = nanmedian(ISIrate);
+
+MTOnormoccupancy = hist(log10(ISIrate./MTO),logbins);
+MTOnormoccupancy = MTOnormoccupancy./sum(MTOnormoccupancy);
+MTOnormISI = hist(log10(ISIs./MTO),meannormISIhist.bins);
+[~,normbin] = min(abs(meannormISIhist.bins-0));
+MTOnormISI = MTOnormISI./sum(MTOnormISI);
 %%
+figure
+subplot(2,2,1)
+hist(log10(ISIs))
+subplot(2,2,2)
+plot(logbins,MTOnormoccupancy,'k')
+subplot(2,2,3)
+plot(logbins,MTOnormISI,'k')
 %%
 figure
 for rr = 1:length(regions)
@@ -524,10 +551,11 @@ for ss = 1:3
 subplot(5,4,(rr-1)+17)
  hold on
         for ss = 1:2
-           
+ 
             plot(meannormISIhist.bins,meannormISIhist.(regions{rr}).(statenames{ss}).pE,...
                 'linewidth',1,'color',statecolors{ss})
         end
+        plot(meannormISIhist.bins,MTOnormISI,'k--')
         axis tight
         if ss==1
             title(regions{rr})
@@ -584,6 +612,7 @@ subplot(5,4,(rr-1)+17)
             plot(meannormOcc.bins,meannormOcc.(regions{rr}).(statenames{ss}).pE,...
                 'linewidth',1,'color',statecolors{ss})
         end
+        plot(logbins,MTOnormoccupancy,'k')
         axis tight
         if ss==1
             title(regions{rr})

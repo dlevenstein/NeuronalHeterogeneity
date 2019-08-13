@@ -5,7 +5,7 @@ reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
-basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/GrosmarkAD/Cicero/Cicero_09102014';
+basePath = '/mnt/proraidDL/Database/AGData/Cicero/Cicero_09012014';
 %basePath = pwd;
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyPopActivityAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
@@ -29,13 +29,13 @@ cellcolor = {'k','r'};
 statenames = fieldnames(SleepState.ints);
 
 %% Calculate spike count matrix
-binsize = 0.08; %s
+binsize = 0.1; %s
 overlap = 10;
 spikemat = bz_SpktToSpkmat(spikes,'binsize',binsize,'overlap',overlap);
 
 %% For each cell, calculate E and I pop rates of all OTHER cells
 for tt = 1:length(celltypes)
-    spikemat.poprate.(celltypes{tt}) = sum(spikemat.data(:,CellClass.(celltypes{tt})),2);%./...
+    spikemat.poprate.(celltypes{tt}) = sum(spikemat.data(:,CellClass.(celltypes{tt}))>0,2);%./...
             %sum(CellClass.(celltypes{tt}))./binsize;
 end
 
@@ -44,18 +44,19 @@ for cc = 1:spikes.numcells
     thiscell(cc) = true;
     spikemat.cellrate{cc} = spikemat.data(:,cc);
     for tt = 1:length(celltypes)
-        spikemat.bycellpoprate.(celltypes{tt}){cc} = sum(spikemat.data(:,CellClass.(celltypes{tt}) & ~thiscell),2);%./...
+        spikemat.bycellpoprate.(celltypes{tt}){cc} = sum(spikemat.data(:,CellClass.(celltypes{tt}) & ~thiscell)>0,2);%./...
             %sum(CellClass.(celltypes{tt}) & ~thiscell)./binsize;
     end
+    spikemat.bycellpoprate.ALL{cc} = sum(spikemat.data(:,~thiscell)>0,2);
 end
 
 
-
 %% Calculate E and I pop rate (of other cells) for each spike
-for tt = 1:length(celltypes)
-    ISIStats.allspikes.poprate.(celltypes{tt}) = ...
+synchtypes = [celltypes,'ALL'];
+for tt = 1:length(synchtypes)
+    ISIStats.allspikes.poprate.(synchtypes{tt}) = ...
         cellfun(@(X,Y) interp1(spikemat.timestamps,X,Y,'nearest'),...
-        spikemat.bycellpoprate.(celltypes{tt}),ISIStats.allspikes.times,...
+        spikemat.bycellpoprate.(synchtypes{tt}),ISIStats.allspikes.times,...
         'UniformOutput',false);
 end
 
@@ -65,20 +66,105 @@ end
     
     
 %% Calculate stuff in each state
-%for ss = 1:length(statenames)
-state = statenames{1};
+for ss = 1:length(statenames)
+    statenames{ss} = statenames{ss};
 
-instatespiketimes = cellfun(@(X) InIntervals(X,double(SleepState.ints.(state))),...
-    ISIStats.allspikes.times,'UniformOutput',false);
-instateratetimes = InIntervals(spikemat.timestamps,double(SleepState.ints.(state)));
+    ISIStats.allspikes.instate = cellfun(@(X) InIntervals(X,double(SleepState.ints.(statenames{ss}))),...
+        ISIStats.allspikes.times,'UniformOutput',false);
+    spikemat.instate = InIntervals(spikemat.timestamps,double(SleepState.ints.(statenames{ss})));
 
+    %% Calculate conditional ISI/Synch distributions
+
+    numsynchbins = 25;
+    for st = 1:length(synchtypes)
+        [ ISIbySynch.(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W) ConditionalHist( [Z(W);Z(W)],log10([X(W);Y(W)]),...
+            'Xbounds',[0 numsynchbins],'numXbins',numsynchbins+1,'Ybounds',[-3 2],'numYbins',125,'minX',50),...
+            ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
+            ISIStats.allspikes.poprate.(synchtypes{st}),ISIStats.allspikes.instate,...
+            'UniformOutput',false);
+        ISIbySynch.(synchtypes{st}).(statenames{ss}) = cat(1,ISIbySynch.(synchtypes{st}).(statenames{ss}){:});
+        ISIbySynch.(synchtypes{st}).(statenames{ss}) = CollapseStruct( ISIbySynch.(synchtypes{st}).(statenames{ss}),3);
+
+        [ SynchbyISI.(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W) ConditionalHist( log10([X(W);Y(W)]),[Z(W);Z(W)],...
+            'Ybounds',[0 numsynchbins],'numYbins',numsynchbins+1,'Xbounds',[-3 2],'numXbins',125,'minX',50),...
+            ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
+            ISIStats.allspikes.poprate.(synchtypes{st}),ISIStats.allspikes.instate,...
+            'UniformOutput',false);
+        SynchbyISI.(synchtypes{st}).(statenames{ss}) = cat(1,SynchbyISI.(synchtypes{st}).(statenames{ss}){:});
+        SynchbyISI.(synchtypes{st}).(statenames{ss}) = CollapseStruct( SynchbyISI.(synchtypes{st}).(statenames{ss}),3);
+
+        for cc = 1:length(celltypes)
+            ISIbySynch.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) = nanmean(ISIbySynch.(synchtypes{st}).(statenames{ss}).pYX(:,:,CellClass.(celltypes{cc})),3);
+            SynchbyISI.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) = nanmean(SynchbyISI.(synchtypes{st}).(statenames{ss}).pYX(:,:,CellClass.(celltypes{cc})),3);
+
+            ISIbySynch.(synchtypes{st}).(statenames{ss}).celltypeidx.(celltypes{cc}) = CellClass.(celltypes{cc});
+            SynchbyISI.(synchtypes{st}).(statenames{ss}).celltypeidx.(celltypes{cc}) = CellClass.(celltypes{cc});
+        end
+    end
+end
+%%
+figure
+for ss = 1:3
+for tt = 1:length(celltypes)
+for st = 1:2
+subplot(4,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
+    imagesc(ISIbySynch.(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),ISIbySynch.(synchtypes{st}).(statenames{ss}).Ybins(1,:,1), ISIbySynch.(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt})')
+    %hold on
+    %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
+    axis xy
+    %LogScale('y',10)
+    ylabel([(celltypes{tt}),' ISI (log(s))']);xlabel([(synchtypes{st}),' Synch'])
+    if tt==1 & st == 1
+        title(statenames{ss})
+    end
+    %title((celltypes{tt}))
+   % colorbar
+    if tt ==1 
+        caxis([0 0.02])
+    elseif tt==2
+         caxis([0 0.03])
+    end
+    xlim(ISIbySynch.(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
+  
+end
+end
+end
+   
+NiceSave('ISIbySynch',figfolder,baseName)
+
+figure
+for ss = 1:3
+for tt = 1:length(celltypes)
+for st = 1:2
+subplot(4,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
+    
+    imagesc(SynchbyISI.(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),SynchbyISI.(synchtypes{st}).(statenames{ss}).Ybins(1,:,1), SynchbyISI.(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt})')
+    %hold on
+    %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
+    axis xy
+    %LogScale('y',10)
+    xlabel([(celltypes{tt}),' ISI (log(s))']);ylabel([(synchtypes{st}),' Synch'])
+    %title((celltypes{tt}))
+    if tt==1 & st == 1
+        title(statenames{ss})
+    end
+%     if tt ==1 
+%         caxis([0 0.02])
+%     elseif tt==2
+%          caxis([0 0.03])
+%     end
+    xlim(SynchbyISI.(synchtypes{tt}).(statenames{ss}).Xbins(1,[1 end],1))
+end 
+end
+end
+NiceSave('SynchbyISI',figfolder,baseName)
 
 %% Pop rate Histogram
 %popratehist.bins = {unique(spikemat.poprate.pE),unique(spikemat.poprate.pI)};
 nbins = 20;
 clear popratehist
 [popratehist.all,popratehist.bins{1},popratehist.bins{2}]...
-    = histcounts2(spikemat.poprate.pE(instateratetimes),spikemat.poprate.pI(instateratetimes),nbins);
+    = histcounts2(spikemat.poprate.pE(spikemat.instate),spikemat.poprate.pI(spikemat.instate),nbins);
 
 [popratehist.Nspikes,~,~,ISIStats.allspikes.Ebin,ISIStats.allspikes.Ibin] = ...
     cellfun(@(X,Y) histcounts2(X,Y,popratehist.bins{1},popratehist.bins{2}),...
@@ -97,7 +183,7 @@ for ee = 1:length(popratehist.bins{1})-1
         
         
         inbinspikes = cellfun(@(X,Y,Z) X==ee & Y==ii & Z,...
-            ISIStats.allspikes.Ebin,ISIStats.allspikes.Ibin,instatespiketimes,...
+            ISIStats.allspikes.Ebin,ISIStats.allspikes.Ibin,ISIStats.allspikes.instate,...
             'UniformOutput',false);
         
 
@@ -165,9 +251,9 @@ end
 
 for tt = 1:length(celltypes)
     CV2popcorr.(celltypes{tt}) = cellfun(@(X,Y,Z) corr(X(Z),Y(Z),'type','spearman'),...
-        ISIStats.allspikes.poprate.(celltypes{tt}),ISIStats.allspikes.CV2,instatespiketimes);
+        ISIStats.allspikes.poprate.(celltypes{tt}),ISIStats.allspikes.CV2,ISIStats.allspikes.instate);
     ratepopcorr.(celltypes{tt}) = cellfun(@(X,Y,Z) corr(X(Z),1./Y(Z),'type','spearman'),...
-        ISIStats.allspikes.poprate.(celltypes{tt}),ISIStats.allspikes.ISIs,instatespiketimes);
+        ISIStats.allspikes.poprate.(celltypes{tt}),ISIStats.allspikes.ISIs,ISIStats.allspikes.instate);
 end
 
 %%
@@ -307,7 +393,7 @@ ISIbounds = [-3 1.5];
     'numXbins',80,'numYbins',80,'Xbounds',ISIbounds,'Ybounds',ISIbounds,...
     'minXY',30,'sigma',0.1),...
     ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,ISIStats.allspikes.poprate.pI,...
-    instatespiketimes,'UniformOutput',false);
+    ISIStats.allspikes.instate,'UniformOutput',false);
 meansynchall = cellfun(@mean,spikemat.bycellpoprate.pI,'UniformOutput',false);
 meanZ_norm = cellfun(@(X,Y) X./Y,meanZ,meansynchall,'UniformOutput',false);
 
@@ -369,7 +455,8 @@ NiceSave('ReturnMapPopRate',figfolder,baseName)
 for tt = 1:length(celltypes)
     CV2distbyPOP.(celltypes{tt}) = nanmean(CONDXY.pYX(:,:,CellClass.(celltypes{tt})),3);
     meanCV2byPOP.(celltypes{tt}) = nanmean(CONDXY.meanYX(:,:,CellClass.(celltypes{tt})),3);
-    PopsynchhistbyPOP = .(celltypes{tt}) = 
+    %PopsynchhistbyPOP = .(celltypes{tt}) = 
+    
 end
 %%
 figure
@@ -396,15 +483,15 @@ figure
 subplot(2,2,1)
 plot(ISIStats.allspikes.cellrate{excell},ISIStats.allspikes.CV2{excell},'.')
 subplot(2,2,3)
-scatter(log10(ISIStats.allspikes.ISIs{excell}(instatespiketimes{excell})),...
-    log10(ISIStats.allspikes.ISInp1{excell}(instatespiketimes{excell})),1,...
-    log10(ISIStats.allspikes.poprate.pE{excell}(instatespiketimes{excell})))
+scatter(log10(ISIStats.allspikes.ISIs{excell}(ISIStats.allspikes.instate{excell})),...
+    log10(ISIStats.allspikes.ISInp1{excell}(ISIStats.allspikes.instate{excell})),1,...
+    log10(ISIStats.allspikes.poprate.pE{excell}(ISIStats.allspikes.instate{excell})))
 colorbar
 
 subplot(2,2,4)
-scatter(log10(ISIStats.allspikes.ISIs{excell}(instatespiketimes{excell})),...
-    log10(ISIStats.allspikes.ISInp1{excell}(instatespiketimes{excell})),1,...
-    log10(ISIStats.allspikes.poprate.pI{excell}(instatespiketimes{excell})))
+scatter(log10(ISIStats.allspikes.ISIs{excell}(ISIStats.allspikes.instate{excell})),...
+    log10(ISIStats.allspikes.ISInp1{excell}(ISIStats.allspikes.instate{excell})),1,...
+    log10(ISIStats.allspikes.poprate.pI{excell}(ISIStats.allspikes.instate{excell})))
 colorbar
 
 subplot(2,2,2)

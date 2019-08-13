@@ -1,0 +1,67 @@
+#to set up links, use ./links in terminal
+
+
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat08/Rat08-20130708/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat08/Rat08-20130709/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat08/Rat08-20130710/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat08/Rat08-20130711/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat08/Rat08-20130712/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat08/Rat08-20130713/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat08/Rat08-20130715/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat08/Rat08-20130716/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat08/Rat08-20130717/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat08/Rat08-20130718/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat08/Rat08-20130719/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat08/Rat08-20130720/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat08/Rat08-20130722/ .
+
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat09/Rat09-20140324/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat09/Rat09-20140325/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat09/Rat09-20140326/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat09/Rat09-20140327/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat09/Rat09-20140328/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat09/Rat09-20140329/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat09/Rat09-20140331/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat09/Rat09-20140401/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat09/Rat09-20140402/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat09/Rat09-20140403/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat09/Rat09-20140404/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat09/Rat09-20140405/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat09/Rat09-20140407/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat09/Rat09-20140408/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat09/Rat09-20140409/ .
+
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat10/Rat10-20140619/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat10/Rat10-20140620/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat10/Rat10-20140622/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat10/Rat10-20140624/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat10/Rat10-20140626/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat10/Rat10-20140627/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat10/Rat10-20140628/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat10/Rat10-20140629/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat10/Rat10-20140701/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat10/Rat10-20140702/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat10/Rat10-20140703/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat10/Rat10-20140704/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat10/Rat10-20140705/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat10/Rat10-20140707/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat10/Rat10-20140708/ .
+
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150310/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150312/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150313/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150314/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150315/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150316/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150317/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150321/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150323/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150325/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150326/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150327/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150328/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150330/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150331/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150401/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150402/ .
+ln -s /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/Rat11/Rat11-20150403/ .
