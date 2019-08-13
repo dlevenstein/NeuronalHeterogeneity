@@ -51,8 +51,11 @@ for ss = 1:3
     state = states{ss};
 %for tt = 1:length(celltypes)
 subplot(4,3,ss)
-    imagesc(ISIbyCspkRate.(regions{rr}).(state).Xbins(1,:,1),ISIbyCspkRate.(regions{rr}).(state).Ybins(1,:,1), ISIbyCspkRate.(regions{rr}).(state).pop.(celltypes{tt})')
+    s =imagesc(ISIbyCspkRate.(regions{rr}).(state).Xbins(1,:,1),ISIbyCspkRate.(regions{rr}).(state).Ybins(1,:,1),...
+        ISIbyCspkRate.(regions{rr}).(state).pop.(celltypes{tt})');
     %hold on
+       % alpha(s,single(ISIoccupancy.(regions{rr}).(state).mednormhist(:,sorts.(regions{rr}).(statenames{ss}).ratebyclass)'~=0))
+
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
     axis xy
     LogScale('xy',10)
@@ -220,8 +223,10 @@ figure
 for rr = 1:length(regions)
     for ss = 1:length(states)
 subplot(3,4,rr + (ss-1)*4)
-    imagesc(CV2byCspkRate.(regions{rr}).(states{ss}).Xbins(1,:,1),[1 sum(ISIbyCspkRate.(regions{rr}).celltypeidx.(celltypes{tt}))],...
+    s = imagesc(CV2byCspkRate.(regions{rr}).(states{ss}).Xbins(1,:,1),[1 sum(ISIbyCspkRate.(regions{rr}).celltypeidx.(celltypes{tt}))],...
         squeeze(CV2byCspkRate.(regions{rr}).(states{ss}).pX(:,:,Cellmeanrate.(regions{rr}).sorts.(states{ss}).(celltypes{tt})))')
+        alpha(s,single(squeeze(CV2byCspkRate.(regions{rr}).(states{ss}).pX(:,:,Cellmeanrate.(regions{rr}).sorts.(states{ss}).(celltypes{tt})))'~=0))
+
     hold on
     plot(log10(Cellmeanrate.(regions{rr}).(states{ss})(Cellmeanrate.(regions{rr}).sorts.(states{ss}).(celltypes{tt}))),[1:sum(ISIbyCspkRate.(regions{rr}).celltypeidx.(celltypes{tt}))],'w')
     axis xy

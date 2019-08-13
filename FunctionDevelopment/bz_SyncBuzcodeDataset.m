@@ -6,7 +6,7 @@ rsynccommand = ['rsync -auvzP --exclude=*dat --exclude=*.clu* --exclude=*.fet.* 
     '--exclude=*.res.* --exclude=*.spk.* --exclude=.phy --exclude=*.npy'];
 
 
-% YS from server
+% YS from cluster
  rsync -auvzP dl2820@bigpurple.nyumc.org:/gpfs/data/buzsakilab/DL/Database/YSData /mnt/proraidDL/Database/
 
 %YS to server
@@ -20,8 +20,13 @@ rsync -auvzP --exclude=Old --exclude=Zip /mnt/proraidDL/Database/AGData dl2820@b
 rsync -auvzP --exclude=c3po --exclude=*_ACC /mnt/proraidDL/Database/BWData dl2820@bigpurple.nyumc.org:/gpfs/data/buzsakilab/DL/Database/
 
 
+
 %AP from NYUshare (L/K to keep softlinks on send/recieve)
 rsync -auvzPLK --exclude=*raw* --exclude=CluSAV --exclude=Analysis --exclude=*dat --exclude=*.clu* --exclude=*.fet.* --exclude=*.res.* --exclude=*.spk.* --exclude=*.m1m2.* --exclude=*.alg.* --exclude=*.mm.* /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onNYUShare/AP_THAL/ /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL/
+
+
+%GG first time from NYUshare
+rsync -auvzPLK --exclude=Histology --exclude=Figures --exclude=Rat07 --exclude=*GLMoutput* --exclude=*dat --exclude=*.clu* --exclude=*.fet.* --exclude=*.klg.* --exclude=*.res.* --exclude=*.spk.* --exclude=RawKK /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/ /mnt/proraidDL/Database/GGData/
 %/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL/
 
 %AP from cluster
@@ -45,6 +50,9 @@ rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onP
 rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL/ /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onNYUShare/AP_THAL/ 
 
 %EVERYTHING to Cluster
+
+
+rsync -auvzP --exclude=*dat --exclude=Atropine --exclude=Kilosort* /mnt/NyuShare/dl2820/WMDataset/ /mnt/proraidDL/Database/WMData/AChPupil/
 
 end
 
