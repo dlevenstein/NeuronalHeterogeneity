@@ -95,7 +95,7 @@ thetas_log = logspace(-1.5,2.5,numbins);
 sigmas_log = logspace(-1,1,numbins);
 trialduration = 20; 
 numtrials = 100;
-
+%%
 for tt = 1:length(thetas_log)
     tt
     %Create OU with time scale theta, mean 0, std 1.
@@ -182,7 +182,14 @@ for ee = 1:length(examplethetas)
     numspikes_ex{ee} = binnedrate.data;
     FF_ex{ee} = std(numspikes_ex{ee}).^2./mean(numspikes_ex{ee});
 
+    %CV2 dist
+    CV2bins = linspace(0,2,50);
+    CV2hist{ee} = hist(CV2,CV2bins);
     
+    ISIbins = linspace(-3.5,1.5,50);
+    ISIhist_ex{ee} = hist(log10(ISIs_ex{ee}),CV2bins);
+    
+    JointHist{ee} = hist3([log10(ISIs_ex{ee}(2:end)),CV2],{ISIbins,CV2bins});
 end
 
 %%
@@ -288,6 +295,36 @@ end
 
 NiceSave('CompareFFCV2',figfolder,'Poiss')
 
+%%
+
+figure
+for ee = 1:length(examplethetas)
+subplot(5,4,(ee-1)*4+1)
+    bar(CV2bins,CV2hist{ee})
+    axis tight
+    box off
+    xlabel('CV2')
+    
+    
+subplot(5,4,(ee-1)*4+2)
+    bar(ISIbins,ISIhist_ex{ee})
+    axis tight
+    xlim([-3 1.5])
+    box off
+    LogScale('x',10,'exp',true)
+    xlabel('ISI')
+    
+subplot(5,4,(ee-1)*4+3)
+    imagesc(ISIbins,CV2bins,JointHist{ee}')
+    axis xy
+    %axis tight
+    %xlim([-3 1.5]);ylim([0 2])
+    box off
+    LogScale('x',10,'exp',true)
+    xlabel('ISI');ylabel('CV2')
+    
+end
+NiceSave('CV2Hist',figfolder,'Poiss')
 
 %% Reduction in variability with sinusoidal input
 
