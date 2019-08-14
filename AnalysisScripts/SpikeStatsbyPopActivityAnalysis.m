@@ -30,13 +30,17 @@ statenames = fieldnames(SleepState.ints);
 
 %% Calculate spike count matrix
 binsize = 0.1; %s
-overlap = 10;
-spikemat = bz_SpktToSpkmat(spikes,'binsize',binsize,'overlap',overlap);
+dt = 0.005;
+spikemat = bz_SpktToSpkmat(spikes,'binsize',binsize,'dt',dt,'bintype','gaussian');
 
 %% For each cell, calculate E and I pop rates of all OTHER cells
 for tt = 1:length(celltypes)
-    spikemat.poprate.(celltypes{tt}) = sum(spikemat.data(:,CellClass.(celltypes{tt}))>0,2);%./...
-            %sum(CellClass.(celltypes{tt}))./binsize;
+    %Mean Rate of active cells
+    spikemat.poprate.(celltypes{tt}) = sum(spikemat.data(:,CellClass.(celltypes{tt})),2)./...
+            sum(CellClass.(celltypes{tt}))./binsize;
+    %Percentage of cells active (more than half a gaussian kernal)
+    spikemat.cellsync.(celltypes{tt}) = sum(spikemat.data(:,CellClass.(celltypes{tt}))>0.5,2)./...
+            sum(CellClass.(celltypes{tt}));
 end
 
 for cc = 1:spikes.numcells
@@ -44,10 +48,11 @@ for cc = 1:spikes.numcells
     thiscell(cc) = true;
     spikemat.cellrate{cc} = spikemat.data(:,cc);
     for tt = 1:length(celltypes)
-        spikemat.bycellpoprate.(celltypes{tt}){cc} = sum(spikemat.data(:,CellClass.(celltypes{tt}) & ~thiscell)>0,2);%./...
-            %sum(CellClass.(celltypes{tt}) & ~thiscell)./binsize;
+        spikemat.bycellpoprate.(celltypes{tt}){cc} = sum(spikemat.data(:,CellClass.(celltypes{tt}) & ~thiscell),2)./...
+            sum(CellClass.(celltypes{tt}) & ~thiscell)./binsize;
     end
-    spikemat.bycellpoprate.ALL{cc} = sum(spikemat.data(:,~thiscell)>0,2);
+    spikemat.bycellpoprate.ALL{cc} = sum(spikemat.data(:,~thiscell),2)./...
+            sum(~thiscell)./binsize;
 end
 
 
@@ -64,10 +69,100 @@ end
     ISIStats.allspikes.cellrate = cellfun(@(X,Y) interp1(spikemat.timestamps,X,Y,'nearest'),...
         spikemat.cellrate,ISIStats.allspikes.times,'UniformOutput',false);
     
+   
+
+
+%% Calculate Population Rate Histograms
+
+nbins = 100;
+popratehist.Ebins = linspace(0,10,nbins+1);
+popratehist.Ibins = linspace(0,100,nbins+1);
+
+clear countmap
+for ss = 1:3
+    spikemat.instate = InIntervals(spikemat.timestamps,double(SleepState.ints.(statenames{ss})));
+    ISIStats.allspikes.instate = cellfun(@(X) InIntervals(X,double(SleepState.ints.(statenames{ss}))),...
+        ISIStats.allspikes.times,'UniformOutput',false);
     
-%% Calculate stuff in each state
+    %Pop rate distribution
+    [popratehist.(statenames{ss}).all]...
+        = histcounts2(spikemat.poprate.pE(spikemat.instate),spikemat.poprate.pI(spikemat.instate),...
+        popratehist.Ebins,popratehist.Ibins);
+    
+    %Mean CV2 by pop rate
+    [popratehist.(statenames{ss}).cellCV2s,countmap.(statenames{ss}).numspikes ] = cellfun(@(X,Y,Z,Q) ConditionalHist3(X(Q),...
+        Y(Q),Z(Q),...
+        'numXbins',25,'numYbins',25,'Xbounds',[0 10],'Ybounds',[0 100],...
+        'minXY',25),...
+        ISIStats.allspikes.poprate.pE,ISIStats.allspikes.poprate.pI,ISIStats.allspikes.CV2,...
+        ISIStats.allspikes.instate,'UniformOutput',false);
+    
+    %Mean ISI by pop rate
+    [popratehist.(statenames{ss}).cellISIs ] = cellfun(@(X,Y,Z,Q) ConditionalHist3(X(Q),...
+        Y(Q),Z(Q),...
+        'numXbins',25,'numYbins',25,'Xbounds',[0 10],'Ybounds',[0 100],...
+        'minXY',25),...
+        ISIStats.allspikes.poprate.pE,ISIStats.allspikes.poprate.pI,ISIStats.allspikes.ISIs,...
+        ISIStats.allspikes.instate,'UniformOutput',false);
+    
+    %Per-cell pop rate distribution
+    [popratehist.(statenames{ss}).cellsync,countmap.(statenames{ss}).numtimebins ] = cellfun(@(X,Y) ConditionalHist3(X(spikemat.instate),...
+        Y(spikemat.instate),spikemat.cellsync.pE(spikemat.instate),...
+        'numXbins',25,'numYbins',25,'Xbounds',[0 10],'Ybounds',[0 100],...
+        'minXY',25),...
+        spikemat.bycellpoprate.pE,spikemat.bycellpoprate.pI,...
+        'UniformOutput',false);
+    
+    %P(spike|poprate)
+    popratehist.(statenames{ss}).pSpk = cellfun(@(X,Y) X./(Y.*dt),...
+        countmap.(statenames{ss}).numspikes,countmap.(statenames{ss}).numtimebins,...
+        'UniformOutput',false);
+
+    for tt = 1:length(celltypes)
+        popratehist.(statenames{ss}).(celltypes{tt}).cellCV2s = nanmean(cat(3,popratehist.(statenames{ss}).cellCV2s{CellClass.(celltypes{tt})}),3);
+        popratehist.(statenames{ss}).(celltypes{tt}).pSpk = nanmean(cat(3,popratehist.(statenames{ss}).pSpk{CellClass.(celltypes{tt})}),3);
+        popratehist.(statenames{ss}).(celltypes{tt}).cellISIs = nanmean(cat(3,popratehist.(statenames{ss}).cellISIs{CellClass.(celltypes{tt})}),3);
+
+    end
+end
+
+
+%%
+figure
+for ss = 1:3
+    subplot(3,3,ss)
+        h = imagesc(popratehist.Ebins,popratehist.Ibins,popratehist.(statenames{ss}).all');
+        axis xy
+        set(h,'AlphaData',~(popratehist.(statenames{ss}).all'<50));
+
+        title(statenames{ss})
+    for tt = 1:length(celltypes)
+    subplot(6,6,(ss-1)*2+12+tt)
+        h = imagesc(popratehist.Ebins,popratehist.Ibins,log10(popratehist.(statenames{ss}).(celltypes{tt}).pSpk)');
+        axis xy
+        set(h,'AlphaData',~isnan(popratehist.(statenames{ss}).(celltypes{tt}).pSpk'));
+        colorbar
+        %crameri lajolla
+        caxis([-1 1])
+        
+    subplot(6,6,(ss-1)*2+18+tt)
+        h = imagesc(popratehist.Ebins,popratehist.Ibins,popratehist.(statenames{ss}).(celltypes{tt}).cellCV2s');
+        axis xy
+        set(h,'AlphaData',~isnan(popratehist.(statenames{ss}).(celltypes{tt}).cellCV2s'));
+        colorbar
+        crameri berlin
+        caxis([0.7 1.3])
+    end
+end
+
+NiceSave('PopRateHists',figfolder,baseName)
+
+
+
+    
+%% Calculate Conditional distributions on synchrony (pop rate) in each state
 for ss = 1:length(statenames)
-    statenames{ss} = statenames{ss};
+    %statenames{ss} = statenames{ss};
 
     ISIStats.allspikes.instate = cellfun(@(X) InIntervals(X,double(SleepState.ints.(statenames{ss}))),...
         ISIStats.allspikes.times,'UniformOutput',false);
@@ -75,10 +170,12 @@ for ss = 1:length(statenames)
 
     %% Calculate conditional ISI/Synch distributions
 
-    numsynchbins = 25;
+    maxrate.pE = 10;
+    maxrate.pI = 100;
+    maxrate.ALL = 25;
     for st = 1:length(synchtypes)
         [ ISIbySynch.(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W) ConditionalHist( [Z(W);Z(W)],log10([X(W);Y(W)]),...
-            'Xbounds',[0 numsynchbins],'numXbins',numsynchbins+1,'Ybounds',[-3 2],'numYbins',125,'minX',50),...
+            'Xbounds',[0 maxrate.(synchtypes{st})],'numXbins',25,'Ybounds',[-3 2],'numYbins',125,'minX',50),...
             ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
             ISIStats.allspikes.poprate.(synchtypes{st}),ISIStats.allspikes.instate,...
             'UniformOutput',false);
@@ -86,7 +183,7 @@ for ss = 1:length(statenames)
         ISIbySynch.(synchtypes{st}).(statenames{ss}) = CollapseStruct( ISIbySynch.(synchtypes{st}).(statenames{ss}),3);
 
         [ SynchbyISI.(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W) ConditionalHist( log10([X(W);Y(W)]),[Z(W);Z(W)],...
-            'Ybounds',[0 numsynchbins],'numYbins',numsynchbins+1,'Xbounds',[-3 2],'numXbins',125,'minX',50),...
+            'Ybounds',[0 maxrate.(synchtypes{st})],'numYbins',25,'Xbounds',[-3 2],'numXbins',125,'minX',50),...
             ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
             ISIStats.allspikes.poprate.(synchtypes{st}),ISIStats.allspikes.instate,...
             'UniformOutput',false);
@@ -159,13 +256,15 @@ end
 end
 NiceSave('SynchbyISI',figfolder,baseName)
 
+
+
+
+
 %% Pop rate Histogram
 %popratehist.bins = {unique(spikemat.poprate.pE),unique(spikemat.poprate.pI)};
-nbins = 20;
-clear popratehist
-[popratehist.all,popratehist.bins{1},popratehist.bins{2}]...
-    = histcounts2(spikemat.poprate.pE(spikemat.instate),spikemat.poprate.pI(spikemat.instate),nbins);
 
+
+%Find PopSynch Bins for each spike
 [popratehist.Nspikes,~,~,ISIStats.allspikes.Ebin,ISIStats.allspikes.Ibin] = ...
     cellfun(@(X,Y) histcounts2(X,Y,popratehist.bins{1},popratehist.bins{2}),...
     ISIStats.allspikes.poprate.pE,ISIStats.allspikes.poprate.pI,...
