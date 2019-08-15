@@ -194,7 +194,7 @@ for ss = 1:length(statenames)
             ISIStats.allspikes.poprate.(synchtypes{st}),ISIStats.allspikes.instate,...
             'UniformOutput',false);
         ISIbySynch.(synchtypes{st}).(statenames{ss}) = cat(1,ISIbySynch.(synchtypes{st}).(statenames{ss}){:});
-        ISIbySynch.(synchtypes{st}).(statenames{ss}) = CollapseStruct( ISIbySynch.(synchtypes{st}).(statenames{ss}),3);
+        ISIbySynch.(synchtypes{st}).(statenames{ss}) = bz_CollapseStruct( ISIbySynch.(synchtypes{st}).(statenames{ss}),3);
 
         [ SynchbyISI.(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W) ConditionalHist( log10([X(W);Y(W)]),[Z(W);Z(W)],...
             'Ybounds',[0 maxrate.(synchtypes{st})],'numYbins',25,'Xbounds',[-3 2],'numXbins',125,'minX',50),...
@@ -202,7 +202,7 @@ for ss = 1:length(statenames)
             ISIStats.allspikes.poprate.(synchtypes{st}),ISIStats.allspikes.instate,...
             'UniformOutput',false);
         SynchbyISI.(synchtypes{st}).(statenames{ss}) = cat(1,SynchbyISI.(synchtypes{st}).(statenames{ss}){:});
-        SynchbyISI.(synchtypes{st}).(statenames{ss}) = CollapseStruct( SynchbyISI.(synchtypes{st}).(statenames{ss}),3);
+        SynchbyISI.(synchtypes{st}).(statenames{ss}) = bz_CollapseStruct( SynchbyISI.(synchtypes{st}).(statenames{ss}),3);
 
         for cc = 1:length(celltypes)
             ISIbySynch.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) = nanmean(ISIbySynch.(synchtypes{st}).(statenames{ss}).pYX(:,:,CellClass.(celltypes{cc})),3);
@@ -333,7 +333,7 @@ figure
     plot(get(gca,'xlim'),[0 0],'k')
     xlabel('Mean Rate (Hz)');ylabel('CV2-pE Rate Corr.')
     LogScale('x',10)
-    title(statenames{ss})
+    %title(statenames{ss})
     
     subplot(3,3,5)
     for tt = 1:length(celltypes)
@@ -376,7 +376,7 @@ figure
     plot([0 0],get(gca,'ylim'),'k')
     xlabel('Rate-pI Corr.');ylabel('CV2-pI Corr.')
     
-    NiceSave('RateCV2PopCorr',figfolder,baseName)
+    NiceSave(['RateCV2PopCorr_',(statenames{ss})],figfolder,baseName)
 end
 
 %%
