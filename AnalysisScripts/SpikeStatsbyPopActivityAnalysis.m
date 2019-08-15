@@ -24,7 +24,11 @@ ISIStats.allspikes.ISInp1 = cellfun(@(X) [X(2:end);nan],ISIStats.allspikes.ISIs,
     'UniformOutput',false);
 
 %% Cell types and states
-[celltypes,~,typeidx] = unique(CellClass.label);
+try
+celltypes = CellClass.celltypes;
+catch
+    celltypes = unique(CellClass.label);
+end
 cellcolor = {'k','r'};
 statenames = fieldnames(SleepState.ints);
 
@@ -69,12 +73,10 @@ end
     ISIStats.allspikes.cellrate = cellfun(@(X,Y) interp1(spikemat.timestamps,X,Y,'nearest'),...
         spikemat.cellrate,ISIStats.allspikes.times,'UniformOutput',false);
     
-   
-
 
 %% Calculate Population Rate Histograms
-    maxrate.pE = 6;
-    maxrate.pI = 60;
+    maxrate.pE = 8;
+    maxrate.pI = 80;
     maxrate.ALL = 25;
     
 nbins = 100;
@@ -267,6 +269,7 @@ end
 end
 end
 NiceSave('SynchbyISI',figfolder,baseName)
+
 
 
 
