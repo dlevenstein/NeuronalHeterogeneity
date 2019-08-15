@@ -9,6 +9,7 @@ addParameter(p,'Xbounds',[])
 addParameter(p,'Ybounds',[])
 addParameter(p,'minXY',25)
 addParameter(p,'sigma',[])
+addParameter(p,'countnorm',true)
 parse(p,varargin{:})
 numXbins = p.Results.numXbins;
 numYbins = p.Results.numYbins;
@@ -16,6 +17,7 @@ Xbounds = p.Results.Xbounds;
 Ybounds = p.Results.Ybounds;
 minXY = p.Results.minXY;
 sig = p.Results.sigma;
+countnorm = p.Results.countnorm;
 
 if ~isempty(sig)
     bintype = 'gaussian';
@@ -67,7 +69,9 @@ switch bintype
 end
 
 meanZ(N<minXY)=nan;
-N = N./length(Z);
+if countnorm
+    N = N./length(Z);
+end
 %weightmean(totweight<minXY)=nan;
 
 %%

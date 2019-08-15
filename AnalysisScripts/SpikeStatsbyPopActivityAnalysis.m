@@ -1,13 +1,13 @@
-function [ ] = SpikeStatsbyPopActivityAnalysis(basePath,figfolder)
+function [popratehist,ISIbySynch,SynchbyISI,CV2popcorr,ratepopcorr ] = SpikeStatsbyPopActivityAnalysis(basePath,figfolder)
 
 %% DEV
-reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
-basePath = '/mnt/proraidDL/Database/AGData/Cicero/Cicero_09012014';
+%basePath = '/mnt/proraidDL/Database/AGData/Cicero/Cicero_09012014';
 %basePath = pwd;
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyPopActivityAnalysis'];
+%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyPopActivityAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
@@ -15,8 +15,8 @@ ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
 SleepState = bz_LoadStates(basePath,'SleepState');
 SleepState.ints.ALL = [0 Inf];
-lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
-    'basepath',basePath);
+% lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
+%     'basepath',basePath);
 
 %%
 
@@ -46,7 +46,7 @@ end
 for cc = 1:spikes.numcells
     thiscell = false(size(CellClass.pE));
     thiscell(cc) = true;
-    spikemat.cellrate{cc} = spikemat.data(:,cc);
+    spikemat.cellrate{cc} = spikemat.data(:,cc)./binsize;
     for tt = 1:length(celltypes)
         spikemat.bycellpoprate.(celltypes{tt}){cc} = sum(spikemat.data(:,CellClass.(celltypes{tt}) & ~thiscell),2)./...
             sum(CellClass.(celltypes{tt}) & ~thiscell)./binsize;
@@ -73,10 +73,13 @@ end
 
 
 %% Calculate Population Rate Histograms
-
+    maxrate.pE = 6;
+    maxrate.pI = 60;
+    maxrate.ALL = 25;
+    
 nbins = 100;
-popratehist.Ebins = linspace(0,10,nbins+1);
-popratehist.Ibins = linspace(0,100,nbins+1);
+popratehist.Ebins = linspace(0,maxrate.pE,nbins+1);
+popratehist.Ibins = linspace(0,maxrate.pI,nbins+1);
 
 clear countmap
 for ss = 1:3
@@ -85,31 +88,33 @@ for ss = 1:3
         ISIStats.allspikes.times,'UniformOutput',false);
     
     %Pop rate distribution
-    [popratehist.(statenames{ss}).all]...
+    [popratehist.(statenames{ss}).alltime]...
         = histcounts2(spikemat.poprate.pE(spikemat.instate),spikemat.poprate.pI(spikemat.instate),...
         popratehist.Ebins,popratehist.Ibins);
     
     %Mean CV2 by pop rate
-    [popratehist.(statenames{ss}).cellCV2s,countmap.(statenames{ss}).numspikes ] = cellfun(@(X,Y,Z,Q) ConditionalHist3(X(Q),...
-        Y(Q),Z(Q),...
-        'numXbins',25,'numYbins',25,'Xbounds',[0 10],'Ybounds',[0 100],...
-        'minXY',25),...
+    [popratehist.(statenames{ss}).cellCV2s,countmap.(statenames{ss}).numspikes ] = cellfun(@(Erate,Irate,CV2,instate)...
+        ConditionalHist3(Erate(instate),Irate(instate),CV2(instate),...
+        'numXbins',25,'numYbins',25,'Xbounds',[0 maxrate.pE],'Ybounds',[0 maxrate.pI],...
+        'minXY',25,'countnorm',false),...
         ISIStats.allspikes.poprate.pE,ISIStats.allspikes.poprate.pI,ISIStats.allspikes.CV2,...
         ISIStats.allspikes.instate,'UniformOutput',false);
+    popratehist.(statenames{ss}).cellCV2s = cat(3,popratehist.(statenames{ss}).cellCV2s{:});
     
     %Mean ISI by pop rate
-    [popratehist.(statenames{ss}).cellISIs ] = cellfun(@(X,Y,Z,Q) ConditionalHist3(X(Q),...
-        Y(Q),Z(Q),...
-        'numXbins',25,'numYbins',25,'Xbounds',[0 10],'Ybounds',[0 100],...
+    [popratehist.(statenames{ss}).geomeanISIs ] = cellfun(@(X,Y,Z,Q,W) ConditionalHist3([X(Q);X(Q)],...
+        [Y(Q);Y(Q)],log10([Z(Q);W(Q)]),...
+        'numXbins',25,'numYbins',25,'Xbounds',[0 maxrate.pE],'Ybounds',[0 maxrate.pI],...
         'minXY',25),...
         ISIStats.allspikes.poprate.pE,ISIStats.allspikes.poprate.pI,ISIStats.allspikes.ISIs,...
-        ISIStats.allspikes.instate,'UniformOutput',false);
+        ISIStats.allspikes.instate,ISIStats.allspikes.ISInp1,'UniformOutput',false);
+    popratehist.(statenames{ss}).geomeanISIs = cat(3,popratehist.(statenames{ss}).geomeanISIs{:});
     
     %Per-cell pop rate distribution
     [popratehist.(statenames{ss}).cellsync,countmap.(statenames{ss}).numtimebins ] = cellfun(@(X,Y) ConditionalHist3(X(spikemat.instate),...
         Y(spikemat.instate),spikemat.cellsync.pE(spikemat.instate),...
-        'numXbins',25,'numYbins',25,'Xbounds',[0 10],'Ybounds',[0 100],...
-        'minXY',25),...
+        'numXbins',25,'numYbins',25,'Xbounds',[0 maxrate.pE],'Ybounds',[0 maxrate.pI],...
+        'minXY',100,'countnorm',false),...
         spikemat.bycellpoprate.pE,spikemat.bycellpoprate.pI,...
         'UniformOutput',false);
     
@@ -117,11 +122,12 @@ for ss = 1:3
     popratehist.(statenames{ss}).pSpk = cellfun(@(X,Y) X./(Y.*dt),...
         countmap.(statenames{ss}).numspikes,countmap.(statenames{ss}).numtimebins,...
         'UniformOutput',false);
+    popratehist.(statenames{ss}).pSpk = cat(3,popratehist.(statenames{ss}).pSpk{:});
 
     for tt = 1:length(celltypes)
-        popratehist.(statenames{ss}).(celltypes{tt}).cellCV2s = nanmean(cat(3,popratehist.(statenames{ss}).cellCV2s{CellClass.(celltypes{tt})}),3);
-        popratehist.(statenames{ss}).(celltypes{tt}).pSpk = nanmean(cat(3,popratehist.(statenames{ss}).pSpk{CellClass.(celltypes{tt})}),3);
-        popratehist.(statenames{ss}).(celltypes{tt}).cellISIs = nanmean(cat(3,popratehist.(statenames{ss}).cellISIs{CellClass.(celltypes{tt})}),3);
+        popratehist.(statenames{ss}).(celltypes{tt}).cellCV2s = nanmean(popratehist.(statenames{ss}).cellCV2s(:,:,CellClass.(celltypes{tt})),3);
+        popratehist.(statenames{ss}).(celltypes{tt}).pSpk = nanmean(popratehist.(statenames{ss}).pSpk(:,:,CellClass.(celltypes{tt})),3);
+        popratehist.(statenames{ss}).(celltypes{tt}).geomeanISIs = nanmean(popratehist.(statenames{ss}).geomeanISIs(:,:,CellClass.(celltypes{tt})),3);
 
     end
 end
@@ -131,9 +137,9 @@ end
 figure
 for ss = 1:3
     subplot(3,3,ss)
-        h = imagesc(popratehist.Ebins,popratehist.Ibins,popratehist.(statenames{ss}).all');
+        h = imagesc(popratehist.Ebins,popratehist.Ibins,popratehist.(statenames{ss}).alltime');
         axis xy
-        set(h,'AlphaData',~(popratehist.(statenames{ss}).all'<50));
+        set(h,'AlphaData',~(popratehist.(statenames{ss}).alltime'<25));
 
         title(statenames{ss})
     for tt = 1:length(celltypes)
@@ -143,9 +149,17 @@ for ss = 1:3
         set(h,'AlphaData',~isnan(popratehist.(statenames{ss}).(celltypes{tt}).pSpk'));
         colorbar
         %crameri lajolla
-        caxis([-1 1])
+        caxis([-0.5 1.75])
         
     subplot(6,6,(ss-1)*2+18+tt)
+            h = imagesc(popratehist.Ebins,popratehist.Ibins,1./(popratehist.(statenames{ss}).(celltypes{tt}).geomeanISIs)');
+        axis xy
+        set(h,'AlphaData',~isnan(popratehist.(statenames{ss}).(celltypes{tt}).geomeanISIs'));
+        colorbar
+        %crameri lajolla
+        %caxis([-1 1])
+        
+    subplot(6,6,(ss-1)*2+24+tt)
         h = imagesc(popratehist.Ebins,popratehist.Ibins,popratehist.(statenames{ss}).(celltypes{tt}).cellCV2s');
         axis xy
         set(h,'AlphaData',~isnan(popratehist.(statenames{ss}).(celltypes{tt}).cellCV2s'));
@@ -170,9 +184,7 @@ for ss = 1:length(statenames)
 
     %% Calculate conditional ISI/Synch distributions
 
-    maxrate.pE = 10;
-    maxrate.pI = 100;
-    maxrate.ALL = 25;
+
     for st = 1:length(synchtypes)
         [ ISIbySynch.(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W) ConditionalHist( [Z(W);Z(W)],log10([X(W);Y(W)]),...
             'Xbounds',[0 maxrate.(synchtypes{st})],'numXbins',25,'Ybounds',[-3 2],'numYbins',125,'minX',50),...
@@ -258,184 +270,37 @@ NiceSave('SynchbyISI',figfolder,baseName)
 
 
 
-
-
-%% Pop rate Histogram
-%popratehist.bins = {unique(spikemat.poprate.pE),unique(spikemat.poprate.pI)};
-
-
-%Find PopSynch Bins for each spike
-[popratehist.Nspikes,~,~,ISIStats.allspikes.Ebin,ISIStats.allspikes.Ibin] = ...
-    cellfun(@(X,Y) histcounts2(X,Y,popratehist.bins{1},popratehist.bins{2}),...
-    ISIStats.allspikes.poprate.pE,ISIStats.allspikes.poprate.pI,...
-    'UniformOutput',false);
-
-[popratehist.Nbins] = ...
-    cellfun(@(X,Y) histcounts2(X,Y,popratehist.bins{1},popratehist.bins{2}),...
-    spikemat.bycellpoprate.pE,spikemat.bycellpoprate.pI,...
-    'UniformOutput',false);
-
-Nspikesthresh = 30;
-
-for ee = 1:length(popratehist.bins{1})-1
-    for ii = 1:length(popratehist.bins{2})-1
-        
-        
-        inbinspikes = cellfun(@(X,Y,Z) X==ee & Y==ii & Z,...
-            ISIStats.allspikes.Ebin,ISIStats.allspikes.Ibin,ISIStats.allspikes.instate,...
-            'UniformOutput',false);
-        
-
-        
-        
-        %Cell maps
-        for cc = 1:spikes.numcells
-%         popratehist.meanISI{cc}(ee,ii) = cellfun(@(X,Y,Z) mean(X(Y==ee & Z==ii)),...
-%             ISIStats.allspikes.ISIs,ISIStats.allspikes.Ebin,ISIStats.allspikes.Ibin,...
-%             'UniformOutput',false)
-            popratehist.meanISI_bycell{cc}(ee,ii) = ...
-                mean(ISIStats.allspikes.ISIs{cc}(inbinspikes{cc}));
-            popratehist.meanCV2_bycell{cc}(ee,ii) = ...
-                mean(ISIStats.allspikes.CV2{cc}(inbinspikes{cc}));
-            
-            if sum(inbinspikes{cc}) < Nspikesthresh
-                popratehist.meanISI_bycell{cc}(ee,ii) = nan;
-                popratehist.meanCV2_bycell{cc}(ee,ii) = nan;
-            end
-        end
-        
-        %All Pop Spike Maps
-        for tt = 1:length(celltypes)
-            
-            allspikeCV2s = cellfun(@(X,Y) X(Y),...
-                ISIStats.allspikes.CV2(CellClass.(celltypes{tt})),...
-                inbinspikes(CellClass.(celltypes{tt})),...
-                'UniformOutput',false);
-            allspikeCV2s = cat(1,allspikeCV2s{:});
-            
-            allspikeISIs = cellfun(@(X,Y) X(Y),...
-                ISIStats.allspikes.ISIs(CellClass.(celltypes{tt})),...
-                inbinspikes(CellClass.(celltypes{tt})),...
-                'UniformOutput',false);
-            allspikeISIs = cat(1,allspikeISIs{:});
-            
-            popratehist.popstats.meanCV2.(celltypes{tt})(ee,ii) = mean(allspikeCV2s);
-            popratehist.popstats.meanISI.(celltypes{tt})(ee,ii) = mean(allspikeISIs);
-            popratehist.popstats.numspikes.(celltypes{tt})(ee,ii) = length(allspikeCV2s);
-            
-            if length(allspikeCV2s) < Nspikesthresh
-                popratehist.popstats.meanCV2.(celltypes{tt})(ee,ii) = nan;
-                popratehist.popstats.meanISI.(celltypes{tt})(ee,ii) = nan;
-            end
-            %popratehist.popstats.meanrate.(celltypes{tt}) = nanmean(1./cat(3,popratehist.meanISI_bycell{CellClass.(celltypes{tt})}),3);
-        end
-    end
-end
-
-
-%%
-
-binthreshold = 500;
-for tt = 1:length(celltypes)
-    popratehist.meancellstats.meanCV2.(celltypes{tt}) = nanmean(cat(3,popratehist.meanCV2_bycell{CellClass.(celltypes{tt})}),3);
-    popratehist.meancellstats.meanrate.(celltypes{tt}) = nanmean(1./cat(3,popratehist.meanISI_bycell{CellClass.(celltypes{tt})}),3);
-    
-    popratehist.Nbins_all = sum(cat(3,popratehist.Nbins{CellClass.(celltypes{tt})}),3);
-    popratehist.popstats.meanrate.(celltypes{tt}) = popratehist.popstats.numspikes.(celltypes{tt})./popratehist.Nbins_all./spikemat.dt;
-    popratehist.popstats.meanrate.(celltypes{tt})(popratehist.Nbins_all<binthreshold) = nan;
-end
-%popratehist.popstats.meanCV2.pI = mean(cat(3,popratehist.meanCV2{CellClass.pI}),3);
-
 %% Correlate CV2, rate with E/I rate
+for ss = 1:length(statenames)
+    %statenames{ss} = statenames{ss};
 
-for tt = 1:length(celltypes)
-    CV2popcorr.(celltypes{tt}) = cellfun(@(X,Y,Z) corr(X(Z),Y(Z),'type','spearman'),...
-        ISIStats.allspikes.poprate.(celltypes{tt}),ISIStats.allspikes.CV2,ISIStats.allspikes.instate);
-    ratepopcorr.(celltypes{tt}) = cellfun(@(X,Y,Z) corr(X(Z),1./Y(Z),'type','spearman'),...
-        ISIStats.allspikes.poprate.(celltypes{tt}),ISIStats.allspikes.ISIs,ISIStats.allspikes.instate);
+    ISIStats.allspikes.instate = cellfun(@(X) InIntervals(X,double(SleepState.ints.(statenames{ss}))),...
+        ISIStats.allspikes.times,'UniformOutput',false);
+    for tt = 1:length(celltypes)
+        CV2popcorr.(statenames{ss}).(celltypes{tt}) = cellfun(@(X,Y,Z) corr(X(Z),Y(Z),'type','spearman'),...
+            ISIStats.allspikes.poprate.(celltypes{tt}),ISIStats.allspikes.CV2,ISIStats.allspikes.instate);
+        ratepopcorr.(statenames{ss}).(celltypes{tt}) = cellfun(@(X,Y,Z) corr(X(Z),Y(Z),'type','spearman'),...
+            ISIStats.allspikes.poprate.(celltypes{tt}),ISIStats.allspikes.cellrate,ISIStats.allspikes.instate);
+    end
 end
 
 %%
-cv2color = [makeColorMap([0.5 0.5 1],[0 0 0.8],[0 0 0]);makeColorMap([0 0 0],[0.8 0 0],[1 0.5 0.5])];
-
-figure
-
-    subplot(3,3,1)
-    for tt = 1:length(celltypes)
-        plot(log10(ISIStats.summstats.NREMstate.meanrate(CellClass.(celltypes{tt}))),CV2popcorr.pE(CellClass.(celltypes{tt})),...
-            '.','color',cellcolor{tt})
-        hold on
-    end
-    plot(get(gca,'xlim'),[0 0],'k')
-    xlabel('Mean Rate (Hz)');ylabel('CV2-pE Rate Corr.')
-    LogScale('x',10)
-    title(state)
-    
-    subplot(3,3,2)
-    for tt = 1:length(celltypes)
-        plot(log10(ISIStats.summstats.NREMstate.meanrate(CellClass.(celltypes{tt}))),CV2popcorr.pI(CellClass.(celltypes{tt})),...
-            '.','color',cellcolor{tt})
-        hold on
-    end
-    plot(get(gca,'xlim'),[0 0],'k')
-    xlabel('Mean Rate (Hz)');ylabel('CV2-pI Rate Corr.')
-    LogScale('x',10)
-    
-    
-    subplot(3,3,3)
-    for tt = 1:length(celltypes)
-        plot(CV2popcorr.pE(CellClass.(celltypes{tt})),CV2popcorr.pI(CellClass.(celltypes{tt})),...
-            '.','color',cellcolor{tt})
-        hold on
-    end
-    plot(get(gca,'xlim'),[0 0],'k')
-    plot([0 0],get(gca,'ylim'),'k')
-    xlabel('CV2-pE Corr.');ylabel('CV2-pI Corr.')
-    
-subplot(2,2,3)
-colormap(gca,cv2color)
-h = imagesc(popratehist.bins{1}./sum(CellClass.pE)./binsize,...
-    popratehist.bins{2}./(sum(CellClass.pI)-1)./binsize,...
-    (popratehist.popstats.meanCV2.pI)');
-set(h,'AlphaData',~isnan(popratehist.popstats.meanCV2.pI'));
-axis xy
-colorbar
-%LogScale('c',10)
-xlabel('pE Rate (Hz/cell)');ylabel('pI Rate (Hz/cell)')
-caxis([0.75 1.25])
-title('CV2 - pI cells')
-
-subplot(2,2,4)
-colormap(gca,cv2color)
-h = imagesc(popratehist.bins{1}./(sum(CellClass.pE)-1)./binsize,...
-    popratehist.bins{2}./(sum(CellClass.pI))./binsize,...
-    (popratehist.popstats.meanCV2.pE)');
-set(h,'AlphaData',~isnan(popratehist.popstats.meanCV2.pE'));
-axis xy
-colorbar
-xlabel('pE Rate (Hz/cell)');ylabel('pI Rate (Hz/cell)')
-title('CV2 - pE cells')
-caxis([0.75 1.25])
-%LogScale('c',10)
-
-NiceSave('CV2byPopRate',figfolder,baseName)
-%% 
-
+for ss = 1:3
 figure
     subplot(3,3,1)
         for tt = 1:length(celltypes)
-            plot(log10(ISIStats.summstats.NREMstate.meanrate(CellClass.(celltypes{tt}))),ratepopcorr.pE(CellClass.(celltypes{tt})),...
+            plot(log10(ISIStats.summstats.(statenames{ss}).meanrate(CellClass.(celltypes{tt}))),ratepopcorr.(statenames{ss}).pE(CellClass.(celltypes{tt})),...
                 '.','color',cellcolor{tt})
             hold on
         end
         plot(get(gca,'xlim'),[0 0],'k')
         xlabel('Mean Rate (Hz)');ylabel('Cell Rate-pE Rate Corr.')
         LogScale('x',10)
-        title(state)
+        title((statenames{ss}))
 
     subplot(3,3,2)
         for tt = 1:length(celltypes)
-            plot(log10(ISIStats.summstats.NREMstate.meanrate(CellClass.(celltypes{tt}))),ratepopcorr.pI(CellClass.(celltypes{tt})),...
+            plot(log10(ISIStats.summstats.(statenames{ss}).meanrate(CellClass.(celltypes{tt}))),ratepopcorr.(statenames{ss}).pI(CellClass.(celltypes{tt})),...
                 '.','color',cellcolor{tt})
             hold on
         end
@@ -446,7 +311,7 @@ figure
         
     subplot(3,3,3)
         for tt = 1:length(celltypes)
-            plot(ratepopcorr.pE(CellClass.(celltypes{tt})),ratepopcorr.pI(CellClass.(celltypes{tt})),...
+            plot(ratepopcorr.(statenames{ss}).pE(CellClass.(celltypes{tt})),ratepopcorr.(statenames{ss}).pI(CellClass.(celltypes{tt})),...
                 '.','color',cellcolor{tt})
             hold on
         end
@@ -455,227 +320,256 @@ figure
         plot(get(gca,'xlim'),[0 0],'k')
         plot([0 0],get(gca,'ylim'),'k')
         
-    subplot(2,2,3)
-        h = imagesc(popratehist.bins{1}./sum(CellClass.pE)./binsize,...
-            popratehist.bins{2}./(sum(CellClass.pI)-1)./binsize,...
-            log10(popratehist.popstats.meanrate.pI)');
-        set(h,'AlphaData',~isnan(popratehist.popstats.meanrate.pI'));
-        xlabel('pE Rate (Hz/cell)');ylabel('pI Rate (Hz/cell)')
-        title('Rate - pI cells')
-        axis xy
-        colorbar
-        caxis([0 1.5])
-        LogScale('c',10)
-        %
-
-    subplot(2,2,4)
-        h = imagesc(popratehist.bins{1}./(sum(CellClass.pE)-1)./binsize,...
-            popratehist.bins{2}./(sum(CellClass.pI))./binsize,...
-            log10(popratehist.popstats.meanrate.pE)');
-        set(h,'AlphaData',~isnan(popratehist.popstats.meanrate.pE'));
-        xlabel('pE Rate (Hz/cell)');ylabel('pI Rate (Hz/cell)')
-        title('Rate - pE cells')
-        axis xy
-        colorbar
-        caxis([-1 0.5])
-        LogScale('c',10)
-
         
-NiceSave('RatebyPopRate',figfolder,baseName)
-
-%% Average Synchrony (Pop Rate) during spikes in the ISI return map
-excell = randsample(spikes.numcells,1);
-
-ISIbounds = [-3 1.5];
-[meanZ,countmap ] = cellfun(@(X,Y,Z,Q) ConditionalHist3(log10(X(Q)),...
-    log10(Y(Q)),Z(Q),...
-    'numXbins',80,'numYbins',80,'Xbounds',ISIbounds,'Ybounds',ISIbounds,...
-    'minXY',30,'sigma',0.1),...
-    ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,ISIStats.allspikes.poprate.pI,...
-    ISIStats.allspikes.instate,'UniformOutput',false);
-meansynchall = cellfun(@mean,spikemat.bycellpoprate.pI,'UniformOutput',false);
-meanZ_norm = cellfun(@(X,Y) X./Y,meanZ,meansynchall,'UniformOutput',false);
-
-%%
-for tt = 1:length(celltypes)
-    popratereturn.(celltypes{tt}) = nanmean(cat(3,meanZ_norm{CellClass.(celltypes{tt})}),3);
-    meanreturn.(celltypes{tt}) = nanmean(cat(3,countmap{CellClass.(celltypes{tt})}),3);
-end
-
-%%
-posnegcolormap = makeColorMap([0 0 0.8],[0 0 0],[0.8 0 0]);
-histcolormap = makeColorMap([1 1 1],[0 0 0]);
-
-figure
-subplot(2,2,1)
-colormap(gca,histcolormap)
-
-s = imagesc(ISIbounds,ISIbounds,meanreturn.pE');
-axis xy
-LogScale('xy',10)
-colorbar
-%caxis([0.5 1.5])
-
-subplot(2,2,2)
-colormap(gca,histcolormap)
-
-s = imagesc(ISIbounds,ISIbounds,meanreturn.pI')
-axis xy
-LogScale('xy',10)
-colorbar
-%caxis([0.5 1.5])
-
-subplot(2,2,3)
-colormap(gca,posnegcolormap)
-
-s = imagesc(ISIbounds,ISIbounds,popratereturn.pE');
-alpha(s,meanreturn.pE'*25)
-axis xy
-caxis([0.5 1.5])
-LogScale('xy',10)
-colorbar
-
-subplot(2,2,4)
-colormap(gca,posnegcolormap)
-s = imagesc(ISIbounds,ISIbounds,popratereturn.pI')
-alpha(s,meanreturn.pI'*25)
-axis xy
-caxis([0.5 1.5])
-LogScale('xy',10)
-colorbar
-
-NiceSave('ReturnMapPopRate',figfolder,baseName)
-
-%% Conditional CV2 distribution given pop synchrony
-[ CONDXY ] = ConditionalHist(ISIStats.allspikes.poprate.pI,...
-    ISIStats.allspikes.CV2,'Xbounds',[0 12],'numXbins',13,...
-    'numYbins',20,'Ybounds',[0 2]);
-%%
-for tt = 1:length(celltypes)
-    CV2distbyPOP.(celltypes{tt}) = nanmean(CONDXY.pYX(:,:,CellClass.(celltypes{tt})),3);
-    meanCV2byPOP.(celltypes{tt}) = nanmean(CONDXY.meanYX(:,:,CellClass.(celltypes{tt})),3);
-    %PopsynchhistbyPOP = .(celltypes{tt}) = 
+    subplot(3,3,4)
+    for tt = 1:length(celltypes)
+        plot(log10(ISIStats.summstats.NREMstate.meanrate(CellClass.(celltypes{tt}))),CV2popcorr.(statenames{ss}).pE(CellClass.(celltypes{tt})),...
+            '.','color',cellcolor{tt})
+        hold on
+    end
+    plot(get(gca,'xlim'),[0 0],'k')
+    xlabel('Mean Rate (Hz)');ylabel('CV2-pE Rate Corr.')
+    LogScale('x',10)
+    title(statenames{ss})
     
+    subplot(3,3,5)
+    for tt = 1:length(celltypes)
+        plot(log10(ISIStats.summstats.NREMstate.meanrate(CellClass.(celltypes{tt}))),CV2popcorr.(statenames{ss}).pI(CellClass.(celltypes{tt})),...
+            '.','color',cellcolor{tt})
+        hold on
+    end
+    plot(get(gca,'xlim'),[0 0],'k')
+    xlabel('Mean Rate (Hz)');ylabel('CV2-pI Rate Corr.')
+    LogScale('x',10)
+    
+    
+    subplot(3,3,6)
+    for tt = 1:length(celltypes)
+        plot(CV2popcorr.(statenames{ss}).pE(CellClass.(celltypes{tt})),CV2popcorr.(statenames{ss}).pI(CellClass.(celltypes{tt})),...
+            '.','color',cellcolor{tt})
+        hold on
+    end
+    plot(get(gca,'xlim'),[0 0],'k')
+    plot([0 0],get(gca,'ylim'),'k')
+    xlabel('CV2-pE Corr.');ylabel('CV2-pI Corr.')
+    
+    subplot(3,3,7)
+    for tt = 1:length(celltypes)
+        plot(ratepopcorr.(statenames{ss}).pE(CellClass.(celltypes{tt})),CV2popcorr.(statenames{ss}).pE(CellClass.(celltypes{tt})),...
+            '.','color',cellcolor{tt})
+        hold on
+    end
+    plot(get(gca,'xlim'),[0 0],'k')
+    plot([0 0],get(gca,'ylim'),'k')
+    xlabel('Rate-pE Corr.');ylabel('CV2-pE Corr.')
+    
+    subplot(3,3,8)
+    for tt = 1:length(celltypes)
+        plot(ratepopcorr.(statenames{ss}).pI(CellClass.(celltypes{tt})),CV2popcorr.(statenames{ss}).pI(CellClass.(celltypes{tt})),...
+            '.','color',cellcolor{tt})
+        hold on
+    end
+    plot(get(gca,'xlim'),[0 0],'k')
+    plot([0 0],get(gca,'ylim'),'k')
+    xlabel('Rate-pI Corr.');ylabel('CV2-pI Corr.')
+    
+    NiceSave('RateCV2PopCorr',figfolder,baseName)
 end
-%%
-figure
-subplot(2,2,1)
-imagesc(CONDXY.Xbins(:,:,1),CONDXY.Ybins(:,:,1),CV2distbyPOP.pE')
-hold on
-plot(CONDXY.Xbins(:,:,excell),meanCV2byPOP.pE,'w-')
-plot(CONDXY.Xbins(:,[1 end],excell),[1 1],'w--')
-
-axis xy
-xlabel('Pop Synchrony');ylabel('CV2')
-%%
-excell = randsample(spikes.numcells,1);
-figure
-imagesc(CONDXY.Xbins(:,:,excell),CONDXY.Ybins(:,:,excell),CONDXY.pYX(:,:,excell)')
-hold on
-plot(CONDXY.Xbins(:,:,excell),CONDXY.meanYX(:,:,excell),'w-')
-plot(CONDXY.Xbins(:,:,excell),CONDXY.meanYX(:,:,excell),'w-')
-axis xy
-%%
-excell = randsample(spikes.numcells,1);
-
-figure
-subplot(2,2,1)
-plot(ISIStats.allspikes.cellrate{excell},ISIStats.allspikes.CV2{excell},'.')
-subplot(2,2,3)
-scatter(log10(ISIStats.allspikes.ISIs{excell}(ISIStats.allspikes.instate{excell})),...
-    log10(ISIStats.allspikes.ISInp1{excell}(ISIStats.allspikes.instate{excell})),1,...
-    log10(ISIStats.allspikes.poprate.pE{excell}(ISIStats.allspikes.instate{excell})))
-colorbar
-
-subplot(2,2,4)
-scatter(log10(ISIStats.allspikes.ISIs{excell}(ISIStats.allspikes.instate{excell})),...
-    log10(ISIStats.allspikes.ISInp1{excell}(ISIStats.allspikes.instate{excell})),1,...
-    log10(ISIStats.allspikes.poprate.pI{excell}(ISIStats.allspikes.instate{excell})))
-colorbar
-
-subplot(2,2,2)
-imagesc((meanZ_norm{excell})')
-axis xy
-colorbar
-caxis([0 2])
-%% Figure: Pop Rate
-
-%Example cell... show example window: high pE, medium pI, high pI medium
-%pE, low pE pI
-
-excell = randsample(spikes.numcells,1);
-
-bigwin = bz_RandomWindowInIntervals( SleepState.ints.(state),10 );
-
-figure
-subplot(3,1,1)
-bz_MultiLFPPlot(lfp,'timewin',bigwin,'spikes',spikes,'cellgroups',{CellClass.pE,CellClass.pI})
-
-subplot(6,1,3)
-plot(spikemat.timestamps,spikemat.bycellpoprate.pE{excell},'k')
-hold on
-plot(spikemat.timestamps,spikemat.bycellpoprate.pI{excell},'r')
-xlim(bigwin)
-
-subplot(6,1,4)
-plot(ISIStats.allspikes.times{excell},ISIStats.allspikes.CV2{excell},'o-')
-hold on
-plot(bigwin,[1 1],'k--')
-xlim(bigwin)
-
-
-
-
-
 
 %%
-figure
-subplot(3,3,1)
-imagesc(popratehist.bins{1},popratehist.bins{2},log10(popratehist.all)')
-axis xy
-xlabel('pE Spikes');ylabel('pI Spikes')
-colorbar
-LogScale('c',10)
-
-subplot(3,3,2)
-imagesc(popratehist.bins{1},popratehist.bins{2},log10(popratehist.popstats.meanrate.pI)')
-axis xy
-colorbar
-LogScale('c',10)
-%caxis([0.5 1.5])
-
-subplot(3,3,3)
-imagesc(popratehist.bins{1},popratehist.bins{2},log10(popratehist.popstats.meanrate.pE)')
-axis xy
-colorbar
-LogScale('c',10)
-%caxis([0.5 1.5])
-
-subplot(3,3,5)
-imagesc(popratehist.bins{1},popratehist.bins{2},(popratehist.popstats.meanCV2.pI)')
-axis xy
-colorbar
-%LogScale('c',10)
-%caxis([0.5 1.5])
-
-subplot(3,3,6)
-imagesc(popratehist.bins{1},popratehist.bins{2},(popratehist.popstats.meanCV2.pE)')
-axis xy
-colorbar
-%LogScale('c',10)
-
-subplot(3,3,7)
-imagesc(popratehist.bins{1},popratehist.bins{2},log10(1./popratehist.meanISI_bycell{excell})')
-axis xy
-colorbar
-caxis([-1 1])
-LogScale('c',10)
-
-subplot(3,3,8)
-imagesc(popratehist.bins{1},popratehist.bins{2},popratehist.meanCV2_bycell{excell}')
-axis xy
-colorbar
-caxis([0.8 1.4])
+% %% Average Synchrony (Pop Rate) during spikes in the ISI return map
+% excell = randsample(spikes.numcells,1);
+% 
+% ISIbounds = [-3 1.5];
+% [meanZ,countmap ] = cellfun(@(X,Y,Z,Q) ConditionalHist3(log10(X(Q)),...
+%     log10(Y(Q)),Z(Q),...
+%     'numXbins',80,'numYbins',80,'Xbounds',ISIbounds,'Ybounds',ISIbounds,...
+%     'minXY',30,'sigma',0.1),...
+%     ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,ISIStats.allspikes.poprate.pI,...
+%     ISIStats.allspikes.instate,'UniformOutput',false);
+% meansynchall = cellfun(@mean,spikemat.bycellpoprate.pI,'UniformOutput',false);
+% meanZ_norm = cellfun(@(X,Y) X./Y,meanZ,meansynchall,'UniformOutput',false);
+% 
+% %%
+% for tt = 1:length(celltypes)
+%     popratereturn.(celltypes{tt}) = nanmean(cat(3,meanZ_norm{CellClass.(celltypes{tt})}),3);
+%     meanreturn.(celltypes{tt}) = nanmean(cat(3,countmap{CellClass.(celltypes{tt})}),3);
+% end
+% 
+% %%
+% posnegcolormap = makeColorMap([0 0 0.8],[0 0 0],[0.8 0 0]);
+% histcolormap = makeColorMap([1 1 1],[0 0 0]);
+% 
+% figure
+% subplot(2,2,1)
+% colormap(gca,histcolormap)
+% 
+% s = imagesc(ISIbounds,ISIbounds,meanreturn.pE');
+% axis xy
+% LogScale('xy',10)
+% colorbar
+% %caxis([0.5 1.5])
+% 
+% subplot(2,2,2)
+% colormap(gca,histcolormap)
+% 
+% s = imagesc(ISIbounds,ISIbounds,meanreturn.pI')
+% axis xy
+% LogScale('xy',10)
+% colorbar
+% %caxis([0.5 1.5])
+% 
+% subplot(2,2,3)
+% colormap(gca,posnegcolormap)
+% 
+% s = imagesc(ISIbounds,ISIbounds,popratereturn.pE');
+% alpha(s,meanreturn.pE'*25)
+% axis xy
+% caxis([0.5 1.5])
+% LogScale('xy',10)
+% colorbar
+% 
+% subplot(2,2,4)
+% colormap(gca,posnegcolormap)
+% s = imagesc(ISIbounds,ISIbounds,popratereturn.pI')
+% alpha(s,meanreturn.pI'*25)
+% axis xy
+% caxis([0.5 1.5])
+% LogScale('xy',10)
+% colorbar
+% 
+% NiceSave('ReturnMapPopRate',figfolder,baseName)
+% 
+% %% Conditional CV2 distribution given pop synchrony
+% [ CONDXY ] = ConditionalHist(ISIStats.allspikes.poprate.pI,...
+%     ISIStats.allspikes.CV2,'Xbounds',[0 12],'numXbins',13,...
+%     'numYbins',20,'Ybounds',[0 2]);
+% %%
+% for tt = 1:length(celltypes)
+%     CV2distbyPOP.(celltypes{tt}) = nanmean(CONDXY.pYX(:,:,CellClass.(celltypes{tt})),3);
+%     meanCV2byPOP.(celltypes{tt}) = nanmean(CONDXY.meanYX(:,:,CellClass.(celltypes{tt})),3);
+%     %PopsynchhistbyPOP = .(celltypes{tt}) = 
+%     
+% end
+% %%
+% figure
+% subplot(2,2,1)
+% imagesc(CONDXY.Xbins(:,:,1),CONDXY.Ybins(:,:,1),CV2distbyPOP.pE')
+% hold on
+% plot(CONDXY.Xbins(:,:,excell),meanCV2byPOP.pE,'w-')
+% plot(CONDXY.Xbins(:,[1 end],excell),[1 1],'w--')
+% 
+% axis xy
+% xlabel('Pop Synchrony');ylabel('CV2')
+% %%
+% excell = randsample(spikes.numcells,1);
+% figure
+% imagesc(CONDXY.Xbins(:,:,excell),CONDXY.Ybins(:,:,excell),CONDXY.pYX(:,:,excell)')
+% hold on
+% plot(CONDXY.Xbins(:,:,excell),CONDXY.meanYX(:,:,excell),'w-')
+% plot(CONDXY.Xbins(:,:,excell),CONDXY.meanYX(:,:,excell),'w-')
+% axis xy
+% %%
+% excell = randsample(spikes.numcells,1);
+% 
+% figure
+% subplot(2,2,1)
+% plot(ISIStats.allspikes.cellrate{excell},ISIStats.allspikes.CV2{excell},'.')
+% subplot(2,2,3)
+% scatter(log10(ISIStats.allspikes.ISIs{excell}(ISIStats.allspikes.instate{excell})),...
+%     log10(ISIStats.allspikes.ISInp1{excell}(ISIStats.allspikes.instate{excell})),1,...
+%     log10(ISIStats.allspikes.poprate.pE{excell}(ISIStats.allspikes.instate{excell})))
+% colorbar
+% 
+% subplot(2,2,4)
+% scatter(log10(ISIStats.allspikes.ISIs{excell}(ISIStats.allspikes.instate{excell})),...
+%     log10(ISIStats.allspikes.ISInp1{excell}(ISIStats.allspikes.instate{excell})),1,...
+%     log10(ISIStats.allspikes.poprate.pI{excell}(ISIStats.allspikes.instate{excell})))
+% colorbar
+% 
+% subplot(2,2,2)
+% imagesc((meanZ_norm{excell})')
+% axis xy
+% colorbar
+% caxis([0 2])
+% %% Figure: Pop Rate
+% 
+% %Example cell... show example window: high pE, medium pI, high pI medium
+% %pE, low pE pI
+% 
+% excell = randsample(spikes.numcells,1);
+% 
+% bigwin = bz_RandomWindowInIntervals( SleepState.ints.(state),10 );
+% 
+% figure
+% subplot(3,1,1)
+% bz_MultiLFPPlot(lfp,'timewin',bigwin,'spikes',spikes,'cellgroups',{CellClass.pE,CellClass.pI})
+% 
+% subplot(6,1,3)
+% plot(spikemat.timestamps,spikemat.bycellpoprate.pE{excell},'k')
+% hold on
+% plot(spikemat.timestamps,spikemat.bycellpoprate.pI{excell},'r')
+% xlim(bigwin)
+% 
+% subplot(6,1,4)
+% plot(ISIStats.allspikes.times{excell},ISIStats.allspikes.CV2{excell},'o-')
+% hold on
+% plot(bigwin,[1 1],'k--')
+% xlim(bigwin)
+% 
+% 
+% 
+% 
+% 
+% 
+% %%
+% figure
+% subplot(3,3,1)
+% imagesc(popratehist.bins{1},popratehist.bins{2},log10(popratehist.all)')
+% axis xy
+% xlabel('pE Spikes');ylabel('pI Spikes')
+% colorbar
+% LogScale('c',10)
+% 
+% subplot(3,3,2)
+% imagesc(popratehist.bins{1},popratehist.bins{2},log10(popratehist.popstats.meanrate.pI)')
+% axis xy
+% colorbar
+% LogScale('c',10)
+% %caxis([0.5 1.5])
+% 
+% subplot(3,3,3)
+% imagesc(popratehist.bins{1},popratehist.bins{2},log10(popratehist.popstats.meanrate.pE)')
+% axis xy
+% colorbar
+% LogScale('c',10)
+% %caxis([0.5 1.5])
+% 
+% subplot(3,3,5)
+% imagesc(popratehist.bins{1},popratehist.bins{2},(popratehist.popstats.meanCV2.pI)')
+% axis xy
+% colorbar
+% %LogScale('c',10)
+% %caxis([0.5 1.5])
+% 
+% subplot(3,3,6)
+% imagesc(popratehist.bins{1},popratehist.bins{2},(popratehist.popstats.meanCV2.pE)')
+% axis xy
+% colorbar
+% %LogScale('c',10)
+% 
+% subplot(3,3,7)
+% imagesc(popratehist.bins{1},popratehist.bins{2},log10(1./popratehist.meanISI_bycell{excell})')
+% axis xy
+% colorbar
+% caxis([-1 1])
+% LogScale('c',10)
+% 
+% subplot(3,3,8)
+% imagesc(popratehist.bins{1},popratehist.bins{2},popratehist.meanCV2_bycell{excell}')
+% axis xy
+% colorbar
+% caxis([0.8 1.4])
 
 
 end

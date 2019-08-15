@@ -26,7 +26,7 @@ rsync -auvzPLK --exclude=*raw* --exclude=CluSAV --exclude=Analysis --exclude=*da
 
 
 %GG first time from NYUshare
-rsync -auvzPLK --exclude=Histology --exclude=Figures --exclude=Rat07 --exclude=*GLMoutput* --exclude=*dat --exclude=*.clu* --exclude=*.fet.* --exclude=*.klg.* --exclude=*.res.* --exclude=*.spk.* --exclude=RawKK /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/ /mnt/proraidDL/Database/GGData/
+rsync -auvzPLK --exclude=Histology --exclude=Figures --exclude=Rat07 --exclude=*GLMoutput* --exclude=*.fil --exclude=*dat --exclude=*.clu* --exclude=*.fet.* --exclude=*.klg.* --exclude=*.res.* --exclude=*.spk.* --exclude=RawKK /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/ /mnt/proraidDL/Database/GGData/
 %/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL/
 
 %AP from cluster
