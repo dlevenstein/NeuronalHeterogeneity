@@ -24,11 +24,12 @@ ISIStats.allspikes.ISInp1 = cellfun(@(X) [X(2:end);nan],ISIStats.allspikes.ISIs,
     'UniformOutput',false);
 
 %% Cell types and states
-try
-celltypes = CellClass.celltypes;
-catch
-    celltypes = unique(CellClass.label);
-end
+% try
+% celltypes = CellClass.celltypes;
+% catch
+%     celltypes = unique(CellClass.label);
+% end
+celltypes = {'pE','pI'};
 cellcolor = {'k','r'};
 statenames = fieldnames(SleepState.ints);
 
@@ -75,7 +76,7 @@ end
     
 
 %% Calculate Population Rate Histograms
-    maxrate.pE = 8;
+    maxrate.pE = 10;
     maxrate.pI = 80;
     maxrate.ALL = 25;
     
