@@ -5,7 +5,7 @@ function [popratehist_joint,popratehist,ISIbySynch,SynchbyISI,CV2popcorr,ratepop
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
-basePath = '/mnt/proraidDL/Database/AGData/Cicero/Cicero_09012014';
+%basePath = '/mnt/proraidDL/Database/AGData/Cicero/Cicero_09012014';
 %basePath = pwd;
 %figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyPopActivityAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
