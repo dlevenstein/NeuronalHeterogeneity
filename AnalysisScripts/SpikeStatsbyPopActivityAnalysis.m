@@ -76,7 +76,7 @@ end
         spikemat.cellrate,ISIStats.allspikes.times,'UniformOutput',false);
     
 %%
-for ss = 1:length(statenames{ss})
+for ss = 1:length(statenames)
     spikemat.instate.(statenames{ss}) = InIntervals(spikemat.timestamps,double(SleepState.ints.(statenames{ss})));
     ISIStats.allspikes.instate.(statenames{ss}) = cellfun(@(X) InIntervals(X,double(SleepState.ints.(statenames{ss}))),...
         ISIStats.allspikes.times,'UniformOutput',false);
