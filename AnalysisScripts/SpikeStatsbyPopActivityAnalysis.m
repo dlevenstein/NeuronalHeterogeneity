@@ -1,4 +1,4 @@
-function [popratehist_joint,popratehist,ISIbySynch,SynchbyISI,CV2popcorr,ratepopcorr ] = SpikeStatsbyPopActivityAnalysis(basePath,figfolder)
+function [popratehist_joint,popratehist,ISIbySynch,SynchbyISI,CV2popcorr,ratepopcorr,Ncells ] = SpikeStatsbyPopActivityAnalysis(basePath,figfolder)
 
 %% DEV
 %reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
@@ -40,6 +40,7 @@ spikemat = bz_SpktToSpkmat(spikes,'binsize',binsize,'dt',dt,'bintype','gaussian'
 
 %% For each cell, calculate E and I pop rates of all OTHER cells
 for tt = 1:length(celltypes)
+    Ncells.(celltypes{tt}) = sum(CellClass.(celltypes{tt}));
     %Mean Rate of active cells
     spikemat.poprate.(celltypes{tt}) = mean(spikemat.data(:,CellClass.(celltypes{tt})),2);%./...
             %sum(CellClass.(celltypes{tt}))./binsize;
@@ -82,18 +83,18 @@ for ss = 1:length(statenames)
         ISIStats.allspikes.times,'UniformOutput',false);
 end
 %% Calculate Population Rate Histograms
-    maxrate.pE = 10;
-    maxrate.pI = 80;
-    maxrate.ALL = 25;
+%     maxrate.pE = 10;
+%     maxrate.pI = 80;
+%     maxrate.ALL = 25;
     
 nbins = 100;
-popratehist.bins.pE = linspace(0,maxrate.pE,nbins+1);
-popratehist.bins.pI = linspace(0,maxrate.pI,nbins+1);
-popratehist.bins.ALL = linspace(0,maxrate.ALL,nbins+1);
+% popratehist.bins.pE = linspace(0,maxrate.pE,nbins+1);
+% popratehist.bins.pI = linspace(0,maxrate.pI,nbins+1);
+% popratehist.bins.ALL = linspace(0,maxrate.ALL,nbins+1);
 % 
-popratehist.bins.pE = linspace(-1.5,1,nbins+1);
-popratehist.bins.pI = linspace(-0.5,2,nbins+1);
-popratehist.bins.ALL = linspace(-1,1.5,nbins+1);
+popratehist.bins.pE = linspace(-1.25,1,nbins+1);
+popratehist.bins.pI = linspace(-0.25,1.75,nbins+1);
+popratehist.bins.ALL = linspace(-0.75,1.25,nbins+1);
 
 
 popratehist_joint.Ebins = popratehist.bins.pE; 
@@ -224,7 +225,7 @@ for ss = 1:3
 
     for st = 1:length(synchtypes)
         [ ISIbySynch.(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W) ConditionalHist( log10([Z(W);Z(W)]),log10([X(W);Y(W)]),...
-            'Xbounds',popratehist.bins.(synchtypes{st})([1 end]),'numXbins',25,'Ybounds',[-3 2],'numYbins',125,'minX',50),...
+            'Xbounds',popratehist.bins.(synchtypes{st})([1 end]),'numXbins',25,'Ybounds',[-3 2],'numYbins',125,'minX',100),...
             ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
             ISIStats.allspikes.poprate.(synchtypes{st}),ISIStats.allspikes.instate.(statenames{ss}),...
             'UniformOutput',false);
@@ -232,7 +233,7 @@ for ss = 1:3
         ISIbySynch.(synchtypes{st}).(statenames{ss}) = bz_CollapseStruct( ISIbySynch.(synchtypes{st}).(statenames{ss}),3);
 
         [ SynchbyISI.(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W) ConditionalHist( log10([X(W);Y(W)]),log10([Z(W);Z(W)]),...
-            'Ybounds',popratehist.bins.(synchtypes{st})([1 end]),'numYbins',25,'Xbounds',[-3 2],'numXbins',125,'minX',50),...
+            'Ybounds',popratehist.bins.(synchtypes{st})([1 end]),'numYbins',25,'Xbounds',[-3 2],'numXbins',125,'minX',100),...
             ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
             ISIStats.allspikes.poprate.(synchtypes{st}),ISIStats.allspikes.instate.(statenames{ss}),...
             'UniformOutput',false);

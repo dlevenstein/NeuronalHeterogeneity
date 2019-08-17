@@ -9,7 +9,7 @@ datasetPath.THAL = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Dataset
 regions = {'THAL','vCTX','fCTX','CA1'};
 
 for rr = 1:length(regions)
-    [ISIstats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
+    [ISIStats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
     CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
 
     PopActivityAll = GetMatResults(figfolder,'SpikeStatsbyPopActivityAnalysis','baseNames',baseNames);
@@ -17,17 +17,17 @@ for rr = 1:length(regions)
 
 
 
-    popratehist.(regions{rr}) = bz_CollapseStruct(PopActivityAll.popratehist,3,'justcat',true);
+    popratehist_joint.(regions{rr}) = bz_CollapseStruct(PopActivityAll.popratehist_joint,3,'justcat',true);
     ISIbySynch.(regions{rr}) = bz_CollapseStruct(PopActivityAll.ISIbySynch,'match','justcat',true);
     SynchbyISI.(regions{rr}) = bz_CollapseStruct(PopActivityAll.SynchbyISI,'match','justcat',true);
     CV2popcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.CV2popcorr,'match','justcat',true);
     ratepopcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.ratepopcorr,'match','justcat',true);
 
-    popratehist_mean.(regions{rr}) = bz_CollapseStruct(PopActivityAll.popratehist,3,'mean',true);
+    popratehist_joint_mean.(regions{rr}) = bz_CollapseStruct(PopActivityAll.popratehist_joint,3,'mean',true);
 
 end
 %%
-statenames = fieldnames(ISIstats.(regions{1}).summstats);
+statenames = fieldnames(ISIStats.(regions{1}).summstats);
 statecolors = {[0 0 0],[0 0 1],[1 0 0]};
 numstates = length(statenames);
 
@@ -37,9 +37,9 @@ for rr = 1:length(regions)
     for ss = 1:3
     for tt = 1:length(celltypes)
         inclass = ISIbySynch.(regions{rr}).pE.NREMstate.celltypeidx.(celltypes{tt});
-        popratehist.(regions{rr}).(statenames{ss}).(celltypes{tt}).cellCV2s = nanmean(popratehist.(regions{rr}).(statenames{ss}).cellCV2s(:,:,inclass),3);
-        popratehist.(regions{rr}).(statenames{ss}).(celltypes{tt}).pSpk = nanmean(popratehist.(regions{rr}).(statenames{ss}).pSpk(:,:,inclass),3);
-        popratehist.(regions{rr}).(statenames{ss}).(celltypes{tt}).geomeanISIs = nanmean(popratehist.(regions{rr}).(statenames{ss}).geomeanISIs(:,:,inclass),3);
+        popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).cellCV2s = nanmean(popratehist_joint.(regions{rr}).(statenames{ss}).cellCV2s(:,:,inclass),3);
+        popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).pSpk = nanmean(popratehist_joint.(regions{rr}).(statenames{ss}).pSpk(:,:,inclass),3);
+       % popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).geomeanISIs = nanmean(popratehist_joint.(regions{rr}).(statenames{ss}).geomeanISIs(:,:,inclass),3);
         
         for st = 1:length(synchtypes)
             ISIbySynch.(regions{rr}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass),3);
@@ -54,38 +54,39 @@ for rr = 1:length(regions)
 figure
 for ss = 1:3
     subplot(3,3,ss)
-        h = imagesc(popratehist.(regions{rr}).Ebins(1,:),popratehist.(regions{rr}).Ibins(1,:),popratehist_mean.(regions{rr}).(statenames{ss}).alltime');
+        h = imagesc(popratehist_joint.(regions{rr}).Ebins(1,:),popratehist_joint.(regions{rr}).Ibins(1,:),...
+            popratehist_joint_mean.(regions{rr}).(statenames{ss}).alltime');
         axis xy
-        set(h,'AlphaData',~(popratehist_mean.(regions{rr}).(statenames{ss}).alltime'<25));
+        set(h,'AlphaData',~(popratehist_joint_mean.(regions{rr}).(statenames{ss}).alltime'==0));
 
         title(statenames{ss})
     for tt = 1:length(celltypes)
     subplot(6,6,(ss-1)*2+12+tt)
-        h = imagesc(popratehist.(regions{rr}).Ebins(1,:),popratehist.(regions{rr}).Ibins(1,:),log10(popratehist.(regions{rr}).(statenames{ss}).(celltypes{tt}).pSpk)');
+        h = imagesc(popratehist_joint.(regions{rr}).Ebins(1,:),popratehist_joint.(regions{rr}).Ibins(1,:),log10(popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).pSpk)');
         axis xy
-        set(h,'AlphaData',~isnan(popratehist.(regions{rr}).(statenames{ss}).(celltypes{tt}).pSpk'));
+        set(h,'AlphaData',~isnan(popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).pSpk'));
         colorbar
         %crameri lajolla
         caxis([-0.5 1.75])
         
-    subplot(6,6,(ss-1)*2+18+tt)
-            h = imagesc(popratehist.(regions{rr}).Ebins(1,:),popratehist.(regions{rr}).Ibins(1,:),1./(popratehist.(regions{rr}).(statenames{ss}).(celltypes{tt}).geomeanISIs)');
-        axis xy
-        set(h,'AlphaData',~isnan(popratehist.(regions{rr}).(statenames{ss}).(celltypes{tt}).geomeanISIs'));
-        colorbar
-        %crameri lajolla
-        %caxis([-1 1])
+%     subplot(6,6,(ss-1)*2+18+tt)
+%             h = imagesc(popratehist_joint.(regions{rr}).Ebins(1,:),popratehist_joint.(regions{rr}).Ibins(1,:),1./(popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).geomeanISIs)');
+%         axis xy
+%         set(h,'AlphaData',~isnan(popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).geomeanISIs'));
+%         colorbar
+%         %crameri lajolla
+%         %caxis([-1 1])
         
     subplot(6,6,(ss-1)*2+24+tt)
-        h = imagesc(popratehist.(regions{rr}).Ebins(1,:),popratehist.(regions{rr}).Ibins(1,:),popratehist.(regions{rr}).(statenames{ss}).(celltypes{tt}).cellCV2s');
+        h = imagesc(popratehist_joint.(regions{rr}).Ebins(1,:),popratehist_joint.(regions{rr}).Ibins(1,:),popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).cellCV2s');
         axis xy
-        set(h,'AlphaData',~isnan(popratehist.(regions{rr}).(statenames{ss}).(celltypes{tt}).cellCV2s'));
+        set(h,'AlphaData',~isnan(popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).cellCV2s'));
         colorbar
         crameri berlin
         caxis([0.7 1.3])
     end
 end
-NiceSave(['PopRateHists_',(regions{rr})],figfolder,[])
+NiceSave(['popratehist_joints_',(regions{rr})],figfolder,[])
 end
 %
 %%
