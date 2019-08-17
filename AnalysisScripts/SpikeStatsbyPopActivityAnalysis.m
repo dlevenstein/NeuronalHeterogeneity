@@ -76,7 +76,7 @@ end
         spikemat.cellrate,ISIStats.allspikes.times,'UniformOutput',false);
     
 %%
-for ss = 1:3
+for ss = 1:length(statenames{ss})
     spikemat.instate.(statenames{ss}) = InIntervals(spikemat.timestamps,double(SleepState.ints.(statenames{ss})));
     ISIStats.allspikes.instate.(statenames{ss}) = cellfun(@(X) InIntervals(X,double(SleepState.ints.(statenames{ss}))),...
         ISIStats.allspikes.times,'UniformOutput',false);
@@ -216,7 +216,7 @@ NiceSave('PopRateHists',figfolder,baseName)
 
     
 %% Calculate Conditional distributions on synchrony (pop rate) in each state
-for ss = 1:length(statenames)
+for ss = 1:3
     %statenames{ss} = statenames{ss};
 
     %% Calculate conditional ISI/Synch distributions
