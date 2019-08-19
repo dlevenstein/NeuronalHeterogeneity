@@ -51,10 +51,12 @@ end
 spikemat.poprate.ALL = mean(spikemat.data,2);
 
 for cc = 1:spikes.numcells
+    cc
     thiscell = false(size(CellClass.pE));
     thiscell(cc) = true;
-    spikemat.cellrate{cc} = spikemat.data(:,cc)./binsize;
+    spikemat.cellrate{cc} = spikemat.data(:,cc);
     for tt = 1:length(celltypes)
+        popratehist.(celltypes{tt})(cc) = sum(CellClass.(celltypes{tt}) & ~thiscell);
         spikemat.bycellpoprate.(celltypes{tt}){cc} = mean(spikemat.data(:,CellClass.(celltypes{tt}) & ~thiscell),2);%./...
             %sum(CellClass.(celltypes{tt}) & ~thiscell)./binsize;
     end
