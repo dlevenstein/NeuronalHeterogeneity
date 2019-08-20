@@ -317,10 +317,23 @@ for ss = 1:length(statenames)
 
 
     for tt = 1:length(synchtypes)
-        CV2popcorr.(statenames{ss}).(synchtypes{tt}) = cellfun(@(X,Y,Z) corr(X(Z),Y(Z),'type','spearman'),...
-            ISIStats.allspikes.poprate.(synchtypes{tt}),ISIStats.allspikes.CV2,ISIStats.allspikes.instate.(statenames{ss}));
-        ratepopcorr.(statenames{ss}).(synchtypes{tt}) = cellfun(@(X,Y,Z) corr(X(Z),Y(Z),'type','spearman'),...
-            ISIStats.allspikes.poprate.(synchtypes{tt}),ISIStats.allspikes.cellrate,ISIStats.allspikes.instate.(statenames{ss}));
+        for cc = 1:spikes.numcells
+            if sum(ISIStats.allspikes.instate.(statenames{ss}){cc})==0
+                CV2popcorr.(statenames{ss}).(synchtypes{tt})(cc) = nan;
+                ratepopcorr.(statenames{ss}).(synchtypes{tt})(cc) = nan;
+                continue
+            end
+            
+            
+            CV2popcorr.(statenames{ss}).(synchtypes{tt})(cc) = ...
+                corr(ISIStats.allspikes.poprate.(synchtypes{tt}){cc}(ISIStats.allspikes.instate.(statenames{ss}){cc}),...
+                ISIStats.allspikes.CV2{cc}(ISIStats.allspikes.instate.(statenames{ss}){cc}),'type','spearman');
+            
+            ratepopcorr.(statenames{ss}).(synchtypes{tt})(cc) = ...
+                corr(ISIStats.allspikes.poprate.(synchtypes{tt}){cc}(ISIStats.allspikes.instate.(statenames{ss}){cc}),...
+                ISIStats.allspikes.cellrate{cc}(ISIStats.allspikes.instate.(statenames{ss}){cc}),'type','spearman');
+            
+        end
     end
 end
 
