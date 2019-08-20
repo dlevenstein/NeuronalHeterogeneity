@@ -51,7 +51,7 @@ end
 spikemat.poprate.ALL = mean(spikemat.data,2);
 
 for cc = 1:spikes.numcells
-    cc
+    bz_Counter(cc,spikes.numcells,'Cell');
     thiscell = false(size(CellClass.pE));
     thiscell(cc) = true;
     spikemat.cellrate{cc} = spikemat.data(:,cc);
@@ -316,11 +316,11 @@ for ss = 1:length(statenames)
     %statenames{ss} = statenames{ss};
 
 
-    for tt = 1:length(celltypes)
-        CV2popcorr.(statenames{ss}).(celltypes{tt}) = cellfun(@(X,Y,Z) corr(X(Z),Y(Z),'type','spearman'),...
-            ISIStats.allspikes.poprate.(celltypes{tt}),ISIStats.allspikes.CV2,ISIStats.allspikes.instate.(statenames{ss}));
-        ratepopcorr.(statenames{ss}).(celltypes{tt}) = cellfun(@(X,Y,Z) corr(X(Z),Y(Z),'type','spearman'),...
-            ISIStats.allspikes.poprate.(celltypes{tt}),ISIStats.allspikes.cellrate,ISIStats.allspikes.instate.(statenames{ss}));
+    for tt = 1:length(synchtypes)
+        CV2popcorr.(statenames{ss}).(synchtypes{tt}) = cellfun(@(X,Y,Z) corr(X(Z),Y(Z),'type','spearman'),...
+            ISIStats.allspikes.poprate.(synchtypes{tt}),ISIStats.allspikes.CV2,ISIStats.allspikes.instate.(statenames{ss}));
+        ratepopcorr.(statenames{ss}).(synchtypes{tt}) = cellfun(@(X,Y,Z) corr(X(Z),Y(Z),'type','spearman'),...
+            ISIStats.allspikes.poprate.(synchtypes{tt}),ISIStats.allspikes.cellrate,ISIStats.allspikes.instate.(statenames{ss}));
     end
 end
 

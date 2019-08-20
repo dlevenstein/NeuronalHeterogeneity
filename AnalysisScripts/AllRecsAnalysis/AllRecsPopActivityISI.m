@@ -14,6 +14,10 @@ for rr = 1:length(regions)
 
     PopActivityAll = GetMatResults(figfolder,'SpikeStatsbyPopActivityAnalysis','baseNames',baseNames);
     PopActivityAll = bz_CollapseStruct(PopActivityAll);
+    
+    recinfo.(regions{rr}).baseName = PopActivityAll.name;
+    recinfo.(regions{rr}).Ncells = PopActivityAll.Ncells;
+    recinfo.(regions{rr}).cellinfofiles = baseNames;
 
 
 
@@ -48,6 +52,19 @@ for rr = 1:length(regions)
     end
     end
 end
+
+
+%%
+figure
+
+for rr = 1:4
+   hold on
+        plot(cat(1,recinfo.(regions{rr}).Ncells.pE),cat(1,recinfo.(regions{rr}).Ncells.pI),'.','markersize',10)
+        xlabel('# E Cells');ylabel('# I Cells')
+        %title(regions{rr})
+end
+legend(regions,'Location','northwest')
+NiceSave('CellCounts',figfolder,[])
 
 %%
 for rr = 1:length(regions)
@@ -186,6 +203,7 @@ end
 end
 NiceSave('SynchbyISI',figfolder,[])
 %%
+cellcolor = {'k','r'};
 for ss = 1:3
 figure
     subplot(3,3,1)
