@@ -54,7 +54,7 @@ for rr = 1:length(regions)
     
     popratehist.(regions{rr}).ALL = popratehist.(regions{rr}).pE + popratehist.(regions{rr}).pI;
     for n = 1:length(recinfo.(regions{rr}).Ncells)
-    recinfo.(regions{rr}).Ncells(n).ALL = [recinfo.(regions{rr}).Ncells(n).pE]+ [recinfo.(regions{rr}).Ncells(n).pI]
+    recinfo.(regions{rr}).Ncells(n).ALL = [recinfo.(regions{rr}).Ncells(n).pE]+ [recinfo.(regions{rr}).Ncells(n).pI];
     end
     for ss = 1:3
     for tt = 1:length(celltypes)
@@ -75,26 +75,65 @@ for rr = 1:length(regions)
     end
 end
 
-
+%%
+clear Noverthresh
+clear sortncells
+for rr = 1:length(regions)
+    for st = 1:length(synchtypes)
+        [~,sortncells.(regions{rr}).(synchtypes{st})]=sort([recinfo.(regions{rr}).Ncells(:).(synchtypes{st})]);
+        Noverthresh.(regions{rr}).(synchtypes{st}) = sum([recinfo.(regions{rr}).Ncells(:).(synchtypes{st})]>popthresh.(synchtypes{st}));
+        frac.(regions{rr}).(synchtypes{st}) = 1-((Noverthresh.(regions{rr}).(synchtypes{st})+0.5)./length([recinfo.(regions{rr}).Ncells(:).(synchtypes{st})]));
+    end
+end
 %%
 figure
-subplot(2,2,1)
+subplot(4,2,1)
 for rr = 1:4
    hold on
         plot(cat(1,recinfo.(regions{rr}).Ncells.pE),cat(1,recinfo.(regions{rr}).Ncells.pI),'.','markersize',10)
         xlabel('# E Cells');ylabel('# I Cells')
         %title(regions{rr})
 end
-legend(regions,'Location','northwest')
+axis tight
+plot(popthresh.pE.*[1 1],get(gca,'ylim'),'k')
+plot(get(gca,'xlim'),popthresh.pI.*[1 1],'k')
+%plot(linspace(0,100,100),popthresh.ALL-linspace(0,100,100),'k')
+
+legend(regions,'Location','eastoutside')
+for st = 1:length(synchtypes)
+for rr = 1:length(regions)
+    subplot(4,4,rr+4*st)
+    imagesc(popratehist.(regions{rr}).bins.(synchtypes{st})(1,:),[0 1],...
+        popratehist.(regions{rr}).(statenames{ss}).(synchtypes{st})(sortncells.(regions{rr}).(synchtypes{st}),:))  
+    axis xy
+    hold on
+    %for st = 1:length(synchtypes)
+        plot(popratehist.(regions{rr}).bins.(synchtypes{st})(1,:),...
+            bz_NormToRange(popratehist_mean.(regions{rr}).(statenames{ss}).(synchtypes{st}),[0 1]))
+        plot(popratehist.(regions{rr}).bins.(synchtypes{st})(1,[1 end]),frac.(regions{rr}).(synchtypes{st}).*[1 1],'k')
+    %end
+    if rr==1
+    ylabel((synchtypes{st}))
+    end
+    caxis([0 2*max(popratehist_mean.(regions{rr}).(statenames{ss}).ALL)])
+    crameri bilbao
+    if st ==1
+        title(regions{rr})
+    end
+end
+end
 NiceSave('CellCounts',figfolder,[])
 
 %%
+ss = 1
 figure
 for rr = 1:length(regions)
     subplot(4,4,rr)
+    imagesc(popratehist.(regions{rr}).bins.ALL(1,:),[0 0.1],popratehist.(regions{rr}).(statenames{ss}).ALL(sortncells.(regions{rr}),:))  
+    axis xy
     hold on
     for st = 1:length(synchtypes)
-        plot(popratehist.(regions{rr}).bins(1,:).ALL,popratehist_mean.(regions{rr}).(statenames{ss}).(synchtypes{st}))
+        plot(popratehist.(regions{rr}).bins.(synchtypes{st})(1,:),popratehist_mean.(regions{rr}).(statenames{ss}).(synchtypes{st}))
     end
     
     subplot(4,4,rr+4)

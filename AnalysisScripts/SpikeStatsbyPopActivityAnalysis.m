@@ -118,18 +118,13 @@ end
 %%
 figure
 for ss =1:3
-    subplot(3,3,ss)
-        h = imagesc(popratehist_joint.Ebins,popratehist_joint.Ibins,popratehist_joint.(statenames{ss}).alltime');
-        axis xy
-        set(h,'AlphaData',~(popratehist_joint.(statenames{ss}).alltime'==0));
-
-        title(statenames{ss})
         
-    subplot(3,3,ss+3)
+    subplot(3,3,ss)
     hold on
     for st = 1:length(synchtypes)
         plot(popratehist.bins.(synchtypes{st}),popratehist.(statenames{ss}).(synchtypes{st}))
     end
+    xlabel('Pop Rate (Hz)')
 end
     %% Spiking statistics wrt pop rate
 clear countmap
