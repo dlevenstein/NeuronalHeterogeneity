@@ -97,7 +97,7 @@ end
 axis tight
 plot(popthresh.pE.*[1 1],get(gca,'ylim'),'k')
 plot(get(gca,'xlim'),popthresh.pI.*[1 1],'k')
-%plot(linspace(0,100,100),popthresh.ALL-linspace(0,100,100),'k')
+plot(linspace(0,popthresh.ALL,100),popthresh.ALL-linspace(0,popthresh.ALL,100),'k')
 
 legend(regions,'Location','eastoutside')
 for st = 1:length(synchtypes)
