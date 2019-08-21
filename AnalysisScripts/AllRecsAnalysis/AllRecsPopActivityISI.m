@@ -8,41 +8,54 @@ datasetPath.vCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Dataset
 datasetPath.THAL = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL';
 regions = {'THAL','vCTX','fCTX','CA1'};
 
+
+popthresh.pE = 15;
+popthresh.pI = 5;
+popthresh.ALL = 15;
+
 for rr = 1:length(regions)
     [ISIStats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
     CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
 
-    PopActivityAll = GetMatResults(figfolder,'SpikeStatsbyPopActivityAnalysis','baseNames',baseNames);
-    PopActivityAll = bz_CollapseStruct(PopActivityAll);
+    PopActivityAll.(regions{rr}) = GetMatResults(figfolder,'SpikeStatsbyPopActivityAnalysis','baseNames',baseNames);
+    PopActivityAll.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}));
     
-    recinfo.(regions{rr}).baseName = PopActivityAll.name;
-    recinfo.(regions{rr}).Ncells = PopActivityAll.Ncells;
+    recinfo.(regions{rr}).baseName = PopActivityAll.(regions{rr}).name;
+    recinfo.(regions{rr}).Ncells = PopActivityAll.(regions{rr}).Ncells;
     recinfo.(regions{rr}).cellinfofiles = baseNames;
 
 
 
-    popratehist_joint.(regions{rr}) = bz_CollapseStruct(PopActivityAll.popratehist_joint,3,'justcat',true);
-    popratehist.(regions{rr}) = bz_CollapseStruct(PopActivityAll.popratehist,'match','justcat',true);
-    ISIbySynch.(regions{rr}) = bz_CollapseStruct(PopActivityAll.ISIbySynch,'match','justcat',true);
-    SynchbyISI.(regions{rr}) = bz_CollapseStruct(PopActivityAll.SynchbyISI,'match','justcat',true);
-    CV2popcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.CV2popcorr,'match','justcat',true);
-    ratepopcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.ratepopcorr,'match','justcat',true);
+    popratehist_joint.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).popratehist_joint,3,'justcat',true);
+    popratehist.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).popratehist,'match','justcat',true);
+    ISIbySynch.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).ISIbySynch,'match','justcat',true);
+    SynchbyISI.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).SynchbyISI,'match','justcat',true);
+    CV2popcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).CV2popcorr,'match','justcat',true);
+    ratepopcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).ratepopcorr,'match','justcat',true);
 
-    popratehist_joint_mean.(regions{rr}) = bz_CollapseStruct(PopActivityAll.popratehist_joint,3,'mean',true);
-
+    keeprecs = [recinfo.(regions{rr}).Ncells.pE]>popthresh.pE & [recinfo.(regions{rr}).Ncells.pI]>popthresh.pI; 
+    if all(~keeprecs)
+        disp(['Region ',regions{rr},' has no recordings with enough cells'])
+        continue
+    else
+        popratehist_joint_mean.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).popratehist_joint(keeprecs),3,'mean',true);
+    end
 end
 %%
 statenames = fieldnames(ISIStats.(regions{1}).summstats);
 statecolors = {[0 0 0],[0 0 1],[1 0 0]};
 numstates = length(statenames);
 
-popthresh.pE = 15;
-popthresh.pI = 5;
-popthresh.ALL = 20;
+
 
 for rr = 1:length(regions)
     celltypes = fieldnames(ISIbySynch.(regions{rr}).pE.NREMstate.celltypeidx);
     synchtypes = fieldnames(ISIbySynch.(regions{rr}));
+    
+    popratehist.(regions{rr}).ALL = popratehist.(regions{rr}).pE + popratehist.(regions{rr}).pI;
+    for n = 1:length(recinfo.(regions{rr}).Ncells)
+    recinfo.(regions{rr}).Ncells(n).ALL = [recinfo.(regions{rr}).Ncells(n).pE]+ [recinfo.(regions{rr}).Ncells(n).pI]
+    end
     for ss = 1:3
     for tt = 1:length(celltypes)
         inclass = ISIbySynch.(regions{rr}).pE.NREMstate.celltypeidx.(celltypes{tt});
@@ -51,9 +64,12 @@ for rr = 1:length(regions)
        % popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).geomeanISIs = nanmean(popratehist_joint.(regions{rr}).(statenames{ss}).geomeanISIs(:,:,inclass),3);
         
         for st = 1:length(synchtypes)
-            enoughpopcells = popratehist.(regions{rr}).(synchtypes{tt})>popthresh.(synchtypes{tt});
-            ISIbySynch.(regions{rr}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&enoughpopcells),3);
-            SynchbyISI.(regions{rr}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(SynchbyISI.(regions{rr}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&enoughpopcells),3);
+            popratehist.(regions{rr}).enoughpopcells.(synchtypes{st}) = popratehist.(regions{rr}).(synchtypes{st})>popthresh.(synchtypes{st});
+            ISIbySynch.(regions{rr}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
+            SynchbyISI.(regions{rr}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(SynchbyISI.(regions{rr}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
+            
+            enoughpopcellsrec = [recinfo.(regions{rr}).Ncells.(synchtypes{st})]>popthresh.(synchtypes{st});
+            popratehist_mean.(regions{rr}).(statenames{ss}).(synchtypes{st}) = nanmean(popratehist.(regions{rr}).(statenames{ss}).(synchtypes{st})(enoughpopcellsrec,:),1);
         end
     end
     end
@@ -62,7 +78,7 @@ end
 
 %%
 figure
-
+subplot(2,2,1)
 for rr = 1:4
    hold on
         plot(cat(1,recinfo.(regions{rr}).Ncells.pE),cat(1,recinfo.(regions{rr}).Ncells.pI),'.','markersize',10)
@@ -73,7 +89,21 @@ legend(regions,'Location','northwest')
 NiceSave('CellCounts',figfolder,[])
 
 %%
+figure
 for rr = 1:length(regions)
+    subplot(4,4,rr)
+    hold on
+    for st = 1:length(synchtypes)
+        plot(popratehist.(regions{rr}).bins(1,:).ALL,popratehist_mean.(regions{rr}).(statenames{ss}).(synchtypes{st}))
+    end
+    
+    subplot(4,4,rr+4)
+        imagesc(ISIbySynch.(regions{rr}).ALL.(statenames{ss}).Xbins(1,:,1),[0 1],...
+            squeeze(ISIbySynch.(regions{rr}).ALL.(statenames{ss}).pX(1,:,popratehist.(regions{rr}).enoughpopcells.ALL))')
+end
+
+%%
+for rr = 2:length(regions)
 figure
 for ss = 1:3
     subplot(3,3,ss)

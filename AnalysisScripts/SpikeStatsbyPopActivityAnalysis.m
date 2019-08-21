@@ -48,7 +48,7 @@ for tt = 1:length(celltypes)
     spikemat.cellsync.(celltypes{tt}) = mean(spikemat.data(:,CellClass.(celltypes{tt}))>0.5,2);%./...
             %sum(CellClass.(celltypes{tt}));
 end
-spikemat.poprate.ALL = mean(spikemat.data,2);
+spikemat.poprate.ALL = mean(spikemat.data(CellClass.pI|CellClass.pE,2);
 
 for cc = 1:spikes.numcells
     bz_Counter(cc,spikes.numcells,'Cell');
@@ -60,7 +60,7 @@ for cc = 1:spikes.numcells
         spikemat.bycellpoprate.(celltypes{tt}){cc} = mean(spikemat.data(:,CellClass.(celltypes{tt}) & ~thiscell),2);%./...
             %sum(CellClass.(celltypes{tt}) & ~thiscell)./binsize;
     end
-    spikemat.bycellpoprate.ALL{cc} = mean(spikemat.data(:,~thiscell),2);%./...
+    spikemat.bycellpoprate.ALL{cc} = mean(spikemat.data(:,(CellClass.pI|CellClass.pE) & ~thiscell),2);%./...
             %sum(~thiscell)./binsize;
 end
 
