@@ -94,9 +94,9 @@ nbins = 100;
 % popratehist.bins.pI = linspace(0,maxrate.pI,nbins+1);
 % popratehist.bins.ALL = linspace(0,maxrate.ALL,nbins+1);
 % 
-popratehist.bins.pE = linspace(-1.25,1.25,nbins+1);
-popratehist.bins.pI = linspace(-0.25,2,nbins+1);
-popratehist.bins.ALL = linspace(-0.75,1.5,nbins+1);
+popratehist.bins.pE = linspace(-1.5,1.5,nbins+1);
+popratehist.bins.pI = linspace(-0.5,2,nbins+1);
+popratehist.bins.ALL = linspace(-1,1.5,nbins+1);
 
 
 popratehist_joint.Ebins = popratehist.bins.pE; 

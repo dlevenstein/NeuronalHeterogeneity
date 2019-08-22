@@ -9,9 +9,9 @@ datasetPath.THAL = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Dataset
 regions = {'THAL','vCTX','fCTX','CA1'};
 
 
-popthresh.pE = 15;
+popthresh.pE = 25;
 popthresh.pI = 5;
-popthresh.ALL = 15;
+popthresh.ALL = 25;
 
 for rr = 1:length(regions)
     [ISIStats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
@@ -109,7 +109,7 @@ for rr = 1:length(regions)
     hold on
     %for st = 1:length(synchtypes)
         plot(popratehist.(regions{rr}).bins.(synchtypes{st})(1,:),...
-            bz_NormToRange(popratehist_mean.(regions{rr}).(statenames{ss}).(synchtypes{st}),[0 1]))
+            bz_NormToRange(popratehist_mean.(regions{rr}).(statenames{ss}).(synchtypes{st}),[frac.(regions{rr}).(synchtypes{st}) 1]))
         plot(popratehist.(regions{rr}).bins.(synchtypes{st})(1,[1 end]),frac.(regions{rr}).(synchtypes{st}).*[1 1],'k')
     %end
     if rr==1
