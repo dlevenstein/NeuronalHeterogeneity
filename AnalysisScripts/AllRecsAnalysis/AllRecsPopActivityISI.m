@@ -129,7 +129,8 @@ ss = 1
 figure
 for rr = 1:length(regions)
     subplot(4,4,rr)
-    imagesc(popratehist.(regions{rr}).bins.ALL(1,:),[0 0.1],popratehist.(regions{rr}).(statenames{ss}).ALL(sortncells.(regions{rr}),:))  
+    imagesc(popratehist.(regions{rr}).bins.ALL(1,:),[0 0.1],...
+        popratehist.(regions{rr}).(statenames{ss}).ALL(sortncells.(regions{rr}).ALL,:))  
     axis xy
     hold on
     for st = 1:length(synchtypes)
