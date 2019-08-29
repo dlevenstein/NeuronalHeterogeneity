@@ -107,7 +107,7 @@ popratehist.log.bins.pE = linspace(-1.5,1.5,nbins+1);
 popratehist.log.bins.pI = linspace(-0.5,2,nbins+1);
 popratehist.log.bins.ALL = linspace(-1,1.5,nbins+1);
 
-popratehist.norm.bins.pE = linspace(-2,1,nbins+1);
+popratehist.norm.bins.pE = linspace(-1.25,1,nbins+1);
 popratehist.norm.bins.pI = popratehist.norm.bins.pE;
 popratehist.norm.bins.ALL = popratehist.norm.bins.pE;
 
@@ -135,7 +135,7 @@ for ss = 1:3
         popratehist.(normtypes{nn}).(statenames{ss}).(synchtypes{st}) = ...
             hist((spikemat.poprate.(normtypes{nn}).(synchtypes{st})(spikemat.instate.(statenames{ss}))),...
             popratehist.(normtypes{nn}).bins.(synchtypes{st}));
-        popratehist.(statenames{ss}).(synchtypes{st}) = ...
+        popratehist.(normtypes{rr}).(statenames{ss}).(synchtypes{st}) = ...
             popratehist.(normtypes{nn}).(statenames{ss}).(synchtypes{st})./...
             sum(popratehist.(normtypes{nn}).(statenames{ss}).(synchtypes{st}));
     end

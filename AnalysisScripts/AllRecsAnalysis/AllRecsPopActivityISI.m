@@ -26,10 +26,10 @@ for rr = 1:length(regions)
 
 
 
-    popratehist_joint.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).popratehist_joint,3,'justcat',true);
+    popratehist_joint.(regions{rr}).(normtypes{nn}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).popratehist_joint,3,'justcat',true);
     popratehist.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).popratehist,'match','justcat',true);
-    ISIbySynch.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).ISIbySynch,'match','justcat',true);
-    SynchbyISI.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).SynchbyISI,'match','justcat',true);
+    ISIbySynch.(regions{rr}).(normtypes{nn}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).ISIbySynch,'match','justcat',true);
+    SynchbyISI.(regions{rr}).(normtypes{nn}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).SynchbyISI,'match','justcat',true);
     CV2popcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).CV2popcorr,'match','justcat',true);
     ratepopcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).ratepopcorr,'match','justcat',true);
 
@@ -46,11 +46,13 @@ statenames = fieldnames(ISIStats.(regions{1}).summstats);
 statecolors = {[0 0 0],[0 0 1],[1 0 0]};
 numstates = length(statenames);
 
+normtypes = {'lin','log','norm'};
 
+for nn = 1:length(normtypes)
 
 for rr = 1:length(regions)
-    celltypes = fieldnames(ISIbySynch.(regions{rr}).pE.NREMstate.celltypeidx);
-    synchtypes = fieldnames(ISIbySynch.(regions{rr}));
+    celltypes = fieldnames(ISIbySynch.(regions{rr}).(normtypes{nn}).pE.NREMstate.celltypeidx);
+    synchtypes = fieldnames(ISIbySynch.(regions{rr}).(normtypes{nn}));
     
     popratehist.(regions{rr}).ALL = popratehist.(regions{rr}).pE + popratehist.(regions{rr}).pI;
     for n = 1:length(recinfo.(regions{rr}).Ncells)
@@ -58,23 +60,24 @@ for rr = 1:length(regions)
     end
     for ss = 1:3
     for tt = 1:length(celltypes)
-        inclass = ISIbySynch.(regions{rr}).pE.NREMstate.celltypeidx.(celltypes{tt});
-        popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).cellCV2s = nanmean(popratehist_joint.(regions{rr}).(statenames{ss}).cellCV2s(:,:,inclass),3);
-        popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).pSpk = nanmean(popratehist_joint.(regions{rr}).(statenames{ss}).pSpk(:,:,inclass),3);
-       % popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).geomeanISIs = nanmean(popratehist_joint.(regions{rr}).(statenames{ss}).geomeanISIs(:,:,inclass),3);
+        inclass = ISIbySynch.(regions{rr}).(normtypes{nn}).pE.NREMstate.celltypeidx.(celltypes{tt});
+        popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).cellCV2s = nanmean(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).cellCV2s(:,:,inclass),3);
+        popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).pSpk = nanmean(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).pSpk(:,:,inclass),3);
+       % popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).geomeanISIs = nanmean(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).geomeanISIs(:,:,inclass),3);
         
         for st = 1:length(synchtypes)
             popratehist.(regions{rr}).enoughpopcells.(synchtypes{st}) = popratehist.(regions{rr}).(synchtypes{st})>popthresh.(synchtypes{st});
-            ISIbySynch.(regions{rr}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
-            SynchbyISI.(regions{rr}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(SynchbyISI.(regions{rr}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
+            ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
+            SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
             
             enoughpopcellsrec = [recinfo.(regions{rr}).Ncells.(synchtypes{st})]>popthresh.(synchtypes{st});
-            popratehist_mean.(regions{rr}).(statenames{ss}).(synchtypes{st}) = nanmean(popratehist.(regions{rr}).(statenames{ss}).(synchtypes{st})(enoughpopcellsrec,:),1);
+            popratehist_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st}) = nanmean(popratehist.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st})(enoughpopcellsrec,:),1);
         end
     end
     end
 end
 
+end
 %%
 clear Noverthresh
 clear sortncells
@@ -86,6 +89,7 @@ for rr = 1:length(regions)
     end
 end
 %%
+for nn = 1:3
 figure
 subplot(4,2,1)
 for rr = 1:4
@@ -103,43 +107,48 @@ legend(regions,'Location','eastoutside')
 for st = 1:length(synchtypes)
 for rr = 1:length(regions)
     subplot(4,4,rr+4*st)
-    imagesc(popratehist.(regions{rr}).bins.(synchtypes{st})(1,:),[0 1],...
-        popratehist.(regions{rr}).(statenames{ss}).(synchtypes{st})(sortncells.(regions{rr}).(synchtypes{st}),:))  
+    imagesc(popratehist.(regions{rr}).(normtypes{nn}).bins.(synchtypes{st})(1,:),[0 1],...
+        popratehist.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st})(sortncells.(regions{rr}).(synchtypes{st}),:))  
     axis xy
     hold on
     %for st = 1:length(synchtypes)
-        plot(popratehist.(regions{rr}).bins.(synchtypes{st})(1,:),...
-            bz_NormToRange(popratehist_mean.(regions{rr}).(statenames{ss}).(synchtypes{st}),[frac.(regions{rr}).(synchtypes{st}) 1]))
-        plot(popratehist.(regions{rr}).bins.(synchtypes{st})(1,[1 end]),frac.(regions{rr}).(synchtypes{st}).*[1 1],'k')
+        plot(popratehist.(regions{rr}).(normtypes{nn}).bins.(synchtypes{st})(1,:),...
+            bz_NormToRange(popratehist_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st}),[frac.(regions{rr}).(synchtypes{st}) 1]))
+        plot(popratehist.(regions{rr}).(normtypes{nn}).bins.(synchtypes{st})(1,[1 end]),frac.(regions{rr}).(synchtypes{st}).*[1 1],'k')
     %end
     if rr==1
-    ylabel((synchtypes{st}))
+    ylabel({[(synchtypes{st}),' Cells'],'Recording'})
     end
-    caxis([0 2*max(popratehist_mean.(regions{rr}).(statenames{ss}).ALL)])
+    caxis([0 2*max(popratehist_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).ALL)])
     crameri bilbao
+    set(gca,'ytick',[])
     if st ==1
         title(regions{rr})
     end
+    if st==3
+        xlabel(['Rate (',normtypes{nn},')'])
+    end
 end
 end
-NiceSave('CellCounts',figfolder,[])
-
+NiceSave(['CellCounts_',(normtypes{nn})],figfolder,[])
+end
 %%
 ss = 1
 figure
 for rr = 1:length(regions)
     subplot(4,4,rr)
-    imagesc(popratehist.(regions{rr}).bins.ALL(1,:),[0 0.1],...
-        popratehist.(regions{rr}).(statenames{ss}).ALL(sortncells.(regions{rr}).ALL,:))  
+    imagesc(popratehist.(regions{rr}).(normtypes{nn}).bins.ALL(1,:),[0 0.1],...
+        popratehist.(regions{rr}).(normtypes{nn}).(statenames{ss}).ALL(sortncells.(regions{rr}).ALL,:))  
     axis xy
     hold on
     for st = 1:length(synchtypes)
-        plot(popratehist.(regions{rr}).bins.(synchtypes{st})(1,:),popratehist_mean.(regions{rr}).(statenames{ss}).(synchtypes{st}))
+        plot(popratehist.(regions{rr}).(normtypes{nn}).bins.(synchtypes{st})(1,:),...
+            popratehist_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st}))
     end
     
     subplot(4,4,rr+4)
-        imagesc(ISIbySynch.(regions{rr}).ALL.(statenames{ss}).Xbins(1,:,1),[0 1],...
-            squeeze(ISIbySynch.(regions{rr}).ALL.(statenames{ss}).pX(1,:,popratehist.(regions{rr}).enoughpopcells.ALL))')
+        imagesc(ISIbySynch.(regions{rr}).(normtypes{nn}).ALL.(statenames{ss}).Xbins(1,:,1),[0 1],...
+            squeeze(ISIbySynch.(regions{rr}).(normtypes{nn}).ALL.(statenames{ss}).pX(1,:,popratehist.(regions{rr}).enoughpopcells.ALL))')
 end
 
 %%
@@ -147,33 +156,34 @@ for rr = 2:length(regions)
 figure
 for ss = 1:3
     subplot(3,3,ss)
-        h = imagesc(popratehist_joint.(regions{rr}).Ebins(1,:),popratehist_joint.(regions{rr}).Ibins(1,:),...
-            popratehist_joint_mean.(regions{rr}).(statenames{ss}).alltime');
+        h = imagesc(popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pE(1,:),...
+            popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pI(1,:),...
+            popratehist_joint_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).alltime');
         axis xy
-        set(h,'AlphaData',~(popratehist_joint_mean.(regions{rr}).(statenames{ss}).alltime'==0));
+        set(h,'AlphaData',~(popratehist_joint_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).alltime'==0));
 
         title(statenames{ss})
     for tt = 1:length(celltypes)
     subplot(6,6,(ss-1)*2+12+tt)
-        h = imagesc(popratehist_joint.(regions{rr}).Ebins(1,:),popratehist_joint.(regions{rr}).Ibins(1,:),log10(popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).pSpk)');
+        h = imagesc(popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pE(1,:),popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pI(1,:),log10(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).pSpk)');
         axis xy
-        set(h,'AlphaData',~isnan(popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).pSpk'));
+        set(h,'AlphaData',~isnan(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).pSpk'));
         colorbar
         %crameri lajolla
         caxis([-0.5 1.75])
         
 %     subplot(6,6,(ss-1)*2+18+tt)
-%             h = imagesc(popratehist_joint.(regions{rr}).Ebins(1,:),popratehist_joint.(regions{rr}).Ibins(1,:),1./(popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).geomeanISIs)');
+%             h = imagesc(popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pE(1,:),popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pI(1,:),1./(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).geomeanISIs)');
 %         axis xy
-%         set(h,'AlphaData',~isnan(popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).geomeanISIs'));
+%         set(h,'AlphaData',~isnan(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).geomeanISIs'));
 %         colorbar
 %         %crameri lajolla
 %         %caxis([-1 1])
         
     subplot(6,6,(ss-1)*2+24+tt)
-        h = imagesc(popratehist_joint.(regions{rr}).Ebins(1,:),popratehist_joint.(regions{rr}).Ibins(1,:),popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).cellCV2s');
+        h = imagesc(popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pE(1,:),popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pI(1,:),popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).cellCV2s');
         axis xy
-        set(h,'AlphaData',~isnan(popratehist_joint.(regions{rr}).(statenames{ss}).(celltypes{tt}).cellCV2s'));
+        set(h,'AlphaData',~isnan(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).cellCV2s'));
         colorbar
         crameri berlin
         caxis([0.7 1.3])
@@ -190,7 +200,7 @@ for ss = 1:3
 for tt = 1:length(celltypes)
 for st = 1:2
 subplot(4,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
-    imagesc(ISIbySynch.(regions{rr}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),ISIbySynch.(regions{rr}).(synchtypes{st}).(statenames{ss}).Ybins(1,:,1), ISIbySynch.(regions{rr}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt})')
+    imagesc(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Ybins(1,:,1), ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
     axis xy
@@ -206,13 +216,13 @@ subplot(4,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
     elseif tt==2
          caxis([0 0.03])
     end
-    xlim(ISIbySynch.(regions{rr}).(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
+    xlim(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
   
 end
 end
 end
 end
-%NiceSave('ISIbySynch.(regions{rr})',figfolder,baseName)
+%NiceSave('ISIbySynch.(regions{rr}).(normtypes{nn})',figfolder,baseName)
 %%
 figure
 for ss = 1:3
@@ -220,7 +230,9 @@ for tt = 1:length(celltypes)
 for st = 1:2
 subplot(4,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
     
-    imagesc(SynchbyISI.(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),SynchbyISI.(synchtypes{st}).(statenames{ss}).Ybins(1,:,1), SynchbyISI.(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt})')
+    imagesc(SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),...
+        SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Ybins(1,:,1),...
+        SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
     axis xy
@@ -235,7 +247,7 @@ subplot(4,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
 %     elseif tt==2
 %          caxis([0 0.03])
 %     end
-    xlim(SynchbyISI.(synchtypes{tt}).(statenames{ss}).Xbins(1,[1 end],1))
+    xlim(SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{tt}).(statenames{ss}).Xbins(1,[1 end],1))
 end 
 end
 end
@@ -250,7 +262,7 @@ for ss = 1:3
 for tt = 1:length(celltypes)
 for st = 3
 subplot(6,4,(ss-1)*4+(tt-1)*12+rr)
-    imagesc(ISIbySynch.(regions{rr}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),ISIbySynch.(regions{rr}).(synchtypes{st}).(statenames{ss}).Ybins(1,:,1), ISIbySynch.(regions{rr}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt})')
+    imagesc(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Ybins(1,:,1), ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
     axis xy
@@ -271,7 +283,7 @@ subplot(6,4,(ss-1)*4+(tt-1)*12+rr)
     elseif tt==2
          caxis([0 0.03])
     end
-    xlim(ISIbySynch.(regions{rr}).(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
+    xlim(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
   
 end
 end
