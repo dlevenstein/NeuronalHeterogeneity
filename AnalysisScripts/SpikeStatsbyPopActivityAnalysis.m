@@ -57,9 +57,6 @@ for cc = 1:spikes.numcells
     for tt = 1:length(celltypes)
         popratehist.(celltypes{tt})(cc) = sum(CellClass.(celltypes{tt}) & ~thiscell);
         spikemat.bycellpoprate.(celltypes{tt}){cc} = mean(spikemat.data(:,CellClass.(celltypes{tt}) & ~thiscell),2);
-        spikemat.bycellpoprate.norm.(celltypes{tt}){cc} = spikemat.bycellpoprate.(celltypes{tt}){cc}./mean(spikemat.bycellpoprate.(celltypes{tt}){cc});
-        spikemat.bycellpoprate.log.(celltypes{tt}){cc} = log10(spikemat.bycellpoprate.lin.(celltypes{tt}){cc});
-
 
     end
     spikemat.bycellpoprate.ALL{cc} = mean(spikemat.data(:,(CellClass.pI|CellClass.pE) & ~thiscell),2);
