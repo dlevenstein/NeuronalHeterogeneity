@@ -68,12 +68,16 @@ normtypes = {'lin','log','norm'};
 synchtypes = [celltypes,'ALL'];
 
 for tt = 1:length(synchtypes)
-    spikemat.poprate.norm.(synchtypes{tt}) = log10(spikemat.poprate.(synchtypes{tt})./mean(spikemat.poprate.(synchtypes{tt})));
+    spikemat.poprate.lognorm.(synchtypes{tt}) = log10(spikemat.poprate.(synchtypes{tt})./mean(spikemat.poprate.(synchtypes{tt})));
+    spikemat.poprate.norm.(synchtypes{tt}) = (spikemat.poprate.(synchtypes{tt})./mean(spikemat.poprate.(synchtypes{tt})));
+
     spikemat.poprate.log.(synchtypes{tt}) = log10(spikemat.poprate.(synchtypes{tt}));
     spikemat.poprate.lin.(synchtypes{tt}) = spikemat.poprate.(synchtypes{tt});
 
-    spikemat.bycellpoprate.norm.(synchtypes{tt}) = cellfun(@(X) ...
+    spikemat.bycellpoprate.lognorm.(synchtypes{tt}) = cellfun(@(X) ...
         log10(X./mean(X)),spikemat.bycellpoprate.(synchtypes{tt}),'UniformOutput',false);
+    spikemat.bycellpoprate.norm.(synchtypes{tt}) = cellfun(@(X) ...
+        (X./mean(X)),spikemat.bycellpoprate.(synchtypes{tt}),'UniformOutput',false);
     spikemat.bycellpoprate.log.(synchtypes{tt}) = cellfun(@(X) ...
         log10(X),spikemat.bycellpoprate.(synchtypes{tt}),'UniformOutput',false);
     spikemat.bycellpoprate.lin.(synchtypes{tt}) = spikemat.bycellpoprate.(synchtypes{tt});
@@ -107,11 +111,15 @@ popratehist.log.bins.pE = linspace(-1.5,1.5,nbins+1);
 popratehist.log.bins.pI = linspace(-0.5,2,nbins+1);
 popratehist.log.bins.ALL = linspace(-1,1.5,nbins+1);
 
-popratehist.norm.bins.pE = linspace(-1.25,1,nbins+1);
-popratehist.norm.bins.pI = popratehist.norm.bins.pE;
-popratehist.norm.bins.ALL = popratehist.norm.bins.pE;
+popratehist.lognorm.bins.pE = linspace(-1.25,1,nbins+1);
+popratehist.lognorm.bins.pI = popratehist.lognorm.bins.pE;
+popratehist.lognorm.bins.ALL = popratehist.lognorm.bins.pE;
 
-popratehist.lin.bins.pE = linspace(0,15,nbins+1);
+popratehist.lognorm.bins.pE = linspace(0,5,nbins+1);
+popratehist.lognorm.bins.pI = popratehist.lognorm.bins.pE;
+popratehist.lognorm.bins.ALL = popratehist.lognorm.bins.pE;
+
+popratehist.lin.bins.pE = linspace(0,20,nbins+1);
 popratehist.lin.bins.pI = linspace(-0,50,nbins+1);
 popratehist.lin.bins.ALL = linspace(0,20,nbins+1);
 
@@ -138,16 +146,27 @@ for ss = 1:3
         popratehist.(normtypes{nn}).(statenames{ss}).(synchtypes{st}) = ...
             popratehist.(normtypes{nn}).(statenames{ss}).(synchtypes{st})./...
             sum(popratehist.(normtypes{nn}).(statenames{ss}).(synchtypes{st}));
+        
+        bycellpopratehist.(normtypes{nn}).bins.(synchtypes{st}) = popratehist.(normtypes{nn}).bins.(synchtypes{st});
+        bycellpopratehist.(normtypes{nn}).(statenames{ss}).(synchtypes{st}) = ...
+            cellfun(@(BCrate) hist(BCrate(spikemat.instate.(statenames{ss})),...
+            bycellpopratehist.(normtypes{nn}).bins.(synchtypes{st})),...
+            spikemat.bycellpoprate.(normtypes{nn}).(synchtypes{st}),'UniformOutput',false);
+        bycellpopratehist.(normtypes{nn}).(statenames{ss}).(synchtypes{st}) = ...
+            cellfun(@(BCrate) BCrate./sum(BCrate),...
+            bycellpopratehist.(normtypes{nn}).(statenames{ss}).(synchtypes{st}),'UniformOutput',false);
+        bycellpopratehist.(normtypes{nn}).(statenames{ss}).(synchtypes{st}) = ...
+            cat(1,bycellpopratehist.(normtypes{nn}).(statenames{ss}).(synchtypes{st}){:});
     end
     
 end
 end
 %%
 figure
-for nn = 1:3
+for nn = 1:length(normtypes)
 for ss =1:3
         
-    subplot(3,3,ss+(nn-1)*3)
+    subplot(4,3,ss+(nn-1)*3)
     hold on
     for st = 1:length(synchtypes)
         plot(popratehist.(normtypes{nn}).bins.(synchtypes{st}),popratehist.(normtypes{nn}).(statenames{ss}).(synchtypes{st}))
@@ -157,7 +176,7 @@ end
 end
     %% Spiking statistics wrt pop rate
 clear countmap
-for nn = 1:3
+for nn = 1:length(normtypes)
 for ss = 1:3  
     %Mean CV2 by pop rate
     [popratehist_joint.(normtypes{nn}).(statenames{ss}).cellCV2s,countmap.(normtypes{nn}).(statenames{ss}).numspikes ] = cellfun(@(Erate,Irate,CV2,instate)...
@@ -204,7 +223,7 @@ end
 end
 
 %%
-for nn = 1:3
+for nn = 1:length(normtypes)
 figure
 for ss = 1:3
     subplot(3,3,ss)
@@ -249,7 +268,7 @@ end
 
     
 %% Calculate Conditional distributions on synchrony (pop rate) in each state
-for nn = 1:3
+for nn = 1:length(normtypes)
 for ss = 1:3
     %statenames{ss} = statenames{ss};
 
@@ -284,7 +303,7 @@ for ss = 1:3
 end
 end
 %%
-for nn = 1:3
+for nn = 1:length(normtypes)
 figure
 for ss = 1:3
 for tt = 1:length(celltypes)
@@ -316,7 +335,7 @@ NiceSave(['ISIbySynch_',(normtypes{nn})],figfolder,baseName)
 
 end
 %%
-for nn = 1:3
+for nn = 1:length(normtypes)
 figure
 for ss = 1:3
 for tt = 1:length(celltypes)

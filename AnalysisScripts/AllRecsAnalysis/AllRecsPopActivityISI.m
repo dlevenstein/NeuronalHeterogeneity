@@ -17,8 +17,10 @@ for rr = 1:length(regions)
     [ISIStats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
     CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
 
-    PopActivityAll.(regions{rr}) = GetMatResults(figfolder,'SpikeStatsbyPopActivityAnalysis','baseNames',baseNames);
-    PopActivityAll.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}));
+    PopActivityAll.(regions{rr}) = bz_LoadAnalysisResults(datasetPath.(regions{rr}),'SpikeStatsbyPopActivityAnalysis','dataset',true,'baseNames',baseNames);
+
+    %PopActivityAll.(regions{rr}) = GetMatResults(figfolder,'SpikeStatsbyPopActivityAnalysis','baseNames',baseNames);
+    %PopActivityAll.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}));
     
     recinfo.(regions{rr}).baseName = PopActivityAll.(regions{rr}).name;
     recinfo.(regions{rr}).Ncells = PopActivityAll.(regions{rr}).Ncells;
@@ -72,6 +74,8 @@ for rr = 1:length(regions)
             
             enoughpopcellsrec = [recinfo.(regions{rr}).Ncells.(synchtypes{st})]>popthresh.(synchtypes{st});
             popratehist_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st}) = nanmean(popratehist.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st})(enoughpopcellsrec,:),1);
+            popratehist_std.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st}) = nanstd(popratehist.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st})(enoughpopcellsrec,:),[],1);
+
         end
     end
     end
@@ -88,7 +92,56 @@ for rr = 1:length(regions)
         frac.(regions{rr}).(synchtypes{st}) = 1-((Noverthresh.(regions{rr}).(synchtypes{st})+0.5)./length([recinfo.(regions{rr}).Ncells(:).(synchtypes{st})]));
     end
 end
-%%
+%% Pop Rate between regions
+
+for nn = 1:3
+figure
+for rr = 1:4
+for st = 1:length(synchtypes)
+    subplot(4,3,st+(rr-1)*3)
+        hold on
+    for ss = 1:3
+         plot(popratehist.(regions{rr}).(normtypes{nn}).bins.(synchtypes{st})(1,:),...
+                popratehist_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st}),'color',statecolors{ss})
+
+    end
+    %legend(regions)
+end 
+
+end
+
+NiceSave(['PopRateDist_',(normtypes{nn})],figfolder,[])
+
+
+end
+%% EI poprate
+for nn = 1:3
+figure
+    for rr = 2:length(regions)
+        for ss = 1:3
+    subplot(3,3,rr-1+(ss-1)*3)
+        h = imagesc(popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pE(1,:),...
+            popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pI(1,:),...
+            popratehist_joint_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).alltime');
+        axis xy
+        set(h,'AlphaData',~(popratehist_joint_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).alltime'==0));
+        if ss==1
+            title(regions{rr})
+        end
+        if rr==2
+            ylabel({(statenames{ss}),'I Rate'})
+        end
+        if ss==3
+           xlabel('E Rate') 
+        end
+        end
+    end
+    
+NiceSave(['PopRateDistEI_',(normtypes{nn})],figfolder,[])
+
+    
+end
+%% Variability between recordings
 for nn = 1:3
 figure
 subplot(4,2,1)
@@ -193,6 +246,7 @@ NiceSave(['popratehist_joints_',(regions{rr})],figfolder,[])
 end
 %
 %%
+nn=3;
 for rr = 1:length(regions)
     
 figure
@@ -205,10 +259,11 @@ subplot(4,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
     axis xy
     %LogScale('y',10)
-    ylabel([(celltypes{tt}),' ISI (log(s))']);xlabel([(synchtypes{st}),' Synch'])
+    ylabel([(celltypes{tt}),' ISI (log(s))']);xlabel([(synchtypes{st}),' Rate (norm)'])
     if tt==1 & st == 1
         title(statenames{ss})
     end
+    
     %title((celltypes{tt}))
    % colorbar
     if tt ==1 
@@ -221,8 +276,9 @@ subplot(4,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
 end
 end
 end
+NiceSave('ISIbySynch',figfolder,(regions{rr}))
+
 end
-%NiceSave('ISIbySynch.(regions{rr}).(normtypes{nn})',figfolder,baseName)
 %%
 figure
 for ss = 1:3
@@ -254,7 +310,7 @@ end
 %NiceSave('SynchbyISI',figfolder,baseName)
 
 %%
-
+nn = 3
     
 figure
 for rr = 1:length(regions)
@@ -271,7 +327,7 @@ subplot(6,4,(ss-1)*4+(tt-1)*12+rr)
     ylabel({(statenames{ss}),[(celltypes{tt}),' ISI (log(s))']});
     end
     if ss==3
-        xlabel(['Pop Rate, ',(synchtypes{st}),' cells (Hz/cell)'])
+        xlabel(['Pop Rate, ',(synchtypes{st}),' cells (Norm)'])
     end
     if tt==1 & ss==1
         title(regions{rr})
