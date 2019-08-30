@@ -15,12 +15,12 @@ popthresh.ALL = 25;
 
 for rr = 1:length(regions)
     [ISIStats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
-    CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
+    %CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
 
     PopActivityAll.(regions{rr}) = bz_LoadAnalysisResults(datasetPath.(regions{rr}),'SpikeStatsbyPopActivityAnalysis','dataset',true,'baseNames',baseNames);
 
     %PopActivityAll.(regions{rr}) = GetMatResults(figfolder,'SpikeStatsbyPopActivityAnalysis','baseNames',baseNames);
-    %PopActivityAll.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}));
+    PopActivityAll.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}));
     
     recinfo.(regions{rr}).baseName = PopActivityAll.(regions{rr}).name;
     recinfo.(regions{rr}).Ncells = PopActivityAll.(regions{rr}).Ncells;
@@ -102,10 +102,12 @@ for st = 1:length(synchtypes)
         hold on
     for ss = 1:3
          plot(popratehist.(regions{rr}).(normtypes{nn}).bins.(synchtypes{st})(1,:),...
-                popratehist_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st}),'color',statecolors{ss})
+                popratehist_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st}),...
+                'color',statecolors{ss},'linewidth',1)
 
     end
     %legend(regions)
+    xlabel(['Rate (',(normtypes{nn})])
 end 
 
 end
@@ -119,7 +121,7 @@ for nn = 1:3
 figure
     for rr = 2:length(regions)
         for ss = 1:3
-    subplot(3,3,rr-1+(ss-1)*3)
+    subplot(3,3,ss-1+(rr-2)*3)
         h = imagesc(popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pE(1,:),...
             popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pI(1,:),...
             popratehist_joint_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).alltime');
@@ -276,7 +278,7 @@ subplot(4,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
 end
 end
 end
-NiceSave('ISIbySynch',figfolder,(regions{rr}))
+NiceSave(['ISIbySynch_',(regions{rr})],figfolder,[])
 
 end
 %%

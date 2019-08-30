@@ -63,7 +63,7 @@ if dataset
         thisAResults = bz_LoadAnalysisResults(basePaths{rr},analysisName);
         
         %Add baseName to the cellinfo file. this could be for each unit....
-        thisAResults.baseName = repmat(baseNames(rr),size(thisAResults.UID));
+        thisAResults.baseName = baseNames(rr);
         
         %Check if the new .mat has any additional fields
         if exist('analysisResults','var')    
