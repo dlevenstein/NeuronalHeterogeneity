@@ -115,7 +115,7 @@ popratehist.lognorm.bins.pE = linspace(-1.25,1,nbins+1);
 popratehist.lognorm.bins.pI = linspace(-1.25,0.75,nbins+1);
 popratehist.lognorm.bins.ALL = linspace(-0.75,0.75,nbins+1);
 
-popratehist.norm.bins.pE = linspace(0,5,nbins+1);
+popratehist.norm.bins.pE = linspace(0,4,nbins+1);
 popratehist.norm.bins.pI = linspace(0,4,nbins+1);
 popratehist.norm.bins.ALL = linspace(0,4,nbins+1);
 
@@ -374,6 +374,7 @@ for ss = 1:length(statenames)
 
     for tt = 1:length(synchtypes)
         for cc = 1:spikes.numcells
+            ratepopcorr.(statenames{ss}).cellrate = ISIStats.summstats.(statenames{ss}).meanrate;
             if sum(ISIStats.allspikes.instate.(statenames{ss}){cc})==0
                 CV2popcorr.(statenames{ss}).(synchtypes{tt})(cc) = nan;
                 ratepopcorr.(statenames{ss}).(synchtypes{tt})(cc) = nan;
