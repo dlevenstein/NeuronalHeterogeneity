@@ -115,7 +115,7 @@ popratehist.lognorm.bins.pE = linspace(-1.25,1,nbins+1);
 popratehist.lognorm.bins.pI = popratehist.lognorm.bins.pE;
 popratehist.lognorm.bins.ALL = popratehist.lognorm.bins.pE;
 
-popratehist.norm.bins.pE = linspace(0,5,nbins+1);
+popratehist.norm.bins.pE = linspace(0,3.5,nbins+1);
 popratehist.norm.bins.pI = popratehist.norm.bins.pE;
 popratehist.norm.bins.ALL = popratehist.norm.bins.pE;
 

@@ -14,41 +14,43 @@ popthresh.pI = 5;
 popthresh.ALL = 25;
 
 for rr = 1:length(regions)
-    [ISIStats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
+    %[ISIStats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
     %CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
 
-    PopActivityAll.(regions{rr}) = bz_LoadAnalysisResults(datasetPath.(regions{rr}),'SpikeStatsbyPopActivityAnalysis','dataset',true,'baseNames',baseNames);
+    [PopActivityAll,baseNames] = bz_LoadAnalysisResults(datasetPath.(regions{rr}),'SpikeStatsbyPopActivityAnalysis','dataset',true);
 
-    %PopActivityAll.(regions{rr}) = GetMatResults(figfolder,'SpikeStatsbyPopActivityAnalysis','baseNames',baseNames);
-    PopActivityAll.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}));
+    %PopActivityAll = GetMatResults(figfolder,'SpikeStatsbyPopActivityAnalysis','baseNames',baseNames);
+    PopActivityAll = bz_CollapseStruct(PopActivityAll);
     
-    recinfo.(regions{rr}).baseName = PopActivityAll.(regions{rr}).name;
-    recinfo.(regions{rr}).Ncells = PopActivityAll.(regions{rr}).Ncells;
+    recinfo.(regions{rr}).baseName = PopActivityAll.baseName;
+    recinfo.(regions{rr}).Ncells = PopActivityAll.Ncells;
     recinfo.(regions{rr}).cellinfofiles = baseNames;
 
 
 
-    popratehist_joint.(regions{rr}).(normtypes{nn}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).popratehist_joint,3,'justcat',true);
-    popratehist.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).popratehist,'match','justcat',true);
-    ISIbySynch.(regions{rr}).(normtypes{nn}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).ISIbySynch,'match','justcat',true);
-    SynchbyISI.(regions{rr}).(normtypes{nn}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).SynchbyISI,'match','justcat',true);
-    CV2popcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).CV2popcorr,'match','justcat',true);
-    ratepopcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).ratepopcorr,'match','justcat',true);
+    popratehist_joint.(regions{rr}) = bz_CollapseStruct(PopActivityAll.popratehist_joint,3,'justcat',true);
+    popratehist.(regions{rr}) = bz_CollapseStruct(PopActivityAll.popratehist,'match','justcat',true);
+    ISIbySynch.(regions{rr}) = bz_CollapseStruct(PopActivityAll.ISIbySynch,'match','justcat',true);
+    SynchbyISI.(regions{rr}) = bz_CollapseStruct(PopActivityAll.SynchbyISI,'match','justcat',true);
+    CV2popcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.CV2popcorr,'match','justcat',true);
+    ratepopcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.ratepopcorr,'match','justcat',true);
 
     keeprecs = [recinfo.(regions{rr}).Ncells.pE]>popthresh.pE & [recinfo.(regions{rr}).Ncells.pI]>popthresh.pI; 
     if all(~keeprecs)
         disp(['Region ',regions{rr},' has no recordings with enough cells'])
         continue
     else
-        popratehist_joint_mean.(regions{rr}) = bz_CollapseStruct(PopActivityAll.(regions{rr}).popratehist_joint(keeprecs),3,'mean',true);
+        popratehist_joint_mean.(regions{rr}) = bz_CollapseStruct(PopActivityAll.popratehist_joint(keeprecs),3,'mean',true);
     end
+    
+    clear PopActivityAll
 end
 %%
-statenames = fieldnames(ISIStats.(regions{1}).summstats);
+statenames = {'WAKEstate','NREMstate','REMstate'};
 statecolors = {[0 0 0],[0 0 1],[1 0 0]};
 numstates = length(statenames);
 
-normtypes = {'lin','log','norm'};
+normtypes = {'lin','log','lognorm','norm'};
 
 for nn = 1:length(normtypes)
 
@@ -94,20 +96,28 @@ for rr = 1:length(regions)
 end
 %% Pop Rate between regions
 
-for nn = 1:3
+for nn = 1:4
 figure
 for rr = 1:4
 for st = 1:length(synchtypes)
     subplot(4,3,st+(rr-1)*3)
         hold on
-    for ss = 1:3
+    for ss = 3:-1:1
          plot(popratehist.(regions{rr}).(normtypes{nn}).bins.(synchtypes{st})(1,:),...
                 popratehist_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st}),...
-                'color',statecolors{ss},'linewidth',1)
+                'color',statecolors{ss},'linewidth',2)
 
     end
     %legend(regions)
-    xlabel(['Rate (',(normtypes{nn})])
+    axis tight 
+    xlabel(['Rate (',(normtypes{nn}),')'])
+    set(gca,'ytick',[])
+    if st==1
+       ylabel({(regions{rr}),'P[time]'}) 
+    end
+    if rr ==1
+       title((synchtypes{st}))
+    end
 end 
 
 end
@@ -117,23 +127,23 @@ NiceSave(['PopRateDist_',(normtypes{nn})],figfolder,[])
 
 end
 %% EI poprate
-for nn = 1:3
+for nn = 1:4
 figure
     for rr = 2:length(regions)
         for ss = 1:3
-    subplot(3,3,ss-1+(rr-2)*3)
+    subplot(3,3,ss+(rr-2)*3)
         h = imagesc(popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pE(1,:),...
             popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pI(1,:),...
             popratehist_joint_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).alltime');
         axis xy
         set(h,'AlphaData',~(popratehist_joint_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).alltime'==0));
         if ss==1
-            title(regions{rr})
+            ylabel({(regions{rr}),'I Rate'})
         end
         if rr==2
-            ylabel({(statenames{ss}),'I Rate'})
+            title(statenames{ss})
         end
-        if ss==3
+        if rr==4
            xlabel('E Rate') 
         end
         end
@@ -144,7 +154,7 @@ NiceSave(['PopRateDistEI_',(normtypes{nn})],figfolder,[])
     
 end
 %% Variability between recordings
-for nn = 1:3
+for nn = 1:4
 figure
 subplot(4,2,1)
 for rr = 1:4
@@ -248,7 +258,7 @@ NiceSave(['popratehist_joints_',(regions{rr})],figfolder,[])
 end
 %
 %%
-nn=3;
+nn=4;
 for rr = 1:length(regions)
     
 figure
@@ -312,7 +322,7 @@ end
 %NiceSave('SynchbyISI',figfolder,baseName)
 
 %%
-nn = 3
+nn = 4
     
 figure
 for rr = 1:length(regions)
