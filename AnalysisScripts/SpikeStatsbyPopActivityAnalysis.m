@@ -64,7 +64,7 @@ for cc = 1:spikes.numcells
 end
 
 %% Normalizations
-normtypes = {'lin','log','norm'};
+normtypes = {'lin','log','lognorm','norm'};
 synchtypes = [celltypes,'ALL'];
 
 for tt = 1:length(synchtypes)
@@ -115,9 +115,9 @@ popratehist.lognorm.bins.pE = linspace(-1.25,1,nbins+1);
 popratehist.lognorm.bins.pI = popratehist.lognorm.bins.pE;
 popratehist.lognorm.bins.ALL = popratehist.lognorm.bins.pE;
 
-popratehist.lognorm.bins.pE = linspace(0,5,nbins+1);
-popratehist.lognorm.bins.pI = popratehist.lognorm.bins.pE;
-popratehist.lognorm.bins.ALL = popratehist.lognorm.bins.pE;
+popratehist.norm.bins.pE = linspace(0,5,nbins+1);
+popratehist.norm.bins.pI = popratehist.norm.bins.pE;
+popratehist.norm.bins.ALL = popratehist.norm.bins.pE;
 
 popratehist.lin.bins.pE = linspace(0,20,nbins+1);
 popratehist.lin.bins.pI = linspace(-0,50,nbins+1);
