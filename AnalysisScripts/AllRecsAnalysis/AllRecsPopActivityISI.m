@@ -72,6 +72,7 @@ for rr = 1:length(regions)
         for st = 1:length(synchtypes)
             popratehist.(regions{rr}).enoughpopcells.(synchtypes{st}) = popratehist.(regions{rr}).(synchtypes{st})>popthresh.(synchtypes{st});
             ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
+            ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
             SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
             
             enoughpopcellsrec = [recinfo.(regions{rr}).Ncells.(synchtypes{st})]>popthresh.(synchtypes{st});
@@ -197,6 +198,48 @@ end
 end
 NiceSave(['CellCounts_',(normtypes{nn})],figfolder,[])
 end
+
+%%
+
+%Pop Rate Distirbutioon 
+%Other cell pop rate distirbution
+%Other cell pop rade distribution | spike
+for nn = 1:4
+figure
+for rr = 1:4
+for st = 1:length(synchtypes)
+    subplot(4,3,st+(rr-1)*3)
+        hold on
+    for ss = 3:-1:1
+        plot(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),...
+        ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt}),...
+                'color',statecolors{ss},'linewidth',2)
+
+    end
+    %legend(regions)
+    axis tight 
+    xlabel(['Rate (',(normtypes{nn}),')'])
+    set(gca,'ytick',[])
+    if st==1
+       ylabel({(regions{rr}),'P[time]'}) 
+    end
+    if rr ==1
+       title((synchtypes{st}))
+    end
+end 
+
+end
+
+%NiceSave(['PopRateDist_',(normtypes{nn})],figfolder,[])
+
+
+end
+%hold on
+%          plot(popratehist.(regions{rr}).(normtypes{nn}).bins.(synchtypes{st})(1,:),...
+%                 popratehist_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st}),...
+%                 'color',statecolors{ss},'linewidth',2)
+%plot(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt}))
+
 %%
 ss = 1
 figure

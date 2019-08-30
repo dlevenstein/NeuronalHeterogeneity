@@ -1,4 +1,4 @@
-function [popratehist_joint,popratehist,ISIbySynch,SynchbyISI,CV2popcorr,ratepopcorr,Ncells ] = SpikeStatsbyPopActivityAnalysis(basePath,figfolder)
+function [popratehist_joint,popratehist,bycellpopratehist,ISIbySynch,SynchbyISI,CV2popcorr,ratepopcorr,Ncells ] = SpikeStatsbyPopActivityAnalysis(basePath,figfolder)
 
 %% DEV
 %reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
@@ -112,12 +112,12 @@ popratehist.log.bins.pI = linspace(-0.5,2,nbins+1);
 popratehist.log.bins.ALL = linspace(-1,1.5,nbins+1);
 
 popratehist.lognorm.bins.pE = linspace(-1.25,1,nbins+1);
-popratehist.lognorm.bins.pI = popratehist.lognorm.bins.pE;
-popratehist.lognorm.bins.ALL = popratehist.lognorm.bins.pE;
+popratehist.lognorm.bins.pI = linspace(-1.25,0.75,nbins+1);
+popratehist.lognorm.bins.ALL = linspace(-0.75,0.75,nbins+1);
 
-popratehist.norm.bins.pE = linspace(0,3.5,nbins+1);
-popratehist.norm.bins.pI = popratehist.norm.bins.pE;
-popratehist.norm.bins.ALL = popratehist.norm.bins.pE;
+popratehist.norm.bins.pE = linspace(0,5,nbins+1);
+popratehist.norm.bins.pI = linspace(0,4,nbins+1);
+popratehist.norm.bins.ALL = linspace(0,4,nbins+1);
 
 popratehist.lin.bins.pE = linspace(0,20,nbins+1);
 popratehist.lin.bins.pI = linspace(-0,50,nbins+1);
