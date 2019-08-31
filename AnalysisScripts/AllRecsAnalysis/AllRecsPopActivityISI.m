@@ -62,6 +62,10 @@ for rr = 1:length(regions)
     for n = 1:length(recinfo.(regions{rr}).Ncells)
     recinfo.(regions{rr}).Ncells(n).ALL = [recinfo.(regions{rr}).Ncells(n).pE]+ [recinfo.(regions{rr}).Ncells(n).pI];
     end
+    
+    
+    
+    
     for ss = 1:3
     for tt = 1:length(celltypes)
         inclass = ISIbySynch.(regions{rr}).(normtypes{nn}).pE.NREMstate.celltypeidx.(celltypes{tt});
@@ -70,6 +74,16 @@ for rr = 1:length(regions)
        % popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).geomeanISIs = nanmean(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).geomeanISIs(:,:,inclass),3);
         
         for st = 1:length(synchtypes)
+            
+            
+            %How many cells are contributing?
+           % nspkthresh = 50;
+           % ncellthresh = 200;
+            %sum(ISIbytheta.(regions{rr}).Xhist>nspkthresh,3)
+            %sum(ISIbyPSS.(regions{rr}).Xhist>nspkthresh,3)
+           % ISIbySynch.(regions{rr}).pYX(sum(ISIbySynch.(regions{rr}).Xhist>nspkthresh,3)<ncellthresh,:,:)=nan;
+            
+            
             popratehist.(regions{rr}).enoughpopcells.(synchtypes{st}) = popratehist.(regions{rr}).(synchtypes{st})>popthresh.(synchtypes{st});
             ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
             ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
@@ -241,9 +255,12 @@ end
 %plot(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt}))
 
 %%
+
 ss = 1
 figure
 for rr = 1:length(regions)
+    
+    
     subplot(4,4,rr)
     imagesc(popratehist.(regions{rr}).(normtypes{nn}).bins.ALL(1,:),[0 0.1],...
         popratehist.(regions{rr}).(normtypes{nn}).(statenames{ss}).ALL(sortncells.(regions{rr}).ALL,:))  
