@@ -271,6 +271,8 @@ for ss = 1:3
         set(h,'AlphaData',~(popratehist_joint_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).alltime'==0));
 
         title(statenames{ss})
+        non0 = popratehist_joint_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).alltime([2:end],[2:end]);
+        caxis([0 max(non0(:))])
     for tt = 1:length(celltypes)
     subplot(6,6,(ss-1)*2+12+tt)
         h = imagesc(popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pE(1,:),popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pI(1,:),log10(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).pSpk)');
@@ -301,7 +303,8 @@ NiceSave(['popratehist_joints_',(regions{rr})],figfolder,[])
 end
 %
 %%
-nn=4;
+for nn = 3:4
+%nn=3;
 for rr = 1:length(regions)
     
 figure
@@ -310,7 +313,10 @@ for tt = 1:length(celltypes)
 for st = 1:2
 subplot(4,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
     imagesc(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Ybins(1,:,1), ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt})')
-    %hold on
+    hold on
+	plot(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),...
+        bz_NormToRange(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt})),...
+                'color',statecolors{ss},'linewidth',1)
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
     axis xy
     %LogScale('y',10)
@@ -326,13 +332,13 @@ subplot(4,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
     elseif tt==2
          caxis([0 0.03])
     end
-    xlim(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
+    %xlim(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
   
 end
 end
 end
-NiceSave(['ISIbySynch_',(regions{rr})],figfolder,[])
-
+NiceSave(['ISIbySynch_',(normtypes{nn}),'_',(regions{rr})],figfolder,[])
+end
 end
 %%
 figure
@@ -365,7 +371,7 @@ end
 %NiceSave('SynchbyISI',figfolder,baseName)
 
 %%
-nn = 4
+for nn = 3:4
     
 figure
 for rr = 1:length(regions)
@@ -374,8 +380,10 @@ for tt = 1:length(celltypes)
 for st = 3
 subplot(6,4,(ss-1)*4+(tt-1)*12+rr)
     imagesc(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Ybins(1,:,1), ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt})')
-    %hold on
-    %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
+    hold on
+	plot(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),...
+        bz_NormToRange(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt})),...
+                'color',statecolors{ss},'linewidth',1)
     axis xy
     %LogScale('y',10)
     if rr==1
@@ -400,7 +408,8 @@ end
 end
 end
 end
-NiceSave('SynchbyISI',figfolder,[])
+NiceSave(['SynchbyISI_',(normtypes{nn})],figfolder,[])
+end
 %%
 cellcolor = {'k','r'};
 for ss = 1:3
