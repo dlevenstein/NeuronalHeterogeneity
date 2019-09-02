@@ -268,7 +268,7 @@ end
 
     
 %% Calculate Conditional distributions on synchrony (pop rate) in each state
-for nn = 1:length(normtypes)
+for nn = 3:4 %only do normalized rates
 for ss = 1:3
     %statenames{ss} = statenames{ss};
 
@@ -303,7 +303,7 @@ for ss = 1:3
 end
 end
 %%
-for nn = 1:length(normtypes)
+for nn = 3:4
 figure
 for ss = 1:3
 for tt = 1:length(celltypes)
@@ -335,7 +335,7 @@ NiceSave(['ISIbySynch_',(normtypes{nn})],figfolder,baseName)
 
 end
 %%
-for nn = 1:length(normtypes)
+for nn = 3:4
 figure
 for ss = 1:3
 for tt = 1:length(celltypes)
