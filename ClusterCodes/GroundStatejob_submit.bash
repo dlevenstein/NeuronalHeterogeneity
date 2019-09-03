@@ -3,7 +3,7 @@ sbatch ./GroundStatejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV01/YMV
 sbatch ./GroundStatejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV02/YMV02_170815
 #sbatch ./GroundStatejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV03/YMV03_170818
 sbatch ./GroundStatejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV04/YMV04_170907
-sbatch ./GroundStatejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV05/YMV05_170912
+#sbatch ./GroundStatejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV05/YMV05_170912
 sbatch ./GroundStatejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV06/YMV06_170913
 #sbatch ./GroundStatejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV07/YMV07_170914
 #sbatch ./GroundStatejob.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV08/YMV08_170922

@@ -133,7 +133,15 @@ cellinfofilename = fullfile(basePath,[baseName,'.ISIrate.cellinfo.mat']);
 ISIrate.UID = spikes.UID;
 ISIrate.OccupancyStats = OccupancyStats;
 
-save(cellinfofilename,'ISIrate')
+save(cellinfofilename,'ISIrate','-v7.3')
+
+
+cellinfofilename = fullfile(basePath,[baseName,'.OccupancyStats.cellinfo.mat']);
+OccupancyStats.UID = spikes.UID;
+%ISIrate.OccupancyStats = OccupancyStats;
+
+save(cellinfofilename,'OccupancyStats')
+
 %%
 % figure
 % subplot(2,2,1)
