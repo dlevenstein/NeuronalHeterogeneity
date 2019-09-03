@@ -7,5 +7,8 @@
 echo $1
 module load matlab/R2018a
 
+#YS and earlier
+#matlab -nodisplay -nodesktop -singleCompThread -r "cd('/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/ClusterCodes');addPaths;bz_RunAnalysis('RescoreYS','$1','basePath',true);exit;"
 
-matlab -nodisplay -nodesktop -singleCompThread -r "cd('/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/ClusterCodes');addPaths;bz_RunAnalysis('RescoreYS','$1','basePath',true);exit;"
+#GG
+matlab -nodisplay -nodesktop -singleCompThread -r "cd('/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/ClusterCodes');addPaths;bz_RunAnalysis('RescoreGG','$1','basePath',true);exit;"
