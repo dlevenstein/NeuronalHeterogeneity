@@ -1,4 +1,4 @@
-function [] = RescoreYS(basePath,figfolder)
+function [] = RescoreGG(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
