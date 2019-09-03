@@ -127,6 +127,13 @@ for ss = 1:3
     
 end
 
+%% Save Occupancy Stats as cellinfo
+
+cellinfofilename = fullfile(basePath,[baseName,'.ISIrate.cellinfo.mat']);
+ISIrate.UID = spikes.UID;
+ISIrate.OccupancyStats = OccupancyStats;
+
+save(cellinfofilename,'ISIrate')
 %%
 % figure
 % subplot(2,2,1)
