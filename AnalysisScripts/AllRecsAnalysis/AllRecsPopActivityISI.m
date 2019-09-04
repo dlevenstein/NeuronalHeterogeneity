@@ -56,8 +56,8 @@ normtypes = {'lin','log','lognorm','norm'};
 for nn = 1:length(normtypes)
 
 for rr = 1:length(regions)
-    celltypes = fieldnames(ISIbySynch.(regions{rr}).(normtypes{nn}).pE.NREMstate.celltypeidx);
-    synchtypes = fieldnames(ISIbySynch.(regions{rr}).(normtypes{nn}));
+    celltypes = fieldnames(ISIbySynch.(regions{rr}).norm.pE.NREMstate.celltypeidx);
+    synchtypes = fieldnames(ISIbySynch.(regions{rr}).norm);
     
     popratehist.(regions{rr}).ALL = popratehist.(regions{rr}).pE + popratehist.(regions{rr}).pI;
     for n = 1:length(recinfo.(regions{rr}).Ncells)
@@ -69,7 +69,7 @@ for rr = 1:length(regions)
     
     for ss = 1:3
     for tt = 1:length(celltypes)
-        inclass = ISIbySynch.(regions{rr}).(normtypes{nn}).pE.NREMstate.celltypeidx.(celltypes{tt});
+        inclass = ISIbySynch.(regions{rr}).norm.pE.NREMstate.celltypeidx.(celltypes{tt});
         popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).cellCV2s = nanmean(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).cellCV2s(:,:,inclass),3);
         popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).pSpk = nanmean(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).pSpk(:,:,inclass),3);
        % popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).geomeanISIs = nanmean(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).geomeanISIs(:,:,inclass),3);
@@ -86,6 +86,7 @@ for rr = 1:length(regions)
             
             
             popratehist.(regions{rr}).enoughpopcells.(synchtypes{st}) = popratehist.(regions{rr}).(synchtypes{st})>popthresh.(synchtypes{st});
+            if nn>2
             ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
             ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
             SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
@@ -94,7 +95,7 @@ for rr = 1:length(regions)
                 nanmean(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
             normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt}) = ...
                 nanmean(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
-            
+            end     
             enoughpopcellsrec = [recinfo.(regions{rr}).Ncells.(synchtypes{st})]>popthresh.(synchtypes{st});
             popratehist_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st}) = nanmean(popratehist.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st})(enoughpopcellsrec,:),1);
             popratehist_std.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st}) = nanstd(popratehist.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st})(enoughpopcellsrec,:),[],1);
@@ -118,7 +119,7 @@ end
 %% Pop Rate between regions
 
 for nn = 1:4
-figure
+figure('visible','off')
 for rr = 1:4
 for st = 1:length(synchtypes)
     subplot(4,3,st+(rr-1)*3)
@@ -149,7 +150,7 @@ NiceSave(['PopRateDist_',(normtypes{nn})],figfolder,[])
 end
 %% EI poprate
 for nn = 1:4
-figure
+figure('visible','off')
     for rr = 2:length(regions)
         for ss = 1:3
     subplot(3,3,ss+(rr-2)*3)
@@ -176,7 +177,7 @@ NiceSave(['PopRateDistEI_',(normtypes{nn})],figfolder,[])
 end
 %% Variability between recordings
 for nn = 1:4
-figure
+figure('visible','off')
 subplot(4,2,1)
 for rr = 1:4
    hold on
@@ -225,7 +226,7 @@ end
 %Other cell pop rate distirbution
 %Other cell pop rade distribution | spike
 for nn = 1:4
-figure
+figure('visible','off')
 for rr = 1:4
 for st = 1:length(synchtypes)
     subplot(4,3,st+(rr-1)*3)
@@ -263,7 +264,7 @@ end
 %%
 
 ss = 1
-figure
+figure('visible','off')
 for rr = 1:length(regions)
     
     
@@ -284,7 +285,7 @@ end
 
 %%
 for rr = 2:length(regions)
-figure
+figure('visible','off')
 for ss = 1:3
     subplot(3,3,ss)
         h = imagesc(popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pE(1,:),...
@@ -330,7 +331,7 @@ for nn = 3:4
 %nn=3;
 for rr = 1:length(regions)
     
-figure
+figure('visible','off')
 for ss = 1:3
 for tt = 1:length(celltypes)
 for st = 1:2
@@ -369,7 +370,7 @@ for nn = 3:4
 %nn=3;
 for rr = 1:length(regions)
     
-figure
+figure('visible','off')
 for ss = 1:3
 for tt = 1:length(celltypes)
 for st = 1:2
@@ -405,7 +406,7 @@ NiceSave(['normISIbySynch_',(normtypes{nn}),'_',(regions{rr})],figfolder,[])
 end
 end
 %%
-figure
+figure('visible','off')
 for ss = 1:3
 for tt = 1:length(celltypes)
 for st = 1:2
@@ -437,7 +438,7 @@ end
 %%
 for nn = 3:4
     
-figure
+figure('visible','off')
 for rr = 1:length(regions)
 for ss = 1:3
 for tt = 1:length(celltypes)
@@ -478,7 +479,7 @@ end
 %%
 for nn = 3:4
     
-figure
+figure('visible','off')
 for rr = 1:length(regions)
 for ss = 1:3
 for tt = 1:length(celltypes)
@@ -520,7 +521,7 @@ end
 %%
 cellcolor = {'k','r'};
 for ss = 1:3
-figure
+figure('visible','off')
     subplot(3,3,1)
         for tt = 1:length(celltypes)
             plot(log10(ratepopcorr.(statenames{ss}).cellrate(CellClass.(regions{rr}).(celltypes{tt}))),...
