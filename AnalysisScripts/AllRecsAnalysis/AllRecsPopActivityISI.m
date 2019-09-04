@@ -14,6 +14,7 @@ popthresh.pI = 5;
 popthresh.ALL = 25;
 
 for rr = 1:length(regions)
+    disp(['Loading ',regions{rr}])
     %[ISIStats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
     %CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
 
@@ -116,7 +117,7 @@ for rr = 1:length(regions)
     end
 end
 %% Pop Rate between regions
-
+display('Making figure - Regional Pop Rate')
 for nn = 1:4
 figure
 for rr = 1:4
@@ -148,6 +149,8 @@ NiceSave(['PopRateDist_',(normtypes{nn})],figfolder,[])
 
 end
 %% EI poprate
+display('Making figure - Regional E/I Pop Rate')
+
 for nn = 1:4
 figure
     for rr = 2:length(regions)
@@ -175,6 +178,8 @@ NiceSave(['PopRateDistEI_',(normtypes{nn})],figfolder,[])
     
 end
 %% Variability between recordings
+display('Making figure - Recording Variation')
+
 for nn = 1:4
 figure
 subplot(4,2,1)
@@ -224,7 +229,7 @@ end
 %Pop Rate Distirbutioon 
 %Other cell pop rate distirbution
 %Other cell pop rade distribution | spike
-for nn = 1:4
+for nn = 3:4
 figure
 for rr = 1:4
 for st = 1:length(synchtypes)
@@ -283,6 +288,8 @@ for rr = 1:length(regions)
 end
 
 %%
+display('Making figure - Gross ISI stats byRegional Pop Rate')
+for nn = 3:4
 for rr = 2:length(regions)
 figure
 for ss = 1:3
@@ -322,10 +329,12 @@ for ss = 1:3
         caxis([0.7 1.3])
     end
 end
-NiceSave(['popratehist_joints_',(regions{rr})],figfolder,[])
+NiceSave(['popratehist_jointstats_',(normtypes{nn}),'_',(regions{rr})],figfolder,[])
+end
 end
 %
 %%
+display('Making figure - ISI by Pop Rate')
 for nn = 3:4
 %nn=3;
 for rr = 1:length(regions)
@@ -365,6 +374,8 @@ end
 end
 
 %%
+display('Making figure - normISI by Pop Rate')
+
 for nn = 3:4
 %nn=3;
 for rr = 1:length(regions)
@@ -405,6 +416,8 @@ NiceSave(['normISIbySynch_',(normtypes{nn}),'_',(regions{rr})],figfolder,[])
 end
 end
 %%
+display('Making figure - Pop Rate by ISI')
+
 figure
 for ss = 1:3
 for tt = 1:length(celltypes)
@@ -435,6 +448,8 @@ end
 %NiceSave('SynchbyISI',figfolder,baseName)
 
 %%
+display('Making figure - ISI by Pop Rate (ALL)')
+
 for nn = 3:4
     
 figure
@@ -476,6 +491,8 @@ NiceSave(['ISIbySynch_',(normtypes{nn})],figfolder,[])
 end
 
 %%
+display('Making figure - normISI by Pop Rate (ALL)')
+
 for nn = 3:4
     
 figure
@@ -518,6 +535,8 @@ end
 NiceSave(['normISIbySynch_',(normtypes{nn})],figfolder,[])
 end
 %%
+display('Making figure - PopRate corr stats')
+
 cellcolor = {'k','r'};
 for ss = 1:3
 figure
