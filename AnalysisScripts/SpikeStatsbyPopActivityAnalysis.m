@@ -1,4 +1,5 @@
-function [popratehist_joint,popratehist,bycellpopratehist,ISIbySynch,SynchbyISI,CV2popcorr,ratepopcorr,Ncells ] = SpikeStatsbyPopActivityAnalysis(basePath,figfolder)
+function [popratehist_joint,popratehist,bycellpopratehist,ISIbySynch,SynchbyISI,...
+    normISIbySynch,SynchbynormISI,CV2popcorr,ratepopcorr,Ncells ] = SpikeStatsbyPopActivityAnalysis(basePath,figfolder)
 
 %% DEV
 %reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
@@ -13,6 +14,7 @@ baseName = bz_BasenameFromBasepath(basePath);
 spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
 ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
+OccupancyStats = bz_LoadCellinfo(basePath,'OccupancyStats');
 SleepState = bz_LoadStates(basePath,'SleepState');
 SleepState.ints.ALL = [0 Inf];
 % lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
@@ -299,6 +301,25 @@ for ss = 1:3
             ISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).celltypeidx.(celltypes{cc}) = CellClass.(celltypes{cc});
             SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).celltypeidx.(celltypes{cc}) = CellClass.(celltypes{cc});
         end
+        
+        
+        [ normISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W,MTO) ConditionalHist( ([Z(W);Z(W)]),log10([X(W);Y(W)]./MTO),...
+            'Xbounds',popratehist.(normtypes{nn}).bins.(synchtypes{st})([1 end]),'numXbins',25,'Ybounds',[-4 1],'numYbins',100,'minX',50),...
+            ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
+            ISIStats.allspikes.poprate.(normtypes{nn}).(synchtypes{st}),...
+            ISIStats.allspikes.instate.(statenames{ss}),num2cell(OccupancyStats.(statenames{ss}).median),...
+            'UniformOutput',false);
+        normISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) = cat(1,normISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}){:});
+        normISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) = bz_CollapseStruct( normISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}),3);
+        
+        [ SynchbynormISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W,MTO) ConditionalHist( log10([X(W);Y(W)]./MTO),([Z(W);Z(W)]),...
+            'Ybounds',popratehist.(normtypes{nn}).bins.(synchtypes{st})([1 end]),'numYbins',50,'Xbounds',[-4 1],'numXbins',100,'minX',50),...
+            ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
+            ISIStats.allspikes.poprate.(normtypes{nn}).(synchtypes{st}),...
+            ISIStats.allspikes.instate.(statenames{ss}),num2cell(OccupancyStats.(statenames{ss}).median),...
+            'UniformOutput',false);
+        SynchbynormISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) = cat(1,SynchbynormISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}){:});
+        SynchbynormISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) = bz_CollapseStruct( SynchbynormISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}),3);
     end
 end
 end
