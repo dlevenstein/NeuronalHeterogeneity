@@ -32,6 +32,7 @@ for rr = 1:length(regions)
     popratehist.(regions{rr}) = bz_CollapseStruct(PopActivityAll.popratehist,'match','justcat',true);
     ISIbySynch.(regions{rr}) = bz_CollapseStruct(PopActivityAll.ISIbySynch,'match','justcat',true);
     SynchbyISI.(regions{rr}) = bz_CollapseStruct(PopActivityAll.SynchbyISI,'match','justcat',true);
+    normISIbySynch.(regions{rr}) = bz_CollapseStruct(PopActivityAll.normISIbySynch,'match','justcat',true);
     CV2popcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.CV2popcorr,'match','justcat',true);
     ratepopcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.ratepopcorr,'match','justcat',true);
 
@@ -88,6 +89,11 @@ for rr = 1:length(regions)
             ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
             ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
             SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
+            
+            normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = ...
+                nanmean(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
+            normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt}) = ...
+                nanmean(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
             
             enoughpopcellsrec = [recinfo.(regions{rr}).Ncells.(synchtypes{st})]>popthresh.(synchtypes{st});
             popratehist_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st}) = nanmean(popratehist.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st})(enoughpopcellsrec,:),1);
@@ -357,6 +363,47 @@ end
 NiceSave(['ISIbySynch_',(normtypes{nn}),'_',(regions{rr})],figfolder,[])
 end
 end
+
+%%
+for nn = 3:4
+%nn=3;
+for rr = 1:length(regions)
+    
+figure
+for ss = 1:3
+for tt = 1:length(celltypes)
+for st = 1:2
+subplot(4,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
+    imagesc(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),...
+        normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Ybins(1,:,1),...
+        normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt})')
+    hold on
+	plot(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),...
+        bz_NormToRange(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt})),...
+                'color',statecolors{ss},'linewidth',1)
+    %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
+    axis xy
+    %LogScale('y',10)
+    ylabel([(celltypes{tt}),' ISI (MTOnorm)']);xlabel([(synchtypes{st}),' Rate (norm)'])
+    if tt==1 & st == 1
+        title(statenames{ss})
+    end
+    
+    %title((celltypes{tt}))
+   % colorbar
+    if tt ==1 
+        caxis([0 0.02])
+    elseif tt==2
+         caxis([0 0.03])
+    end
+    %xlim(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
+  
+end
+end
+end
+NiceSave(['normISIbySynch_',(normtypes{nn}),'_',(regions{rr})],figfolder,[])
+end
+end
 %%
 figure
 for ss = 1:3
@@ -425,7 +472,50 @@ end
 end
 end
 end
-NiceSave(['SynchbyISI_',(normtypes{nn})],figfolder,[])
+NiceSave(['ISIbySynch_',(normtypes{nn})],figfolder,[])
+end
+
+%%
+for nn = 3:4
+    
+figure
+for rr = 1:length(regions)
+for ss = 1:3
+for tt = 1:length(celltypes)
+for st = 3
+subplot(6,4,(ss-1)*4+(tt-1)*12+rr)
+    imagesc(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),...
+        normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Ybins(1,:,1),...
+        normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt})')
+    hold on
+	plot(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),...
+        bz_NormToRange(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt})),...
+                'color',statecolors{ss},'linewidth',1)
+    axis xy
+    %LogScale('y',10)
+    if rr==1
+    ylabel({(statenames{ss}),[(celltypes{tt}),' ISI (MTOnorm)']});
+    end
+    if ss==3
+        xlabel(['Pop Rate, ',(synchtypes{st}),' cells (Norm)'])
+    end
+    if tt==1 & ss==1
+        title(regions{rr})
+    end
+    %title((celltypes{tt}))
+   % colorbar
+    if tt ==1 
+        caxis([0 0.02])
+    elseif tt==2
+         caxis([0 0.03])
+    end
+    xlim(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
+  
+end
+end
+end
+end
+NiceSave(['normISIbySynch_',(normtypes{nn})],figfolder,[])
 end
 %%
 cellcolor = {'k','r'};
@@ -433,7 +523,7 @@ for ss = 1:3
 figure
     subplot(3,3,1)
         for tt = 1:length(celltypes)
-            plot(log10(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).(celltypes{tt}))),...
+            plot(log10(ratepopcorr.(statenames{ss}).cellrate(CellClass.(regions{rr}).(celltypes{tt}))),...
                 ratepopcorr.(regions{rr}).(statenames{ss}).pE(CellClass.(regions{rr}).(celltypes{tt})),...
                 '.','color',cellcolor{tt})
             hold on
@@ -445,7 +535,7 @@ figure
 
     subplot(3,3,2)
         for tt = 1:length(celltypes)
-            plot(log10(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).(celltypes{tt}))),ratepopcorr.(regions{rr}).(statenames{ss}).pI(CellClass.(regions{rr}).(celltypes{tt})),...
+            plot(log10(ratepopcorr.(statenames{ss}).cellrate(CellClass.(regions{rr}).(celltypes{tt}))),ratepopcorr.(regions{rr}).(statenames{ss}).pI(CellClass.(regions{rr}).(celltypes{tt})),...
                 '.','color',cellcolor{tt})
             hold on
         end
@@ -468,7 +558,7 @@ figure
         
     subplot(3,3,4)
     for tt = 1:length(celltypes)
-        plot(log10(ISIStats.(regions{rr}).summstats.NREMstate.meanrate(CellClass.(regions{rr}).(celltypes{tt}))),CV2popcorr.(regions{rr}).(statenames{ss}).pE(CellClass.(regions{rr}).(celltypes{tt})),...
+        plot(log10(ratepopcorr.(statenames{ss}).cellrate(CellClass.(regions{rr}).(celltypes{tt}))),CV2popcorr.(regions{rr}).(statenames{ss}).pE(CellClass.(regions{rr}).(celltypes{tt})),...
             '.','color',cellcolor{tt})
         hold on
     end
@@ -479,7 +569,7 @@ figure
     
     subplot(3,3,5)
     for tt = 1:length(celltypes)
-        plot(log10(ISIStats.(regions{rr}).summstats.NREMstate.meanrate(CellClass.(regions{rr}).(celltypes{tt}))),CV2popcorr.(regions{rr}).(statenames{ss}).pI(CellClass.(regions{rr}).(celltypes{tt})),...
+        plot(log10(ratepopcorr.(statenames{ss}).cellrate(CellClass.(regions{rr}).(celltypes{tt}))),CV2popcorr.(regions{rr}).(statenames{ss}).pI(CellClass.(regions{rr}).(celltypes{tt})),...
             '.','color',cellcolor{tt})
         hold on
     end
