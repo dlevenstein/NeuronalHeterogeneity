@@ -75,7 +75,7 @@ end
 
 for tt = 1:length(synchtypes)
     spikemat.bycellpoprate.(synchtypes{tt}) = cellfun(@(X) ...
-        log10(X./mean(X)),spikemat.bycellpoprate.(synchtypes{tt}),'UniformOutput',false);
+        (X./mean(X)),spikemat.bycellpoprate.(synchtypes{tt}),'UniformOutput',false);
 end
 
 %% Calculate E and I pop rate (of other cells) for each spike
@@ -169,7 +169,7 @@ for cc = 1:length(celltypes)
             PopMod.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}))
         %colorbar
         
-        caxis([-0.25 0.25])
+        caxis([0.9 1.8])
         %crameri('vik','pivot',1)
       
         %LogScale('y',2)
@@ -201,7 +201,7 @@ for cc = 1:length(celltypes)
             PopMod_MTO.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}))
         %colorbar
         
-        caxis([-0.25 0.25])
+        caxis([0.9 1.8])
         %crameri('vik','pivot',1)
       
         %LogScale('y',2)
