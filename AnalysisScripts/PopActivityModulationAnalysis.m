@@ -13,7 +13,7 @@ baseName = bz_BasenameFromBasepath(basePath);
 spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
 ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
-%OccupancyStats = bz_LoadCellinfo(basePath,'OccupancyStats');
+OccupancyStats = bz_LoadCellinfo(basePath,'OccupancyStats');
 SleepState = bz_LoadStates(basePath,'SleepState');
 SleepState.ints.ALL = [0 Inf];
 % lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
@@ -96,14 +96,31 @@ for ss = 1:3
 
     for st = 1:length(synchtypes)
 
-        [ SynchbyISI.(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W) ConditionalHist( log10([X(W);Y(W)]),([Z(W);Z(W)]),...
+        [ SynchbyISI.(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W) ...
+            ConditionalHist( log10([X(W);Y(W)]),([Z(W);Z(W)]),...
             'Ybounds',[-1 1],'numYbins',50,'Xbounds',[-3 2],'numXbins',125,'minX',100),...
             ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
-            ISIStats.allspikes.poprate.(synchtypes{st}),ISIStats.allspikes.instate.(statenames{ss}),...
+            ISIStats.allspikes.poprate.(synchtypes{st}),...
+            ISIStats.allspikes.instate.(statenames{ss}),...
             'UniformOutput',false);
-        SynchbyISI.(synchtypes{st}).(statenames{ss}) = cat(1,SynchbyISI.(synchtypes{st}).(statenames{ss}){:});
-        SynchbyISI.(synchtypes{st}).(statenames{ss}) = bz_CollapseStruct( SynchbyISI.(synchtypes{st}).(statenames{ss}),3);
+        SynchbyISI.(synchtypes{st}).(statenames{ss}) = ...
+            cat(1,SynchbyISI.(synchtypes{st}).(statenames{ss}){:});
+        SynchbyISI.(synchtypes{st}).(statenames{ss}) = ...
+            bz_CollapseStruct( SynchbyISI.(synchtypes{st}).(statenames{ss}),3);
 
+        [ SynchbynormISI.(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W,MTO) ...
+            ConditionalHist( log10([X(W);Y(W)]./MTO),([Z(W);Z(W)]),...
+            'Ybounds',[-1 1],'numYbins',50,'Xbounds',[-4 1],'numXbins',100,'minX',100),...
+            ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
+            ISIStats.allspikes.poprate.(synchtypes{st}),...
+            ISIStats.allspikes.instate.(statenames{ss}),...
+            num2cell(OccupancyStats.(statenames{ss}).median),...
+            'UniformOutput',false);
+        SynchbynormISI.(synchtypes{st}).(statenames{ss}) = ...
+            cat(1,SynchbynormISI.(synchtypes{st}).(statenames{ss}){:});
+        SynchbynormISI.(synchtypes{st}).(statenames{ss}) = ...
+            bz_CollapseStruct( SynchbynormISI.(synchtypes{st}).(statenames{ss}),3);
+        
 %         for cc = 1:length(celltypes)
 %             SynchbyISI.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) = nanmean(SynchbyISI.(synchtypes{st}).(statenames{ss}).pYX(:,:,CellClass.(celltypes{cc})),3);
 %             SynchbyISI.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) = nanmean(SynchbyISI.(synchtypes{st}).(statenames{ss}).pYX(:,:,CellClass.(celltypes{cc})),3);
@@ -115,6 +132,7 @@ for ss = 1:3
             spikemat.cellrate,spikemat.bycellpoprate.(synchtypes{st}));
         
         PopMod.(synchtypes{st}).(statenames{ss}).allcells(bb,:,:) = SynchbyISI.(synchtypes{st}).(statenames{ss}).meanYX;
+        PopMod_MTO.(synchtypes{st}).(statenames{ss}).allcells(bb,:,:) = SynchbynormISI.(synchtypes{st}).(statenames{ss}).meanYX;
     end
 
 end
@@ -123,6 +141,9 @@ end
 PopMod.bins.ISIbins = SynchbyISI.(synchtypes{st}).(statenames{ss}).Xbins(1,:,1);
 PopMod.bins.BinSizeBins = binsizes;
 
+PopMod_MTO.bins.ISIbins = SynchbynormISI.(synchtypes{st}).(statenames{ss}).Xbins(1,:,1);
+PopMod_MTO.bins.BinSizeBins = binsizes;
+
 PopCellCorr.bins.BinSizeBins = PopMod.bins.BinSizeBins;
 %% Population average modulation
 for ss = 1:3
@@ -130,6 +151,8 @@ for ss = 1:3
         for cc = 1:length(celltypes)
                 PopMod.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) =...
                     nanmean(PopMod.(synchtypes{st}).(statenames{ss}).allcells(:,:,CellClass.(celltypes{cc})),3); 
+                PopMod_MTO.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) =...
+                    nanmean(PopMod_MTO.(synchtypes{st}).(statenames{ss}).allcells(:,:,CellClass.(celltypes{cc})),3); 
 %                 PopCellCorr.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) =...
 %                     nanmean(PopCellCorr.(synchtypes{st}).(statenames{ss}).allcells(:,CellClass.(celltypes{cc})),3); 
         end
@@ -143,7 +166,7 @@ for st = 1:2
 for cc = 1:length(celltypes)
     subplot(4,3,ss+(st-1)*3+(cc-1)*6)
         imagesc((PopMod.bins.ISIbins),log10(PopMod.bins.BinSizeBins),...
-            PopMod.(synchtypes{st}).(statenames{ss}).popp.(celltypes{cc}))
+            PopMod.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}))
         %colorbar
         
         caxis([-0.25 0.25])
@@ -168,6 +191,38 @@ end
 end
 
 NiceSave('PopRateModulation',figfolder,baseName)
+%%
+figure
+for ss = 1:3
+for st = 1:2
+for cc = 1:length(celltypes)
+    subplot(4,3,ss+(st-1)*3+(cc-1)*6)
+        imagesc((PopMod_MTO.bins.ISIbins),log10(PopMod_MTO.bins.BinSizeBins),...
+            PopMod_MTO.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}))
+        %colorbar
+        
+        caxis([-0.25 0.25])
+        %crameri('vik','pivot',1)
+      
+        %LogScale('y',2)
+         LogScale('xy',10,'exp',true);
+        axis xy
+        
+        if cc==1 &st==1
+           title(statenames{ss}) 
+        end
+        if ss == 1
+            ylabel({[(synchtypes{st}),' Modulation'],'Bin Size'})
+        end
+        if st == 2
+            xlabel([(celltypes{cc}),' ISI (MTOnorm)'])
+        end
+        
+end
+end 
+end
+
+NiceSave('PopRateModulation_MTO',figfolder,baseName)
 
 %%
 cc =1
