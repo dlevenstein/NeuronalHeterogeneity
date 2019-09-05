@@ -19,7 +19,7 @@ for rr = 1:length(regions)
     %CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
 
     [PopActivityAll,baseNames] = bz_LoadAnalysisResults(datasetPath.(regions{rr}),'SpikeStatsbyPopActivityAnalysis','dataset',true);
-
+    CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
     %PopActivityAll = GetMatResults(figfolder,'SpikeStatsbyPopActivityAnalysis','baseNames',baseNames);
     PopActivityAll = bz_CollapseStruct(PopActivityAll);
     
@@ -77,17 +77,20 @@ for rr = 1:length(regions)
         
         for st = 1:length(synchtypes)
             
-            
-            %How many cells are contributing?
-           % nspkthresh = 50;
-           % ncellthresh = 200;
-            %sum(ISIbytheta.(regions{rr}).Xhist>nspkthresh,3)
-            %sum(ISIbyPSS.(regions{rr}).Xhist>nspkthresh,3)
-           % ISIbySynch.(regions{rr}).pYX(sum(ISIbySynch.(regions{rr}).Xhist>nspkthresh,3)<ncellthresh,:,:)=nan;
-            
+           
+
             
             popratehist.(regions{rr}).enoughpopcells.(synchtypes{st}) = popratehist.(regions{rr}).(synchtypes{st})>popthresh.(synchtypes{st});
             if nn>2
+            %How many cells are contributing?
+            nspkthresh = 100;
+            ncellthresh = 300;
+            %sum(ISIbytheta.(regions{rr}).Xhist>nspkthresh,3)
+            %sum(ISIbyPSS.(regions{rr}).Xhist>nspkthresh,3)
+            ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(sum(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xhist>nspkthresh,3)<ncellthresh,:,:)=nan;
+            normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(sum(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xhist>nspkthresh,3)<ncellthresh,:,:)=nan;
+            
+            
             ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
             ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
             SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
@@ -120,7 +123,7 @@ end
 %% Pop Rate between regions
 display('Making figure - Regional Pop Rate')
 for nn = 1:4
-figure('visible','off')
+figure
 for rr = 1:4
 for st = 1:length(synchtypes)
     subplot(4,3,st+(rr-1)*3)
@@ -153,7 +156,7 @@ end
 display('Making figure - Regional E/I Pop Rate')
 
 for nn = 1:4
-figure('visible','off')
+figure
     for rr = 2:length(regions)
         for ss = 1:3
     subplot(3,3,ss+(rr-2)*3)
@@ -171,6 +174,10 @@ figure('visible','off')
         if rr==4
            xlabel('E Rate') 
         end
+        
+        non0 = popratehist_joint_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).alltime([2:end],[2:end]);
+        caxis([0 max(non0(:))])
+        
         end
     end
     
@@ -182,7 +189,7 @@ end
 display('Making figure - Recording Variation')
 
 for nn = 1:4
-figure('visible','off')
+figure
 subplot(4,2,1)
 for rr = 1:4
    hold on
@@ -231,7 +238,7 @@ end
 %Other cell pop rate distirbution
 %Other cell pop rade distribution | spike
 for nn = 3:4
-figure('visible','off')
+figure
 for rr = 1:4
 for st = 1:length(synchtypes)
     subplot(4,3,st+(rr-1)*3)
@@ -252,6 +259,7 @@ for st = 1:length(synchtypes)
     if rr ==1
        title((synchtypes{st}))
     end
+    
 end 
 
 end
@@ -266,53 +274,37 @@ end
 %                 'color',statecolors{ss},'linewidth',2)
 %plot(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt}))
 
-%%
-
-ss = 1
-figure('visible','off')
-for rr = 1:length(regions)
-    
-    
-    subplot(4,4,rr)
-    imagesc(popratehist.(regions{rr}).(normtypes{nn}).bins.ALL(1,:),[0 0.1],...
-        popratehist.(regions{rr}).(normtypes{nn}).(statenames{ss}).ALL(sortncells.(regions{rr}).ALL,:))  
-    axis xy
-    hold on
-    for st = 1:length(synchtypes)
-        plot(popratehist.(regions{rr}).(normtypes{nn}).bins.(synchtypes{st})(1,:),...
-            popratehist_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st}))
-    end
-    
-    subplot(4,4,rr+4)
-        imagesc(ISIbySynch.(regions{rr}).(normtypes{nn}).ALL.(statenames{ss}).Xbins(1,:,1),[0 1],...
-            squeeze(ISIbySynch.(regions{rr}).(normtypes{nn}).ALL.(statenames{ss}).pX(1,:,popratehist.(regions{rr}).enoughpopcells.ALL))')
-end
 
 %%
 display('Making figure - Gross ISI stats byRegional Pop Rate')
 for nn = 3:4
-for rr = 2:length(regions)
-figure('visible','off')
+
+figure
 for ss = 1:3
-    subplot(3,3,ss)
+for rr = 2:length(regions)
+    for tt = 1:length(celltypes)
+    subplot(6,6,(ss-1)*6+(tt-1)*18+rr-1)
         h = imagesc(popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pE(1,:),...
             popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pI(1,:),...
-            popratehist_joint_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).alltime');
-        axis xy
-        set(h,'AlphaData',~(popratehist_joint_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).alltime'==0));
-
-        title(statenames{ss})
-        non0 = popratehist_joint_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).alltime([2:end],[2:end]);
-        caxis([0 max(non0(:))])
-    for tt = 1:length(celltypes)
-    subplot(6,6,(ss-1)*2+12+tt)
-        h = imagesc(popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pE(1,:),popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pI(1,:),log10(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).pSpk)');
+            log10(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).pSpk)');
         axis xy
         set(h,'AlphaData',~isnan(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).pSpk'));
-        colorbar
+        %colorbar
         %crameri lajolla
-        caxis([-0.5 1.75])
-        
+        if tt == 1
+            caxis([-0.5 1])
+        elseif tt == 2
+            caxis([0 1.75])
+        end
+        if ss ==1 & tt ==1
+            title(regions{rr})
+        end
+        if ss==3&tt==2
+           xlabel('pE Rate') 
+        end
+        if rr == 2
+           ylabel('pI Rate') 
+        end
 %     subplot(6,6,(ss-1)*2+18+tt)
 %             h = imagesc(popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pE(1,:),popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pI(1,:),1./(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).geomeanISIs)');
 %         axis xy
@@ -321,17 +313,24 @@ for ss = 1:3
 %         %crameri lajolla
 %         %caxis([-1 1])
         
-    subplot(6,6,(ss-1)*2+24+tt)
+    subplot(6,6,(ss-1)*6+(tt-1)*18++rr+2)
         h = imagesc(popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pE(1,:),popratehist_joint.(regions{rr}).(normtypes{nn}).bins.pI(1,:),popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).cellCV2s');
         axis xy
         set(h,'AlphaData',~isnan(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).cellCV2s'));
-        colorbar
+        %colorbar
         crameri berlin
         caxis([0.7 1.3])
+        if ss ==1 & tt ==1
+            title(regions{rr})
+        end
+        if ss==3&tt==2
+           xlabel('pE Rate') 
+        end
     end
 end
-NiceSave(['popratehist_jointstats_',(normtypes{nn}),'_',(regions{rr})],figfolder,[])
 end
+NiceSave(['popratehist_jointstats_',(normtypes{nn}),'_',(regions{rr})],figfolder,[])
+
 end
 %
 %%
@@ -340,11 +339,11 @@ for nn = 3:4
 %nn=3;
 for rr = 1:length(regions)
     
-figure('visible','off')
+figure
 for ss = 1:3
 for tt = 1:length(celltypes)
 for st = 1:2
-subplot(4,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
+subplot(4,3,(ss-1)+(tt-1)*6+(st-1)*3+1)
     imagesc(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Ybins(1,:,1), ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt})')
     hold on
 	plot(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),...
@@ -360,11 +359,11 @@ subplot(4,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
     
     %title((celltypes{tt}))
    % colorbar
-    if tt ==1 
-        caxis([0 0.02])
-    elseif tt==2
-         caxis([0 0.03])
-    end
+%     if tt ==1 
+%         caxis([0 0.02])
+%     elseif tt==2
+%          caxis([0 0.03])
+%     end
     %xlim(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
   
 end
@@ -381,7 +380,7 @@ for nn = 3:4
 %nn=3;
 for rr = 1:length(regions)
     
-figure('visible','off')
+figure
 for ss = 1:3
 for tt = 1:length(celltypes)
 for st = 1:2
@@ -403,11 +402,11 @@ subplot(4,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
     
     %title((celltypes{tt}))
    % colorbar
-    if tt ==1 
-        caxis([0 0.02])
-    elseif tt==2
-         caxis([0 0.03])
-    end
+%     if tt ==1 
+%         caxis([0 0.03])
+%     elseif tt==2
+%          caxis([0 0.04])
+%     end
     %xlim(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
   
 end
@@ -419,7 +418,7 @@ end
 %%
 display('Making figure - Pop Rate by ISI')
 
-figure('visible','off')
+figure
 for ss = 1:3
 for tt = 1:length(celltypes)
 for st = 1:2
@@ -453,7 +452,7 @@ display('Making figure - ISI by Pop Rate (ALL)')
 
 for nn = 3:4
     
-figure('visible','off')
+figure
 for rr = 1:length(regions)
 for ss = 1:3
 for tt = 1:length(celltypes)
@@ -477,12 +476,12 @@ subplot(6,4,(ss-1)*4+(tt-1)*12+rr)
     end
     %title((celltypes{tt}))
    % colorbar
-    if tt ==1 
-        caxis([0 0.02])
-    elseif tt==2
-         caxis([0 0.03])
-    end
-    xlim(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
+%     if tt ==1 
+%         caxis([0 0.025])
+%     elseif tt==2
+%          caxis([0 0.03])
+%     end
+   % xlim(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
   
 end
 end
@@ -496,7 +495,7 @@ display('Making figure - normISI by Pop Rate (ALL)')
 
 for nn = 3:4
     
-figure('visible','off')
+figure
 for rr = 1:length(regions)
 for ss = 1:3
 for tt = 1:length(celltypes)
@@ -522,11 +521,11 @@ subplot(6,4,(ss-1)*4+(tt-1)*12+rr)
     end
     %title((celltypes{tt}))
    % colorbar
-    if tt ==1 
-        caxis([0 0.02])
-    elseif tt==2
-         caxis([0 0.03])
-    end
+%     if tt ==1 
+%         caxis([0 0.03])
+%     elseif tt==2
+%          caxis([0 0.04])
+%     end
     xlim(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
   
 end
@@ -539,49 +538,60 @@ end
 display('Making figure - PopRate corr stats')
 
 cellcolor = {'k','r'};
+for rr = 1:4
 for ss = 1:3
-figure('visible','off')
+figure
     subplot(3,3,1)
         for tt = 1:length(celltypes)
-            plot(log10(ratepopcorr.(statenames{ss}).cellrate(CellClass.(regions{rr}).(celltypes{tt}))),...
-                ratepopcorr.(regions{rr}).(statenames{ss}).pE(CellClass.(regions{rr}).(celltypes{tt})),...
+            plotcells = CellClass.(regions{rr}).(celltypes{tt})&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st});
+            plot(log10(ratepopcorr.(regions{rr}).(statenames{ss}).cellrate(plotcells)),...
+                ratepopcorr.(regions{rr}).(statenames{ss}).pE(plotcells),...
                 '.','color',cellcolor{tt})
             hold on
         end
+        axis tight;box off
         plot(get(gca,'xlim'),[0 0],'k')
         xlabel('Mean Rate (Hz)');ylabel('Cell Rate-pE Rate Corr.')
         LogScale('x',10)
-        title((statenames{ss}))
+        title((regions{rr}))
 
     subplot(3,3,2)
         for tt = 1:length(celltypes)
-            plot(log10(ratepopcorr.(statenames{ss}).cellrate(CellClass.(regions{rr}).(celltypes{tt}))),ratepopcorr.(regions{rr}).(statenames{ss}).pI(CellClass.(regions{rr}).(celltypes{tt})),...
+            plotcells = CellClass.(regions{rr}).(celltypes{tt})&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st});
+            plot(log10(ratepopcorr.(regions{rr}).(statenames{ss}).cellrate(plotcells)),...
+                ratepopcorr.(regions{rr}).(statenames{ss}).pI(plotcells),...
                 '.','color',cellcolor{tt})
             hold on
         end
+        axis tight;box off
         plot(get(gca,'xlim'),[0 0],'k')
         xlabel('Mean Rate (Hz)');ylabel('Cell Rate-pI Rate Corr.')
         LogScale('x',10)
-        
+        title((statenames{ss}))
         
     subplot(3,3,3)
         for tt = 1:length(celltypes)
-            plot(ratepopcorr.(regions{rr}).(statenames{ss}).pE(CellClass.(regions{rr}).(celltypes{tt})),ratepopcorr.(regions{rr}).(statenames{ss}).pI(CellClass.(regions{rr}).(celltypes{tt})),...
+            plotcells = CellClass.(regions{rr}).(celltypes{tt})&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st});
+            plot(ratepopcorr.(regions{rr}).(statenames{ss}).pE(plotcells),...
+                ratepopcorr.(regions{rr}).(statenames{ss}).pI(plotcells),...
                 '.','color',cellcolor{tt})
             hold on
         end
         xlabel('Rate-pE Corr');ylabel('Rate-pI Corr')
-        axis tight
+        axis tight;box off
         plot(get(gca,'xlim'),[0 0],'k')
         plot([0 0],get(gca,'ylim'),'k')
         
         
     subplot(3,3,4)
     for tt = 1:length(celltypes)
-        plot(log10(ratepopcorr.(statenames{ss}).cellrate(CellClass.(regions{rr}).(celltypes{tt}))),CV2popcorr.(regions{rr}).(statenames{ss}).pE(CellClass.(regions{rr}).(celltypes{tt})),...
+        plotcells = CellClass.(regions{rr}).(celltypes{tt})&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st});
+        plot(log10(ratepopcorr.(regions{rr}).(statenames{ss}).cellrate(plotcells)),...
+            CV2popcorr.(regions{rr}).(statenames{ss}).pE(plotcells),...
             '.','color',cellcolor{tt})
         hold on
     end
+    axis tight;box off
     plot(get(gca,'xlim'),[0 0],'k')
     xlabel('Mean Rate (Hz)');ylabel('CV2-pE Rate Corr.')
     LogScale('x',10)
@@ -589,10 +599,13 @@ figure('visible','off')
     
     subplot(3,3,5)
     for tt = 1:length(celltypes)
-        plot(log10(ratepopcorr.(statenames{ss}).cellrate(CellClass.(regions{rr}).(celltypes{tt}))),CV2popcorr.(regions{rr}).(statenames{ss}).pI(CellClass.(regions{rr}).(celltypes{tt})),...
+        plotcells = CellClass.(regions{rr}).(celltypes{tt})&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st});
+        plot(log10(ratepopcorr.(regions{rr}).(statenames{ss}).cellrate(plotcells)),...
+            CV2popcorr.(regions{rr}).(statenames{ss}).pI(plotcells),...
             '.','color',cellcolor{tt})
         hold on
     end
+    axis tight;box off
     plot(get(gca,'xlim'),[0 0],'k')
     xlabel('Mean Rate (Hz)');ylabel('CV2-pI Rate Corr.')
     LogScale('x',10)
@@ -600,7 +613,9 @@ figure('visible','off')
     
     subplot(3,3,6)
     for tt = 1:length(celltypes)
-        plot(CV2popcorr.(regions{rr}).(statenames{ss}).pE(CellClass.(regions{rr}).(celltypes{tt})),CV2popcorr.(regions{rr}).(statenames{ss}).pI(CellClass.(regions{rr}).(celltypes{tt})),...
+        plotcells = CellClass.(regions{rr}).(celltypes{tt})&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st});
+        plot(CV2popcorr.(regions{rr}).(statenames{ss}).pE(plotcells),...
+            CV2popcorr.(regions{rr}).(statenames{ss}).pI(plotcells),...
             '.','color',cellcolor{tt})
         hold on
     end
@@ -610,7 +625,9 @@ figure('visible','off')
     
     subplot(3,3,7)
     for tt = 1:length(celltypes)
-        plot(ratepopcorr.(regions{rr}).(statenames{ss}).pE(CellClass.(regions{rr}).(celltypes{tt})),CV2popcorr.(regions{rr}).(statenames{ss}).pE(CellClass.(regions{rr}).(celltypes{tt})),...
+        plotcells = CellClass.(regions{rr}).(celltypes{tt})&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st});
+        plot(ratepopcorr.(regions{rr}).(statenames{ss}).pE(plotcells),...
+            CV2popcorr.(regions{rr}).(statenames{ss}).pE(plotcells),...
             '.','color',cellcolor{tt})
         hold on
     end
@@ -620,7 +637,9 @@ figure('visible','off')
     
     subplot(3,3,8)
     for tt = 1:length(celltypes)
-        plot(ratepopcorr.(regions{rr}).(statenames{ss}).pI(CellClass.(regions{rr}).(celltypes{tt})),CV2popcorr.(regions{rr}).(statenames{ss}).pI(CellClass.(regions{rr}).(celltypes{tt})),...
+        plotcells = CellClass.(regions{rr}).(celltypes{tt})&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st});
+        plot(ratepopcorr.(regions{rr}).(statenames{ss}).pI(plotcells),...
+            CV2popcorr.(regions{rr}).(statenames{ss}).pI(plotcells),...
             '.','color',cellcolor{tt})
         hold on
     end
@@ -628,5 +647,102 @@ figure('visible','off')
     plot([0 0],get(gca,'ylim'),'k')
     xlabel('Rate-pI Corr.');ylabel('CV2-pI Corr.')
     
-    %NiceSave(['RateCV2PopCorr_',(statenames{ss})],figfolder,baseName)
+    NiceSave(['RateCV2PopCorr_',(regions{rr}),'_',(statenames{ss})],figfolder,[])
 end
+end
+%%
+st =3; %all MUA
+figure
+for rr = 1:4
+    for ss = 1:3
+    subplot(3,4,rr+(ss-1)*4)
+        for tt = 1:length(celltypes)
+            plotcells = CellClass.(regions{rr}).(celltypes{tt})&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st});
+            plot(log10(ratepopcorr.(regions{rr}).(statenames{ss}).cellrate(plotcells)),...
+                ratepopcorr.(regions{rr}).(statenames{ss}).(synchtypes{st})(plotcells),...
+                '.','color',cellcolor{tt})
+            hold on
+        end
+        axis tight;box off
+        xlim([-2 2]);ylim([-0.6 0.75])
+        plot(get(gca,'xlim'),[0 0],'k')
+        if ss ==3
+        xlabel('Mean Rate (Hz)');
+        end
+        LogScale('x',10)
+        if ss == 1
+        title((regions{rr}))
+        end
+        if rr == 1
+            ylabel({statenames{ss},'Pop-Rate Corr'})
+        end
+    end
+end
+NiceSave('RatePopCorr',figfolder,[])
+%%
+st =3; %all MUA
+figure
+for rr = 1:4
+    for ss = 1:3
+    subplot(3,4,rr+(ss-1)*4)
+        for tt = 1:length(celltypes)
+            plotcells = CellClass.(regions{rr}).(celltypes{tt})&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st});
+            plot(log10(ratepopcorr.(regions{rr}).(statenames{ss}).cellrate(plotcells)),...
+                CV2popcorr.(regions{rr}).(statenames{ss}).(synchtypes{st})(plotcells),...
+                '.','color',cellcolor{tt})
+            hold on
+        end
+        axis tight;box off
+        xlim([-2 2]);ylim([-0.25 0.25])
+        plot(get(gca,'xlim'),[0 0],'k')
+        if ss ==3
+        xlabel('Mean Rate (Hz)');
+        end
+        LogScale('x',10)
+        if ss == 1
+        title((regions{rr}))
+        end
+        if rr == 1
+            ylabel({statenames{ss},'Pop-CV2 Corr'})
+        end
+    end
+end
+NiceSave('CV2PopCorr',figfolder,[])
+%% 
+for rr = 1:4
+    for ss = 1:3
+        for st = 1:3
+            for tt = 1:length(celltypes)
+[~,choristersort.(regions{rr}).(celltypes{tt}).(statenames{ss}).(synchtypes{st})] = sort(ratepopcorr.(regions{rr}).(statenames{ss}).(synchtypes{st}));
+
+usecells = find(CellClass.(regions{rr}).(celltypes{tt})&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st}));
+choristersort.(regions{rr}).(celltypes{tt}).(statenames{ss}).(synchtypes{st}) = ...
+    intersect(choristersort.(regions{rr}).(celltypes{tt}).(statenames{ss}).(synchtypes{st}),usecells,...
+    'stable');
+            end
+        end
+        
+        
+    end
+end
+
+%%
+nn= 3
+ss = 1
+figure
+for rr = 1:length(regions)
+    for ss = 1:3
+    for tt = 1:2
+    subplot(6,4,rr+(ss-1)*4+(tt-1)*12)
+        imagesc(ISIbySynch.(regions{rr}).(normtypes{nn}).ALL.(statenames{ss}).Xbins(1,:,1),[0 1],...
+            squeeze(ISIbySynch.(regions{rr}).(normtypes{nn}).ALL.(statenames{ss}).pX(1,:,choristersort.(regions{rr}).(celltypes{tt}).(statenames{ss}).(synchtypes{st})))')
+        if ss ==3
+            xlabel('All MUA (lognorm)')
+        end
+        if rr == 1
+            ylabel({statenames{ss},[(celltypes{tt}), ' Cells, Chor. Sort']})
+        end
+    end
+    end
+end
+NiceSave('SpikeTriggeredPopDist',figfolder,[])
