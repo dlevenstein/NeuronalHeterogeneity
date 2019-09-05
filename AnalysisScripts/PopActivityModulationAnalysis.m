@@ -162,9 +162,9 @@ end
 NiceSave('PopRateModulation',figfolder,baseName)
 
 %%
-pickbinsize = 5;
-figure
-imagesc(squeeze(PopMod.pE.NREMstate.allcells(pickbinsize,:,:))')
+% pickbinsize = 5;
+% figure
+% imagesc(squeeze(PopMod.pE.NREMstate.allcells(pickbinsize,:,:))')
 %%
 % figure
 % for ss = 1:3
