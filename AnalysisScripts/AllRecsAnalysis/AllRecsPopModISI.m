@@ -27,7 +27,6 @@ for rr = 1:length(regions)
     recinfo.(regions{rr}).cellinfofiles = baseNames;
 
 
-
     PopCellCorr.(regions{rr}) = bz_CollapseStruct(PopModAll.PopCellCorr,'match','justcat',true);
     PopMod.(regions{rr}) = bz_CollapseStruct(PopModAll.PopMod,'match','justcat',true);
     cellinfo.(regions{rr}) = bz_CollapseStruct(PopModAll.cellinfo,'match','justcat',true);
@@ -43,11 +42,13 @@ celltypes = {'pE','pI'};
 %%
 %% Population average modulation
 for rr = 1:4
+    PopMod.(regions{rr}).Ncells.ALL = PopMod.(regions{rr}).Ncells.pE + PopMod.(regions{rr}).Ncells.pI;
 for ss = 1:3
     for st = 1:length(synchtypes)
+        keepcells = PopMod.(regions{rr}).Ncells.(synchtypes{st})>popthresh.(synchtypes{st});
         for cc = 1:length(celltypes)
                 PopMod.(regions{rr}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) =...
-                    nanmean(PopMod.(regions{rr}).(synchtypes{st}).(statenames{ss}).allcells(:,:,cellinfo.(regions{rr}).CellClass.(celltypes{cc})),3); 
+                    nanmean(PopMod.(regions{rr}).(synchtypes{st}).(statenames{ss}).allcells(:,:,cellinfo.(regions{rr}).CellClass.(celltypes{cc})&keepcells),3); 
 %                PopMod_MTO.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) =...
 %                    nanmean(PopMod_MTO.(synchtypes{st}).(statenames{ss}).allcells(:,:,CellClass.(celltypes{cc})),3); 
 %                 PopCellCorr.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) =...
@@ -64,10 +65,10 @@ for st = 1:2
 for cc = 1:length(celltypes)
     subplot(4,3,ss+(st-1)*3+(cc-1)*6)
         imagesc((PopMod.(regions{rr}).bins.ISIbins(1,:)),log10(PopMod.(regions{rr}).bins.BinSizeBins(1,:)),...
-            PopMod.(regions{rr}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}))
+            log10(PopMod.(regions{rr}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc})))
         %colorbar
         
-        caxis([0.8 1.5])
+        %caxis([-0.1 0.1])
         %crameri('vik','pivot',1)
       
         %LogScale('y',2)
@@ -87,4 +88,5 @@ for cc = 1:length(celltypes)
 end
 end 
 end
+NiceSave(['PopMod_',(regions{rr})],figfolder,[])
 end
