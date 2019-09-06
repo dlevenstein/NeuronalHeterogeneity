@@ -8,7 +8,8 @@ datasetPath.vCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Dataset
 datasetPath.THAL = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL';
 regions = {'THAL','vCTX','fCTX','CA1'};
 
-
+synchtypes = {'pE','pI','ALL'};
+normtypes = {'lin','log','lognorm','norm'};
 popthresh.pE = 25;
 popthresh.pI = 5;
 popthresh.ALL = 25;
@@ -24,10 +25,10 @@ for rr = 1:length(regions)
     PopActivityAll = bz_CollapseStruct(PopActivityAll);
     
     recinfo.(regions{rr}).baseName = PopActivityAll.baseName;
-    recinfo.(regions{rr}).Ncells = PopActivityAll.Ncells;
     recinfo.(regions{rr}).cellinfofiles = baseNames;
-
-
+    recinfo.(regions{rr}).Ncells.pE = [PopActivityAll.Ncells.pE]';
+    recinfo.(regions{rr}).Ncells.pI = [PopActivityAll.Ncells.pI]';
+    recinfo.(regions{rr}).Ncells.ALL = recinfo.(regions{rr}).Ncells.pE+recinfo.(regions{rr}).Ncells.pI;
 
     popratehist_joint.(regions{rr}) = bz_CollapseStruct(PopActivityAll.popratehist_joint,3,'justcat',true);
     popratehist.(regions{rr}) = bz_CollapseStruct(PopActivityAll.popratehist,'match','justcat',true);
@@ -36,7 +37,13 @@ for rr = 1:length(regions)
     normISIbySynch.(regions{rr}) = bz_CollapseStruct(PopActivityAll.normISIbySynch,'match','justcat',true);
     CV2popcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.CV2popcorr,'match','justcat',true);
     ratepopcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.ratepopcorr,'match','justcat',true);
-
+    
+    for st = 3
+        keeprecs = recinfo.(regions{rr}).Ncells.(synchtypes{st})>popthresh.(synchtypes{st});
+        PopRatebyPSS.(regions{rr}).(synchtypes{st}) = bz_CollapseStruct(PopActivityAll.PopRatebyPSS(keeprecs),3,'mean',true);
+        PopRatebyTheta.(regions{rr}).(synchtypes{st}) = bz_CollapseStruct(PopActivityAll.PopRatebyTheta(keeprecs),3,'mean',true);
+    end
+    
     keeprecs = [recinfo.(regions{rr}).Ncells.pE]>popthresh.pE & [recinfo.(regions{rr}).Ncells.pI]>popthresh.pI; 
     if all(~keeprecs)
         disp(['Region ',regions{rr},' has no recordings with enough cells'])
@@ -44,7 +51,7 @@ for rr = 1:length(regions)
     else
         popratehist_joint_mean.(regions{rr}) = bz_CollapseStruct(PopActivityAll.popratehist_joint(keeprecs),3,'mean',true);
     end
-    
+
     clear PopActivityAll
 end
 %%
@@ -52,13 +59,13 @@ statenames = {'WAKEstate','NREMstate','REMstate'};
 statecolors = {[0 0 0],[0 0 1],[1 0 0]};
 numstates = length(statenames);
 
-normtypes = {'lin','log','lognorm','norm'};
+
 
 for nn = 1:length(normtypes)
 
 for rr = 1:length(regions)
     celltypes = fieldnames(ISIbySynch.(regions{rr}).norm.pE.NREMstate.celltypeidx);
-    synchtypes = fieldnames(ISIbySynch.(regions{rr}).norm);
+    %synchtypes = fieldnames(ISIbySynch.(regions{rr}).norm);
     
     popratehist.(regions{rr}).ALL = popratehist.(regions{rr}).pE + popratehist.(regions{rr}).pI;
     for n = 1:length(recinfo.(regions{rr}).Ncells)
@@ -84,7 +91,7 @@ for rr = 1:length(regions)
             if nn>2
             %How many cells are contributing?
             nspkthresh = 100;
-            ncellthresh = 300;
+            ncellthresh = 250;
             %sum(ISIbytheta.(regions{rr}).Xhist>nspkthresh,3)
             %sum(ISIbyPSS.(regions{rr}).Xhist>nspkthresh,3)
             ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(sum(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xhist>nspkthresh,3)<ncellthresh,:,:)=nan;
@@ -103,7 +110,7 @@ for rr = 1:length(regions)
             enoughpopcellsrec = [recinfo.(regions{rr}).Ncells.(synchtypes{st})]>popthresh.(synchtypes{st});
             popratehist_mean.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st}) = nanmean(popratehist.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st})(enoughpopcellsrec,:),1);
             popratehist_std.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st}) = nanstd(popratehist.(regions{rr}).(normtypes{nn}).(statenames{ss}).(synchtypes{st})(enoughpopcellsrec,:),[],1);
-
+            
         end
     end
     end
@@ -233,7 +240,57 @@ NiceSave(['CellCounts_',(normtypes{nn})],figfolder,[])
 end
 
 %%
+figure
+for rr = 1:4
+subplot(4,4,rr)
+imagesc(PopRatebyPSS.(regions{rr}).(synchtypes{st}).(normtypes{nn}).(synchtypes{st}).Xbins,...
+    PopRatebyPSS.(regions{rr}).(synchtypes{st}).(normtypes{nn}).(synchtypes{st}).Ybins,...
+    PopRatebyPSS.(regions{rr}).(synchtypes{st}).(normtypes{nn}).(synchtypes{st}).pYX')
+hold on
+plot(PopRatebyPSS.(regions{rr}).(synchtypes{st}).(normtypes{nn}).(synchtypes{st}).Xbins,...
+    bz_NormToRange(PopRatebyPSS.(regions{rr}).(synchtypes{st}).(normtypes{nn}).(synchtypes{st}).pX),'k')
+axis xy
+xlabel('PSS');ylabel('Pop Rate (norm)')
+title(regions{rr})
 
+subplot(4,4,rr+4)
+imagesc(PopRatebyTheta.(regions{rr}).(synchtypes{st}).notNREM.(normtypes{nn}).(synchtypes{st}).Xbins,...
+    PopRatebyTheta.(regions{rr}).(synchtypes{st}).notNREM.(normtypes{nn}).(synchtypes{st}).Ybins,...
+    PopRatebyTheta.(regions{rr}).(synchtypes{st}).notNREM.(normtypes{nn}).(synchtypes{st}).pYX')
+hold on
+plot(PopRatebyTheta.(regions{rr}).(synchtypes{st}).notNREM.(normtypes{nn}).(synchtypes{st}).Xbins,...
+    bz_NormToRange(PopRatebyTheta.(regions{rr}).(synchtypes{st}).notNREM.(normtypes{nn}).(synchtypes{st}).pX),'k')
+axis xy
+xlabel('Theta');ylabel('Pop Rate (norm)')
+end
+NiceSave(['PopDistbyState',(normtypes{nn})],figfolder,[])
+
+%%
+figure
+subplot(4,2,6)
+imagesc(PopRatebyTheta.(regions{rr}).(synchtypes{st}).WAKE.(normtypes{nn}).(synchtypes{st}).Xbins,...
+    PopRatebyTheta.(regions{rr}).(synchtypes{st}).WAKE.(normtypes{nn}).(synchtypes{st}).Ybins,...
+    PopRatebyTheta.(regions{rr}).(synchtypes{st}).WAKE.(normtypes{nn}).(synchtypes{st}).pYX')
+hold on
+plot(PopRatebyTheta.(regions{rr}).(synchtypes{st}).WAKE.(normtypes{nn}).(synchtypes{st}).Xbins,...
+    bz_NormToRange(PopRatebyTheta.(regions{rr}).(synchtypes{st}).WAKE.(normtypes{nn}).(synchtypes{st}).pX),'k')
+axis xy
+ylabel({'WAKE','Pop Rate'})
+
+subplot(4,2,8)
+imagesc(PopRatebyTheta.(regions{rr}).(synchtypes{st}).REM.(normtypes{nn}).(synchtypes{st}).Xbins,...
+    PopRatebyTheta.(regions{rr}).(synchtypes{st}).REM.(normtypes{nn}).(synchtypes{st}).Ybins,...
+    PopRatebyTheta.(regions{rr}).(synchtypes{st}).REM.(normtypes{nn}).(synchtypes{st}).pYX')
+hold on
+plot(PopRatebyTheta.(regions{rr}).(synchtypes{st}).REM.(normtypes{nn}).(synchtypes{st}).Xbins,...
+    bz_NormToRange(PopRatebyTheta.(regions{rr}).(synchtypes{st}).REM.(normtypes{nn}).(synchtypes{st}).pX),'k')
+axis xy
+xlabel('Theta');ylabel({'REM','Pop Rate'})
+
+
+
+
+%%
 %Pop Rate Distirbutioon 
 %Other cell pop rate distirbution
 %Other cell pop rade distribution | spike
