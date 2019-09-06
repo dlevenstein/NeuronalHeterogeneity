@@ -45,8 +45,8 @@ for ss = 1:length(statenames)
 end
 %% Loop binsizes
 numbins = 20;
-binrange = [0.003 30];
-dt = 0.003;
+binrange = [0.001 30];
+dt = 0.001;
 binsizes = logspace(log10(binrange(1)),log10(binrange(2)),numbins);
 %%
 for bb = 1:numbins
