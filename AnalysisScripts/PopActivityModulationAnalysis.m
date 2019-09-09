@@ -1,4 +1,4 @@
-function [PopMod,cellinfo,PopCellCorr] = PopActivityModulationAnalysis(basePath,figfolder)
+function [PopMod,PopMod_MTO,cellinfo,PopCellCorr] = PopActivityModulationAnalysis(basePath,figfolder)
 
 %% DEV
 %reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
