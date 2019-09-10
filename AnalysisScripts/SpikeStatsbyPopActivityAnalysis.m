@@ -44,31 +44,42 @@ dt = 0.005;
 spikemat = bz_SpktToSpkmat(spikes,'binsize',binsize,'dt',dt,'bintype','gaussian','units','rate');
 
 %% For each cell, calculate E and I pop rates of all OTHER cells
+
 for tt = 1:length(celltypes)
     Ncells.(celltypes{tt}) = sum(CellClass.(celltypes{tt}));
-    %Mean Rate of active cells
-    spikemat.poprate.(celltypes{tt}) = mean(spikemat.data(:,CellClass.(celltypes{tt})),2);
-    %Percentage of cells active (more than half a gaussian kernal)
-    spikemat.cellsync.(celltypes{tt}) = mean(spikemat.data(:,CellClass.(celltypes{tt}))>0.5,2);%./...
-            %sum(CellClass.(celltypes{tt}));
+    spikemat.totpoprate.(celltypes{tt}) = sum(spikemat.data(:,CellClass.(celltypes{tt})),2);
+    spikemat.poprate.(celltypes{tt}) = spikemat.totpoprate.(celltypes{tt})./Ncells.(celltypes{tt});
+    
+    spikemat.cellsync.(celltypes{tt}) = mean(spikemat.data(:,CellClass.(celltypes{tt}))>0.5,2);
 end
-spikemat.poprate.ALL = mean(spikemat.data(:,CellClass.pI|CellClass.pE),2);
 Ncells.ALL = Ncells.pE + Ncells.pI;
-%%
-for cc = 1:spikes.numcells
+spikemat.totpoprate.ALL = sum(spikemat.data(:,(CellClass.pI|CellClass.pE)),2);
+spikemat.poprate.ALL = spikemat.totpoprate.ALL./Ncells.ALL;
+
+for cc = 1:spikes.numcells %weird roundabout way to calculate is much faster
     bz_Counter(cc,spikes.numcells,'Cell');
     thiscell = false(size(CellClass.pE));
     thiscell(cc) = true;
     spikemat.cellrate{cc} = spikemat.data(:,cc);
     for tt = 1:length(celltypes)
         popratehist.(celltypes{tt})(cc) = sum(CellClass.(celltypes{tt}) & ~thiscell);
-        spikemat.bycellpoprate.(celltypes{tt}){cc} = mean(spikemat.data(:,CellClass.(celltypes{tt}) & ~thiscell),2);
-
+        if CellClass.(celltypes{tt})(cc) %if it's in theclass, subtract off the current cell
+            spikemat.bycellpoprate.(celltypes{tt}){cc} = ...
+                (spikemat.totpoprate.(celltypes{tt})-spikemat.cellrate{cc})./...
+               popratehist.(celltypes{tt})(cc);
+        else
+            spikemat.bycellpoprate.(celltypes{tt}){cc} = ...
+                spikemat.totpoprate.(celltypes{tt})./popratehist.(celltypes{tt})(cc);
+        end
     end
-    spikemat.bycellpoprate.ALL{cc} = mean(spikemat.data(:,(CellClass.pI|CellClass.pE) & ~thiscell),2);
-            %sum(~thiscell)./binsize;
+    
+    if CellClass.pI(cc)||CellClass.pE(cc)
+        spikemat.bycellpoprate.ALL{cc} = (spikemat.totpoprate.(celltypes{tt})-spikemat.cellrate{cc})./...
+            (Ncells.ALL-1);
+    else
+        spikemat.bycellpoprate.ALL{cc} = spikemat.totpoprate.(celltypes{tt})./Ncells.ALL;
+    end
 end
-
 %% Normalizations
 normtypes = {'lin','log','lognorm','norm'};
 synchtypes = [celltypes,'ALL'];

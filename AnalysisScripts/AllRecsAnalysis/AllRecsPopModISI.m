@@ -90,3 +90,41 @@ end
 end
 NiceSave(['PopMod_',(regions{rr})],figfolder,[])
 end
+
+
+%% FIgure : ALLMUA modulation
+maxR = [0.15 0.25 0.15 0.3];
+
+figure
+for rr = 1:4
+for ss = 1:3
+for st = 3
+for cc = 1:length(celltypes)
+    subplot(6,4,(ss-1)*4+(cc-1)*12+rr)
+        imagesc((PopMod.(regions{rr}).bins.ISIbins(1,:)),log10(PopMod.(regions{rr}).bins.BinSizeBins(1,:)),...
+            log10(PopMod.(regions{rr}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc})))
+        colorbar
+        
+        %caxis([-0.1 0.1])
+        caxis([-0.05 maxR(rr)])
+        %crameri('vik','pivot',0)
+      
+        %LogScale('y',2)
+         LogScale('xy',10,'exp',true);
+        axis xy
+        
+        if cc==1 &st==1
+           title(statenames{ss}) 
+        end
+        if ss == 1
+            ylabel({[(synchtypes{st}),' Modulation'],'Bin Size'})
+        end
+        if st == 2
+            xlabel([(celltypes{cc}),' ISI (s)'])
+        end
+        
+end
+end 
+end
+%NiceSave(['PopMod_',(regions{rr})],figfolder,[])
+end
