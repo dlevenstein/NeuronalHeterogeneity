@@ -1,4 +1,5 @@
-function [PopMod,PopMod_MTO,cellinfo,PopCellCorr] = PopActivityModulationAnalysis(basePath,figfolder)
+function [PopMod,PopMod_MTO,cellinfo,PopCellCorr,MutInfo] =...
+    PopActivityModulationAnalysis(basePath,figfolder)
 
 %% DEV
 %reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
@@ -15,7 +16,7 @@ ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
 OccupancyStats = bz_LoadCellinfo(basePath,'OccupancyStats');
 SleepState = bz_LoadStates(basePath,'SleepState');
-SleepState.ints.ALL = [0 Inf];
+%SleepState.ints.ALL = [0 Inf];
 % lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
 %     'basepath',basePath);
 
@@ -34,7 +35,7 @@ ISIStats.allspikes.ISInp1 = cellfun(@(X) [X(2:end);nan],ISIStats.allspikes.ISIs,
 %     celltypes = unique(CellClass.label);
 % end
 celltypes = {'pE','pI'};
-cellcolor = {'k','r'};
+cellcolor = {[0 0 0],[1 0 0]};
 statenames = fieldnames(SleepState.ints);
 synchtypes = [celltypes,'ALL'];
 
@@ -43,34 +44,61 @@ for ss = 1:length(statenames)
     ISIStats.allspikes.instate.(statenames{ss}) = cellfun(@(X) InIntervals(X,double(SleepState.ints.(statenames{ss}))),...
         ISIStats.allspikes.times,'UniformOutput',false);
 end
+
+%%
+alltime = [0 ...
+    max([SleepState.ints.NREMstate(:,2);SleepState.ints.WAKEstate(:,2);SleepState.ints.REMstate(:,2)])];
 %% Loop binsizes
-numbins = 20;
-binrange = [0.001 30];
-dt = 0.001;
+numbins = 25;
+binrange = [0.002 20];
+mindt = 0.002; %minimum acceptable dt
+% numbins = 10;
+% binrange = [0.005 10];
+% mindt = 0.005; %minimum acceptable dt
 binsizes = logspace(log10(binrange(1)),log10(binrange(2)),numbins);
+dt = max(binsizes/20,mindt);
 %%
 for bb = 1:numbins
     bb
 %% Calculate spike count matrix
 %binsize = 0.1; %s
 clear spikemat
-spikemat = bz_SpktToSpkmat(spikes,'binsize',binsizes(bb),'dt',dt,'bintype','gaussian','units','rate');
+spikemat = bz_SpktToSpkmat(spikes,'binsize',binsizes(bb),'dt',dt(bb),...
+    'bintype','gaussian','units','rate','win',alltime);
 
 %% For each cell, calculate E and I pop rates of all OTHER cells
 
-for cc = 1:spikes.numcells
+for tt = 1:length(celltypes)
+    cellinfo.Ncells.(celltypes{tt}) = sum(CellClass.(celltypes{tt}));
+    spikemat.totpoprate.(celltypes{tt}) = sum(spikemat.data(:,CellClass.(celltypes{tt})),2);
+end
+spikemat.totpoprate.ALL = sum(spikemat.data(:,(CellClass.pI|CellClass.pE)),2);
+cellinfo.Ncells.ALL = cellinfo.Ncells.pE + cellinfo.Ncells.pI;
+
+for cc = 1:spikes.numcells %weird roundabout way to calculate is much faster
     bz_Counter(cc,spikes.numcells,'Cell');
     thiscell = false(size(CellClass.pE));
     thiscell(cc) = true;
     spikemat.cellrate{cc} = spikemat.data(:,cc);
     for tt = 1:length(celltypes)
-        cellinfo.Ncells.(celltypes{tt}) = sum(CellClass.(celltypes{tt}));
         PopMod.Ncells.(celltypes{tt})(cc) = sum(CellClass.(celltypes{tt}) & ~thiscell);
-        spikemat.bycellpoprate.(celltypes{tt}){cc} = mean(spikemat.data(:,CellClass.(celltypes{tt}) & ~thiscell),2);
+        if CellClass.(celltypes{tt})(cc) %if it's in theclass, subtract off the current cell
+            spikemat.bycellpoprate.(celltypes{tt}){cc} = ...
+                (spikemat.totpoprate.(celltypes{tt})-spikemat.cellrate{cc})./...
+                PopMod.Ncells.(celltypes{tt})(cc);
+        else
+            spikemat.bycellpoprate.(celltypes{tt}){cc} = ...
+                spikemat.totpoprate.(celltypes{tt})./PopMod.Ncells.(celltypes{tt})(cc);
+        end
     end
-    spikemat.bycellpoprate.ALL{cc} = mean(spikemat.data(:,(CellClass.pI|CellClass.pE) & ~thiscell),2);
+    
+    if CellClass.pI(cc)||CellClass.pE(cc)
+        spikemat.bycellpoprate.ALL{cc} = (spikemat.totpoprate.ALL-spikemat.cellrate{cc})./...
+            (cellinfo.Ncells.ALL-1);
+    else
+        spikemat.bycellpoprate.ALL{cc} = spikemat.totpoprate.ALL./cellinfo.Ncells.ALL;
+    end
 end
-
 %% Normalizations
 
 for tt = 1:length(synchtypes)
@@ -98,7 +126,7 @@ for ss = 1:3
 
         [ SynchbyISI.(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W) ...
             ConditionalHist( log10([X(W);Y(W)]),([Z(W);Z(W)]),...
-            'Ybounds',[-1 1],'numYbins',50,'Xbounds',[-3 2],'numXbins',125,'minX',100),...
+            'Ybounds',[-1 1],'numYbins',50,'Xbounds',[-3 2],'numXbins',100,'minX',50),...
             ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
             ISIStats.allspikes.poprate.(synchtypes{st}),...
             ISIStats.allspikes.instate.(statenames{ss}),...
@@ -110,7 +138,7 @@ for ss = 1:3
 
         [ SynchbynormISI.(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W,MTO) ...
             ConditionalHist( log10([X(W);Y(W)]./MTO),([Z(W);Z(W)]),...
-            'Ybounds',[-1 1],'numYbins',50,'Xbounds',[-4 1],'numXbins',100,'minX',100),...
+            'Ybounds',[-1 1],'numYbins',50,'Xbounds',[-4 1],'numXbins',100,'minX',50),...
             ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
             ISIStats.allspikes.poprate.(synchtypes{st}),...
             ISIStats.allspikes.instate.(statenames{ss}),...
@@ -127,21 +155,24 @@ for ss = 1:3
 %             SynchbyISI.(synchtypes{st}).(statenames{ss}).celltypeidx.(celltypes{cc}) = CellClass.(celltypes{cc});
 %         end
         
-        PopCellCorr.(synchtypes{st}).(statenames{ss})(bb,:) = cellfun(@(CR,PR) ...
+        PopCellCorr.(synchtypes{st}).(statenames{ss}).allcells(bb,:) = cellfun(@(CR,PR) ...
             corr(CR(spikemat.instate.(statenames{ss})),PR(spikemat.instate.(statenames{ss})),'type','spearman'),...
             spikemat.cellrate,spikemat.bycellpoprate.(synchtypes{st}));
         
         PopMod.(synchtypes{st}).(statenames{ss}).allcells(bb,:,:) = SynchbyISI.(synchtypes{st}).(statenames{ss}).meanYX;
         PopMod_MTO.(synchtypes{st}).(statenames{ss}).allcells(bb,:,:) = SynchbynormISI.(synchtypes{st}).(statenames{ss}).meanYX;
-        
+        PopMod.(synchtypes{st}).(statenames{ss}).pISI(bb,:,:) = SynchbyISI.(synchtypes{st}).(statenames{ss}).pX;
+        PopMod_MTO.(synchtypes{st}).(statenames{ss}).pISI(bb,:,:) = SynchbynormISI.(synchtypes{st}).(statenames{ss}).pX;
+        PopMod.(synchtypes{st}).(statenames{ss}).nISI(bb,:,:) = SynchbyISI.(synchtypes{st}).(statenames{ss}).Xhist;
+        PopMod_MTO.(synchtypes{st}).(statenames{ss}).nISI(bb,:,:) = SynchbynormISI.(synchtypes{st}).(statenames{ss}).Xhist;
         
         %Mutual info
-        MutInfo.(ff).(synchtypes{st}).(statenames{ss})(bb,:) = ...
+        MutInfo.(synchtypes{st}).(statenames{ss}).allcells(bb,:) = ...
             cellfun(@(ISIs,ISInp1,PopRate,instate) ...
-            mutualinfo(log10([X(W);Y(W)]),([Z(W);Z(W)])),...
+            mutualinfo(log10([ISIs(instate);ISInp1(instate)]),([PopRate(instate);PopRate(instate)])),...
             ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
             ISIStats.allspikes.poprate.(synchtypes{st}),...
-            ISIStats.allspikes.instate.(statenames{ss});
+            ISIStats.allspikes.instate.(statenames{ss}));
     end
 
 end
@@ -154,6 +185,7 @@ PopMod_MTO.bins.ISIbins = SynchbynormISI.(synchtypes{st}).(statenames{ss}).Xbins
 PopMod_MTO.bins.BinSizeBins = binsizes;
 
 PopCellCorr.bins.BinSizeBins = PopMod.bins.BinSizeBins;
+MutInfo.bins.BinSizeBins = PopMod.bins.BinSizeBins;
 %% Population average modulation
 for ss = 1:3
     for st = 1:length(synchtypes)
@@ -162,12 +194,15 @@ for ss = 1:3
                     nanmean(PopMod.(synchtypes{st}).(statenames{ss}).allcells(:,:,CellClass.(celltypes{cc})),3); 
                 PopMod_MTO.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) =...
                     nanmean(PopMod_MTO.(synchtypes{st}).(statenames{ss}).allcells(:,:,CellClass.(celltypes{cc})),3); 
-%                 PopCellCorr.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) =...
-%                     nanmean(PopCellCorr.(synchtypes{st}).(statenames{ss}).allcells(:,CellClass.(celltypes{cc})),3); 
+                PopCellCorr.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) =...
+                    nanmean(PopCellCorr.(synchtypes{st}).(statenames{ss}).allcells(:,CellClass.(celltypes{cc})),2); 
+                MutInfo.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) = ...
+                    nanmean(MutInfo.(synchtypes{st}).(statenames{ss}).allcells(:,CellClass.(celltypes{cc})),2);
         end
     end
 end
 
+ 
 %%
 figure
 for ss = 1:3
@@ -239,12 +274,18 @@ figure
 for ss = 1:3
 for st = 1:3
 %for cc = 1:length(celltypes)
-    subplot(3,3,ss+(st-1)*3+(cc-1)*6)
-plot(log10(PopCellCorr.bins.BinSizeBins),PopCellCorr.(synchtypes{st}).(statenames{ss})')
-hold on
-plot(log10(PopCellCorr.bins.BinSizeBins([1 end])),[0 0],'k')
+    subplot(3,3,ss+(st-1)*3)
+    hold on
+    for cc = 1:length(celltypes)
+plot(log10(PopCellCorr.bins.BinSizeBins),PopCellCorr.(synchtypes{st}).(statenames{ss}).allcells(:,CellClass.(celltypes{cc}))',...
+    'color',min(1,cellcolor{cc}+0.5),'linewidth',0.1)
+
+plot(log10(PopCellCorr.bins.BinSizeBins),PopCellCorr.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}),...
+    'color',cellcolor{cc},'linewidth',2)
+    end
+    plot(log10(PopCellCorr.bins.BinSizeBins([1 end])),[0 0],'k')
 %caxis([-1 1])
-ylim([-1 1])
+%ylim([-1 1])
 xlim(log10(PopCellCorr.bins.BinSizeBins([1 end])))
 xlabel('TimeScale');
 
@@ -260,6 +301,52 @@ end
 end
 NiceSave('PopRateCorr',figfolder,baseName)
 
+%%
+cc =1
+figure
+for ss = 1:3
+for st = 1:3
+
+    subplot(3,3,ss+(st-1)*3)
+    hold on
+    for cc = 1:length(celltypes)
+plot(log10(MutInfo.bins.BinSizeBins),MutInfo.(synchtypes{st}).(statenames{ss}).allcells(:,CellClass.(celltypes{cc}))',...
+    'color',min(1,cellcolor{cc}+0.5),'linewidth',0.1)
+
+plot(log10(MutInfo.bins.BinSizeBins),MutInfo.(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}),...
+    'color',cellcolor{cc},'linewidth',2)
+    end
+%caxis([-1 1])
+%ylim([-1 1])
+xlim(log10(MutInfo.bins.BinSizeBins([1 end])))
+xlabel('TimeScale');
+LogScale('x',10)
+
+        if ss == 1
+            ylabel([(synchtypes{st}),' MI'])
+        end
+        if cc==1 &st==1
+           title(statenames{ss}) 
+        end
+%crameri('vik','pivot',0)
+end
+%end
+end
+NiceSave('ISIMITimeScale',figfolder,baseName)
+%%
+exbin = 3;
+figure
+for ss = 1:3
+for st = 1:3
+subplot(3,3,ss+(st-1)*3)
+h = imagesc(squeeze(PopMod.(synchtypes{st}).(statenames{ss}).allcells(exbin,:,ISIStats.sorts.(statenames{ss}).ratebyclass))');
+ set(h,'AlphaData',50*(squeeze(PopMod.(synchtypes{st}).(statenames{ss}).pISI(exbin,:,ISIStats.sorts.(statenames{ss}).ratebyclass))'));
+% PopMod.(synchtypes{st}).(statenames{ss}).pISI(bb,:,:)
+%axis xy
+colorbar
+caxis([0.8 2])
+end
+end
 %%
 % pickbinsize = 5;
 % figure

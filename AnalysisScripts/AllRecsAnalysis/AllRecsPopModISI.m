@@ -93,7 +93,7 @@ end
 
 
 %% FIgure : ALLMUA modulation
-maxR = [0.1 0.25 0.15 0.3];
+maxR = [0.15 0.25 0.15 0.3];
 
 figure
 for rr = 1:4
