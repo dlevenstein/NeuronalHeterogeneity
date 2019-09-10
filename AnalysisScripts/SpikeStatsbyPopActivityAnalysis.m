@@ -1,5 +1,5 @@
-function [popratehist_joint,popratehist,bycellpopratehist,ISIbySynch,SynchbyISI,...
-    normISIbySynch,SynchbynormISI,CV2popcorr,ratepopcorr,cellinfo,Ncells,...
+function [popratehist_joint,popratehist,bycellpopratehist,ISIbySynch,...
+    normISIbySynch,CV2popcorr,ratepopcorr,cellinfo,Ncells,...
     PopRatebyPSS,PopRatebyTheta] = SpikeStatsbyPopActivityAnalysis(basePath,figfolder)
 
 %% DEV
@@ -23,6 +23,7 @@ lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanI
 %%
 cellinfo.CellClass = CellClass;
 cellinfo.ISIStats = ISIStats.summstats;
+cellinfo.OccupancyStats = OccupancyStats;
 %%
 
 ISIStats.allspikes.ISInp1 = cellfun(@(X) [X(2:end);nan],ISIStats.allspikes.ISIs,...
@@ -133,11 +134,11 @@ popratehist.log.bins.ALL = linspace(-1,1.5,nbins+1);
 
 popratehist.lognorm.bins.pE = linspace(-1,0.75,nbins+1);
 popratehist.lognorm.bins.pI = linspace(-1,0.75,nbins+1);
-popratehist.lognorm.bins.ALL = linspace(-0.6,0.6,nbins+1);
+popratehist.lognorm.bins.ALL = linspace(-0.75,0.75,nbins+1);
 
-popratehist.norm.bins.pE = linspace(0,4,nbins+1);
+popratehist.norm.bins.pE = linspace(0,5,nbins+1);
 popratehist.norm.bins.pI = linspace(0,4,nbins+1);
-popratehist.norm.bins.ALL = linspace(0,3.5,nbins+1);
+popratehist.norm.bins.ALL = linspace(0,5,nbins+1);
 
 popratehist.lin.bins.pE = linspace(0,20,nbins+1);
 popratehist.lin.bins.pI = linspace(-0,50,nbins+1);
@@ -288,6 +289,7 @@ end
 
     
 %% Calculate Conditional distributions on synchrony (pop rate) in each state
+
 for nn = 3:4 %only do normalized rates
 for ss = 1:3
     %statenames{ss} = statenames{ss};
@@ -297,32 +299,32 @@ for ss = 1:3
 
     for st = 1:length(synchtypes)
         [ ISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W) ConditionalHist( ([Z(W);Z(W)]),log10([X(W);Y(W)]),...
-            'Xbounds',popratehist.(normtypes{nn}).bins.(synchtypes{st})([1 end]),'numXbins',25,'Ybounds',[-3 2],'numYbins',125,'minX',100),...
+            'Xbounds',popratehist.(normtypes{nn}).bins.(synchtypes{st})([1 end]),'numXbins',30,'Ybounds',[-3 2],'numYbins',125,'minX',100),...
             ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
             ISIStats.allspikes.poprate.(normtypes{nn}).(synchtypes{st}),ISIStats.allspikes.instate.(statenames{ss}),...
             'UniformOutput',false);
         ISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) = cat(1,ISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}){:});
         ISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) = bz_CollapseStruct( ISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}),3);
 
-        [ SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W) ConditionalHist( log10([X(W);Y(W)]),([Z(W);Z(W)]),...
-            'Ybounds',popratehist.(normtypes{nn}).bins.(synchtypes{st})([1 end]),'numYbins',50,'Xbounds',[-3 2],'numXbins',125,'minX',50),...
-            ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
-            ISIStats.allspikes.poprate.(normtypes{nn}).(synchtypes{st}),ISIStats.allspikes.instate.(statenames{ss}),...
-            'UniformOutput',false);
-        SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) = cat(1,SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}){:});
-        SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) = bz_CollapseStruct( SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}),3);
+%         [ SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W) ConditionalHist( log10([X(W);Y(W)]),([Z(W);Z(W)]),...
+%             'Ybounds',popratehist.(normtypes{nn}).bins.(synchtypes{st})([1 end]),'numYbins',50,'Xbounds',[-3 2],'numXbins',125,'minX',50),...
+%             ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
+%             ISIStats.allspikes.poprate.(normtypes{nn}).(synchtypes{st}),ISIStats.allspikes.instate.(statenames{ss}),...
+%             'UniformOutput',false);
+%         SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) = cat(1,SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}){:});
+%         SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) = bz_CollapseStruct( SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}),3);
 
         for cc = 1:length(celltypes)
             ISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) = nanmean(ISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,CellClass.(celltypes{cc})),3);
-            SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) = nanmean(SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,CellClass.(celltypes{cc})),3);
+%            SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc}) = nanmean(SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,CellClass.(celltypes{cc})),3);
 
             ISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).celltypeidx.(celltypes{cc}) = CellClass.(celltypes{cc});
-            SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).celltypeidx.(celltypes{cc}) = CellClass.(celltypes{cc});
+%            SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).celltypeidx.(celltypes{cc}) = CellClass.(celltypes{cc});
         end
         
         
         [ normISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W,MTO) ConditionalHist( ([Z(W);Z(W)]),log10([X(W);Y(W)]./MTO),...
-            'Xbounds',popratehist.(normtypes{nn}).bins.(synchtypes{st})([1 end]),'numXbins',25,'Ybounds',[-4 1],'numYbins',100,'minX',100),...
+            'Xbounds',popratehist.(normtypes{nn}).bins.(synchtypes{st})([1 end]),'numXbins',30,'Ybounds',[-4 1],'numYbins',100,'minX',100),...
             ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
             ISIStats.allspikes.poprate.(normtypes{nn}).(synchtypes{st}),...
             ISIStats.allspikes.instate.(statenames{ss}),num2cell(OccupancyStats.(statenames{ss}).median),...
@@ -330,14 +332,14 @@ for ss = 1:3
         normISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) = cat(1,normISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}){:});
         normISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) = bz_CollapseStruct( normISIbySynch.(normtypes{nn}).(synchtypes{st}).(statenames{ss}),3);
         
-        [ SynchbynormISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W,MTO) ConditionalHist( log10([X(W);Y(W)]./MTO),([Z(W);Z(W)]),...
-            'Ybounds',popratehist.(normtypes{nn}).bins.(synchtypes{st})([1 end]),'numYbins',50,'Xbounds',[-4 1],'numXbins',100,'minX',50),...
-            ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
-            ISIStats.allspikes.poprate.(normtypes{nn}).(synchtypes{st}),...
-            ISIStats.allspikes.instate.(statenames{ss}),num2cell(OccupancyStats.(statenames{ss}).median),...
-            'UniformOutput',false);
-        SynchbynormISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) = cat(1,SynchbynormISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}){:});
-        SynchbynormISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) = bz_CollapseStruct( SynchbynormISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}),3);
+%         [ SynchbynormISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) ] = cellfun(@(X,Y,Z,W,MTO) ConditionalHist( log10([X(W);Y(W)]./MTO),([Z(W);Z(W)]),...
+%             'Ybounds',popratehist.(normtypes{nn}).bins.(synchtypes{st})([1 end]),'numYbins',50,'Xbounds',[-4 1],'numXbins',100,'minX',50),...
+%             ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
+%             ISIStats.allspikes.poprate.(normtypes{nn}).(synchtypes{st}),...
+%             ISIStats.allspikes.instate.(statenames{ss}),num2cell(OccupancyStats.(statenames{ss}).median),...
+%             'UniformOutput',false);
+%         SynchbynormISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) = cat(1,SynchbynormISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}){:});
+%         SynchbynormISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}) = bz_CollapseStruct( SynchbynormISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}),3);
     end
 end
 end
@@ -373,36 +375,36 @@ end
 NiceSave(['ISIbySynch_',(normtypes{nn})],figfolder,baseName)
 
 end
-%%
-for nn = 3:4
-figure
-for ss = 1:3
-for tt = 1:length(celltypes)
-for st = 1:3
-subplot(6,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
-    
-    imagesc(SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Ybins(1,:,1), SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt})')
-    %hold on
-    %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
-    axis xy
-    %LogScale('y',10)
-    xlabel([(celltypes{tt}),' ISI (log(s))']);ylabel([(synchtypes{st}),' Synch'])
-    %title((celltypes{tt}))
-    if tt==1 & st == 1
-        title(statenames{ss})
-    end
-%     if tt ==1 
-%         caxis([0 0.02])
-%     elseif tt==2
-%          caxis([0 0.03])
+%% Synch by ISI figure
+% for nn = 3:4
+% figure
+% for ss = 1:3
+% for tt = 1:length(celltypes)
+% for st = 1:3
+% subplot(6,3,(ss-1)+(tt-1)*3+(st-1)*6+1)
+%     
+%     imagesc(SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Ybins(1,:,1), SynchbyISI.(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt})')
+%     %hold on
+%     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
+%     axis xy
+%     %LogScale('y',10)
+%     xlabel([(celltypes{tt}),' ISI (log(s))']);ylabel([(synchtypes{st}),' Synch'])
+%     %title((celltypes{tt}))
+%     if tt==1 & st == 1
+%         title(statenames{ss})
 %     end
-    xlim(SynchbyISI.(normtypes{nn}).(synchtypes{tt}).(statenames{ss}).Xbins(1,[1 end],1))
-end 
-end
-end
-
-NiceSave(['SynchbyISI_',(normtypes{nn})],figfolder,baseName)
-end
+% %     if tt ==1 
+% %         caxis([0 0.02])
+% %     elseif tt==2
+% %          caxis([0 0.03])
+% %     end
+%     xlim(SynchbyISI.(normtypes{nn}).(synchtypes{tt}).(statenames{ss}).Xbins(1,[1 end],1))
+% end 
+% end
+% end
+% 
+% NiceSave(['SynchbyISI_',(normtypes{nn})],figfolder,baseName)
+% end
 
 
 
@@ -545,8 +547,8 @@ PopRatebyPSS.(normtypes{nn}).(synchtypes{st})  = ConditionalHist(...
     'Ybounds',popratehist.(normtypes{nn}).bins.(synchtypes{st})([1 end]));
 
 PopRatebyTheta.notNREM.(normtypes{nn}).(synchtypes{st})  = ConditionalHist(...
-    spikemat.BSmetrics.thratio(~spikemat.instate.NREMstate),...
-    spikemat.poprate.(normtypes{nn}).(synchtypes{st})(~spikemat.instate.NREMstate),...
+    spikemat.BSmetrics.thratio(spikemat.instate.WAKEstate|spikemat.instate.REMstate),...
+    spikemat.poprate.(normtypes{nn}).(synchtypes{st})(spikemat.instate.WAKEstate|spikemat.instate.REMstate),...
     'Xbounds',[0 1],'numXbins',25,'numYbins',100,'minX',2000,...
     'Ybounds',popratehist.(normtypes{nn}).bins.(synchtypes{st})([1 end]));
 
