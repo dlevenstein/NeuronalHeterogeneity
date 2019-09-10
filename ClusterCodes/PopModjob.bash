@@ -1,7 +1,8 @@
-#!/bin/bash
+
 
 usemem = $2*12
 echo usemem
+#!/bin/bash
 #SBATCH -p cpu_medium
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
