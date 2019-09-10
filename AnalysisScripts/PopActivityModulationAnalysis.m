@@ -50,7 +50,7 @@ alltime = [0 ...
     max([SleepState.ints.NREMstate(:,2);SleepState.ints.WAKEstate(:,2);SleepState.ints.REMstate(:,2)])];
 %% Loop binsizes
 numbins = 25;
-binrange = [0.002 20];
+binrange = [0.002 30];
 mindt = 0.002; %minimum acceptable dt
 % numbins = 10;
 % binrange = [0.005 10];
@@ -277,6 +277,9 @@ for st = 1:3
     subplot(3,3,ss+(st-1)*3)
     hold on
     for cc = 1:length(celltypes)
+        if all(~(CellClass.(celltypes{cc})))
+            continue
+        end
 plot(log10(PopCellCorr.bins.BinSizeBins),PopCellCorr.(synchtypes{st}).(statenames{ss}).allcells(:,CellClass.(celltypes{cc}))',...
     'color',min(1,cellcolor{cc}+0.5),'linewidth',0.1)
 
@@ -310,6 +313,9 @@ for st = 1:3
     subplot(3,3,ss+(st-1)*3)
     hold on
     for cc = 1:length(celltypes)
+                if all(~(CellClass.(celltypes{cc})))
+            continue
+        end
 plot(log10(MutInfo.bins.BinSizeBins),MutInfo.(synchtypes{st}).(statenames{ss}).allcells(:,CellClass.(celltypes{cc}))',...
     'color',min(1,cellcolor{cc}+0.5),'linewidth',0.1)
 
@@ -334,7 +340,7 @@ end
 end
 NiceSave('ISIMITimeScale',figfolder,baseName)
 %%
-exbin = 3;
+exbin = 5;
 figure
 for ss = 1:3
 for st = 1:3
@@ -347,6 +353,7 @@ colorbar
 caxis([0.8 2])
 end
 end
+NiceSave('AllCellsMod',figfolder,baseName)
 %%
 % pickbinsize = 5;
 % figure
