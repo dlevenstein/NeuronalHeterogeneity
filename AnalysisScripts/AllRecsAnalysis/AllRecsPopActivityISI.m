@@ -93,16 +93,20 @@ for rr = 1:length(regions)
             
             popratehist.(regions{rr}).enoughpopcells.(synchtypes{st}) = ...
                 popratehist.(regions{rr}).(synchtypes{st})>popthresh.(synchtypes{st});
+            keepcells = popratehist.(regions{rr}).enoughpopcells.(synchtypes{st});
             if nn>2
             %How many cells are contributing?
             nspkthresh = 100;
-            ncellthresh = 200;
+            ncellthresh.pE = 125;
+            ncellthresh.pI = 50;
             %sum(ISIbytheta.(regions{rr}).Xhist>nspkthresh,3)
             %sum(ISIbyPSS.(regions{rr}).Xhist>nspkthresh,3)
+            POPcolsunderthresh = sum(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xhist(1,:,inclass&keepcells)>nspkthresh,3)<ncellthresh.(celltypes{tt});            
             ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(...
-                sum(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xhist(:,:,popratehist.(regions{rr}).enoughpopcells.(synchtypes{st}))>nspkthresh,3)<ncellthresh,:,:)=nan;
+                POPcolsunderthresh,:,inclass)=nan;
+            POPcolsunderthresh = sum(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xhist(1,:,inclass&keepcells)>nspkthresh,3)<ncellthresh.(celltypes{tt});            
             normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(...
-                sum(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xhist(:,:,popratehist.(regions{rr}).enoughpopcells.(synchtypes{st}))>nspkthresh,3)<ncellthresh,:,:)=nan;
+                POPcolsunderthresh,:,inclass)=nan;
             
             
             ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
