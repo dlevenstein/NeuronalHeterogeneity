@@ -305,7 +305,7 @@ end
 NiceSave('PopRateCorr',figfolder,baseName)
 
 %%
-cc =1
+cc =1;
 figure
 for ss = 1:3
 for st = 1:3
