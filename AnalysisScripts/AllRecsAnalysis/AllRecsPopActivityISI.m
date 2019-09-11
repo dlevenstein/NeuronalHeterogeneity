@@ -37,7 +37,7 @@ for rr = 1:length(regions)
     popratehist_joint.(regions{rr}) = bz_CollapseStruct(PopActivityAll.popratehist_joint,3,'justcat',true);
     popratehist.(regions{rr}) = bz_CollapseStruct(PopActivityAll.popratehist,'match','justcat',true);
     ISIbySynch.(regions{rr}) = bz_CollapseStruct(PopActivityAll.ISIbySynch,'match','justcat',true);
-    SynchbyISI.(regions{rr}) = bz_CollapseStruct(PopActivityAll.SynchbyISI,'match','justcat',true);
+    %SynchbyISI.(regions{rr}) = bz_CollapseStruct(PopActivityAll.SynchbyISI,'match','justcat',true);
     normISIbySynch.(regions{rr}) = bz_CollapseStruct(PopActivityAll.normISIbySynch,'match','justcat',true);
     CV2popcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.CV2popcorr,'match','justcat',true);
     ratepopcorr.(regions{rr}) = bz_CollapseStruct(PopActivityAll.ratepopcorr,'match','justcat',true);
@@ -107,7 +107,7 @@ for rr = 1:length(regions)
             
             ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
             ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt}) = nanmean(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
-            SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
+            %SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = nanmean(SynchbyISI.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);
             
             normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt}) = ...
                 nanmean(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pYX(:,:,inclass&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st})),3);

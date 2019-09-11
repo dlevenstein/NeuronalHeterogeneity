@@ -75,12 +75,13 @@ for cc = 1:spikes.numcells %weird roundabout way to calculate is much faster
     end
     
     if CellClass.pI(cc)||CellClass.pE(cc)
-        spikemat.bycellpoprate.ALL{cc} = (spikemat.totpoprate.(celltypes{tt})-spikemat.cellrate{cc})./...
+        spikemat.bycellpoprate.ALL{cc} = (spikemat.totpoprate.ALL-spikemat.cellrate{cc})./...
             (Ncells.ALL-1);
     else
-        spikemat.bycellpoprate.ALL{cc} = spikemat.totpoprate.(celltypes{tt})./Ncells.ALL;
+        spikemat.bycellpoprate.ALL{cc} = spikemat.totpoprate.ALL./Ncells.ALL;
     end
 end
+
 %% Normalizations
 normtypes = {'lin','log','lognorm','norm'};
 synchtypes = [celltypes,'ALL'];
@@ -168,7 +169,8 @@ for ss = 1:3
             popratehist.(normtypes{nn}).(statenames{ss}).(synchtypes{st})./...
             sum(popratehist.(normtypes{nn}).(statenames{ss}).(synchtypes{st}));
         
-        bycellpopratehist.(normtypes{nn}).bins.(synchtypes{st}) = popratehist.(normtypes{nn}).bins.(synchtypes{st});
+        bycellpopratehist.(normtypes{nn}).bins.(synchtypes{st}) = ...
+            popratehist.(normtypes{nn}).bins.(synchtypes{st});
         bycellpopratehist.(normtypes{nn}).(statenames{ss}).(synchtypes{st}) = ...
             cellfun(@(BCrate) hist(BCrate(spikemat.instate.(statenames{ss})),...
             bycellpopratehist.(normtypes{nn}).bins.(synchtypes{st})),...
@@ -182,6 +184,8 @@ for ss = 1:3
     
 end
 end
+
+
 %%
 figure
 for nn = 1:length(normtypes)
