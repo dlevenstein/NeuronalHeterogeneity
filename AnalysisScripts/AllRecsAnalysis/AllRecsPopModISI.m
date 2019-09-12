@@ -188,7 +188,7 @@ for cc = 1:length(celltypes)
     subplot(6,4,(ss-1)*4+(cc-1)*12+rr)
         imagesc((PopMod_MTO.(regions{rr}).bins.ISIbins(1,:)),log10(PopMod_MTO.(regions{rr}).bins.BinSizeBins(1,:)),...
             log10(PopMod_MTO.(regions{rr}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc})))
-        colorbar
+        %colorbar
         hold on
         plot([0 0],get(gca,'ylim'),'w--')
         plot(PopMod_MTO.(regions{rr}).bins.ISIbins(1,:),...
@@ -199,8 +199,9 @@ for cc = 1:length(celltypes)
         %crameri('vik','pivot',0)
       
         %LogScale('y',2)
-         LogScale('xy',10,'exp',true);
+         LogScale('xy',10,'exp',true,'nohalf',true);
         axis xy
+        
         
         if ss==1 && cc==1
            title(regions{rr})
@@ -208,8 +209,8 @@ for cc = 1:length(celltypes)
         if rr == 1
             ylabel({(statenames{ss}),'Bin Size (s)'})
         end
-        if ss == 3
-            xlabel([(celltypes{cc}),' ISI (MTONorm)'])
+        if ss == 3 | ss==2
+            xlabel([(celltypes{cc}),' ISI (MTOnorm)'])
         end
         
 end
