@@ -560,7 +560,7 @@ subplot(6,5,(ss-1)*5+(tt-1)*15+rr)
     ylabel({(statenames{ss}),[(celltypes{tt}),' ISI (log(s))']});
     end
     if ss==3 || ss==2
-        xlabel(['Pop Rate, ',(synchtypes{st}),' cells (Norm)'])
+        xlabel(['Pop Rate, ',(synchtypes{st}),' (Norm)'])
     end
     if tt==1 & ss==1
         title(regions{rr})
