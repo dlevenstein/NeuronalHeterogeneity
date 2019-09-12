@@ -126,7 +126,7 @@ for cc = 1:length(celltypes)
     subplot(6,4,(ss-1)*4+(cc-1)*12+rr)
         imagesc((PopMod.(regions{rr}).bins.ISIbins(1,:)),log10(PopMod.(regions{rr}).bins.BinSizeBins(1,:)),...
             (PopMod.(regions{rr}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{cc})))
-        colorbar
+        %colorbar
         hold on
         plot(PopMod.(regions{rr}).bins.ISIbins(1,:),...
             bz_NormToRange(ISIdist.(regions{rr}).(statenames{ss}).(celltypes{cc}),0.4),...
@@ -136,9 +136,10 @@ for cc = 1:length(celltypes)
         %crameri('vik','pivot',1)
       
         %LogScale('y',2)
-         LogScale('xy',10,'exp',true);
-        axis xy
         xlim([-2.7 1.7])
+         LogScale('xy',10,'exp',true,'nohalf',true);
+        axis xy
+        
         
         if ss==1 && cc==1
            title(regions{rr})
@@ -146,7 +147,7 @@ for cc = 1:length(celltypes)
         if rr == 1
             ylabel({(statenames{ss}),'Bin Size (s)'})
         end
-        if ss == 3
+        if ss == 3 | ss==2
             xlabel([(celltypes{cc}),' ISI (s)'])
         end
         
