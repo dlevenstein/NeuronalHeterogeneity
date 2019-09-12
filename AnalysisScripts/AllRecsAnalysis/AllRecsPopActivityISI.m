@@ -97,7 +97,7 @@ for rr = 1:length(regions)
             if nn>2
             %How many cells are contributing?
             nspkthresh = 100;
-            ncellthresh.pE = 125;
+            ncellthresh.pE = 150;
             ncellthresh.pI = 50;
             %sum(ISIbytheta.(regions{rr}).Xhist>nspkthresh,3)
             %sum(ISIbyPSS.(regions{rr}).Xhist>nspkthresh,3)
@@ -261,23 +261,30 @@ imagesc(PopRatebyPSS.(regions{rr}).(synchtypes{st}).(normtypes{nn}).(synchtypes{
     PopRatebyPSS.(regions{rr}).(synchtypes{st}).(normtypes{nn}).(synchtypes{st}).Ybins,...
     PopRatebyPSS.(regions{rr}).(synchtypes{st}).(normtypes{nn}).(synchtypes{st}).pYX')
 hold on
+if nn==4
+    ylim([0 3.5])
+end
 plot(PopRatebyPSS.(regions{rr}).(synchtypes{st}).(normtypes{nn}).(synchtypes{st}).Xbins,...
-    bz_NormToRange(PopRatebyPSS.(regions{rr}).(synchtypes{st}).(normtypes{nn}).(synchtypes{st}).pX),'k')
+    bz_NormToRange(PopRatebyPSS.(regions{rr}).(synchtypes{st}).(normtypes{nn}).(synchtypes{st}).pX,0.5),'k')
 axis xy
 xlabel('PSS');ylabel('Pop Rate (norm)')
 title(regions{rr})
+
 
 subplot(4,4,rr+4)
 imagesc(PopRatebyTheta.(regions{rr}).(synchtypes{st}).notNREM.(normtypes{nn}).(synchtypes{st}).Xbins,...
     PopRatebyTheta.(regions{rr}).(synchtypes{st}).notNREM.(normtypes{nn}).(synchtypes{st}).Ybins,...
     PopRatebyTheta.(regions{rr}).(synchtypes{st}).notNREM.(normtypes{nn}).(synchtypes{st}).pYX')
 hold on
+if nn==4
+    ylim([0 3.5])
+end
 plot(PopRatebyTheta.(regions{rr}).(synchtypes{st}).notNREM.(normtypes{nn}).(synchtypes{st}).Xbins,...
-    bz_NormToRange(PopRatebyTheta.(regions{rr}).(synchtypes{st}).notNREM.(normtypes{nn}).(synchtypes{st}).pX),'k')
-plot(PopRatebyTheta.(regions{rr}).(synchtypes{st}).notNREM.(normtypes{nn}).(synchtypes{st}).Xbins,...
-    bz_NormToRange(PopRatebyTheta.(regions{rr}).(synchtypes{st}).notNREM.(normtypes{nn}).(synchtypes{st}).pX),'k')
+    bz_NormToRange(PopRatebyTheta.(regions{rr}).(synchtypes{st}).notNREM.(normtypes{nn}).(synchtypes{st}).pX,0.5),'k')
+
 axis xy
 xlabel('Theta');ylabel('Pop Rate (norm)')
+
 end
 NiceSave(['PopDistbyState',(normtypes{nn})],figfolder,[])
 end
@@ -524,6 +531,10 @@ end
 %%
 display('Making figure - ISI by Pop Rate (ALL)')
 
+bounds.THAL = [0 2.8];
+bounds.vCTX = [0 3.2];
+bounds.fCTX = [0 2.8];
+bounds.CA1 = [0 4.2];
 for nn = 3:4
     
 figure
@@ -531,34 +542,33 @@ for rr = 1:length(regions)
 for ss = 1:3
 for tt = 1:length(celltypes)
 for st = 3
-subplot(6,4,(ss-1)*4+(tt-1)*12+rr)
+subplot(6,5,(ss-1)*5+(tt-1)*15+rr)
     imagesc(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Ybins(1,:,1), ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop.(celltypes{tt})')
     hold on
+    if tt==1
     ylim([-2.7 1.5])
+    else
+        ylim([-2.5 0.8])
+    end
 	plot(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,:,1),...
         bz_NormToRange(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).pop_pX.(celltypes{tt})),...
                 'color',statecolors{ss},'linewidth',1)
     axis xy
     
-    LogScale('y',10,'exp',true)
+    LogScale('y',10,'exp',true,'nohalf',true)
     if rr==1
     ylabel({(statenames{ss}),[(celltypes{tt}),' ISI (log(s))']});
     end
-    if ss==3
+    if ss==3 || ss==2
         xlabel(['Pop Rate, ',(synchtypes{st}),' cells (Norm)'])
     end
     if tt==1 & ss==1
         title(regions{rr})
     end
-    %title((celltypes{tt}))
-   % colorbar
-%     if tt ==1 
-%         caxis([0 0.025])
-%     elseif tt==2
-%          caxis([0 0.03])
-%     end
-   % xlim(ISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
-  
+    if nn ==4
+        xlim(bounds.(regions{rr}))
+    end
+
 end
 end
 end
@@ -591,12 +601,18 @@ subplot(6,4,(ss-1)*4+(tt-1)*12+rr)
     if rr==1
     ylabel({(statenames{ss}),[(celltypes{tt}),' ISI (MTOnorm)']});
     end
-    if ss==3
+    if ss==3 || ss==2
         xlabel(['Pop Rate, ',(synchtypes{st}),' cells (Norm)'])
     end
     if tt==1 & ss==1
         title(regions{rr})
     end
+        if nn ==4
+        xlim(bounds.(regions{rr}))
+        end
+
+    ylim([-3.75 1])
+
     %title((celltypes{tt}))
    % colorbar
 %     if tt ==1 
@@ -604,7 +620,7 @@ subplot(6,4,(ss-1)*4+(tt-1)*12+rr)
 %     elseif tt==2
 %          caxis([0 0.04])
 %     end
-    xlim(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
+    %xlim(normISIbySynch.(regions{rr}).(normtypes{nn}).(synchtypes{st}).(statenames{ss}).Xbins(1,[1 end],1))
   
 end
 end

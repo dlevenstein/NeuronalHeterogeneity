@@ -657,8 +657,8 @@ subplot(3,1,ss)
     'cellgroups',{CellClass.pE,CellClass.pI},'spikeside','bottom','scaleLFP',0.7);
 bz_ScaleBar('s')
 hold on
-plot(spikemat.timestamps,bz_NormToRange(spikemat.poprate.pE,ywinrange(1).*[1 0.5]),'k')
-plot(spikemat.timestamps,bz_NormToRange(spikemat.poprate.pI,ywinrange(1).*[1 0.5]),'r')
+plot(spikemat.timestamps,bz_NormToRange(spikemat.poprate.pE,ywinrange(1).*[1 0.5]),'k','linewith',1)
+plot(spikemat.timestamps,bz_NormToRange(spikemat.poprate.pI,ywinrange(1).*[1 0.5]),'r','linewith',1)
 xlim(exwins.(statenames{ss}))
 ylabel((statenames{ss}))
 end
