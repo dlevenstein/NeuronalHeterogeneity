@@ -45,6 +45,6 @@ function [] = RescoreGG(basePath,figfolder)
 %     scoretime = [0 Inf];
 % end
 %%
-bz_getSessionInfo(basePath,'noPrompts',true,'saveMat',true);
+%bz_getSessionInfo(basePath,'noPrompts',true,'saveMat',true);
 SleepScoreMaster(basePath,'overwrite',true)
 

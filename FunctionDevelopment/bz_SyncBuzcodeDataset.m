@@ -29,6 +29,8 @@ rsync -auvzPLK --exclude=*raw* --exclude=CluSAV --exclude=Analysis --exclude=*da
 rsync -auvzPLK --exclude=Histology --exclude=Figures --exclude=Rat07 --exclude=*GLMoutput* --exclude=*.fil --exclude=*dat --exclude=*.clu* --exclude=*.fet.* --exclude=*.klg.* --exclude=*.res.* --exclude=*.spk.* --exclude=RawKK /mnt/NyuShare/Buzsakilabspace/Datasets/GirardeauG/ /mnt/proraidDL/Database/GGData/
 %to cluster
 rsync -auvzPLK --exclude=Histology --exclude=Figures --exclude=Rat07 --exclude=*GLMoutput* --exclude=*.fil --exclude=*dat --exclude=*.clu* --exclude=*.fet.* --exclude=*.klg.* --exclude=*.res.* --exclude=*.spk.* --exclude=RawKK /mnt/proraidDL/Database/GGData/ /mnt/BigPurple/Database/GGData/
+%from cluster
+rsync -auvzPLK --exclude=Histology --exclude=Figures --exclude=Rat07 --exclude=*GLMoutput* --exclude=*.fil --exclude=*dat --exclude=*.clu* --exclude=*.fet.* --exclude=*.klg.* --exclude=*.res.* --exclude=*.spk.* --exclude=RawKK /mnt/BigPurple/Database/GGData/ /mnt/proraidDL/Database/GGData/ 
 
 %AP from cluster
 rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onCluster/AP_THAL/ /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL/
@@ -61,3 +63,5 @@ rsync -auvzP --exclude=*dat --exclude=Atropine --exclude=Kilosort* /mnt/NyuShare
 
 end
 
+%FOr Roman
+%rsync -auvzPLK --exclude=*.AnalysisResults.* /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/YS_CTX/ /mnt/NyuShare/Buzsakilabspace/LabShare/RomanHuszar/DATA/YSData_DL/
