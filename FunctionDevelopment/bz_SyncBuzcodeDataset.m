@@ -65,3 +65,4 @@ end
 
 %FOr Roman
 %rsync -auvzPLK --exclude=*.AnalysisResults.* /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/YS_CTX/ /mnt/NyuShare/Buzsakilabspace/LabShare/RomanHuszar/DATA/YSData_DL/
+%rsync -auvzPLK --exclude=*.AnalysisResults.* /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/BW_CTX/ /mnt/NyuShare/Buzsakilabspace/LabShare/RomanHuszar/DATA/BWData_DL/
