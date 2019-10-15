@@ -312,7 +312,65 @@ end
 end
 
 NiceSave('ISIDists',figfolder,[])
-NiceSave('ISIDists',figfolder,[],'figtype','epsc')
+%NiceSave('ISIDists',figfolder,[],'figtype','epsc')
+
+%% E Only ISI
+%Get 3 random E cells and 1 I cell
+%Sort the E cells by rate
+
+%excell = excells;
+NREMhistcolors = makeColorMap([1 1 1],[0 0 0.8]);
+REMhistcolors = makeColorMap([1 1 1],[0.8 0 0]);
+statecolormap = {histcolors,NREMhistcolors,REMhistcolors};
+
+
+
+
+figure
+for rr = 1:length(regions)
+for ss = 1:3
+    subplot(3,4,ss*4-3+(rr-1))
+    colormap(gca,statecolormap{ss})
+
+       % subplot(2,3,4)
+            imagesc((ISIstats.(regions{rr}).ISIhist.logbins(1,:)),[1 sum(inclasscells.(regions{rr}){1})],...
+                ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(sorts.(regions{rr}).(statenames{ss}).ratepE,:))
+            hold on
+            plot(log10(1./(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(sorts.(regions{rr}).(statenames{ss}).ratepE))),...
+                [1:sum(inclasscells.(regions{rr}){1})],'k.','markersize',1)
+            
+            plot(meanISIhist.logbins,-meanISIhist.(regions{rr}).(statenames{ss}).pE*5000+...
+                sum(inclasscells.(regions{rr}){1})+0.5,...
+                'color',statecolors{ss},'linewidth',2)
+            
+            
+            xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
+            xlim([-3 1.9])
+            LogScale('x',10,'exp',true)
+            if ss==3
+                xlabel('ISI (s)')
+            else
+                set(gca,'xticklabels',[])
+            end
+            %colorbar
+          %  legend('1/Mean Firing Rate (s)','location','southeast')
+          if rr ==1
+            ylabel({statenames{ss},'Cell, sorted by Rate'})
+          end
+            set(gca,'yticklabel',[])
+            %legend('1/Mean Firing Rate (s)','location','southeast')
+            caxis([0 0.1])
+            %title('ISI Distribution (Log Scale)')
+            if ss==1
+                title(regions{rr})
+            end
+
+                
+end
+
+end
+
+NiceSave('ISIDists_E',figfolder,[])
 
 %%
 figure
