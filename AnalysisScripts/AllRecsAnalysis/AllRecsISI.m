@@ -147,7 +147,7 @@ histcolors = flipud(gray);
 figure
 for rr = 1:length(regions)
     for ss = 1:3
-    subplot(4,4,ss+(rr-1).*4)
+    subplot(4,4,rr+(ss-1).*4)
         plot(log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).pE)),...
             ISIstats.(regions{rr}).summstats.(statenames{ss}).meanCV2(CellClass.(regions{rr}).pE),'k.','markersize',4)
         hold on
@@ -157,18 +157,19 @@ for rr = 1:length(regions)
 %             ISIstats.(regions{rr}).summstats.(statenames{ss}).meanCV2(excells),...
 %             'o','color',[0.1 0.7 0],'markersize',5,'LineWidth',2)
         xlim([-2.2 1.8]); ylim([0.4 1.6])
+        box off
         LogScale('x',10)
         plot(get(gca,'xlim'),[1 1],'k')
-        if rr == 1
-        title(statenames{ss})
+        if ss == 1
+            title(regions{rr})
         end
-        if rr==3
+        if ss==3
             xlabel('FR (Hz)');
         else
             set(gca,'xticklabel',[])
         end
-        if ss==1
-        ylabel({regions{rr},'<CV2>'})
+        if rr==1
+            ylabel({statenames{ss},'CV2'})
         else
             set(gca,'yticklabel',[])
         end
@@ -202,7 +203,7 @@ for rr = 1:length(regions)
         plot(get(gca,'xlim'),[0 0],'k')
         box off
         if ss == 1
-            title(statenames{ss})
+            title(regions{rr})
         end
         if ss==3
             xlabel('FR (Hz)');
