@@ -312,7 +312,7 @@ end
 end
 
 NiceSave('ISIDists',figfolder,[])
-NiceSave('ISIDists',figfolder,[],'figtype','eps')
+NiceSave('ISIDists',figfolder,[],'figtype','epsc')
 
 %%
 figure
