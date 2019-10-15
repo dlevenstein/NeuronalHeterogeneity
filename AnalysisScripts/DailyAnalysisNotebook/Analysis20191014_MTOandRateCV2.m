@@ -88,3 +88,30 @@ end
 end
 NiceSave('RateCV2byGSAS',figfolder,[])
 
+%%
+figure
+for rr = 1:length(regions)
+for ss =1:3
+subplot(6,4,rr+(ss-1)*4)
+scatter(log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).pE)),...
+    (ISIstats.(regions{rr}).summstats.(statenames{ss}).meanCV2(CellClass.(regions{rr}).pE)),0.5,...
+     log10(OccupancyStats.(regions{rr}).(statenames{ss}).MTORatio(CellClass.(regions{rr}).pE)))
+ axis tight
+ 
+ %ylim([0 2])
+ %xlim([-2.75 1.75])
+ LogScale('x',10,'exp',true,'nohalf',true)
+ 
+  caxis([0 1])
+  
+ colorbar
+ LogScale('c',10,'exp',true,'nohalf',true)
+ if ss==1
+     title(regions{rr})
+ end
+  if rr ==1
+    ylabel('Activation Ratio') 
+  end
+ 
+end
+end

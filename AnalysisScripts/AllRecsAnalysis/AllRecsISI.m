@@ -187,7 +187,7 @@ figure
 for rr = 1:length(regions)
     for ss = 1:3
 
-    subplot(4,4,ss+(rr-1).*4)
+    subplot(4,4,rr+(ss-1).*4)
         plot(log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).pE)),...
             log2(ISIstats.(regions{rr}).summstats.(statenames{ss}).ISICV(CellClass.(regions{rr}).pE)),'k.','markersize',4)
         hold on
@@ -198,18 +198,19 @@ for rr = 1:length(regions)
 %             'o','color',[0.1 0.7 0],'markersize',5,'LineWidth',2)
 
         xlim([-2.2 1.8]); ylim([-1 5])
-        LogScale('x',10);LogScale('y',2);
+        LogScale('x',10,'exp',true);LogScale('y',2);
         plot(get(gca,'xlim'),[0 0],'k')
-        if rr == 1
+        box off
+        if ss == 1
             title(statenames{ss})
         end
-        if rr==3
+        if ss==3
             xlabel('FR (Hz)');
         else
             set(gca,'xticklabel',[])
         end
-        if ss==1
-            ylabel({regions{rr},'CV'})
+        if rr==1
+            ylabel({statenames{ss},'CV'})
         else
             set(gca,'yticklabel',[])
         end
@@ -311,6 +312,7 @@ end
 end
 
 NiceSave('ISIDists',figfolder,[])
+NiceSave('ISIDists',figfolder,[],'figtype','eps')
 
 %%
 figure
