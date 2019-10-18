@@ -67,23 +67,26 @@ ISIoccupancy.logbins = linspace(-3,3,100);
         
     end
 %%
-ss = 1;
-excell(1) = randsample(find(log10(ISIrate.OccupancyStats.(states{ss}).MTORatio)<0.4 & CellClass.pE),1);
-excell(2) = randsample(find(log10(ISIrate.OccupancyStats.(states{ss}).MTORatio)>0.8 & CellClass.pE),1);
+for ss = 1:2
 
-excell(3) = randsample(find(CellClass.pE),1);
+% excell(1) = randsample(find(log10(ISIrate.OccupancyStats.(states{ss}).MTORatio)<0.4 & CellClass.pE),1);
+% excell(2) = randsample(find(log10(ISIrate.OccupancyStats.(states{ss}).MTORatio)>0.8 & CellClass.pE),1);
+% 
+excell = randsample(find(CellClass.pE),4);
 
+[~,sortex] = sort(ISIrate.OccupancyStats.(states{ss}).median(excell));
+excell = excell(sortex);
 exwin = bz_RandomWindowInIntervals(SleepState.ints.(states{ss}),60);
 
 figure
-for ee = 1:3
-    subplot(4,1,ee)
+for ee = 1:4
+    subplot(6,3,(ee-1).*3+[1:2])
     
         plotspikes = Restrict(spikes.times{excell(ee)},exwin);
         plot(ISIrate.timestamps,log10(ISIrate.ISI(:,excell(ee))),'k')
         hold on
         plot([plotspikes*[1 1]]',[ones(size(plotspikes))*[1.75 2]]','k')
-        plot(exwin,log10(1./ISIStats.summstats.(states{ss}).meanrate(excell(ee))).*[1 1],'r--')
+        plot(exwin,log10(1./ISIStats.summstats.(states{ss}).meanrate(excell(ee))).*[1 1],'k:')
         plot(exwin,log10(ISIrate.OccupancyStats.(states{ss}).median(excell(ee))).*[1 1],'r:')
         xlim(exwin)
         ylim([-3 2.3])
@@ -94,16 +97,33 @@ for ee = 1:3
         bz_ScaleBar('s')
         axis ij
         
-     subplot(6,3,15+ee)
+     subplot(6,4,(ee)+16)
         plot(ISIStats.ISIhist.logbins,ISIStats.ISIhist.(states{ss}).log(excell(ee),:),'k','linewidth',2)
         hold on
         plot(ISIoccupancy.logbins,ISIoccupancy.(states{ss}).loghist(:,excell(ee)),'k:')
-        plot(log10(1./ISIStats.summstats.(states{ss}).meanrate(excell(ee))),0,'r+')
-        plot(log10(ISIrate.OccupancyStats.(states{ss}).median(excell(ee))),0,'r*')
+        plot(log10(1./ISIStats.summstats.(states{ss}).meanrate(excell(ee))),0,'k+')
+        plot(log10(ISIrate.OccupancyStats.(states{ss}).median(excell(ee))),0,'r+')
         box off
         axis tight
         LogScale('x',10,'exp',true)
+        set(gca,'yticklabels',[])
+        xlabel('ISI (s)');ylabel('P[ISI]')
         %plot(ISIrate.OccupancyStats.WAKEstate.
+        
+     subplot(6,4,ee+20)
+        imagesc(ISIStats.ISIhist.logbins,ISIStats.CV2hist.bins,...
+            squeeze(ISIStats.Jointhist.(states{ss}).log(excell(ee),:,:))')
+        axis xy
+        ISIStats.Jointhist.(states{ss}).log(excell(ee),1,:)
+        caxis([0 max([ISIStats.Jointhist.(states{ss}).log(excell(ee),:,1),0])])
 end
 
-NiceSave('GSExamples',figfolder,baseName)
+subplot(3,3,3)
+plot(log10((1./ISIrate.OccupancyStats.(states{ss}).median(CellClass.pE))),...
+    log10(ISIrate.OccupancyStats.(states{ss}).MTORatio(CellClass.pE)),'k.')
+hold on
+plot(log10((1./ISIrate.OccupancyStats.(states{ss}).median(excell))),...
+    log10(ISIrate.OccupancyStats.(states{ss}).MTORatio(excell)),'r.')
+
+NiceSave(['GSExamples_',(states{ss})],figfolder,baseName,'includeDate',true)
+end

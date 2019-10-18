@@ -8,7 +8,7 @@ function [ jitterCV2 ] = SpikeStatsAnalysis(basePath,figfolder)
 
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/mnt/NyuShare/Buzsakilabspace/Datasets/GrosmarkAD/Gatsby/Gatsby_08022013';
-
+%basePath = '/mnt/proraidDL/Database/BWData/JennBuzsaki22/20140526_277um'
 %figfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs';
 %figfolder = [repoRoot,'/AnalysisScripts/AnalysisFigs/SpikeStatsAnalysis'];
 
@@ -25,7 +25,13 @@ SleepState = bz_LoadStates(basePath,'SleepState');
 lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
     'basepath',basePath,'noPrompts',true);
 
-celltypes = CellClass.celltypes;
+try
+    celltypes = CellClass.celltypes;
+catch
+    celltypes = unique(CellClass.label);
+end
+cellcolor = {'k','r'};
+
 %%
 statenames = {'NREMstate','WAKEstate','REMstate'};
 statecolors = {'b','k','r'};
@@ -33,7 +39,7 @@ numstates = length(statenames);
 
 
 [ ISIstats ] = bz_ISIStats( spikes,'ints',SleepState.ints,...
-    'cellclass',CellClass.label,'figfolder',figfolder,'shuffleCV2',true,...
+    'cellclass',CellClass.label,'figfolder',figfolder,'shuffleCV2',false,...
     'savecellinfo',true,'basePath',basePath,'forceRedetect',true);
 
 
