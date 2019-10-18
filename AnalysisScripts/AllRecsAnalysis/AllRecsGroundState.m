@@ -963,6 +963,10 @@ for rr = 1:length(regions)
 
 for cc = 1:2
 	for ss = 1:3
+        
+        [~,idx] = min(abs(meannormISIhist.bins - 0));
+        
+        
         subplot(6,4,rr+(ss-1)*4+(cc-1)*12)    
         %colormap(gca,statecolormap{ss})
 
@@ -1012,7 +1016,7 @@ for cc = 1:2
         %colorbar
         
              caxis([0 max([meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).norm(:,2);0])])
-            
+            %caxis([0 max([2*meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).norm(idx,2);0])])
     end
 end
 end
