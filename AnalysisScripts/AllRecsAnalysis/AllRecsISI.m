@@ -535,6 +535,7 @@ for ss = 1:3
         xlim([-3 1.9])
         LogScale('x',10,'exp',true)
         set(gca,'ytick',[])
+        %legend('1 (low)','2','3','4','5','6 (high)')
             if ss==3
                 xlabel('ISI (s)')
             else
@@ -884,7 +885,7 @@ figure
 for rr = 1:length(regions)
 
 
-for cc = 1:length(classnames)
+for cc = 1:2
 	for ss = 1:3
         subplot(6,4,rr+(ss-1)*4+(cc-1)*12)    
         %colormap(gca,statecolormap{ss})

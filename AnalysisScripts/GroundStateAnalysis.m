@@ -125,6 +125,7 @@ for ss = 1:3
         meandists.(state).(celltypes{tt}).Jointdist = squeeze(nanmean(normISIhist.(state).jointCV2(inclasscells{tt},:,:),1));
     end
     
+    OccupancyStats.(state).hists = ISIoccupancy.(state);
 end
 
 %% Save Occupancy Stats as cellinfo
