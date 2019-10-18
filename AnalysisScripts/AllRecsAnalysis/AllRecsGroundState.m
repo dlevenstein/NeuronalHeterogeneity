@@ -86,7 +86,7 @@ end
 meanISIhist.logbins = ISIstats.(regions{1}).ISIhist.logbins(1,:);
 meannormISIhist.bins = normISIhist.(regions{1}).bins(1,:);
 meannormOcc.bins = ISIoccupancy.(regions{rr}).logbins(1,:);
-numperciles = 6;
+numperciles = 5;
 
 for rr = 1:length(regions)
     for ss = 1:3
@@ -908,7 +908,7 @@ for ss = 1:3
 for rr = 1:length(regions)
    for cc = 1:length(percilenames)
        
-       %[~,idx] = min(abs(10.^meanISIhist.logbins - 1./meanpercrate.(regions{rr}).(statenames{ss})(cc)));
+       [~,idx] = min(abs(10.^meanISIhist.logbins - 1./meanpercmedISI.(regions{rr}).(statenames{ss})(cc)));
        
         subplot(length(percilenames),4,(cc-1)*4+rr)    
         %colormap(gca,statecolormap{ss})
@@ -939,7 +939,16 @@ for rr = 1:length(regions)
             xlim([-2.5 1.7])
             xlim(ISIstats.(regions{rr}).ISIhist.logbins([1 end]))
             
-            caxis([0 max([meanJointhist.(regions{rr}).(statenames{ss}).(percilenames{cc}).log(10:end,1);0])])
+            if ss==2
+                caxis([0 2.7*meanJointhist.(regions{rr}).(statenames{ss}).(percilenames{cc}).log(idx,1)])
+            else
+                caxis([0 3.1*meanJointhist.(regions{rr}).(statenames{ss}).(percilenames{cc}).log(idx,1)])
+                if cc == length(percilenames) & rr~=4
+                caxis([0 max([meanJointhist.(regions{rr}).(statenames{ss}).(percilenames{cc}).log(10:end,1);0])])
+                end
+            end
+            %caxis([0 max([meanJointhist.(regions{rr}).(statenames{ss}).(percilenames{cc}).log(10:end,1);0])])
+            %crameri tokyo
 
     end
 end
@@ -1001,6 +1010,7 @@ for cc = 1:2
 %                     caxis([0.5e-4 1.8e-3])
 %             end
         %colorbar
+        
              caxis([0 max([meanJointhist.(regions{rr}).(statenames{ss}).(classnames{cc}).norm(:,2);0])])
             
     end
