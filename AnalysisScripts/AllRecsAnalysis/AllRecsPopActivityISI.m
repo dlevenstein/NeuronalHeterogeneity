@@ -21,7 +21,7 @@ for rr = 1:length(regions)
 
     [PopActivityAll,baseNames] = bz_LoadAnalysisResults(datasetPath.(regions{rr}),'SpikeStatsbyPopActivityAnalysis','dataset',true);
     CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
-    %OccupancyStats.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'OccupancyStats','dataset',true,'catall',true,'baseNames',baseNames);
+    OccupancyStats.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'OccupancyStats','dataset',true,'catall',true,'baseNames',baseNames);
     tempISI = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true,'baseNames',baseNames);
     ISIhist.(regions{rr}) = tempISI.ISIhist;
     clear tempISI
@@ -80,6 +80,7 @@ for rr = 1:length(regions)
     
     
     for ss = 1:3
+        OccupancyStats.(regions{rr}).(statenames{ss}).GSrate= 1./OccupancyStats.(regions{rr}).(statenames{ss}).median;
     for tt = 1:length(celltypes)
         inclass = ISIbySynch.(regions{rr}).norm.pE.NREMstate.celltypeidx.(celltypes{tt});
         popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).cellCV2s = nanmean(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).cellCV2s(:,:,inclass),3);
@@ -781,6 +782,35 @@ for rr = 1:4
     subplot(3,4,rr+(ss-1)*4)
         for tt = 1:length(celltypes)
             plotcells = CellClass.(regions{rr}).(celltypes{tt})&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st});
+            plot(log10(OccupancyStats.(regions{rr}).(statenames{ss}).GSrate(plotcells)),...
+                ratepopcorr.(regions{rr}).(statenames{ss}).(synchtypes{st})(plotcells),...
+                '.','color',cellcolor{tt})
+            hold on
+        end
+        axis tight;box off
+        xlim([-2 2]);ylim([-0.6 0.75])
+        plot(get(gca,'xlim'),[0 0],'k')
+        if ss ==3
+        xlabel('GS Rate (Hz)');
+        end
+        LogScale('x',10)
+        if ss == 1
+        title((regions{rr}))
+        end
+        if rr == 1
+            ylabel({statenames{ss},'Pop-Rate Corr'})
+        end
+    end
+end
+NiceSave('GSRatePopCorr',figfolder,[])
+%%
+st =3; %all MUA
+figure
+for rr = 1:4
+    for ss = 1:3
+    subplot(3,4,rr+(ss-1)*4)
+        for tt = 1:length(celltypes)
+            plotcells = CellClass.(regions{rr}).(celltypes{tt})&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st});
             plot(log10(ratepopcorr.(regions{rr}).(statenames{ss}).cellrate(plotcells)),...
                 CV2popcorr.(regions{rr}).(statenames{ss}).(synchtypes{st})(plotcells),...
                 '.','color',cellcolor{tt})
@@ -803,6 +833,35 @@ for rr = 1:4
 end
 NiceSave('CV2PopCorr',figfolder,[])
 
+%%
+st =3; %all MUA
+figure
+for rr = 1:4
+    for ss = 1:3
+    subplot(3,4,rr+(ss-1)*4)
+        for tt = 1:length(celltypes)
+            plotcells = CellClass.(regions{rr}).(celltypes{tt})&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st});
+            plot(log10(OccupancyStats.(regions{rr}).(statenames{ss}).GSrate(plotcells)),...
+                CV2popcorr.(regions{rr}).(statenames{ss}).(synchtypes{st})(plotcells),...
+                '.','color',cellcolor{tt})
+            hold on
+        end
+        axis tight;box off
+        xlim([-2 2]);ylim([-0.25 0.25])
+        plot(get(gca,'xlim'),[0 0],'k')
+        if ss ==3
+        xlabel('GS Rate (Hz)');
+        end
+        LogScale('x',10)
+        if ss == 1
+        title((regions{rr}))
+        end
+        if rr == 1
+            ylabel({statenames{ss},'Pop-CV2 Corr'})
+        end
+    end
+end
+NiceSave('GSCV2PopCorr',figfolder,[])
 %%
 
 figure
