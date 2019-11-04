@@ -2,8 +2,8 @@ savefolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/Modeling/Fi
 
 
 rate = 1;
-poissISIs = exprnd(rate,10000,1);
-gaussISIs = 0.25*randn(10000,1)+rate;
+poissISIs = exprnd(rate,5000000,1);
+gaussISIs = 0.25*randn(5000000,1)+rate;
 gaussISIs(gaussISIs <= 0) = [];
 
 CV2_poiss = 2.*abs(poissISIs(2:end)-poissISIs(1:end-1))./(poissISIs(2:end)+poissISIs(1:end-1));
@@ -14,15 +14,18 @@ gaussSpiketimes = cumsum(gaussISIs);
 poissSpiketimes = cumsum(poissISIs);
 
 %%
-    CV2bins = linspace(0,2,50);
+    CV2bins = linspace(0,2,100);
     %CV2hist{ee} = hist(CV2,CV2bins);
     
-    ISIbins = linspace(-3.5,1.5,50);
+    ISIbins = linspace(-3.5,1.5,100);
     %ISIhist_ex{ee} = hist(log10(ISIs_ex{ee}),CV2bins);
     
     JointHist_poiss = hist3([log10(poissISIs(2:end)),CV2_poiss],{ISIbins,CV2bins});
 	JointHist_gauss = hist3([log10(gaussISIs(2:end)),CV2_gausss],{ISIbins,CV2bins});
-
+    
+    
+    ISIhist_poiss = hist(log10(poissISIs(2:end)),ISIbins);
+    ISIhist_gauss = hist(log10(gaussISIs(2:end)),ISIbins);
 %%
 figure
 
@@ -71,20 +74,24 @@ xlabel('CV2')
 subplot(4,3,6)
     imagesc(ISIbins,CV2bins,JointHist_poiss')
     axis xy
+    hold on
+    plot(ISIbins,bz_NormToRange(ISIhist_poiss,0.5),'w','linewidth',1)
     %axis tight
     %xlim([-3 1.5]);ylim([0 2])
     box off
-    LogScale('x',10,'exp',true)
+    LogScale('x',10,'exp',true,'nohalf',true)
     xlabel('ISI');ylabel('CV2')
     
 
 subplot(4,3,12)
     imagesc(ISIbins,CV2bins,JointHist_gauss')
     axis xy
+    hold on
+    plot(ISIbins,bz_NormToRange(ISIhist_gauss,0.5),'w','linewidth',1)
     %axis tight
     %xlim([-3 1.5]);ylim([0 2])
     box off
-    LogScale('x',10,'exp',true)
+    LogScale('x',10,'exp',true,'nohalf',true)
     xlabel('ISI');ylabel('CV2')
 
 NiceSave('ISICV2',savefolder,'poisspop')
