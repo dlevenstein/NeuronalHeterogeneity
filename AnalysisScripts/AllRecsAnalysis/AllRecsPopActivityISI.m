@@ -81,6 +81,8 @@ for rr = 1:length(regions)
     
     for ss = 1:3
         OccupancyStats.(regions{rr}).(statenames{ss}).GSrate= 1./OccupancyStats.(regions{rr}).(statenames{ss}).median;
+        
+        OccupancyStats.(regions{rr}).(statenames{ss}).ActRatio = ratepopcorr.(regions{rr}).(statenames{ss}).cellrate./OccupancyStats.(regions{rr}).(statenames{ss}).GSrate;
     for tt = 1:length(celltypes)
         inclass = ISIbySynch.(regions{rr}).norm.pE.NREMstate.celltypeidx.(celltypes{tt});
         popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).(celltypes{tt}).cellCV2s = nanmean(popratehist_joint.(regions{rr}).(normtypes{nn}).(statenames{ss}).cellCV2s(:,:,inclass),3);
@@ -803,6 +805,37 @@ for rr = 1:4
     end
 end
 NiceSave('GSRatePopCorr',figfolder,[])
+
+%%
+st =3; %all MUA
+figure
+for rr = 1:4
+    for ss = 1:3
+    subplot(3,4,rr+(ss-1)*4)
+        for tt = 1:2
+            plotcells = CellClass.(regions{rr}).(celltypes{tt})&popratehist.(regions{rr}).enoughpopcells.(synchtypes{st});
+            plot(log10(OccupancyStats.(regions{rr}).(statenames{ss}).ActRatio(plotcells)),...
+                ratepopcorr.(regions{rr}).(statenames{ss}).(synchtypes{st})(plotcells),...
+                '.','color',cellcolor{tt})
+            hold on
+        end
+        axis tight;box off
+        %xlim([-2 2]);
+        ylim([-0.6 0.75])
+        plot(get(gca,'xlim'),[0 0],'k')
+        if ss ==3
+        xlabel('Activation Ratio');
+        end
+        LogScale('x',10)
+        if ss == 1
+        title((regions{rr}))
+        end
+        if rr == 1
+            ylabel({statenames{ss},'Pop-Rate Corr'})
+        end
+    end
+end
+NiceSave('ActRatPopCorr',figfolder,[])
 %%
 st =3; %all MUA
 figure
