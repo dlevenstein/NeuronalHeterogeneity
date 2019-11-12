@@ -39,7 +39,7 @@ fs = p.Results.fs;
 peakProminence = p.Results.peakProminence;
 cellPos = p.Results.cellPosition;
 if isempty(cellPos)
-    cellPos = [1 numel(signIntra)/fs];
+    cellPos = [1 numel(d(1,:))/fs];
 end
 hp = 10;
 fprintf('%iHz high pass filtering... \n',hp);
