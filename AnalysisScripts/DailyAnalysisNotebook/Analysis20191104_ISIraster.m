@@ -80,7 +80,9 @@ sorts.MTO_I = intersect(sorts.MTO,find(CellClass.pI),'stable');
 
 figure
 subplot(3,1,1)
-bz_MultiLFPPlot(lfp,'timewin',exwin,'spikes',spikes)
+bz_MultiLFPPlot(lfp,'timewin',exwin,'spikes',spikes,...
+    'sortmetric',ISIrate.OccupancyStats.(states{ss}).median,...
+    'cellgroups',{CellClass.pE,CellClass.pI})
 subplot(3,1,2)
 imagesc(ISIrate.timestamps(inwin),[1 spikes.numcells],log10(1./ISIrate.ISI(inwin,sorts.MTO_E))')
 colorbar('location','east')
