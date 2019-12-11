@@ -32,14 +32,14 @@ ISIs = diff(spikes{1});
 %%
 
 thiscell = 2;
-intra.timestamps = [1:length(spk2_cell{thiscell})]'./fs_spk2;
+intra.timestamps = [1:length(spk2_cell{thiscell})]'./fs_spk2; 
 intra.Vm = spk2_cell{thiscell}(1,:)';
 intra.spiketimes = intra.timestamps(spikes{1});
 intra.ISIs = diff(intra.spiketimes);
 intra.nextISI = interp1(intra.spiketimes(2:end),intra.ISIs,intra.timestamps,'next');
 %%
 ConditionalHist(log10(intra.nextISI),intra.Vm,'SHOWFIG',true,'Xbounds',[-2.5 1.25],...
-    'Ybounds',[-75 -40])
+    'Ybounds',[-80 -40])
 xlabel('ISI (s)')
 LogScale('x',10)
 ylabel('V_m (mV)')
