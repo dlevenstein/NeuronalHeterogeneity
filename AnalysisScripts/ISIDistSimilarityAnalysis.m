@@ -1,4 +1,4 @@
-function [ISIs,ispE,UIDs,states,rates,numISIs,allpairs ] = ISIDistSimilarityAnalysis(basePath,figfolder)
+function [ISIs,ispE,ispI,UIDs,states,rates,numISIs,allpairs ] = ISIDistSimilarityAnalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -76,9 +76,11 @@ end
 %%
 states = [2.*ones(size(CellClass.pE)),1.*ones(size(CellClass.pE)),3.*ones(size(CellClass.pE))];
 ispE = [CellClass.pE,CellClass.pE,CellClass.pE];
+ispI = [CellClass.pI,CellClass.pI,CellClass.pI];
 UIDs = [ISIStats.UID,ISIStats.UID,ISIStats.UID];
 [iUID,jUID] = meshgrid(UIDs,UIDs);
 [iispE,jispE] = meshgrid(ispE,ispE);
+[iispI,jispI] = meshgrid(ispI,ispI);
 [istates,jstates] = meshgrid(states,states);
 samecell = iUID==jUID;
 
@@ -90,15 +92,15 @@ simmatrices.difft = nan(6);
 for ss1 = 1:3
     for ss2 = ss1:-1:1
         allpairs.pE{ss1,ss2} = KSSTAT(samecell & istates==ss1 & jstates==ss2 & iispE);
-        allpairs.pI{ss1,ss2} = KSSTAT(samecell & istates==ss1 & jstates==ss2 & ~iispE);
+        allpairs.pI{ss1,ss2} = KSSTAT(samecell & istates==ss1 & jstates==ss2 & iispI);
         
         simmatrices.pE(ss1,ss2) = mean(allpairs.pE{ss1,ss2});
         simmatrices.pI(ss1,ss2) = mean(allpairs.pI{ss1,ss2});
     
         
         allpairs.difft{ss1,ss2} = KSSTAT(~samecell & istates==ss1 & jstates==ss2 & jispE & iispE);
-        allpairs.difft{ss1+3,ss2} = KSSTAT(~samecell & istates==ss1 & jstates==ss2 & ~jispE & iispE);
-        allpairs.difft{ss1+3,ss2+3} = KSSTAT(~samecell & istates==ss1 & jstates==ss2 & ~jispE & ~iispE);
+        allpairs.difft{ss1+3,ss2} = KSSTAT(~samecell & istates==ss1 & jstates==ss2 & iispI & jispE);
+        allpairs.difft{ss1+3,ss2+3} = KSSTAT(~samecell & istates==ss1 & jstates==ss2 & iispI & jispI);
         
         simmatrices.difft(ss1,ss2) = mean(allpairs.difft{ss1,ss2});
         simmatrices.difft(ss1+3,ss2) = mean(allpairs.difft{ss1+3,ss2});
@@ -116,7 +118,7 @@ end
 
 %% tSNE
 perplexity = 30;
-P = d2p(valid, perplexity, 1e-5); 
+P = d2p(valid(ispE | ispI ,ispE | ispI) , perplexity, 1e-5); 
 Y = tsne_p(P, states, 2);
 %%
 
@@ -171,5 +173,5 @@ hold on
 axis tight
 xticks(gca,[]);yticks(gca,[])
 plot(Y(ispE,1),Y(ispE,2),'.k')
-plot(Y(~ispE,1),Y(~ispE,2),'.r')
+plot(Y(ispI,1),Y(ispI,2),'.r')
 NiceSave('ISISimilarity',figfolder,baseName)
