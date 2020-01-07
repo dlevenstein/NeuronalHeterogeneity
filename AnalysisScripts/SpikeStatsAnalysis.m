@@ -13,7 +13,8 @@ function [ jitterCV2 ] = SpikeStatsAnalysis(basePath,figfolder)
 %figfolder = [repoRoot,'/AnalysisScripts/AnalysisFigs/SpikeStatsAnalysis'];
 
 %figfolder = '/mnt/data1/Dropbox/research/Current Projects/FRHET_temp/SpikeStatsAnalysis';
-
+basePath = '/mnt/proraidDL/Database/GGData/Rat08/Rat08-20130708';
+figfolder = pwd;
 REDOJITTER = false;
 %%
 
