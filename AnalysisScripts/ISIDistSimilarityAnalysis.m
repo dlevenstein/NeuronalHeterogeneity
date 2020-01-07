@@ -118,8 +118,8 @@ end
 
 %% tSNE
 perplexity = 30;
-P = d2p(valid(ispE | ispI ,ispE | ispI) , perplexity, 1e-5); 
-Y = tsne_p(P, states, 2);
+P = d2p(valid, perplexity, 1e-5); 
+Y = tsne_p(P, [], 2);
 %%
 
 rates = [ISIStats.summstats.WAKEstate.meanrate,...
