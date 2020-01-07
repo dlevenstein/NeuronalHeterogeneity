@@ -1,6 +1,6 @@
 reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsbyPopActivityAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIDistSimilarityAnalysis'];
 
 datasetPath.fCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/BW_CTX';
 datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AG_HPC';
@@ -22,9 +22,11 @@ for rr = 1:length(regions)
     ISISimilarityAll = bz_CollapseStruct(ISISimilarityAll);
     
     allpairs.(regions{rr}) = bz_CollapseStruct(ISISimilarityAll.allpairs,3,'justcat',true);
+    ISIs.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.ISIs,1,'justcat',true);
+    ispE.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.ispE,1,'justcat',true);
+    ispI.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.ispI,1,'justcat',true);
+    states.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.states,1,'justcat',true);
     
-
-
     clear ISISimilarityAll
 end
 %%
@@ -35,52 +37,131 @@ for rr = 1:length(regions)
             newpairs.(regions{rr}).pI{ii,jj} = cat(1,allpairs.(regions{rr}).pI{ii,jj,:});
             simmatrices.(regions{rr}).pE(ii,jj) = mean(newpairs.(regions{rr}).pE{ii,jj});
             simmatrices.(regions{rr}).pI(ii,jj) = mean(newpairs.(regions{rr}).pI{ii,jj});
+            
+            if rr ==1
+                newpairs.ALL.pE{ii,jj} = newpairs.(regions{rr}).pE{ii,jj};
+                newpairs.ALL.pI{ii,jj} = newpairs.(regions{rr}).pI{ii,jj};
+            else
+                newpairs.ALL.pE{ii,jj} = [newpairs.ALL.pE{ii,jj};newpairs.(regions{rr}).pE{ii,jj}];
+                newpairs.ALL.pI{ii,jj} = [newpairs.ALL.pI{ii,jj};newpairs.(regions{rr}).pI{ii,jj}];
+                
+                simmatrices.ALL.pE(ii,jj) = mean(newpairs.ALL.pE{ii,jj});
+                simmatrices.ALL.pI(ii,jj) = mean(newpairs.ALL.pI{ii,jj});
+            end
         end
     end
 end
-
+%
 for rr = 1:length(regions)
     for ii = 1:6
         for jj = 1:6
             newpairs.(regions{rr}).difft{ii,jj} = cat(1,allpairs.(regions{rr}).difft{ii,jj,:});
             simmatrices.(regions{rr}).difft(ii,jj) = mean(newpairs.(regions{rr}).difft{ii,jj});
+            
+            if rr ==1
+                newpairs.ALL.difft{ii,jj} = newpairs.(regions{rr}).difft{ii,jj};
+            else
+                newpairs.ALL.difft{ii,jj} = [newpairs.ALL.difft{ii,jj};newpairs.(regions{rr}).difft{ii,jj}];
+                
+                simmatrices.ALL.difft(ii,jj) = mean(newpairs.ALL.difft{ii,jj});
+            end
         end
     end
 end
 
 
 %%
-for rr = 1:4
 figure
+for rr = 1:4
+
 for cc = 1:length(celltypes)
-subplot(3,3,(cc-1).*3+1)
+subplot(4,4,(cc-1).*4+rr)
 imagesc(simmatrices.(regions{rr}).(celltypes{cc}))
 alpha(gca,single(~isnan(simmatrices.(regions{rr}).(celltypes{cc}))))
-caxis([0.075 0.35])
+caxis([0.05 0.5])
 box off
 set(gca,'ytick',[1:3]);set(gca,'xtick',[1:3]);
 set(gca,'yticklabel',{'N','W','R'})
 set(gca,'xticklabel',{'N','W','R'})
 ylabel(celltypes{cc});
 crameri tokyo
-if cc == 1
-    title('Same Cell')
+
+    title((regions{rr}))
+
+    
+subplot(2,2,2+cc)
+imagesc(simmatrices.ALL.(celltypes{cc}))
+alpha(gca,single(~isnan(simmatrices.ALL.(celltypes{cc}))))
+caxis([0.05 0.5])
+box off
+set(gca,'ytick',[1:3]);set(gca,'xtick',[1:3]);
+set(gca,'yticklabel',{'N','W','R'})
+set(gca,'xticklabel',{'N','W','R'})
+crameri tokyo
+
+    title(celltypes{cc})
 end
 end
 
-subplot(3,3,[2 3 5 6])
+NiceSave('ISISimilarity_WithinCell',figfolder,'')
+%%
+figure
+for rr = 1:4
+subplot(2,2,rr)
 imagesc(simmatrices.(regions{rr}).difft)
 alpha(gca,single(~isnan(simmatrices.(regions{rr}).difft)))
-colorbar
-caxis([0.075 0.35])
+%colorbar
+caxis([0.05 0.5])
 title('Diff. Cells')
 box off
 crameri tokyo
 set(gca,'ytick',[1:6]);set(gca,'xtick',[1:6]);
 set(gca,'yticklabel',{'N','W','R','N','W','R'})
 set(gca,'xticklabel',{'N','W','R','N','W','R'})
-
+title((regions{rr}))
 end
+NiceSave('ISISimilarity_BetweenCell',figfolder,'')
+%%
+figure
+
+imagesc(simmatrices.ALL.difft)
+alpha(gca,single(~isnan(simmatrices.ALL.difft)))
+colorbar
+caxis([0.05 0.5])
+title('Diff. Cells')
+box off
+crameri tokyo
+set(gca,'ytick',[1:6]);set(gca,'xtick',[1:6]);
+set(gca,'yticklabel',{'N','W','R','N','W','R'})
+set(gca,'xticklabel',{'N','W','R','N','W','R'})
+title((regions{rr}))
+
+NiceSave('ISISimilarity_AllCells',figfolder,'')
+
+
+%%
+allISIs = [ISIs.THAL,ISIs.vCTX,ISIs.fCTX,ISIs.CA1];
+numISIs = cellfun(@length,allISIs);
+%%
+
+numcells = length(allISIs);
+KSSTAT = nan(numcells);
+%parpool
+for ii = 1:numcells
+    bz_Counter(ii,numcells,'Cell');
+    parfor jj = ii:numcells
+        if ii==jj %For Same Cell, calculate first/last half spikes
+            [~,~,KSSTAT(ii,jj)] = kstest2(allISIs{ii}(1:round(end/2)),allISIs{jj}(round(end/2):end));
+        else
+            [~,~,KSSTAT(ii,jj)] = kstest2(allISIs{ii},allISIs{jj});
+        end
+    end
+    for jj = ii:numcells
+        KSSTAT(jj,ii) = KSSTAT(ii,jj);
+    end
+end
+
+
 %%
 statenames = {'WAKEstate','NREMstate','REMstate'};
 statecolors = {[0 0 0],[0 0 1],[1 0 0]};
