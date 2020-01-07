@@ -29,7 +29,11 @@ states{4} = 'ALL';
 SleepState.ints.ALL = [0 Inf];
 statecolors = {'k','b','r',[0.6 0.6 0.6]};
 
-[celltypes,~,typeidx] = unique(CellClass.label);
+try
+    celltypes = CellClass.celltypes;
+catch
+    celltypes = unique(CellClass.label);
+end
 cellcolor = {'k','r'};
 
 
@@ -104,10 +108,10 @@ end
 
 
 %% MDS Map
-% valid = KSSTAT;
-% for ii =1:numcells
-%         valid(ii,ii)=0;
-% end
+valid = KSSTAT;
+for ii =1:numcells
+        valid(ii,ii)=0;
+end
 % Y = cmdscale(valid);
 
 %% tSNE
