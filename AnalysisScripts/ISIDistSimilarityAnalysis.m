@@ -1,4 +1,4 @@
-function [ISIs,ispE,UIDs,states,rates,numISIs,allpairs ] = ISIDistSimilarity(basePath,figfolder)
+function [ISIs,ispE,UIDs,states,rates,numISIs,allpairs ] = ISIDistSimilarityAnalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
