@@ -87,5 +87,5 @@ axis tight
 xticks(gca,[]);yticks(gca,[])
 plot(tSNEmap(allISIhists.celltype.pE==1,1),tSNEmap(allISIhists.celltype.pE==1,2),'.k')
 plot(tSNEmap(allISIhists.celltype.pI==1,1),tSNEmap(allISIhists.celltype.pI==1,2),'.r')
-legend(celltypes,'location','northoutside')
+legend({'pE','pI'},'location','northoutside')
 NiceSave('tSNE_Map',figfolder,'')
