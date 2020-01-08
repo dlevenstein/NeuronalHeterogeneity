@@ -142,7 +142,7 @@ NiceSave('ISISimilarity_AllCells',figfolder,'')
 
 %%
 %Subsample ISIs
-keepISIs.numPerregion = 500;
+keepISIs.numPerregion = 1000;
 keepISIs.numISIthresh = 500;
 for rr = 1:length(regions)
     OKISIS = (ispE.(regions{rr}) | ispI.(regions{rr})) & numISIs.(regions{rr})>keepISIs.numISIthresh;
@@ -227,6 +227,8 @@ for ss = 1:3
             crameri tokyo
     end
 end
+NiceSave('ISISimilarity_BetweenRegions',figfolder,'')
+
 %% tSNE Map
 valid = KSSTAT;
 for ii =1:numcells
@@ -298,7 +300,7 @@ NiceSave('tSNE_ComparePerplexity',figfolder,'')
 %%
 close all
 clear tSNEmap
-perplexity = 15;
+perplexity = 20;
 P = d2p(valid.^2, perplexity, 1e-6); 
 tSNEmap(:,:) = tsne_p(P, ALLcelltypes.pE, 2, 3000);
 %%
@@ -306,8 +308,8 @@ tSNEmap(:,:) = tsne_p(P, ALLcelltypes.pE, 2, 3000);
 figure
 subplot(3,3,[5 8])
 hold on
-plot(tSNEmap(states.ALL==1,1),tSNEmap(states.ALL==1,2),'b.')
 plot(tSNEmap(states.ALL==2,1),tSNEmap(states.ALL==2,2),'k.')
+plot(tSNEmap(states.ALL==1,1),tSNEmap(states.ALL==1,2),'b.')
 plot(tSNEmap(states.ALL==3,1),tSNEmap(states.ALL==3,2),'r.')
 axis tight
 xticks(gca,[]);yticks(gca,[])
@@ -331,28 +333,85 @@ plot(tSNEmap(ALLcelltypes.pE==1,1),tSNEmap(ALLcelltypes.pE==1,2),'.k')
 plot(tSNEmap(ALLcelltypes.pI==1,1),tSNEmap(ALLcelltypes.pI==1,2),'.r')
 legend(celltypes,'location','northoutside')
 NiceSave('tSNE_Map',figfolder,'')
-%% 3D
+
+
+%% Subsets...
+
+% Each State Only
+for ss = 1:3
+    close all
+    P = d2p(valid(states.ALL==ss,states.ALL ==ss).^2, perplexity, 1e-6); 
+    statetSNEmap.(statenames{ss}) = tsne_p(P, ALLcelltypes.pE(states.ALL==ss), 2, 1000);
+end
+
+%%
 figure
-subplot(3,3,8)
-hold on
-plot3(Y(states.ALL==1,1),Y(states.ALL==1,2),Y(states.ALL==1,1),'b.')
-plot3(Y(states.ALL==2,1),Y(states.ALL==2,2),Y(states.ALL==2,2),'k.')
-plot3(Y(states.ALL==3,1),Y(states.ALL==3,2),Y(states.ALL==3,2),'r.')
-axis tight
-rotate3d
-grid on
-xticks(gca,[]);yticks(gca,[])
-%legend('NREM','WAKE','REM')
-subplot(3,3,9)
+
+for ss = 1:3
+subplot(2,3,ss)
 hold on
 for rr = 1:length(regions)
-    plot3(Y(ALLregions==rr,1),Y(ALLregions==rr,2),Y(ALLregions==rr,3),'.')
+    plot(statetSNEmap.(statenames{ss})(ALLregions(states.ALL==ss)==rr,1),...
+        statetSNEmap.(statenames{ss})(ALLregions(states.ALL==ss)==rr,2),'.')
 end
+legend(regions,'location','northoutside')
 axis tight
 xticks(gca,[]);yticks(gca,[])
-subplot(3,3,7)
+subplot(2,3,ss+3)
 hold on
 axis tight
+
 xticks(gca,[]);yticks(gca,[])
-plot3(Y(ispE.ALL==1,1),Y(ispE.ALL==1,2),Y(ispE.ALL==1,3),'.k')
-plot3(Y(ispI.ALL==1,1),Y(ispI.ALL==1,2),Y(ispI.ALL==1,3),'.r')
+plot(statetSNEmap.(statenames{ss})(ALLcelltypes.pE(states.ALL==ss)==1,1),...
+    statetSNEmap.(statenames{ss})(ALLcelltypes.pE(states.ALL==ss)==1,2),'.k')
+plot(statetSNEmap.(statenames{ss})(ALLcelltypes.pI(states.ALL==ss)==1,1),...
+    statetSNEmap.(statenames{ss})(ALLcelltypes.pI(states.ALL==ss)==1,2),'.r')
+legend(celltypes,'location','northoutside')
+end
+NiceSave('tSNE_Map_SeparateStates',figfolder,'')
+%%
+
+% E only
+    close all
+    P = d2p(valid(ALLcelltypes.pE==1,ALLcelltypes.pE==1).^2, perplexity, 1e-6); 
+    statetSNEmap.pE.all = tsne_p(P, states.ALL(ALLcelltypes.pE==1), 2, 1000);
+
+for ss = 1:3
+    close all
+    P = d2p(valid(ALLcelltypes.pE==1 & states.ALL==ss,ALLcelltypes.pE==1 & states.ALL ==ss).^2, perplexity, 1e-6); 
+    statetSNEmap.pE.(statenames{ss}) = tsne_p(P, ALLregions(ALLcelltypes.pE==1 & states.ALL==ss), 2, 1000);
+end
+%%
+figure
+for ss = 1:3
+    subplot(3,3,ss)
+    hold on
+    for rr = 1:length(regions)
+        plot(statetSNEmap.pE.(statenames{ss})(ALLregions(ALLcelltypes.pE==1 & states.ALL==ss)==rr,1),...
+            statetSNEmap.pE.(statenames{ss})(ALLregions(ALLcelltypes.pE==1 & states.ALL==ss)==rr,2),'.')
+    end
+    axis tight
+    xticks(gca,[]);yticks(gca,[])
+end
+
+subplot(3,3,[5 8])
+hold on
+plot(statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==2,1),statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==2,2),'k.')
+plot(statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==1,1),statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==1,2),'b.')
+plot(statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==3,1),statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==3,2),'r.')
+axis tight
+xticks(gca,[]);yticks(gca,[])
+legend(statenames,'location','northoutside')
+
+%legend('NREM','WAKE','REM')
+subplot(3,3,[6 9])
+hold on
+for rr = 1:length(regions)
+    plot(statetSNEmap.pE.all(ALLregions(ALLcelltypes.pE==1)==rr,1),statetSNEmap.pE.all(ALLregions(ALLcelltypes.pE==1)==rr,2),'.')
+end
+legend(regions,'location','northoutside')
+axis tight
+xticks(gca,[]);yticks(gca,[])
+
+NiceSave('tSNE_Map_pEOnly',figfolder,'')
+
