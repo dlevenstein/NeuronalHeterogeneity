@@ -647,6 +647,45 @@ end
 end
 NiceSave('MTOandMeanRate',figfolder,[])
 
+%% Box plot comparing regions
+
+rnames = repmat(regions,2,1);
+
+figure
+%for ss = 1:2
+subplot(3,1,1)
+BoxAndScatterPlot({log10(1./OccupancyStats.(regions{1}).(statenames{1}).median(CellClass.(regions{1}).(classnames{1}))),...
+    log10(1./OccupancyStats.(regions{1}).(statenames{2}).median(CellClass.(regions{1}).(classnames{1}))),...
+    log10(1./OccupancyStats.(regions{2}).(statenames{1}).median(CellClass.(regions{2}).(classnames{1}))),...
+    log10(1./OccupancyStats.(regions{2}).(statenames{2}).median(CellClass.(regions{2}).(classnames{1}))),...
+    log10(1./OccupancyStats.(regions{3}).(statenames{1}).median(CellClass.(regions{3}).(classnames{1}))),...
+    log10(1./OccupancyStats.(regions{3}).(statenames{2}).median(CellClass.(regions{3}).(classnames{1}))),...
+    log10(1./OccupancyStats.(regions{4}).(statenames{1}).median(CellClass.(regions{4}).(classnames{1}))),...
+    log10(1./OccupancyStats.(regions{4}).(statenames{2}).median(CellClass.(regions{4}).(classnames{1})))},...
+    'colors',repmat([0 0 0;0 0 1],4,1),...
+    'labels',rnames(:))
+ylim([-2.4 1.9])
+box off
+ylabel('GS Rate')
+LogScale('y',10)
+
+
+subplot(3,1,2)
+BoxAndScatterPlot({log10(OccupancyStats.(regions{1}).(statenames{1}).MTORatio(CellClass.(regions{1}).(classnames{1}))),...
+    log10(OccupancyStats.(regions{1}).(statenames{2}).MTORatio(CellClass.(regions{1}).(classnames{1}))),...
+    log10(OccupancyStats.(regions{2}).(statenames{1}).MTORatio(CellClass.(regions{2}).(classnames{1}))),...
+    log10(OccupancyStats.(regions{2}).(statenames{2}).MTORatio(CellClass.(regions{2}).(classnames{1}))),...
+    log10(OccupancyStats.(regions{3}).(statenames{1}).MTORatio(CellClass.(regions{3}).(classnames{1}))),...
+    log10(OccupancyStats.(regions{3}).(statenames{2}).MTORatio(CellClass.(regions{3}).(classnames{1}))),...
+    log10(OccupancyStats.(regions{4}).(statenames{1}).MTORatio(CellClass.(regions{4}).(classnames{1}))),...
+    log10(OccupancyStats.(regions{4}).(statenames{2}).MTORatio(CellClass.(regions{4}).(classnames{1})))},...
+    'colors',repmat([0 0 0;0 0 1],4,1),...
+    'labels',rnames(:))
+box off
+ylabel('Activation Ratio')
+ylim([0 2])
+%end
+NiceSave('MTORegins',figfolder,[])
 %%
 figure
 for rr = 1:length(regions)
@@ -725,6 +764,40 @@ end
 end
 
 NiceSave('MTOAcrossStates',figfolder,[])
+
+%% GSRate by state
+plotstates = {'WAKEstate','REMstate','WAKEstate'};
+plotstates2 = {'NREMstate','NREMstate','REMstate'};
+
+
+
+figure
+%suptitle(regions{rr})
+%Rate
+for rr = 1:length(regions)
+for ss=1:3
+    subplot(4,4,(ss-1)*4+rr)
+    hold on
+    for cc=1
+        plot(log10(1./OccupancyStats.(regions{rr}).(plotstates{ss}).median(CellClass.(regions{rr}).(classnames{cc}))),...
+            log10(1./OccupancyStats.(regions{rr}).(plotstates2{ss}).median(CellClass.(regions{rr}).(classnames{cc}))),...
+            'k.','markersize',2,'color',classcolors{cc})
+        
+    end
+
+        %plot(log10([0.03 30]),log10([0.03 30]),'k')
+        xlabel([plotstates{ss},' MTO Rate']);ylabel([plotstates2{ss},' MTO Rate'])
+        %axis tight
+        xlim([-3 2]);ylim([-3 2])
+        LogScale('xy',10,'exp',true)
+        UnityLine('linetype','-')
+                if ss==1
+            title(regions{rr})
+        end
+end
+end
+
+NiceSave('MTOAcrossStates_Eonly',figfolder,[])
 %% Simulate: Poisson MTO-norm ISI/occupancy dists
 dt = 0.005;
 [ s ] = PoissonRateSpikeBins(1,dt,10000000);

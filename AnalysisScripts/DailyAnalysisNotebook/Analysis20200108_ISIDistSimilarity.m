@@ -44,7 +44,7 @@ for rr = 1:length(regions)
     for ss = 1:3
         whichcells = find((CellClass.(regions{rr}).pE | CellClass.(regions{rr}).pI) &...
             ~isnan(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(:,1))'); 
-        whichcells = randsample(whichcells,numPerregion);
+        %whichcells = randsample(whichcells,numPerregion);
         allISIhists.region = [allISIhists.region rr.*ones(size(whichcells))];
         allISIhists.celltype.pE = [allISIhists.celltype.pE CellClass.(regions{rr}).pE(whichcells)];
         allISIhists.celltype.pI = [allISIhists.celltype.pI CellClass.(regions{rr}).pI(whichcells)];
@@ -57,7 +57,7 @@ perplexity = 20;
 no_dims = 2;
 initial_dims = 30;
 close all
-tSNEmap = tsne(allISIhists.hists, allISIhists.celltype.pE, no_dims, initial_dims, perplexity);
+[tSNEmap,distance] = tsne(allISIhists.hists, allISIhists.celltype.pE, no_dims, initial_dims, perplexity);
 
 %%
 
@@ -89,3 +89,55 @@ plot(tSNEmap(allISIhists.celltype.pE==1,1),tSNEmap(allISIhists.celltype.pE==1,2)
 plot(tSNEmap(allISIhists.celltype.pI==1,1),tSNEmap(allISIhists.celltype.pI==1,2),'.r')
 legend({'pE','pI'},'location','northoutside')
 NiceSave('tSNE_Map',figfolder,'')
+
+%%
+%%
+
+
+[iregions,jregions] = meshgrid(allISIhists.region,allISIhists.region);
+[iiscelltype.pE,jiscelltype.pE] = meshgrid(allISIhists.celltype.pE,allISIhists.celltype.pE);
+[iiscelltype.pI,jiscelltype.pI] = meshgrid(allISIhists.celltype.pI,allISIhists.celltype.pI);
+[istates,jstates] = meshgrid(allISIhists.state,allISIhists.state);
+
+%%
+%simmatrices.(statenames{ss}).(celltypes{cc})
+celltypes = {'pE','pI'};
+for ss = 1:3
+    for cc = 1:2
+        simmatrices.(statenames{ss}).(celltypes{cc}) = nan(4);
+    end
+end
+
+for rr1 = 1:length(regions)
+    for rr2 = rr1:-1:1
+        for ss = 1:3
+            for cc = 1:2
+        allpairs.(statenames{ss}).(celltypes{cc}){rr1,rr2} = distance(istates==ss & jstates==ss & ...
+            iiscelltype.(celltypes{cc}) & jiscelltype.(celltypes{cc}) & iregions == rr1 & jregions == rr2);
+        
+        simmatrices.(statenames{ss}).(celltypes{cc})(rr1,rr2) = ...
+            mean(allpairs.(statenames{ss}).(celltypes{cc}){rr1,rr2});
+            end
+        end
+    end
+end
+
+%%
+figure
+for ss = 1:3
+    for cc = 1:2
+        subplot(3,3,(cc-1)*3+ss)
+            imagesc(simmatrices.(statenames{ss}).(celltypes{cc}))
+            %colorbar
+            alpha(gca,single(~isnan(simmatrices.(statenames{ss}).(celltypes{cc}))))
+            colorbar
+            caxis([0 0.05])
+            if cc == 1
+            title(statenames{ss})
+            end
+            box off
+            crameri tokyo
+    end
+end
+NiceSave('ISISimilarity_BetweenRegions',figfolder,'')
+

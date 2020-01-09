@@ -184,8 +184,8 @@ states.ALL = [states.THAL(keepISIs.THAL),states.vCTX(keepISIs.vCTX),...
     states.fCTX(keepISIs.fCTX),states.CA1(keepISIs.CA1)];
 
 [iregions,jregions] = meshgrid(ALLregions,ALLregions);
-[iispE,jispE] = meshgrid(ALLcelltypes.pE,ALLcelltypes.pE);
-[iispI,jispI] = meshgrid(ALLcelltypes.pI,ALLcelltypes.pI);
+[iiscelltype.pE,jiscelltype.pE] = meshgrid(ALLcelltypes.pE,ALLcelltypes.pE);
+[iiscelltype.pI,jiscelltype.pI] = meshgrid(ALLcelltypes.pI,ALLcelltypes.pI);
 [istates,jstates] = meshgrid(states.ALL,states.ALL);
 
 %%
@@ -201,7 +201,10 @@ for rr1 = 1:length(regions)
     for rr2 = rr1:-1:1
         for ss = 1:3
             for cc = 1:2
-        allpairs.(statenames{ss}).(celltypes{cc}){rr1,rr2} = KSSTAT(istates==ss & jstates==ss & ALLcelltypes.(celltypes{cc}) & iregions == rr1 & jregions == rr2);
+        allpairs.(statenames{ss}).(celltypes{cc}){rr1,rr2} = ...
+            KSSTAT(istates==ss & jstates==ss & ...
+            iiscelltype.(celltypes{cc}) & jiscelltype.(celltypes{cc}) & ...
+            iregions == rr1 & jregions == rr2);
         
         simmatrices.(statenames{ss}).(celltypes{cc})(rr1,rr2) = ...
             mean(allpairs.(statenames{ss}).(celltypes{cc}){rr1,rr2});
