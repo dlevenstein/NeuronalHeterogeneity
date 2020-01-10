@@ -36,8 +36,8 @@ for rr = 1:length(regions)
         for jj = 1:3
             newpairs.(regions{rr}).pE{ii,jj} = cat(1,allpairs.(regions{rr}).pE{ii,jj,:});
             newpairs.(regions{rr}).pI{ii,jj} = cat(1,allpairs.(regions{rr}).pI{ii,jj,:});
-            simmatrices.(regions{rr}).pE(ii,jj) = mean(newpairs.(regions{rr}).pE{ii,jj});
-            simmatrices.(regions{rr}).pI(ii,jj) = mean(newpairs.(regions{rr}).pI{ii,jj});
+            simmatrices.(regions{rr}).pE(ii,jj) = median(newpairs.(regions{rr}).pE{ii,jj});
+            simmatrices.(regions{rr}).pI(ii,jj) = median(newpairs.(regions{rr}).pI{ii,jj});
             
             if rr ==1
                 newpairs.ALL.pE{ii,jj} = newpairs.(regions{rr}).pE{ii,jj};
@@ -46,8 +46,8 @@ for rr = 1:length(regions)
                 newpairs.ALL.pE{ii,jj} = [newpairs.ALL.pE{ii,jj};newpairs.(regions{rr}).pE{ii,jj}];
                 newpairs.ALL.pI{ii,jj} = [newpairs.ALL.pI{ii,jj};newpairs.(regions{rr}).pI{ii,jj}];
                 
-                simmatrices.ALL.pE(ii,jj) = mean(newpairs.ALL.pE{ii,jj});
-                simmatrices.ALL.pI(ii,jj) = mean(newpairs.ALL.pI{ii,jj});
+                simmatrices.ALL.pE(ii,jj) = median(newpairs.ALL.pE{ii,jj});
+                simmatrices.ALL.pI(ii,jj) = median(newpairs.ALL.pI{ii,jj});
             end
         end
     end
@@ -57,14 +57,14 @@ for rr = 1:length(regions)
     for ii = 1:6
         for jj = 1:6
             newpairs.(regions{rr}).difft{ii,jj} = cat(1,allpairs.(regions{rr}).difft{ii,jj,:});
-            simmatrices.(regions{rr}).difft(ii,jj) = mean(newpairs.(regions{rr}).difft{ii,jj});
+            simmatrices.(regions{rr}).difft(ii,jj) = median(newpairs.(regions{rr}).difft{ii,jj});
             
             if rr ==1
                 newpairs.ALL.difft{ii,jj} = newpairs.(regions{rr}).difft{ii,jj};
             else
                 newpairs.ALL.difft{ii,jj} = [newpairs.ALL.difft{ii,jj};newpairs.(regions{rr}).difft{ii,jj}];
                 
-                simmatrices.ALL.difft(ii,jj) = mean(newpairs.ALL.difft{ii,jj});
+                simmatrices.ALL.difft(ii,jj) = median(newpairs.ALL.difft{ii,jj});
             end
         end
     end
@@ -79,7 +79,7 @@ for cc = 1:length(celltypes)
 subplot(4,4,(cc-1).*4+rr)
 imagesc(simmatrices.(regions{rr}).(celltypes{cc}))
 alpha(gca,single(~isnan(simmatrices.(regions{rr}).(celltypes{cc}))))
-caxis([0.05 0.5])
+caxis([0.05 0.4])
 box off
 set(gca,'ytick',[1:3]);set(gca,'xtick',[1:3]);
 set(gca,'yticklabel',{'N','W','R'})
@@ -93,7 +93,7 @@ crameri tokyo
 subplot(2,2,2+cc)
 imagesc(simmatrices.ALL.(celltypes{cc}))
 alpha(gca,single(~isnan(simmatrices.ALL.(celltypes{cc}))))
-caxis([0.05 0.5])
+caxis([0.05 0.4])
 box off
 set(gca,'ytick',[1:3]);set(gca,'xtick',[1:3]);
 set(gca,'yticklabel',{'N','W','R'})
@@ -112,7 +112,7 @@ subplot(2,2,rr)
 imagesc(simmatrices.(regions{rr}).difft)
 alpha(gca,single(~isnan(simmatrices.(regions{rr}).difft)))
 %colorbar
-caxis([0.05 0.5])
+caxis([0.05 0.4])
 title('Diff. Cells')
 box off
 crameri tokyo
@@ -128,7 +128,7 @@ figure
 imagesc(simmatrices.ALL.difft)
 alpha(gca,single(~isnan(simmatrices.ALL.difft)))
 colorbar
-caxis([0.05 0.5])
+caxis([0.05 0.4])
 title('Diff. Cells')
 box off
 crameri tokyo
@@ -142,7 +142,7 @@ NiceSave('ISISimilarity_AllCells',figfolder,'')
 
 %%
 %Subsample ISIs
-keepISIs.numPerregion = 1000;
+keepISIs.numPerregion = 200;
 keepISIs.numISIthresh = 500;
 for rr = 1:length(regions)
     OKISIS = (ispE.(regions{rr}) | ispI.(regions{rr})) & numISIs.(regions{rr})>keepISIs.numISIthresh;
