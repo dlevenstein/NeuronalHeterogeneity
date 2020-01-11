@@ -22,32 +22,39 @@ for rr = 1:length(regions)
     ISISimilarityAll = bz_CollapseStruct(ISISimilarityAll);
     
     allpairs.(regions{rr}) = bz_CollapseStruct(ISISimilarityAll.allpairs,3,'justcat',true);
-    ISIs.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.ISIs,1,'justcat',true);
-    ispE.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.ispE,1,'justcat',true);
-    ispI.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.ispI,1,'justcat',true);
-    states.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.states,1,'justcat',true);
-    numISIs.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.numISIs,1,'justcat',true);
+    allISIs.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.allISIs,2,'justcat',true);
+    lowestpairISI.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.lowestpairISI,3,'justcat',true);
     
     clear ISISimilarityAll
 end
+
 %%
+ISIthreshold = 800;
+
 for rr = 1:length(regions)
     for ii = 1:3
         for jj = 1:3
-            newpairs.(regions{rr}).pE{ii,jj} = cat(1,allpairs.(regions{rr}).pE{ii,jj,:});
-            newpairs.(regions{rr}).pI{ii,jj} = cat(1,allpairs.(regions{rr}).pI{ii,jj,:});
-            simmatrices.(regions{rr}).pE(ii,jj) = median(newpairs.(regions{rr}).pE{ii,jj});
-            simmatrices.(regions{rr}).pI(ii,jj) = median(newpairs.(regions{rr}).pI{ii,jj});
-            
-            if rr ==1
-                newpairs.ALL.pE{ii,jj} = newpairs.(regions{rr}).pE{ii,jj};
-                newpairs.ALL.pI{ii,jj} = newpairs.(regions{rr}).pI{ii,jj};
-            else
-                newpairs.ALL.pE{ii,jj} = [newpairs.ALL.pE{ii,jj};newpairs.(regions{rr}).pE{ii,jj}];
-                newpairs.ALL.pI{ii,jj} = [newpairs.ALL.pI{ii,jj};newpairs.(regions{rr}).pI{ii,jj}];
+            for cc = 1:2
+                newpairs.(regions{rr}).(celltypes{cc}){ii,jj} = ...
+                    cat(1,allpairs.(regions{rr}).(celltypes{cc}){ii,jj,:});
+
+                numISIs.(regions{rr}).(celltypes{cc}){ii,jj} = ...
+                    cat(1,lowestpairISI.(regions{rr}).(celltypes{cc}){ii,jj,:});
+                abovethresh = numISIs.(regions{rr}).(celltypes{cc}){ii,jj}>ISIthreshold;
                 
-                simmatrices.ALL.pE(ii,jj) = median(newpairs.ALL.pE{ii,jj});
-                simmatrices.ALL.pI(ii,jj) = median(newpairs.ALL.pI{ii,jj});
+                simmatrices.(regions{rr}).(celltypes{cc})(ii,jj) = ...
+                    nanmedian(newpairs.(regions{rr}).(celltypes{cc}){ii,jj}(abovethresh));
+            
+                if rr ==1
+                    newpairs.ALL.(celltypes{cc}){ii,jj} = ...
+                        newpairs.(regions{rr}).(celltypes{cc}){ii,jj}(abovethresh);
+                else
+                    newpairs.ALL.(celltypes{cc}){ii,jj} = ...
+                        [newpairs.ALL.(celltypes{cc}){ii,jj};newpairs.(regions{rr}).(celltypes{cc}){ii,jj}(abovethresh)];
+
+                    simmatrices.ALL.(celltypes{cc})(ii,jj) = ...
+                        nanmedian(newpairs.ALL.(celltypes{cc}){ii,jj});
+                end
             end
         end
     end
@@ -57,14 +64,19 @@ for rr = 1:length(regions)
     for ii = 1:6
         for jj = 1:6
             newpairs.(regions{rr}).difft{ii,jj} = cat(1,allpairs.(regions{rr}).difft{ii,jj,:});
-            simmatrices.(regions{rr}).difft(ii,jj) = median(newpairs.(regions{rr}).difft{ii,jj});
+            
+            numISIs.(regions{rr}).difft{ii,jj} = ...
+                cat(1,lowestpairISI.(regions{rr}).difft{ii,jj,:});
+            abovethresh = numISIs.(regions{rr}).difft{ii,jj}>ISIthreshold;
+            
+            simmatrices.(regions{rr}).difft(ii,jj) = nanmedian(newpairs.(regions{rr}).difft{ii,jj}(abovethresh));
             
             if rr ==1
-                newpairs.ALL.difft{ii,jj} = newpairs.(regions{rr}).difft{ii,jj};
+                newpairs.ALL.difft{ii,jj} = newpairs.(regions{rr}).difft{ii,jj}(abovethresh);
             else
-                newpairs.ALL.difft{ii,jj} = [newpairs.ALL.difft{ii,jj};newpairs.(regions{rr}).difft{ii,jj}];
+                newpairs.ALL.difft{ii,jj} = [newpairs.ALL.difft{ii,jj};newpairs.(regions{rr}).difft{ii,jj}(abovethresh)];
                 
-                simmatrices.ALL.difft(ii,jj) = median(newpairs.ALL.difft{ii,jj});
+                simmatrices.ALL.difft(ii,jj) = nanmedian(newpairs.ALL.difft{ii,jj});
             end
         end
     end
@@ -112,7 +124,7 @@ subplot(2,2,rr)
 imagesc(simmatrices.(regions{rr}).difft)
 alpha(gca,single(~isnan(simmatrices.(regions{rr}).difft)))
 %colorbar
-caxis([0.05 0.4])
+caxis([0.05 3])
 title('Diff. Cells')
 box off
 crameri tokyo
@@ -128,7 +140,7 @@ figure
 imagesc(simmatrices.ALL.difft)
 alpha(gca,single(~isnan(simmatrices.ALL.difft)))
 colorbar
-caxis([0.05 0.4])
+caxis([0.25 2.5])
 title('Diff. Cells')
 box off
 crameri tokyo
@@ -140,53 +152,68 @@ title('All Pairs')
 NiceSave('ISISimilarity_AllCells',figfolder,'')
 
 
-%%
+%% Build the All ISI matrix
 %Subsample ISIs
-keepISIs.numPerregion = 200;
-keepISIs.numISIthresh = 500;
+keepISIs.numPerregion = 1000;
+keepISIs.numISIthresh = 800;
 for rr = 1:length(regions)
-    OKISIS = (ispE.(regions{rr}) | ispI.(regions{rr})) & numISIs.(regions{rr})>keepISIs.numISIthresh;
+    OKISIS = (allISIs.(regions{rr}).celltype.pE | allISIs.(regions{rr}).celltype.pI) & ...
+        ~any(isnan(allISIs.(regions{rr}).hists),1) &  allISIs.(regions{rr}).numISIs>keepISIs.numISIthresh;
    keepISIs.(regions{rr}) = randsample(find(OKISIS), keepISIs.numPerregion);
 end
-allISIs = [ISIs.THAL(keepISIs.THAL),ISIs.vCTX(keepISIs.vCTX),...
-    ISIs.fCTX(keepISIs.fCTX),ISIs.CA1(keepISIs.CA1)];
+% allISIs = [ISIs.THAL(keepISIs.THAL),ISIs.vCTX(keepISIs.vCTX),...
+%     ISIs.fCTX(keepISIs.fCTX),ISIs.CA1(keepISIs.CA1)];
 %numISIs = cellfun(@length,allISIs);
-%%
+allISIhists.hists = [allISIs.THAL.hists(:,keepISIs.THAL),allISIs.vCTX.hists(:,keepISIs.vCTX),...
+     allISIs.fCTX.hists(:,keepISIs.fCTX),allISIs.CA1.hists(:,keepISIs.CA1)];
+ 
+ %%
+ALLregions = [1.*ones(1,keepISIs.numPerregion),2.*ones(1,keepISIs.numPerregion),...
+    3.*ones(1,keepISIs.numPerregion),4.*ones(1,keepISIs.numPerregion)];
+ALLcelltypes.pI = [allISIs.THAL.celltype.pI(keepISIs.THAL),allISIs.vCTX.celltype.pI(keepISIs.vCTX),...
+    allISIs.fCTX.celltype.pI(keepISIs.fCTX),allISIs.CA1.celltype.pI(keepISIs.CA1)];
+ALLcelltypes.pE = [allISIs.THAL.celltype.pE(keepISIs.THAL),allISIs.vCTX.celltype.pE(keepISIs.vCTX),...
+    allISIs.fCTX.celltype.pE(keepISIs.fCTX),allISIs.CA1.celltype.pE(keepISIs.CA1)];
+states.ALL = [allISIs.THAL.state(keepISIs.THAL),allISIs.vCTX.state(keepISIs.vCTX),...
+    allISIs.fCTX.state(keepISIs.fCTX),allISIs.CA1.state(keepISIs.CA1)];
 
-numcells = length(allISIs);
-KSSTAT = nan(numcells);
+[jregions,iregions] = meshgrid(ALLregions,ALLregions);
+[jiscelltype.pE,iiscelltype.pE] = meshgrid(ALLcelltypes.pE,ALLcelltypes.pE);
+[jiscelltype.pI,iiscelltype.pI] = meshgrid(ALLcelltypes.pI,ALLcelltypes.pI);
+[jstates,istates] = meshgrid(states.ALL,states.ALL);
+%%
+numcells = length(ALLregions);
+KLDIST = nan(numcells);
 %parpool
 for ii = 1:numcells
     bz_Counter(ii,numcells,'Cell');
-    parfor jj = ii:numcells
-        if ii==jj %For Same Cell, calculate first/last half spikes
-            [~,~,KSSTAT(ii,jj)] = kstest2(allISIs{ii}(1:round(end/2)),allISIs{jj}(round(end/2):end));
-        else
-            [~,~,KSSTAT(ii,jj)] = kstest2(allISIs{ii},allISIs{jj});
-        end
-    end
-    for jj = ii:numcells
-        KSSTAT(jj,ii) = KSSTAT(ii,jj);
-    end
+            KLDIST(:,ii) = KLDiv(allISIhists.hists',allISIhists.hists(:,ii)','symmetric',true);
+
 end
+
+%% For KS Statistic
+
+% numcells = length(allISIs);
+% KSSTAT = nan(numcells);
+% %parpool
+% for ii = 1:numcells
+%     bz_Counter(ii,numcells,'Cell');
+%     parfor jj = ii:numcells
+%         if ii==jj %For Same Cell, calculate first/last half spikes
+%             [~,~,KSSTAT(ii,jj)] = kstest2(allISIs{ii}(1:round(end/2)),allISIs{jj}(round(end/2):end));
+%         else
+%             [~,~,KSSTAT(ii,jj)] = kstest2(allISIs{ii},allISIs{jj});
+%         end
+%     end
+%     for jj = ii:numcells
+%         KSSTAT(jj,ii) = KSSTAT(ii,jj);
+%     end
+% end
 
 %%
 statenames = {'WAKEstate','NREMstate','REMstate'};
 statecolors = {[0 0 0],[0 0 1],[1 0 0]};
-%%
-ALLregions = [1.*ones(1,keepISIs.numPerregion),2.*ones(1,keepISIs.numPerregion),...
-    3.*ones(1,keepISIs.numPerregion),4.*ones(1,keepISIs.numPerregion)];
-ALLcelltypes.pI = [ispI.THAL(keepISIs.THAL),ispI.vCTX(keepISIs.vCTX),...
-    ispI.fCTX(keepISIs.fCTX),ispI.CA1(keepISIs.CA1)];
-ALLcelltypes.pE = [ispE.THAL(keepISIs.THAL),ispE.vCTX(keepISIs.vCTX),...
-    ispE.fCTX(keepISIs.fCTX),ispE.CA1(keepISIs.CA1)];
-states.ALL = [states.THAL(keepISIs.THAL),states.vCTX(keepISIs.vCTX),...
-    states.fCTX(keepISIs.fCTX),states.CA1(keepISIs.CA1)];
 
-[iregions,jregions] = meshgrid(ALLregions,ALLregions);
-[iiscelltype.pE,jiscelltype.pE] = meshgrid(ALLcelltypes.pE,ALLcelltypes.pE);
-[iiscelltype.pI,jiscelltype.pI] = meshgrid(ALLcelltypes.pI,ALLcelltypes.pI);
-[istates,jstates] = meshgrid(states.ALL,states.ALL);
 
 %%
 %simmatrices.(statenames{ss}).(celltypes{cc})
@@ -194,49 +221,74 @@ states.ALL = [states.THAL(keepISIs.THAL),states.vCTX(keepISIs.vCTX),...
 for ss = 1:3
     for cc = 1:2
         simmatrices.(statenames{ss}).(celltypes{cc}) = nan(4);
+        simmatrices.ALL.(celltypes{cc}) = nan(4);
     end
 end
-
+simmatrices.ALL.(celltypes{cc}) = nan(4);
 for rr1 = 1:length(regions)
     for rr2 = rr1:-1:1
-        for ss = 1:3
-            for cc = 1:2
-        allpairs.(statenames{ss}).(celltypes{cc}){rr1,rr2} = ...
-            KSSTAT(istates==ss & jstates==ss & ...
-            iiscelltype.(celltypes{cc}) & jiscelltype.(celltypes{cc}) & ...
-            iregions == rr1 & jregions == rr2);
-        
-        simmatrices.(statenames{ss}).(celltypes{cc})(rr1,rr2) = ...
-            mean(allpairs.(statenames{ss}).(celltypes{cc}){rr1,rr2});
+        for cc = 1:2
+            for ss = 1:3
+            
+                allpairs.(statenames{ss}).(celltypes{cc}){rr1,rr2} = ...
+                    KLDIST(istates==ss & jstates==ss & ...
+                    iiscelltype.(celltypes{cc}) & jiscelltype.(celltypes{cc}) & ...
+                    iregions == rr1 & jregions == rr2);
+
+                simmatrices.(statenames{ss}).(celltypes{cc})(rr1,rr2) = ...
+                    nanmedian(allpairs.(statenames{ss}).(celltypes{cc}){rr1,rr2});
             end
+                allpairs.ALL.(celltypes{cc}){rr1,rr2} = ...
+                    KLDIST(iiscelltype.(celltypes{cc}) & jiscelltype.(celltypes{cc}) & ...
+                    iregions == rr1 & jregions == rr2);
+
+                simmatrices.ALL.(celltypes{cc})(rr1,rr2) = ...
+                    nanmedian(allpairs.(statenames{ss}).(celltypes{cc}){rr1,rr2});
         end
     end
 end
 
 %%
 figure
-for ss = 1:3
-    for cc = 1:2
+for cc = 1:2
+    for ss = 1:3
+
         subplot(3,3,(cc-1)*3+ss)
             imagesc(simmatrices.(statenames{ss}).(celltypes{cc}))
             %colorbar
             alpha(gca,single(~isnan(simmatrices.(statenames{ss}).(celltypes{cc}))))
             colorbar
-            caxis([0.05 0.5])
+            caxis([0.25 1.75])
             if cc == 1
             title(statenames{ss})
             end
             box off
             crameri tokyo
+            set(gca,'ytick',[1:4]);set(gca,'xtick',[1:4])
+            set(gca,'yticklabels',regions);set(gca,'yticklabels',regions)
     end
+        subplot(3,3,6+cc)
+            imagesc(simmatrices.ALL.(celltypes{cc}))
+            %colorbar
+            alpha(gca,single(~isnan(simmatrices.ALL.(celltypes{cc}))))
+            colorbar
+            caxis([0.25 1.75])
+            if cc == 1
+            title('ALL')
+            end
+            box off
+            crameri tokyo
+            set(gca,'ytick',[1:4]);set(gca,'xtick',[1:4])
+            set(gca,'yticklabels',regions);set(gca,'yticklabels',regions)
 end
 NiceSave('ISISimilarity_BetweenRegions',figfolder,'')
 
 %% tSNE Map
-valid = KSSTAT;
+valid = KLDIST;
 for ii =1:numcells
         valid(ii,ii)=0;
 end
+%%
 % %MDS Map
 % Y = cmdscale(valid);
 %Good: perp=20, valid not squared
@@ -305,7 +357,7 @@ close all
 clear tSNEmap
 perplexity = 20;
 P = d2p(valid.^2, perplexity, 1e-6); 
-tSNEmap(:,:) = tsne_p(P, ALLcelltypes.pE, 2, 3000);
+tSNEmap(:,:) = tsne_p(P, ALLcelltypes.pE, 2, 2000);
 %%
 
 figure

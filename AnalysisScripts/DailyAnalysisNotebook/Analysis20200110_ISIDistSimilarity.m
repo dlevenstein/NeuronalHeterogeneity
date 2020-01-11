@@ -36,7 +36,7 @@ allISIhists.celltype.pE = [];
 allISIhists.celltype.pI = [];
 allISIhists.state = [];
 
-numPerregion = 500;
+numPerregion = 400;
 numISIthresh = 500;
 
 
@@ -53,7 +53,7 @@ for rr = 1:length(regions)
     end
 end
 
-%%
+%
 numcells = length(allISIhists.region);
 KLDIST = nan(numcells);
 %parpool
@@ -66,10 +66,10 @@ end
 %%
 
 
-[iregions,jregions] = meshgrid(allISIhists.region,allISIhists.region);
-[iiscelltype.pE,jiscelltype.pE] = meshgrid(allISIhists.celltype.pE,allISIhists.celltype.pE);
-[iiscelltype.pI,jiscelltype.pI] = meshgrid(allISIhists.celltype.pI,allISIhists.celltype.pI);
-[istates,jstates] = meshgrid(allISIhists.state,allISIhists.state);
+[jregions,iregions] = meshgrid(allISIhists.region,allISIhists.region);
+[jiscelltype.pE,iiscelltype.pE] = meshgrid(allISIhists.celltype.pE,allISIhists.celltype.pE);
+[jiscelltype.pI,iiscelltype.pI] = meshgrid(allISIhists.celltype.pI,allISIhists.celltype.pI);
+[jstates,istates] = meshgrid(allISIhists.state,allISIhists.state);
 
 %%
 %simmatrices.(statenames{ss}).(celltypes{cc})
@@ -88,12 +88,16 @@ for rr1 = 1:length(regions)
             iiscelltype.(celltypes{cc}) & jiscelltype.(celltypes{cc}) & iregions == rr1 & jregions == rr2);
         
         simmatrices.(statenames{ss}).(celltypes{cc})(rr1,rr2) = ...
-            mean(allpairs.(statenames{ss}).(celltypes{cc}){rr1,rr2});
+            median(allpairs.(statenames{ss}).(celltypes{cc}){rr1,rr2});
             end
         end
     end
 end
 
+%%
+figure
+imagesc(istates==ss & jstates==ss & ...
+            iiscelltype.(celltypes{1}) & jiscelltype.(celltypes{1}) & iregions == rr1 & jregions == rr2)
 %%
 figure
 for ss = 1:3
@@ -103,7 +107,7 @@ for ss = 1:3
             %colorbar
             alpha(gca,single(~isnan(simmatrices.(statenames{ss}).(celltypes{cc}))))
             colorbar
-            %caxis([0 0.05])
+            caxis([0 2])
             if cc == 1
             title(statenames{ss})
             end
