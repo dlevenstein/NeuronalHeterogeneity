@@ -9,13 +9,13 @@ function [allISIs,allpairs,lowestpairISI ] = ISIDistSimilarityAnalysis(basePath,
 %
 %% Load Header
 %Initiate Paths
-reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
-basePath = pwd;
+%basePath = pwd;
 %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
