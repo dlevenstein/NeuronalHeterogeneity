@@ -36,7 +36,7 @@ allISIhists.celltype.pE = [];
 allISIhists.celltype.pI = [];
 allISIhists.state = [];
 
-numPerregion = 400;
+numPerregion = 500;
 numISIthresh = 500;
 
 
@@ -44,7 +44,7 @@ for rr = 1:length(regions)
     for ss = 1:3
         whichcells = find((CellClass.(regions{rr}).pE | CellClass.(regions{rr}).pI) &...
             ~isnan(ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(:,1))'); 
-        %whichcells = randsample(whichcells,numPerregion);
+        whichcells = randsample(whichcells,numPerregion);
         allISIhists.region = [allISIhists.region rr.*ones(size(whichcells))];
         allISIhists.celltype.pE = [allISIhists.celltype.pE CellClass.(regions{rr}).pE(whichcells)];
         allISIhists.celltype.pI = [allISIhists.celltype.pI CellClass.(regions{rr}).pI(whichcells)];

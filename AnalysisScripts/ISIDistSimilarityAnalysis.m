@@ -9,13 +9,13 @@ function [allISIs,allpairs,lowestpairISI ] = ISIDistSimilarityAnalysis(basePath,
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/Cicero_09102014';
-%basePath = pwd;
+basePath = pwd;
 %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -75,6 +75,10 @@ for ii = 1:numcells
 %         if ii==jj %For Same Cell, calculate first/last half spikes
 %             [~,~,KSSTAT(ii,jj)] = kstest2(allISIs.ISIs{ii}(1:round(end/2)),allISIs.ISIs{jj}(round(end/2):end));
             for jj=ii
+                if isempty(allISIs.ISIs{ii})
+                    KLDIST(ii,jj) = nan;
+                    continue
+                end
             firsthalf = hist(allISIs.ISIs{ii}(1:round(end/2)),allISIs.histbins);
             secondhalf = hist(allISIs.ISIs{jj}(round(end/2):end),allISIs.histbins);
             
@@ -163,9 +167,11 @@ valid = KLDIST;
 for ii =1:numcells
         valid(ii,ii)=0;
 end
+valid(isnan(valid))=0;
 % Y = cmdscale(valid);
 
 %% tSNE
+close all
 perplexity = 20;
 P = d2p(valid, perplexity, 1e-8); 
 Y = tsne_p(P, [], 2);

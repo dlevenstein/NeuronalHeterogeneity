@@ -28,8 +28,20 @@ if size(P,2)~=size(Q,2)
     error('the number of columns in P and Q should be the same');
 end
 
-if sum(~isfinite(P(:))) + sum(~isfinite(Q(:)))
+if sum(isinf(P(:))) + sum(isinf(Q(:)))
    error('the inputs contain non-finite values!') 
+end
+
+
+%Pass through NaNs
+passnans = any(isnan(P),2);
+if size(Q,1)==1
+    if any(isnan(Q))
+        dist = nan(size(passnans));
+        return
+    end
+elseif size(Q,1)==size(P,1)
+    passnans = passnans | any(isnan(Q),2);
 end
 
 % normalizing the P and Q
@@ -62,4 +74,4 @@ elseif size(Q,1)==size(P,1)
     
 end
 
-
+dist(passnans) = nan;
