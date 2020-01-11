@@ -101,11 +101,11 @@ imagesc(KLDIST)
 subplot(2,2,2)
 %imagesc(KSSTAT)
 %%
-[iUID,jUID] = meshgrid(allISIs.UIDs,allISIs.UIDs);
-[iispE,jispE] = meshgrid(allISIs.celltype.pE,allISIs.celltype.pE);
-[iispI,jispI] = meshgrid(allISIs.celltype.pI,allISIs.celltype.pI);
-[istates,jstates] = meshgrid(allISIs.state,allISIs.state);
-[inumISI,jnumISI] = meshgrid(allISIs.numISIs,allISIs.numISIs);
+[jUID,iUID] = meshgrid(allISIs.UIDs,allISIs.UIDs);
+[jispE,iispE] = meshgrid(allISIs.celltype.pE,allISIs.celltype.pE);
+[jispI,iispI] = meshgrid(allISIs.celltype.pI,allISIs.celltype.pI);
+[jstates,istates] = meshgrid(allISIs.state,allISIs.state);
+[jnumISI,inumISI] = meshgrid(allISIs.numISIs,allISIs.numISIs);
 samecell = iUID==jUID;
 
 simmatrices.pE = nan(3);
