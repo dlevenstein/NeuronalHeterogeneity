@@ -154,7 +154,7 @@ NiceSave('ISISimilarity_AllCells',figfolder,'')
 
 %% Build the All ISI matrix
 %Subsample ISIs
-keepISIs.numPerregion = 1000;
+keepISIs.numPerregion = 1800;
 keepISIs.numISIthresh = 800;
 for rr = 1:length(regions)
     OKISIS = (allISIs.(regions{rr}).celltype.pE | allISIs.(regions{rr}).celltype.pI) & ...
@@ -265,7 +265,7 @@ for cc = 1:2
             box off
             crameri tokyo
             set(gca,'ytick',[1:4]);set(gca,'xtick',[1:4])
-            set(gca,'yticklabels',regions);set(gca,'yticklabels',regions)
+            set(gca,'yticklabels',regions);set(gca,'xticklabels',regions)
     end
         subplot(3,3,6+cc)
             imagesc(simmatrices.ALL.(celltypes{cc}))
@@ -279,7 +279,7 @@ for cc = 1:2
             box off
             crameri tokyo
             set(gca,'ytick',[1:4]);set(gca,'xtick',[1:4])
-            set(gca,'yticklabels',regions);set(gca,'yticklabels',regions)
+            set(gca,'yticklabels',regions);set(gca,'xticklabels',regions)
 end
 NiceSave('ISISimilarity_BetweenRegions',figfolder,'')
 
@@ -447,6 +447,7 @@ for ss = 1:3
     end
     axis tight
     xticks(gca,[]);yticks(gca,[])
+    title(statenames{ss})
 end
 
 subplot(3,3,[5 8])
