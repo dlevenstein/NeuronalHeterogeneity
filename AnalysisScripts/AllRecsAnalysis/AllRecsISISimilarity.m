@@ -106,6 +106,7 @@ subplot(2,2,2+cc)
 imagesc(simmatrices.ALL.(celltypes{cc}))
 alpha(gca,single(~isnan(simmatrices.ALL.(celltypes{cc}))))
 caxis([0.05 0.4])
+colorbar
 box off
 set(gca,'ytick',[1:3]);set(gca,'xtick',[1:3]);
 set(gca,'yticklabel',{'N','W','R'})
@@ -123,8 +124,8 @@ for rr = 1:4
 subplot(2,2,rr)
 imagesc(simmatrices.(regions{rr}).difft)
 alpha(gca,single(~isnan(simmatrices.(regions{rr}).difft)))
-%colorbar
-caxis([0.05 3])
+colorbar
+caxis([0.25 2.5])
 title('Diff. Cells')
 box off
 crameri tokyo
@@ -221,10 +222,10 @@ statecolors = {[0 0 0],[0 0 1],[1 0 0]};
 for ss = 1:3
     for cc = 1:2
         simmatrices.(statenames{ss}).(celltypes{cc}) = nan(4);
-        simmatrices.ALL.(celltypes{cc}) = nan(4);
+        simmatrices.ALLregions.(celltypes{cc}) = nan(4);
     end
 end
-simmatrices.ALL.(celltypes{cc}) = nan(4);
+simmatrices.ALLregions.(celltypes{cc}) = nan(4);
 for rr1 = 1:length(regions)
     for rr2 = rr1:-1:1
         for cc = 1:2
@@ -238,11 +239,11 @@ for rr1 = 1:length(regions)
                 simmatrices.(statenames{ss}).(celltypes{cc})(rr1,rr2) = ...
                     nanmedian(allpairs.(statenames{ss}).(celltypes{cc}){rr1,rr2});
             end
-                allpairs.ALL.(celltypes{cc}){rr1,rr2} = ...
+                allpairs.ALLregions.(celltypes{cc}){rr1,rr2} = ...
                     KLDIST(iiscelltype.(celltypes{cc}) & jiscelltype.(celltypes{cc}) & ...
                     iregions == rr1 & jregions == rr2);
 
-                simmatrices.ALL.(celltypes{cc})(rr1,rr2) = ...
+                simmatrices.ALLregions.(celltypes{cc})(rr1,rr2) = ...
                     nanmedian(allpairs.(statenames{ss}).(celltypes{cc}){rr1,rr2});
         end
     end
@@ -268,9 +269,9 @@ for cc = 1:2
             set(gca,'yticklabels',regions);set(gca,'xticklabels',regions)
     end
         subplot(3,3,6+cc)
-            imagesc(simmatrices.ALL.(celltypes{cc}))
+            imagesc(simmatrices.ALLregions.(celltypes{cc}))
             %colorbar
-            alpha(gca,single(~isnan(simmatrices.ALL.(celltypes{cc}))))
+            alpha(gca,single(~isnan(simmatrices.ALLregions.(celltypes{cc}))))
             colorbar
             caxis([0.25 1.75])
             if cc == 1
@@ -313,10 +314,11 @@ for pp = 1:length(perps)
 subplot(4,4,pp)
 hold on
 for rr = 1:length(regions)
-    plot(Y(ALLregions==rr,1,pp),Y(ALLregions==rr,2,pp),'.')
+    plot(Y(ALLregions==rr,1,pp),Y(ALLregions==rr,2,pp),'.','markersize',3)
 end
 %legend(regions,'location','northoutside')
 axis tight
+box on
 xticks(gca,[]);yticks(gca,[])
 title(perps(pp))
 if pp==1
@@ -325,20 +327,21 @@ end
 subplot(4,4,pp+4)
 hold on
 axis tight
-
+box on
 xticks(gca,[]);yticks(gca,[])
-plot(Y(ALLcelltypes.pE==1,1,pp),Y(ALLcelltypes.pE==1,2,pp),'.k')
-plot(Y(ALLcelltypes.pI==1,1,pp),Y(ALLcelltypes.pI==1,2,pp),'.r')
+plot(Y(ALLcelltypes.pE==1,1,pp),Y(ALLcelltypes.pE==1,2,pp),'.k','markersize',3)
+plot(Y(ALLcelltypes.pI==1,1,pp),Y(ALLcelltypes.pI==1,2,pp),'.r','markersize',3)
 %legend(celltypes,'location','northoutside')
 
 
 subplot(4,4,pp+8)
 hold on
 for rr = 1:length(regions)
-    plot(Ysq(ALLregions==rr,1,pp),Ysq(ALLregions==rr,2,pp),'.')
+    plot(Ysq(ALLregions==rr,1,pp),Ysq(ALLregions==rr,2,pp),'.','markersize',3)
 end
 %legend(regions,'location','northoutside')
 axis tight
+box on
 if pp==1
     ylabel('KS^2')
 end
@@ -346,10 +349,11 @@ xticks(gca,[]);yticks(gca,[])
 subplot(4,4,pp+12)
 hold on
 axis tight
+box on
 
 xticks(gca,[]);yticks(gca,[])
-plot(Ysq(ALLcelltypes.pE==1,1,pp),Ysq(ALLcelltypes.pE==1,2,pp),'.k')
-plot(Ysq(ALLcelltypes.pI==1,1,pp),Ysq(ALLcelltypes.pI==1,2,pp),'.r')
+plot(Ysq(ALLcelltypes.pE==1,1,pp),Ysq(ALLcelltypes.pE==1,2,pp),'.k','markersize',3)
+plot(Ysq(ALLcelltypes.pI==1,1,pp),Ysq(ALLcelltypes.pI==1,2,pp),'.r','markersize',3)
 end
 NiceSave('tSNE_ComparePerplexity',figfolder,'')
 %%
@@ -363,10 +367,11 @@ tSNEmap(:,:) = tsne_p(P, ALLcelltypes.pE, 2, 2000);
 figure
 subplot(3,3,[5 8])
 hold on
-plot(tSNEmap(states.ALL==2,1),tSNEmap(states.ALL==2,2),'k.')
-plot(tSNEmap(states.ALL==1,1),tSNEmap(states.ALL==1,2),'b.')
-plot(tSNEmap(states.ALL==3,1),tSNEmap(states.ALL==3,2),'r.')
+plot(tSNEmap(states.ALL==2,1),tSNEmap(states.ALL==2,2),'k.','markersize',3)
+plot(tSNEmap(states.ALL==1,1),tSNEmap(states.ALL==1,2),'b.','markersize',3)
+plot(tSNEmap(states.ALL==3,1),tSNEmap(states.ALL==3,2),'r.','markersize',3)
 axis tight
+box on
 xticks(gca,[]);yticks(gca,[])
 legend(statenames,'location','northoutside')
 
@@ -374,18 +379,19 @@ legend(statenames,'location','northoutside')
 subplot(3,3,[6 9])
 hold on
 for rr = 1:length(regions)
-    plot(tSNEmap(ALLregions==rr,1),tSNEmap(ALLregions==rr,2),'.')
+    plot(tSNEmap(ALLregions==rr,1),tSNEmap(ALLregions==rr,2),'.','markersize',3)
 end
 legend(regions,'location','northoutside')
 axis tight
+box on
 xticks(gca,[]);yticks(gca,[])
 subplot(3,3,[4 7])
 hold on
 axis tight
-
+box on
 xticks(gca,[]);yticks(gca,[])
-plot(tSNEmap(ALLcelltypes.pE==1,1),tSNEmap(ALLcelltypes.pE==1,2),'.k')
-plot(tSNEmap(ALLcelltypes.pI==1,1),tSNEmap(ALLcelltypes.pI==1,2),'.r')
+plot(tSNEmap(ALLcelltypes.pE==1,1),tSNEmap(ALLcelltypes.pE==1,2),'.k','markersize',3)
+plot(tSNEmap(ALLcelltypes.pI==1,1),tSNEmap(ALLcelltypes.pI==1,2),'.r','markersize',3)
 legend(celltypes,'location','northoutside')
 NiceSave('tSNE_Map',figfolder,'')
 
@@ -407,10 +413,11 @@ subplot(2,3,ss)
 hold on
 for rr = 1:length(regions)
     plot(statetSNEmap.(statenames{ss})(ALLregions(states.ALL==ss)==rr,1),...
-        statetSNEmap.(statenames{ss})(ALLregions(states.ALL==ss)==rr,2),'.')
+        statetSNEmap.(statenames{ss})(ALLregions(states.ALL==ss)==rr,2),'.','markersize',3)
 end
 legend(regions,'location','northoutside')
 axis tight
+box on
 xticks(gca,[]);yticks(gca,[])
 subplot(2,3,ss+3)
 hold on
@@ -418,10 +425,11 @@ axis tight
 
 xticks(gca,[]);yticks(gca,[])
 plot(statetSNEmap.(statenames{ss})(ALLcelltypes.pE(states.ALL==ss)==1,1),...
-    statetSNEmap.(statenames{ss})(ALLcelltypes.pE(states.ALL==ss)==1,2),'.k')
+    statetSNEmap.(statenames{ss})(ALLcelltypes.pE(states.ALL==ss)==1,2),'.k','markersize',3)
 plot(statetSNEmap.(statenames{ss})(ALLcelltypes.pI(states.ALL==ss)==1,1),...
-    statetSNEmap.(statenames{ss})(ALLcelltypes.pI(states.ALL==ss)==1,2),'.r')
+    statetSNEmap.(statenames{ss})(ALLcelltypes.pI(states.ALL==ss)==1,2),'.r','markersize',3)
 legend(celltypes,'location','northoutside')
+box on
 end
 NiceSave('tSNE_Map_SeparateStates',figfolder,'')
 %%
@@ -443,19 +451,21 @@ for ss = 1:3
     hold on
     for rr = 1:length(regions)
         plot(statetSNEmap.pE.(statenames{ss})(ALLregions(ALLcelltypes.pE==1 & states.ALL==ss)==rr,1),...
-            statetSNEmap.pE.(statenames{ss})(ALLregions(ALLcelltypes.pE==1 & states.ALL==ss)==rr,2),'.')
+            statetSNEmap.pE.(statenames{ss})(ALLregions(ALLcelltypes.pE==1 & states.ALL==ss)==rr,2),'.','markersize',3)
     end
     axis tight
+    box on
     xticks(gca,[]);yticks(gca,[])
     title(statenames{ss})
 end
 
 subplot(3,3,[5 8])
 hold on
-plot(statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==2,1),statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==2,2),'k.')
-plot(statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==1,1),statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==1,2),'b.')
-plot(statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==3,1),statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==3,2),'r.')
+plot(statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==2,1),statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==2,2),'k.','markersize',3)
+plot(statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==1,1),statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==1,2),'b.','markersize',3)
+plot(statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==3,1),statetSNEmap.pE.all(states.ALL(ALLcelltypes.pE==1)==3,2),'r.','markersize',3)
 axis tight
+box on
 xticks(gca,[]);yticks(gca,[])
 legend(statenames,'location','northoutside')
 
@@ -463,10 +473,11 @@ legend(statenames,'location','northoutside')
 subplot(3,3,[6 9])
 hold on
 for rr = 1:length(regions)
-    plot(statetSNEmap.pE.all(ALLregions(ALLcelltypes.pE==1)==rr,1),statetSNEmap.pE.all(ALLregions(ALLcelltypes.pE==1)==rr,2),'.')
+    plot(statetSNEmap.pE.all(ALLregions(ALLcelltypes.pE==1)==rr,1),statetSNEmap.pE.all(ALLregions(ALLcelltypes.pE==1)==rr,2),'.','markersize',3)
 end
 legend(regions,'location','northoutside')
 axis tight
+box on
 xticks(gca,[]);yticks(gca,[])
 
 NiceSave('tSNE_Map_pEOnly',figfolder,'')
