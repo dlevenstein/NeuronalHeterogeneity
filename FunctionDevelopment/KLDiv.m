@@ -21,8 +21,8 @@ epsilon = p.Results.epsilon;
 symmetric = p.Results.symmetric;
 
 %%
-P(P==0) = epsilon;
-Q(Q==0) = epsilon;
+P(P<=0) = epsilon;
+Q(Q<=0) = epsilon;
 
 if size(P,2)~=size(Q,2)
     error('the number of columns in P and Q should be the same');

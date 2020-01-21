@@ -62,6 +62,8 @@ allISIs.UIDs = [ISIStats.UID,ISIStats.UID,ISIStats.UID];
 allISIs.hists = [ISIStats.ISIhist.WAKEstate.log',ISIStats.ISIhist.NREMstate.log',...
     ISIStats.ISIhist.REMstate.log'];
 allISIs.histbins = ISIStats.ISIhist.logbins;
+
+
 %% Calculate KS and KL distance between ISIs, all cells
 
 numcells = length(allISIs.ISIs);

@@ -1,4 +1,4 @@
-function [Xdn, sigma, npars, u, vals, v] = bz_PCAdenoise(X, nbins)
+function [Xdn, sigma, npars, u, vals, v] = bz_PCAdenoise(X, nbins,varargin)
 
     % "MP": matrix denoising and noiseestimation by exploiting  data redundancy in the PCA domain using universal properties of the eigenspectrum of
     % random covariance matrices, i.e. Marchenko Pastur distribution
@@ -59,6 +59,12 @@ function [Xdn, sigma, npars, u, vals, v] = bz_PCAdenoise(X, nbins)
     
     %%
     
+    p = inputParser;
+    addParameter(p,'percvar',[])
+    parse(p,varargin{:})
+    percvar = p.Results.percvar;
+    %%
+    
     centering = false;
     
     if nargin==1
@@ -89,8 +95,14 @@ function [Xdn, sigma, npars, u, vals, v] = bz_PCAdenoise(X, nbins)
     rangeData = vals(1:R-centering) - vals(R-centering); %Significant EVs
     sigmasq_2 = rangeData./rangeMP;
     
-    t = find(sigmasq_2 < sigmasq_1, 1);
-    sigma = sqrt(sigmasq_1(t));
+    if isempty(percvar)
+        t = find(sigmasq_2 < sigmasq_1, 1);
+        sigma = sqrt(sigmasq_1(t));
+    else
+        ev = cumsum(vals)./sum(vals);
+        t = find(ev>percvar,1);
+        sigma = sqrt(ev(t));
+    end
  
     npars = t-1; 
     
