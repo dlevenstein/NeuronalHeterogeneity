@@ -128,7 +128,7 @@ for ee = 1:4
         axis xy
         hold on
         plot(ISIoccupancy.logbins,bz_NormToRange(ISIoccupancy.(states{ss}).loghist(:,excell(ee)),0.75),':','color',statecolors{ss})
-        plot(ISIStats.ISIhist.logbins,bz_NormToRange(ISIStats.ISIhist.(states{ss}).log(excell(ee),:),0.75,[0 max(ISIoccupancy.(states{ss}).loghist(:,excell(ee)))]),...
+        plot(ISIStats.ISIhist.logbins,bz_NormToRange(ISIStats.ISIhist.(states{ss}).log(excell(ee),:),0.75),...
             'linewidth',2,'color',statecolors{ss})
         
         plot(log10(1./ISIStats.summstats.(states{ss}).meanrate(excell(ee))),0,'k+')
@@ -140,7 +140,6 @@ for ee = 1:4
         xlabel('ISI (s)');ylabel('CV2')
     
     subplot(6,4,ee+20)   
-    colormap(gca,statecolormap{ss})
     imagesc((ISIStats.ISIhist.logbins),(ISIStats.ISIhist.logbins),(ISIStats.ISIhist.(states{ss}).return(:,:,excell(ee))))
     hold on
     plot(log10(1./ISIStats.summstats.(states{ss}).meanrate(excell(ee))),log10(1./ISIStats.summstats.(states{ss}).meanrate(excell(ee))),'k+')
@@ -150,6 +149,7 @@ for ee = 1:4
     caxis([0 0.003])
     xlim(ISIStats.ISIhist.logbins([1 end]));ylim(ISIStats.ISIhist.logbins([1 end]))
     xlim([-3 2]);ylim([-3 2])
+    colormap(gca,statecolormap{ss})
 end
 
 subplot(3,3,3)
