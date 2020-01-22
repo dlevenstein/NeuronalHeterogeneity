@@ -7,7 +7,7 @@ savepath = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/Modeling/Simu
 
 %%
 TimeParams.dt = 0.1;
-TimeParams.SimTime = 600000;
+TimeParams.SimTime = 200000;
 
 %%
 %Feedforward parameters
@@ -17,7 +17,7 @@ parms.K_FF = [250 750];
 parms.J_FF = [0.3 0.1];
 %% Ring input
 
-[theta,T] = OUNoise(50000.^-1,4*pi,TimeParams.SimTime,TimeParams.dt,TimeParams.dt.*5,1);
+[theta,T] = OUNoise(40000.^-1,4*pi,TimeParams.SimTime,TimeParams.dt,TimeParams.dt.*5,1);
 neuronIDX = 2.*pi.*[1:parms.N_FF]./parms.N_FF;
 
 meanrate = 30;
@@ -76,7 +76,9 @@ parms.Kii = parms.Kee.*gamma;
 
 
 parms.LearningRate = 1e-2;
-parms.TargetRate = [sort(exp(1.2.*randn(parms.EPopNum,1)-1.2));nan(parms.IPopNum,1)]; %Target Rate for Excitatory cells (units of Hz)
+parms.TargetRate = [sort(exp(1.1.*randn(parms.EPopNum,1)-1.1));nan(parms.IPopNum,1)]; %Target Rate for Excitatory cells (units of Hz)
+parms.TargetRate = [sort(exp(randn(parms.EPopNum,1)));nan(parms.IPopNum,1)]; %Target Rate for Excitatory cells (units of Hz)
+
 parms.tauSTDP = 20;    %Time Constant for the STDP curve (Units of ms)
 
 figure
@@ -97,9 +99,9 @@ switch netname
         parms.Kee = 0; 
         %Increase K?...
     case 'ring'
-        g = 8;
+        g = 10;
         parms.g = g;
-        parms.J = 0.1; %Weight Exc->Inh %note: 0.05 gives tuning
+        parms.J = 0.05; %Weight Exc->Inh %note: 0.05 gives tuning
         parms.ex_rate = R; 
         
         parms.Kee = 500;
@@ -117,7 +119,7 @@ end
 
 tic 
 [SimValues] = Run_LIF_iSTDP(parms,TimeParams,'showprogress',true,...
-    'cellout',true,'save_dt',1000,'estrate',10);
+    'cellout',true,'save_dt',1000,'estrate',20);
 toc
 
 %% Get Sorting by max(Input(theta))
@@ -141,7 +143,7 @@ imagesc(inputtuning(:,sortpeak))
 %%
 overlay_HD = parms.EPopNum.*mod(theta,2*pi)./(2*pi);
 overlay_HD(abs(diff(overlay_HD))>100) = nan;
-PlotSimRaster(SimValues,TimeParams.SimTime-[5000 0],...
+PlotSimRaster(SimValues,TimeParams.SimTime-[10000 0],...
     'cellsort',sortpeak,'overlay',[T overlay_HD])
 NiceSave('iSTDPRaster_late',pwd,netname)
 
@@ -213,7 +215,7 @@ ISIstats.allspikes.ISInp1 = cellfun(@(X) [X(2:end);nan],...
 %     'UniformOutput',false);
 
 [ ISIbyPos ] = cellfun(@(X,Y,Z,Q) ConditionalHist( [Z(Q);Z(Q)],log10([X(Q);Y(Q)]),...
-    'Xbounds',[0 2*pi],'numXbins',25,'Ybounds',[-3 2],'numYbins',125,'minX',15),...
+    'Xbounds',[0 2*pi],'numXbins',25,'Ybounds',[-3 2],'numYbins',125,'minX',25),...
     ISIstats.allspikes.ISIs,ISIstats.allspikes.ISInp1,...
     ISIstats.allspikes.position_norm,ISIstats.allspikes.instate.equib,...
     'UniformOutput',false);

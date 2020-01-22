@@ -73,10 +73,30 @@ PlotSimRaster(SimValues,TimeParams.SimTime-[400 0])
 NiceSave('iSTDPRaster',pwd,netname)
 %% Save/load
 filename = fullfile(savepath,['TrainedNet_',netname]);
-save(filename,'SimValues','parms','TimeParams','netname')
-%load(filename)
+%save(filename,'SimValues','parms','TimeParams','netname')
+load(filename)
+
+%% Effective Indegree
+K_net = sum(SimValues.WeightMat,2);
+K_E = sum(SimValues.WeightMat(:,SimValues.EcellIDX),2);
+K_I = sum(SimValues.WeightMat(:,SimValues.IcellIDX),2);
+K_EI = K_E./K_I;
+
+figure
+subplot(2,2,1)
+plot(log10(parms.TargetRate),K_net,'.')
+subplot(2,2,2)
+plot(log10(parms.TargetRate),K_EI,'.')
+subplot(2,2,3)
+plot(log10(parms.TargetRate),K_E,'.')
+subplot(2,2,4)
+plot(log10(parms.TargetRate),K_I,'.')
 %%
-%NiceSave('iSTDPRaster',pwd,netname)
+PlotSimRaster(SimValues,TimeParams.SimTime-[2000 0])
+NiceSave('iSTDPRaster_late',pwd,netname)
+
+PlotSimRaster(SimValues,[0000 2000])
+NiceSave('iSTDPRaster_early',pwd,netname)
 %%
 figure
 subplot(2,2,1)

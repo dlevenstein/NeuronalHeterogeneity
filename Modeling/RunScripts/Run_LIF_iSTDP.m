@@ -221,7 +221,7 @@ SimValues.Input = nan(PopNum,SaveTimeLength);
 
 estnumspikes = PopNum.*(SimTime+onsettime).*estrate./1000;
 spikes = nan(estnumspikes,2,'single'); %assume mean rate 10Hz
-
+haswarned = false; %to warn the user if their estimate is low.
 %% Initial Conditions - random voltages
 %Improvement: set # initial spiking neurons instead of hard coding 
 %range: E_L-Vth
@@ -272,8 +272,9 @@ for tt=1:SimTimeLength
         spikes(spikecounter+1:spikecounter+numspikers,:) = ...
             [timecounter.*ones(numspikers,1),spikeneurons];
         spikecounter = spikecounter+numspikers;
-        if spikecounter > estnumspikes
+        if spikecounter > estnumspikes &~ haswarned
             display('WARNING - NUMBER SPIKES IS ABOVE ESTIMATED. GOING MUCH SLOWER NOW')
+            haswarned = true;
         end
         
         %Start the synaptic delay counter
