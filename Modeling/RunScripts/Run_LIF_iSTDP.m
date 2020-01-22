@@ -17,7 +17,8 @@ function [SimValues] = Run_LIF_iSTDP(PopParams,TimeParams,varargin)
 %
 %       .tau_m      membrane time constant (ms)
 %       .t_ref      Refractory period
-%       .delay_s
+%       .delay_s    Delay from cell to ALL postsynaptic partners.
+%                   To Do: make synapse specific...
 %
 %                   SYNAPTIC WEIGHT (voltage jump: mV)
 %       .J          Extiatory synaptic weight

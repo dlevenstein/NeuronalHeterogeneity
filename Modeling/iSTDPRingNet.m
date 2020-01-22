@@ -7,7 +7,7 @@ savepath = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/Modeling/Simu
 
 %%
 TimeParams.dt = 0.1;
-TimeParams.SimTime = 200000;
+TimeParams.SimTime = 10000;
 
 %%
 %Feedforward parameters
@@ -57,7 +57,7 @@ parms.u_0 = 20.*v_norm;
 parms.u_0 = 0;
 
 parms.V_rest = 0;
-parms.delay_s = 5.*rand(parms.EPopNum+parms.IPopNum,1)+1;
+parms.delay_s = 4.*rand(parms.EPopNum+parms.IPopNum,parms.EPopNum+parms.IPopNum)+1;
 %parms.delay_s = 1.2;
 parms.g = g;
 
