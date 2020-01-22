@@ -28,15 +28,15 @@ states{4} = 'ALL';
 SleepState.ints.ALL = [0 Inf];
 statecolors = {'k','b','r',[0.6 0.6 0.6]};
 
-% [celltypes,~,typeidx] = unique(CellClass.label);
-% cellcolor = {'k','r'};
-% 
-% try
-%     celltypes = CellClass.celltypes;
-% catch
-%     celltypes = unique(CellClass.label);
-% end
-% cellcolor = {'k','r'};
+[celltypes,~,typeidx] = unique(CellClass.label);
+cellcolor = {'k','r'};
+
+try
+    celltypes = CellClass.celltypes;
+catch
+    celltypes = unique(CellClass.label);
+end
+cellcolor = {'k','r'};
 %% Load the LFP if needed
 % 
 % lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID;
@@ -77,7 +77,8 @@ NREMhistcolors = makeColorMap([1 1 1],[0 0 0.8]);
 REMhistcolors = makeColorMap([1 1 1],[0.8 0 0]);
 statecolormap = {histcolors,NREMhistcolors,REMhistcolors};
 
-excell = randsample(find(CellClass.pE),4,true);
+for cc = 1:length(celltypes)
+excell = randsample(find(CellClass.(celltypes{cc})),4,true);
 
 for ss = 1:3
 
@@ -153,11 +154,12 @@ for ee = 1:4
 end
 
 subplot(3,3,3)
-plot(log10((1./ISIrate.OccupancyStats.(states{ss}).median(CellClass.pE))),...
-    log10(ISIrate.OccupancyStats.(states{ss}).MTORatio(CellClass.pE)),'k.')
+plot(log10((1./ISIrate.OccupancyStats.(states{ss}).median(CellClass.(celltypes{cc})))),...
+    log10(ISIrate.OccupancyStats.(states{ss}).MTORatio(CellClass.(celltypes{cc}))),'k.')
 hold on
 plot(log10((1./ISIrate.OccupancyStats.(states{ss}).median(excell))),...
     log10(ISIrate.OccupancyStats.(states{ss}).MTORatio(excell)),'r.')
 
-NiceSave(['GSExamples_',(states{ss})],figfolder,baseName)
+NiceSave([(celltypes{cc}),'_GSExamples_',(states{ss})],figfolder,baseName)
+end
 end
