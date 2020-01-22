@@ -7,7 +7,7 @@ savepath = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/Modeling/Simu
 
 %%
 TimeParams.dt = 0.1;
-TimeParams.SimTime = 10000;
+TimeParams.SimTime = 100000;
 
 %%
 %Feedforward parameters
