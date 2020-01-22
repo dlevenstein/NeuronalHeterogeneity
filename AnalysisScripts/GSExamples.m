@@ -72,12 +72,19 @@ ISIoccupancy.logbins = linspace(-3,3,100);
         
     end
 %%
-for ss = 1:2
+histcolors = flipud(gray);
+NREMhistcolors = makeColorMap([1 1 1],[0 0 0.8]);
+REMhistcolors = makeColorMap([1 1 1],[0.8 0 0]);
+statecolormap = {histcolors,NREMhistcolors,REMhistcolors};
+
+excell = randsample(find(CellClass.pE),4,true);
+
+for ss = 1:3
 
 % excell(1) = randsample(find(log10(ISIrate.OccupancyStats.(states{ss}).MTORatio)<0.4 & CellClass.pE),1);
 % excell(2) = randsample(find(log10(ISIrate.OccupancyStats.(states{ss}).MTORatio)>0.8 & CellClass.pE),1);
 % 
-excell = randsample(find(CellClass.pE),4,true);
+
 
 [~,sortex] = sort(ISIrate.OccupancyStats.(states{ss}).median(excell));
 excell = excell(sortex);
@@ -102,27 +109,47 @@ for ee = 1:4
         bz_ScaleBar('s')
         axis ij
         
-     subplot(6,4,(ee)+16)
-        plot(ISIStats.ISIhist.logbins,ISIStats.ISIhist.(states{ss}).log(excell(ee),:),'k','linewidth',2)
-        hold on
-        plot(ISIoccupancy.logbins,ISIoccupancy.(states{ss}).loghist(:,excell(ee)),'k:')
-        plot(log10(1./ISIStats.summstats.(states{ss}).meanrate(excell(ee))),0,'k+')
-        plot(log10(ISIrate.OccupancyStats.(states{ss}).median(excell(ee))),0,'r+')
-        box off
-        axis tight
-        LogScale('x',10,'exp',true)
-        set(gca,'yticklabels',[])
-        xlabel('ISI (s)');ylabel('P[ISI]')
-        %plot(ISIrate.OccupancyStats.WAKEstate.
+%      subplot(6,4,(ee)+16)
+%         plot(ISIStats.ISIhist.logbins,ISIStats.ISIhist.(states{ss}).log(excell(ee),:),'k','linewidth',2)
+%         hold on
+%         plot(ISIoccupancy.logbins,ISIoccupancy.(states{ss}).loghist(:,excell(ee)),'k:')
+%         plot(log10(1./ISIStats.summstats.(states{ss}).meanrate(excell(ee))),0,'k+')
+%         plot(log10(ISIrate.OccupancyStats.(states{ss}).median(excell(ee))),0,'r+')
+%         box off
+%         axis tight
+%         LogScale('x',10,'exp',true)
+%         set(gca,'yticklabels',[])
+%         xlabel('ISI (s)');ylabel('P[ISI]')
+%         %plot(ISIrate.OccupancyStats.WAKEstate.
         
-     subplot(6,4,ee+20)
+     subplot(6,4,ee+16)
         imagesc(ISIStats.ISIhist.logbins,ISIStats.CV2hist.bins,...
             squeeze(ISIStats.Jointhist.(states{ss}).log(excell(ee),:,:))')
         axis xy
+        hold on
+        plot(ISIoccupancy.logbins,bz_NormToRange(ISIoccupancy.(states{ss}).loghist(:,excell(ee)),0.75),':','color',statecolors{ss})
+        plot(ISIStats.ISIhist.logbins,bz_NormToRange(ISIStats.ISIhist.(states{ss}).log(excell(ee),:),0.75,[0 max(ISIoccupancy.(states{ss}).loghist(:,excell(ee)))]),...
+            'linewidth',2,'color',statecolors{ss})
+        
+        plot(log10(1./ISIStats.summstats.(states{ss}).meanrate(excell(ee))),0,'k+')
+        plot(log10(ISIrate.OccupancyStats.(states{ss}).median(excell(ee))),0,'r+')
         %ISIStats.Jointhist.(states{ss}).log(excell(ee),1,:)
         caxis([0 max([ISIStats.Jointhist.(states{ss}).log(excell(ee),:,1),0])])
         LogScale('x',10,'exp',true)
+        xlim([-3 2])
         xlabel('ISI (s)');ylabel('CV2')
+    
+    subplot(6,4,ee+20)   
+    colormap(gca,statecolormap{ss})
+    imagesc((ISIStats.ISIhist.logbins),(ISIStats.ISIhist.logbins),(ISIStats.ISIhist.(states{ss}).return(:,:,excell(ee))))
+    hold on
+    plot(log10(1./ISIStats.summstats.(states{ss}).meanrate(excell(ee))),log10(1./ISIStats.summstats.(states{ss}).meanrate(excell(ee))),'k+')
+    axis xy
+    LogScale('xy',10,'exp',true)
+    %set(gca,'ytick',[]);set(gca,'xtick',[]);
+    caxis([0 0.003])
+    xlim(ISIStats.ISIhist.logbins([1 end]));ylim(ISIStats.ISIhist.logbins([1 end]))
+    xlim([-3 2]);ylim([-3 2])
 end
 
 subplot(3,3,3)
