@@ -112,6 +112,7 @@ switch netname
         
         %Slow down iSTDP?
         parms.LearningRate = 1e-3;
+        parms.LearningRate = 5e-3;
 end
 
 %%
