@@ -79,9 +79,12 @@ plot(ISIbyPos.Xbins(:,:,1),bz_NormToRange(-ISIbyPos.pX(:,:,excell),'ylim',[-0.3 
 plot(ISIbyPos.Xbins(:,:,1)+2*pi,bz_NormToRange(-ISIbyPos.pX(:,:,excell),'ylim',[-0.3 0]),'r')
 title(['UID: ',num2str(spikes.UID(excell))])
 xlim([0 4*pi])
+bz_piTickLabel('x')
+xlabel('HD (rad)');ylabel('ISI (s)')
+LogScale('y',10,'exp',true)
 %drawnow
 %pause
-if mod(excell,12)==0 && excell>0
+if (mod(excell,12)==0 && excell>0) || excell == spikes.numcells
 NiceSave(['UID: ',num2str(spikes.UID(excell))],figfolder,baseName)
 figure
 end
