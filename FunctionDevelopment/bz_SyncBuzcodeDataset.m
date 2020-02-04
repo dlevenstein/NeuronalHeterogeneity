@@ -58,8 +58,9 @@ rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onC
 %AP to NYUShare
 rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL/ /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onNYUShare/AP_THAL/ 
 
-%EVERYTHING to Cluster (ACH)
+%WM from NYUShare (ACH)
 rsync -auvzP --exclude=*dat --exclude=Atropine --exclude=Kilosort* /mnt/NyuShare/dl2820/WMDataset/ /mnt/proraidDL/Database/WMData/AChPupil/
+
 
 end
 
