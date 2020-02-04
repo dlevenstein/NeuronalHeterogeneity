@@ -6,13 +6,24 @@ datasetPath.fCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Dataset
 datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AG_HPC';
 datasetPath.vCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/YS_CTX';
 datasetPath.THAL = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL';
-regions = {'THAL','vCTX','fCTX','CA1'};
+datasetPath.BLA = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/GG_BLA';
+datasetPath.PIR = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/GG_BLA';
+regions = {'THAL','vCTX','fCTX','CA1','BLA','PIR'};
+rnames =  {''    ,''    ,''    ,''   ,'bla','pir'};
 %regions = {'fCTX'};
 %%
 for rr = 1:length(regions)
     [ISIstats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
     CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
     numcells.(regions{rr}) = length(CellClass.(regions{rr}).UID);
+    
+    %Remove cells not in the proper region by removing their cell class!
+    if rr >=5
+        inregion = cellfun(@(X) strcmp(X,rnames{rr}),ISIstats.(regions{rr}).cellinfo.regions);
+        CellClass.(regions{rr}).label(~inregion)={[]};
+        CellClass.(regions{rr}).pE(~inregion)=false;
+        CellClass.(regions{rr}).pI(~inregion)=false;
+    end
 end
 
 %%
@@ -147,7 +158,7 @@ histcolors = flipud(gray);
 figure
 for rr = 1:length(regions)
     for ss = 1:3
-    subplot(4,4,rr+(ss-1).*4)
+    subplot(4,6,rr+(ss-1).*6)
         plot(log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).pE)),...
             ISIstats.(regions{rr}).summstats.(statenames{ss}).meanCV2(CellClass.(regions{rr}).pE),'k.','markersize',4)
         hold on
@@ -188,7 +199,7 @@ figure
 for rr = 1:length(regions)
     for ss = 1:3
 
-    subplot(4,4,rr+(ss-1).*4)
+    subplot(4,6,rr+(ss-1).*6)
         plot(log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).pE)),...
             log2(ISIstats.(regions{rr}).summstats.(statenames{ss}).ISICV(CellClass.(regions{rr}).pE)),'k.','markersize',4)
         hold on
@@ -235,7 +246,7 @@ statecolormap = {histcolors,NREMhistcolors,REMhistcolors};
 figure
 for rr = 1:length(regions)
 for ss = 1:3
-    subplot(3,4,ss*4-3+(rr-1))
+    subplot(3,6,ss*6-5+(rr-1))
     colormap(gca,statecolormap{ss})
 
        % subplot(2,3,4)
@@ -330,7 +341,7 @@ statecolormap = {histcolors,NREMhistcolors,REMhistcolors};
 figure
 for rr = 1:length(regions)
 for ss = 1:3
-    subplot(3,4,ss*4-3+(rr-1))
+    subplot(3,6,ss*6-5+(rr-1))
     colormap(gca,statecolormap{ss})
 
        % subplot(2,3,4)
@@ -417,7 +428,7 @@ NiceSave('ISIReturnMap',figfolder,[])
 figure
 for rr = 1:length(regions)
 for ss = 1:3
-    subplot(3,4,ss*4-3+(rr-1))
+    subplot(3,6,ss*6-5+(rr-1))
     colormap(gca,statecolormap{ss})
 
        % subplot(2,3,4)
@@ -470,7 +481,7 @@ for rr = 1:length(regions)
 
 for cc = 1:2
 	for ss = 1:3
-        subplot(6,4,rr+(ss-1)*4+(cc-1)*12)    
+        subplot(6,6,rr+(ss-1)*6+(cc-1)*18)    
         %colormap(gca,statecolormap{ss})
 
             imagesc(meanISIhist.logbins,ISIstats.(regions{rr}).CV2hist.bins(1,:),...
@@ -519,7 +530,7 @@ for rr = 1:length(regions)
 for ss = 1:3
     pcolor = makeColorMap([0.7 0.7 0.7],statecolors{ss},numperciles);
 
-    subplot(5,4,(rr-1)+(ss-1)*4+1)
+    subplot(5,6,(rr-1)+(ss-1)*6+1)
         hold on
         for cc = 1:length(percilenames)
             plot(meanISIhist.logbins,meanISIhist.(regions{rr}).(statenames{ss}).(percilenames{cc}),...
@@ -547,7 +558,7 @@ end
 
 for rr=1:length(regions)
     ss= 1;
-    subplot(4,4,rr+12)
+    subplot(4,6,rr+18)
         plot(log10(ISIstats.(regions{rr}).summstats.WAKEstate.meanrate(CellClass.(regions{rr}).pE)),...
             log10(ISIstats.(regions{rr}).summstats.NREMstate.meanrate(CellClass.(regions{rr}).pE)),...
             'k.','markersize',2)
@@ -573,7 +584,7 @@ for rr = 1:length(regions)
 for ss = 1:3
     pcolor = makeColorMap([0.7 0.7 0.7],statecolors{ss},numperciles);
 
-    subplot(5,4,(rr-1)+(ss-1)*4+1)
+    subplot(5,6,(rr-1)+(ss-1)*6+1)
         hold on
         for cc = 1:length(percilenames)
             plot(meanISIhist.logbins,meannormISIhist.(regions{rr}).(statenames{ss}).(percilenames{cc}),...
@@ -652,7 +663,7 @@ for rr = 1:length(regions)
        
        %[~,idx] = min(abs(10.^meanISIhist.logbins - 1./meanpercrate.(regions{rr}).(statenames{ss})(cc)));
        
-        subplot(length(percilenames),4,(cc-1)*4+rr)    
+        subplot(length(percilenames),6,(cc-1)*6+rr)    
         %colormap(gca,statecolormap{ss})
 
             imagesc(meanISIhist.logbins,ISIstats.(regions{rr}).CV2hist.bins(1,:),...
@@ -693,7 +704,7 @@ end
 figure
 for rr = 2:length(regions)
 for ss = 1:3
-    subplot(6,4,ss*4-3+(rr-1))
+    subplot(4,6,ss*6-5+(rr-1))
     colormap(gca,statecolormap{ss})
 
        % subplot(2,3,4)
@@ -833,7 +844,7 @@ figure
 for rr = 1:length(regions)
 
 for ss = 1:3
-    subplot(3,4,ss*4-3+(rr-1))
+    subplot(3,6,ss*6-5+(rr-1))
     colormap(gca,statecolormap{ss})
 
        % subplot(2,3,4)
@@ -887,7 +898,7 @@ for rr = 1:length(regions)
 
 for cc = 1:2
 	for ss = 1:3
-        subplot(6,4,rr+(ss-1)*4+(cc-1)*12)    
+        subplot(6,6,rr+(ss-1)*6+(cc-1)*18)    
         %colormap(gca,statecolormap{ss})
 
             imagesc(meanISIhist.logbins,ISIstats.(regions{rr}).CV2hist.bins(1,:),...
