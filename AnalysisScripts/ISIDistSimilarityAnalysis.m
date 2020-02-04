@@ -168,7 +168,7 @@ for ss1 = 1:3
         lowestpairISI.difft{ss1+3,ss2+3} = min([inumISI(sameregion & ~samecell & istates==ss1 & jstates==ss2 & iispI & jispI),...
             jnumISI(sameregion & ~samecell & istates==ss1 & jstates==ss2 & iispI & jispI)],[],2);
 
-        inregion.difft{ss1,ss2} = jregion(sameregion & ~samecell & iispE & jispE);
+        inregion.difft{ss1,ss2} = jregion(sameregion & ~samecell & istates==ss1 & jstates==ss2 & jispE & iispE);
         inregion.difft{ss1+3,ss2} = jregion(sameregion & ~samecell & istates==ss1 & jstates==ss2 & iispI & jispE);
         inregion.difft{ss1+3,ss2+3} = jregion(sameregion & ~samecell & istates==ss1 & jstates==ss2 & iispI & jispI);
         

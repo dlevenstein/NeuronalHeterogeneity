@@ -52,6 +52,7 @@ rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onC
 rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onCluster/BW_CTX/ /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/BW_CTX/
 rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onCluster/AG_HPC/ /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AG_HPC/
 rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onCluster/YS_CTX/ /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/YS_CTX/
+rsync -auvzPLK /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onCluster/GG_BLA/ /home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/GG_BLA/
 
 
 

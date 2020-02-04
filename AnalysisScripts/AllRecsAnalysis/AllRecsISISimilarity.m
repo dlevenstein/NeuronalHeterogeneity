@@ -27,9 +27,13 @@ for rr = 1:length(regions)
     allpairs.(regions{rr}) = bz_CollapseStruct(ISISimilarityAll.allpairs,3,'justcat',true);
     allISIs.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.allISIs,2,'justcat',true);
     lowestpairISI.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.lowestpairISI,3,'justcat',true);
+    if rr>=5
+        whichregion.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.inregion,3,'justcat',true);
+    end
     
     clear ISISimilarityAll
 end
+
 
 %%
 ISIthreshold = 800;
@@ -45,15 +49,23 @@ for rr = 1:length(regions)
                     cat(1,lowestpairISI.(regions{rr}).(celltypes{cc}){ii,jj,:});
                 abovethresh = numISIs.(regions{rr}).(celltypes{cc}){ii,jj}>ISIthreshold;
                 
+            if rr >=5 & ~isempty(abovethresh)
+                pairregions.(regions{rr}).(celltypes{cc}){ii,jj} = ...
+                    cat(1,whichregion.(regions{rr}).(celltypes{cc}){ii,jj,:});
+                inregion = cellfun(@(X) strcmp(X,rnames{rr}),pairregions.(regions{rr}).(celltypes{cc}){ii,jj});
+            else
+                inregion = true(size(abovethresh));
+            end
+                
                 simmatrices.(regions{rr}).(celltypes{cc})(ii,jj) = ...
-                    nanmedian(newpairs.(regions{rr}).(celltypes{cc}){ii,jj}(abovethresh));
+                    nanmedian(newpairs.(regions{rr}).(celltypes{cc}){ii,jj}(abovethresh & inregion));
             
                 if rr ==1
                     newpairs.ALL.(celltypes{cc}){ii,jj} = ...
-                        newpairs.(regions{rr}).(celltypes{cc}){ii,jj}(abovethresh);
+                        newpairs.(regions{rr}).(celltypes{cc}){ii,jj}(abovethresh & inregion);
                 else
                     newpairs.ALL.(celltypes{cc}){ii,jj} = ...
-                        [newpairs.ALL.(celltypes{cc}){ii,jj};newpairs.(regions{rr}).(celltypes{cc}){ii,jj}(abovethresh)];
+                        [newpairs.ALL.(celltypes{cc}){ii,jj};newpairs.(regions{rr}).(celltypes{cc}){ii,jj}(abovethresh & inregion)];
 
                     simmatrices.ALL.(celltypes{cc})(ii,jj) = ...
                         nanmedian(newpairs.ALL.(celltypes{cc}){ii,jj});
@@ -72,12 +84,20 @@ for rr = 1:length(regions)
                 cat(1,lowestpairISI.(regions{rr}).difft{ii,jj,:});
             abovethresh = numISIs.(regions{rr}).difft{ii,jj}>ISIthreshold;
             
-            simmatrices.(regions{rr}).difft(ii,jj) = nanmedian(newpairs.(regions{rr}).difft{ii,jj}(abovethresh));
+            if rr >=5 & ~isempty(abovethresh)
+                pairregions.(regions{rr}).difft{ii,jj} = ...
+                    cat(1,whichregion.(regions{rr}).difft{ii,jj,:});
+                inregion = cellfun(@(X) strcmp(X,rnames{rr}),pairregions.(regions{rr}).difft{ii,jj});
+            else
+                inregion = true(size(abovethresh));
+            end
+            
+            simmatrices.(regions{rr}).difft(ii,jj) = nanmedian(newpairs.(regions{rr}).difft{ii,jj}(abovethresh & inregion));
             
             if rr ==1
-                newpairs.ALL.difft{ii,jj} = newpairs.(regions{rr}).difft{ii,jj}(abovethresh);
+                newpairs.ALL.difft{ii,jj} = newpairs.(regions{rr}).difft{ii,jj}(abovethresh & inregion);
             else
-                newpairs.ALL.difft{ii,jj} = [newpairs.ALL.difft{ii,jj};newpairs.(regions{rr}).difft{ii,jj}(abovethresh)];
+                newpairs.ALL.difft{ii,jj} = [newpairs.ALL.difft{ii,jj};newpairs.(regions{rr}).difft{ii,jj}(abovethresh & inregion)];
                 
                 simmatrices.ALL.difft(ii,jj) = nanmedian(newpairs.ALL.difft{ii,jj});
             end
@@ -88,13 +108,13 @@ end
 
 %%
 figure
-for rr = 1:4
+for rr = 1:length(regions)
 
 for cc = 1:length(celltypes)
-subplot(4,4,(cc-1).*4+rr)
+subplot(4,6,(cc-1).*6+rr)
 imagesc(simmatrices.(regions{rr}).(celltypes{cc}))
 alpha(gca,single(~isnan(simmatrices.(regions{rr}).(celltypes{cc}))))
-caxis([0.05 0.4])
+caxis([0.1 0.35])
 box off
 set(gca,'ytick',[1:3]);set(gca,'xtick',[1:3]);
 set(gca,'yticklabel',{'N','W','R'})
@@ -108,7 +128,7 @@ crameri tokyo
 subplot(2,2,2+cc)
 imagesc(simmatrices.ALL.(celltypes{cc}))
 alpha(gca,single(~isnan(simmatrices.ALL.(celltypes{cc}))))
-caxis([0.05 0.4])
+caxis([0.1 0.35])
 colorbar
 box off
 set(gca,'ytick',[1:3]);set(gca,'xtick',[1:3]);
@@ -123,8 +143,8 @@ end
 NiceSave('ISISimilarity_WithinCell',figfolder,'')
 %%
 figure
-for rr = 1:4
-subplot(2,2,rr)
+for rr = 1:length(regions)
+subplot(2,3,rr)
 imagesc(simmatrices.(regions{rr}).difft)
 alpha(gca,single(~isnan(simmatrices.(regions{rr}).difft)))
 colorbar
@@ -164,6 +184,7 @@ keepISIs.numISIthresh = 300; %Try with smoothing
 for rr = 1:length(regions)
     OKISIS = (allISIs.(regions{rr}).celltype.pE | allISIs.(regions{rr}).celltype.pI) & ...
         ~any(isnan(allISIs.(regions{rr}).hists),1) &  allISIs.(regions{rr}).numISIs>keepISIs.numISIthresh;
+    %Here: inregion
    keepISIs.(regions{rr}) = randsample(find(OKISIS), keepISIs.numPerregion);
 end
 % allISIs = [ISIs.THAL(keepISIs.THAL),ISIs.vCTX(keepISIs.vCTX),...
