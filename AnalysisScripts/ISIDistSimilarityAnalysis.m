@@ -63,7 +63,9 @@ allISIs.hists = [ISIStats.ISIhist.WAKEstate.log',ISIStats.ISIhist.NREMstate.log'
     ISIStats.ISIhist.REMstate.log'];
 allISIs.histbins = ISIStats.ISIhist.logbins;
 
-
+if isfield(ISIStats,'cellinfo')
+    allISIs.region = [ISIStats.cellinfo.regions,ISIStats.cellinfo.regions,ISIStats.cellinfo.regions];
+end
 %% Calculate KS and KL distance between ISIs, all cells
 
 numcells = length(allISIs.ISIs);
@@ -110,6 +112,13 @@ subplot(2,2,2)
 [jnumISI,inumISI] = meshgrid(allISIs.numISIs,allISIs.numISIs);
 samecell = iUID==jUID;
 
+if isfield(ISIStats,'cellinfo')
+    [jregion,iregion] = meshgrid(allISIs.region,allISIs.region);
+    sameregion = cellfun(@(X,Y) strcmp(X,Y),jregion,iregion);
+else
+    sameregion = true(size(samecell));
+end
+
 simmatrices.pE = nan(3);
 simmatrices.pI = nan(3);
 simmatrices.difft = nan(6);
@@ -131,28 +140,28 @@ simmatrices.difft = nan(6);
 numISIthresh = 1000;
 for ss1 = 1:3
     for ss2 = ss1:-1:1
-        allpairs.pE{ss1,ss2} = KLDIST(samecell & iispE & istates==ss1 & jstates==ss2);
-        allpairs.pI{ss1,ss2} = KLDIST(samecell & iispI & istates==ss1 & jstates==ss2);
+        allpairs.pE{ss1,ss2} = KLDIST(sameregion & samecell & iispE & istates==ss1 & jstates==ss2);
+        allpairs.pI{ss1,ss2} = KLDIST(sameregion & samecell & iispI & istates==ss1 & jstates==ss2);
         
-        lowestpairISI.pE{ss1,ss2} = min([inumISI(samecell & istates==ss1 & jstates==ss2 & iispE),...
-            jnumISI(samecell & istates==ss1 & jstates==ss2 & iispE)],[],2);
-        lowestpairISI.pI{ss1,ss2} = min([inumISI(samecell & istates==ss1 & jstates==ss2 & iispI),...
-            jnumISI(samecell & istates==ss1 & jstates==ss2 & iispI)],[],2);
+        lowestpairISI.pE{ss1,ss2} = min([inumISI(sameregion & samecell & istates==ss1 & jstates==ss2 & iispE),...
+            jnumISI(sameregion & samecell & istates==ss1 & jstates==ss2 & iispE)],[],2);
+        lowestpairISI.pI{ss1,ss2} = min([inumISI(sameregion & samecell & istates==ss1 & jstates==ss2 & iispI),...
+            jnumISI(sameregion & samecell & istates==ss1 & jstates==ss2 & iispI)],[],2);
         
         simmatrices.pE(ss1,ss2) = median(allpairs.pE{ss1,ss2}(lowestpairISI.pE{ss1,ss2}>numISIthresh));
         simmatrices.pI(ss1,ss2) = median(allpairs.pI{ss1,ss2}(lowestpairISI.pI{ss1,ss2}>numISIthresh));
     
         
-        allpairs.difft{ss1,ss2} = KLDIST(~samecell & iispE & jispE);
-        allpairs.difft{ss1+3,ss2} = KLDIST(~samecell & istates==ss1 & jstates==ss2 & iispI & jispE);
-        allpairs.difft{ss1+3,ss2+3} = KLDIST(~samecell & istates==ss1 & jstates==ss2 & iispI & jispI);
+        allpairs.difft{ss1,ss2} = KLDIST(sameregion & ~samecell & iispE & jispE);
+        allpairs.difft{ss1+3,ss2} = KLDIST(sameregion & ~samecell & istates==ss1 & jstates==ss2 & iispI & jispE);
+        allpairs.difft{ss1+3,ss2+3} = KLDIST(sameregion & ~samecell & istates==ss1 & jstates==ss2 & iispI & jispI);
         
-        lowestpairISI.difft{ss1,ss2} = min([inumISI(~samecell & istates==ss1 & jstates==ss2 & jispE & iispE),...
-            jnumISI(~samecell & istates==ss1 & jstates==ss2 & jispE & iispE)],[],2);
-        lowestpairISI.difft{ss1+3,ss2} = min([inumISI(~samecell & istates==ss1 & jstates==ss2 & iispI & jispE),...
-            jnumISI(~samecell & istates==ss1 & jstates==ss2 & iispI & jispE)],[],2);
-        lowestpairISI.difft{ss1+3,ss2+3} = min([inumISI(~samecell & istates==ss1 & jstates==ss2 & iispI & jispI),...
-            jnumISI(~samecell & istates==ss1 & jstates==ss2 & iispI & jispI)],[],2);
+        lowestpairISI.difft{ss1,ss2} = min([inumISIsameregion & (~samecell & istates==ss1 & jstates==ss2 & jispE & iispE),...
+            jnumISI(sameregion & ~samecell & istates==ss1 & jstates==ss2 & jispE & iispE)],[],2);
+        lowestpairISI.difft{ss1+3,ss2} = min([inumISI(sameregion & ~samecell & istates==ss1 & jstates==ss2 & iispI & jispE),...
+            jnumISI(sameregion & ~samecell & istates==ss1 & jstates==ss2 & iispI & jispE)],[],2);
+        lowestpairISI.difft{ss1+3,ss2+3} = min([inumISI(sameregion & ~samecell & istates==ss1 & jstates==ss2 & iispI & jispI),...
+            jnumISI(sameregion & ~samecell & istates==ss1 & jstates==ss2 & iispI & jispI)],[],2);
 
         
         simmatrices.difft(ss1,ss2) = median(allpairs.difft{ss1,ss2}(lowestpairISI.difft{ss1,ss2}>numISIthresh));
