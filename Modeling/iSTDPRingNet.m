@@ -7,14 +7,14 @@ savepath = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/Modeling/Simu
 
 %%
 TimeParams.dt = 0.1;
-TimeParams.SimTime = 100000;
+TimeParams.SimTime = 10000;
 
 %%
 %Feedforward parameters
 clear parms
 parms.N_FF = 1000;
 parms.K_FF = [250 750];
-parms.J_FF = [0.3 0.1];
+parms.J_FF = [0.4 0.1];
 %% Ring input
 
 [theta,T] = OUNoise(40000.^-1,4*pi,TimeParams.SimTime,TimeParams.dt,TimeParams.dt.*5,1);
@@ -57,7 +57,7 @@ parms.u_0 = 20.*v_norm;
 parms.u_0 = 0;
 
 parms.V_rest = 0;
-parms.delay_s = 4.*rand(parms.EPopNum+parms.IPopNum,parms.EPopNum+parms.IPopNum)+1;
+parms.delay_s = 1.8.*rand(parms.EPopNum+parms.IPopNum,parms.EPopNum+parms.IPopNum)+1.2;
 %parms.delay_s = 1.2;
 parms.g = g;
 
@@ -112,7 +112,7 @@ switch netname
         
         %Slow down iSTDP?
         parms.LearningRate = 1e-3;
-        parms.LearningRate = 5e-3;
+        parms.LearningRate = 2.5e-3;
 end
 
 %%
@@ -120,7 +120,7 @@ end
 
 tic 
 [SimValues] = Run_LIF_iSTDP(parms,TimeParams,'showprogress',true,...
-    'cellout',true,'save_dt',1000,'estrate',20);
+    'cellout',true,'save_dt',1000,'estrate',15);
 toc
 
 %% Get Sorting by max(Input(theta))
@@ -144,7 +144,7 @@ imagesc(inputtuning(:,sortpeak))
 %%
 overlay_HD = parms.EPopNum.*mod(theta,2*pi)./(2*pi);
 overlay_HD(abs(diff(overlay_HD))>100) = nan;
-PlotSimRaster(SimValues,TimeParams.SimTime-[10000 0],...
+PlotSimRaster(SimValues,TimeParams.SimTime-[5000 0],...
     'cellsort',sortpeak,'overlay',[T overlay_HD])
 NiceSave('iSTDPRaster_late',pwd,netname)
 
@@ -152,7 +152,7 @@ PlotSimRaster(SimValues,[0000 5000],...
     'cellsort',sortpeak,'overlay',[T overlay_HD])
 NiceSave('iSTDPRaster_early',pwd,netname)
 
-%%
+%%  
 %% Save/load
 filename = fullfile(savepath,['TrainedNet_',netname]);
 save(filename,'SimValues','parms','TimeParams','netname')
@@ -179,8 +179,8 @@ spikes.UID = 1:length(SimValues.spikesbycell);
 CellClass = cell(1,length(spikes.times));
 CellClass(SimValues.EcellIDX) = {'E'};
 CellClass(SimValues.IcellIDX) = {'I'};
-timewindows.initialization = [0 50];
-timewindows.equib = [50 TimeParams.SimTime./1000];
+timewindows.initialization = [0 100];
+timewindows.equib = [100 TimeParams.SimTime./1000];
 ISIstats = bz_ISIStats(spikes,'ints',timewindows,'showfig',true,'cellclass',CellClass);
 
 %%
@@ -216,7 +216,7 @@ ISIstats.allspikes.ISInp1 = cellfun(@(X) [X(2:end);nan],...
 %     'UniformOutput',false);
 
 [ ISIbyPos ] = cellfun(@(X,Y,Z,Q) ConditionalHist( [Z(Q);Z(Q)],log10([X(Q);Y(Q)]),...
-    'Xbounds',[0 2*pi],'numXbins',25,'Ybounds',[-3 2],'numYbins',125,'minX',25),...
+    'Xbounds',[0 2*pi],'numXbins',20,'Ybounds',[-2.5 1],'numYbins',125,'minX',20),...
     ISIstats.allspikes.ISIs,ISIstats.allspikes.ISInp1,...
     ISIstats.allspikes.position_norm,ISIstats.allspikes.instate.equib,...
     'UniformOutput',false);
@@ -228,13 +228,15 @@ ISIbyPos.rate = sum(ISIbyPos.pYX,2);
 ISIbyPos.meanpYX.E = nanmean(ISIbyPos.pYX(:,:,SimValues.EcellIDX),3);
 ISIbyPos.meanpYX.I = nanmean(ISIbyPos.pYX(:,:,SimValues.IcellIDX),3);
 
-sextgroups = discretize(SimValues.EcellIDX,5);
-for ss = 1:5
+sextgroups = discretize(SimValues.EcellIDX,6);
+for ss = 1:6
     ISIbyPos.meanpYX.sextiles(:,:,ss) = nanmean(ISIbyPos.pYX(:,:,sextgroups==ss),3);
+    ISIstats.Jointhist.sextiles(ss,:,:) = nanmean(ISIstats.Jointhist.equib.log(sextgroups==ss,:,:),1);
+
 end
 %%
 classes = {'E','I'};
-excell = 700;
+excell = [650 750 850 950];
 figure
 for cc = 1:2
 subplot(2,2,cc)
@@ -251,11 +253,31 @@ for ss = 1:5
 imagesc(ISIbyPos.Xbins(1,:,1)-pi,ISIbyPos.Ybins(1,:,1),ISIbyPos.meanpYX.sextiles(:,:,ss)')
 hold on
 %plot(th,bz_NormToRange(-inputtuning(:,excell)),'r')
-LogScale('y',10)
+LogScale('y',10,'exp',true)
 bz_piTickLabel('x')
 if ss>1
     set(gca,'yticklabel',[])
+else
+    ylabel('ISI (s)')
 end
 title(ss)
+
+%     subplot(4,4,12+ss)
+% imagesc(ISIbyPos.Xbins(1,:,1)-pi,ISIbyPos.Ybins(1,:,1),ISIbyPos.pYX(:,:,excell(ss))')
+% hold on
+% %plot(th,bz_NormToRange(-inputtuning(:,excell)),'r')
+% LogScale('y',10)
+% bz_piTickLabel('x')
+% if ss>1
+%     set(gca,'yticklabel',[])
+% end
 end
 NiceSave('TuningCurves',pwd,netname)
+
+%%
+figure
+for ss = 1:6
+    subplot(6,4,(ss-1)*4+1)
+   imagesc(squeeze(ISIstats.Jointhist.sextiles(ss,:,:) )')
+   axis xy
+end
