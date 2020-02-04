@@ -13,14 +13,19 @@ function [ jitterCV2 ] = SpikeStatsAnalysis(basePath,figfolder)
 %figfolder = [repoRoot,'/AnalysisScripts/AnalysisFigs/SpikeStatsAnalysis'];
 
 %figfolder = '/mnt/data1/Dropbox/research/Current Projects/FRHET_temp/SpikeStatsAnalysis';
-basePath = '/mnt/proraidDL/Database/GGData/Rat08/Rat08-20130708';
-figfolder = pwd;
+%basePath = '/mnt/proraidDL/Database/GGData/Rat08/Rat08-20130708';
+%figfolder = pwd;
 REDOJITTER = false;
 %%
 
 baseName = bz_BasenameFromBasepath(basePath);
-
-spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
+try
+    spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
+catch
+    display('NOSPIKES!')
+    jitterCV2 = [];
+    return
+end
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
 SleepState = bz_LoadStates(basePath,'SleepState');
 lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...

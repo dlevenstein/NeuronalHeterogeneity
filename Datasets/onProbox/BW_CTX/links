@@ -1,38 +1,38 @@
 #to set up links, use ./links in terminal
 
 
-ln -s /mnt/BigPurple/Database/BWData/Bogey/Bogey_012615/ .
+ln -s /mnt/proraidDL/Database/BWData/Bogey/Bogey_012615/ .
 
-ln -s /mnt/BigPurple/Database/BWData/BWRat17/BWRat17_121712/ .
-ln -s /mnt/BigPurple/Database/BWData/BWRat17/BWRat17_121912/ .
+ln -s /mnt/proraidDL/Database/BWData/BWRat17/BWRat17_121712/ .
+ln -s /mnt/proraidDL/Database/BWData/BWRat17/BWRat17_121912/ .
 
-ln -s /mnt/BigPurple/Database/BWData/BWRat18/BWRat18_020513/ .
+ln -s /mnt/proraidDL/Database/BWData/BWRat18/BWRat18_020513/ .
 
-ln -s /mnt/BigPurple/Database/BWData/BWRat19/BWRat19_032413/ .
-ln -s /mnt/BigPurple/Database/BWData/BWRat19/BWRat19_032513/ .
+ln -s /mnt/proraidDL/Database/BWData/BWRat19/BWRat19_032413/ .
+ln -s /mnt/proraidDL/Database/BWData/BWRat19/BWRat19_032513/ .
 
-ln -s /mnt/BigPurple/Database/BWData/BWRat20/BWRat20_101013/ .
-ln -s /mnt/BigPurple/Database/BWData/BWRat20/BWRat20_101513/ .
+ln -s /mnt/proraidDL/Database/BWData/BWRat20/BWRat20_101013/ .
+ln -s /mnt/proraidDL/Database/BWData/BWRat20/BWRat20_101513/ .
 
-ln -s /mnt/BigPurple/Database/BWData/BWRat21/BWRat21_121113/ .
-ln -s /mnt/BigPurple/Database/BWData/BWRat21/BWRat21_121613/ .
-ln -s /mnt/BigPurple/Database/BWData/BWRat21/BWRat21_121813/ .
+ln -s /mnt/proraidDL/Database/BWData/BWRat21/BWRat21_121113/ .
+ln -s /mnt/proraidDL/Database/BWData/BWRat21/BWRat21_121613/ .
+ln -s /mnt/proraidDL/Database/BWData/BWRat21/BWRat21_121813/ .
 
-ln -s /mnt/BigPurple/Database/BWData/Dino/Dino_061814/ .
-ln -s /mnt/BigPurple/Database/BWData/Dino/Dino_061914/ .
-ln -s /mnt/BigPurple/Database/BWData/Dino/Dino_062014/ .
-ln -s /mnt/BigPurple/Database/BWData/Dino/Dino_072114/ .
-ln -s /mnt/BigPurple/Database/BWData/Dino/Dino_072314/ .
-ln -s /mnt/BigPurple/Database/BWData/Dino/Dino_072414/ .
+ln -s /mnt/proraidDL/Database/BWData/Dino/Dino_061814/ .
+ln -s /mnt/proraidDL/Database/BWData/Dino/Dino_061914/ .
+ln -s /mnt/proraidDL/Database/BWData/Dino/Dino_062014/ .
+ln -s /mnt/proraidDL/Database/BWData/Dino/Dino_072114/ .
+ln -s /mnt/proraidDL/Database/BWData/Dino/Dino_072314/ .
+ln -s /mnt/proraidDL/Database/BWData/Dino/Dino_072414/ .
 
-ln -s /mnt/BigPurple/Database/BWData/JennBuzsaki22/20140526_277um/ .
-ln -s /mnt/BigPurple/Database/BWData/JennBuzsaki22/20140527_421um/ .
-ln -s /mnt/BigPurple/Database/BWData/JennBuzsaki22/20140528_565um/ .
+ln -s /mnt/proraidDL/Database/BWData/JennBuzsaki22/20140526_277um/ .
+ln -s /mnt/proraidDL/Database/BWData/JennBuzsaki22/20140527_421um/ .
+ln -s /mnt/proraidDL/Database/BWData/JennBuzsaki22/20140528_565um/ .
 
-ln -s /mnt/BigPurple/Database/BWData/Rizzo/Rizzo_022615/ .
-ln -s /mnt/BigPurple/Database/BWData/Rizzo/Rizzo_022715/ .
+ln -s /mnt/proraidDL/Database/BWData/Rizzo/Rizzo_022615/ .
+ln -s /mnt/proraidDL/Database/BWData/Rizzo/Rizzo_022715/ .
 
-ln -s /mnt/BigPurple/Database/BWData/Splinter/Splinter_020515/ .
-ln -s /mnt/BigPurple/Database/BWData/Splinter/Splinter_020915/ .
+ln -s /mnt/proraidDL/Database/BWData/Splinter/Splinter_020515/ .
+ln -s /mnt/proraidDL/Database/BWData/Splinter/Splinter_020915/ .
 
-ln -s /mnt/BigPurple/Database/BWData/Templeton/Templeton_032415/ .
+ln -s /mnt/proraidDL/Database/BWData/Templeton/Templeton_032415/ .
