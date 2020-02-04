@@ -132,6 +132,7 @@ end
 
 cellinfofilename = fullfile(basePath,[baseName,'.ISIrate.cellinfo.mat']);
 ISIrate.UID = spikes.UID;
+ISIrate.cellinfo.regions = spikes.region;
 ISIrate.OccupancyStats = OccupancyStats;
 
 save(cellinfofilename,'ISIrate','-v7.3')
@@ -139,6 +140,7 @@ save(cellinfofilename,'ISIrate','-v7.3')
 
 cellinfofilename = fullfile(basePath,[baseName,'.OccupancyStats.cellinfo.mat']);
 OccupancyStats.UID = spikes.UID;
+OccupancyStats.cellinfo.regions = spikes.region;
 %ISIrate.OccupancyStats = OccupancyStats;
 
 save(cellinfofilename,'OccupancyStats')
