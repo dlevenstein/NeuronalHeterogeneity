@@ -1,4 +1,4 @@
-function [allISIs,allpairs,lowestpairISI ] = ISIDistSimilarityAnalysis(basePath,figfolder)
+function [allISIs,allpairs,lowestpairISI,inregion ] = ISIDistSimilarityAnalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -20,7 +20,7 @@ baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
 sessionInfo = bz_getSessionInfo(basePath);
-%spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
+spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
 SleepState = bz_LoadStates(basePath,'SleepState');
 ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
@@ -65,6 +65,8 @@ allISIs.histbins = ISIStats.ISIhist.logbins;
 
 if isfield(ISIStats,'cellinfo')
     allISIs.region = [ISIStats.cellinfo.regions,ISIStats.cellinfo.regions,ISIStats.cellinfo.regions];
+else
+    allISIs.region = [spikes.region,spikes.region,spikes.region];
 end
 %% Calculate KS and KL distance between ISIs, all cells
 
@@ -148,6 +150,9 @@ for ss1 = 1:3
         lowestpairISI.pI{ss1,ss2} = min([inumISI(sameregion & samecell & istates==ss1 & jstates==ss2 & iispI),...
             jnumISI(sameregion & samecell & istates==ss1 & jstates==ss2 & iispI)],[],2);
         
+        inregion.pE{ss1,ss2} = jregion(sameregion & samecell & iispE & istates==ss1 & jstates==ss2);
+        inregion.pI{ss1,ss2} = jregion(sameregion & samecell & iispI & istates==ss1 & jstates==ss2);
+        
         simmatrices.pE(ss1,ss2) = median(allpairs.pE{ss1,ss2}(lowestpairISI.pE{ss1,ss2}>numISIthresh));
         simmatrices.pI(ss1,ss2) = median(allpairs.pI{ss1,ss2}(lowestpairISI.pI{ss1,ss2}>numISIthresh));
     
@@ -163,6 +168,9 @@ for ss1 = 1:3
         lowestpairISI.difft{ss1+3,ss2+3} = min([inumISI(sameregion & ~samecell & istates==ss1 & jstates==ss2 & iispI & jispI),...
             jnumISI(sameregion & ~samecell & istates==ss1 & jstates==ss2 & iispI & jispI)],[],2);
 
+        inregion.difft{ss1,ss2} = jregion(sameregion & ~samecell & iispE & jispE);
+        inregion.difft{ss1+3,ss2} = jregion(sameregion & ~samecell & istates==ss1 & jstates==ss2 & iispI & jispE);
+        inregion.difft{ss1+3,ss2+3} = jregion(sameregion & ~samecell & istates==ss1 & jstates==ss2 & iispI & jispI);
         
         simmatrices.difft(ss1,ss2) = median(allpairs.difft{ss1,ss2}(lowestpairISI.difft{ss1,ss2}>numISIthresh));
         simmatrices.difft(ss1+3,ss2) = median(allpairs.difft{ss1+3,ss2}(lowestpairISI.difft{ss1+3,ss2}>numISIthresh));
