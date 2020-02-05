@@ -321,7 +321,7 @@ for cc = 1:2
             %colorbar
             alpha(gca,single(~isnan(simmatrices.(statenames{ss}).(celltypes{cc}))))
             colorbar
-            caxis([0.25 1.75])
+            caxis([0.5 1.75])
             if cc == 1
             title(statenames{ss})
             end
@@ -335,7 +335,7 @@ for cc = 1:2
             %colorbar
             alpha(gca,single(~isnan(simmatrices.ALLregions.(celltypes{cc}))))
             colorbar
-            caxis([0.25 1.75])
+            caxis([0.5 1.75])
             if cc == 1
             title('ALL')
             end
