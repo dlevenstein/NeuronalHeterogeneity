@@ -438,11 +438,10 @@ for ss = 1:3
                 ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(sorts.(regions{rr}).(statenames{ss}).medISIpE,:))
             hold on
             plot(log10((OccupancyStats.(regions{rr}).(statenames{ss}).median(sorts.(regions{rr}).(statenames{ss}).medISIpE))),...
-                [1:length(sorts.(regions{rr}).(statenames{ss}).medISIpE)],'r.','markersize',1)
+                [1:length(sorts.(regions{rr}).(statenames{ss}).medISIpE)],'.','markersize',1,'color',[0.6 0.4 0])
 
             
-            plot(meanISIhist.logbins,-meanISIhist.(regions{rr}).(statenames{ss}).pE*5000+...
-                sum(inclasscells.(regions{rr}){1})+0.5,...
+            plot(meanISIhist.logbins,-bz_NormToRange(meanISIhist.(regions{rr}).(statenames{ss}).pE,0.3)+length(sorts.(regions{rr}).(statenames{ss}).medISIpE),...
                 'color',statecolors{ss},'linewidth',2)
             
             
