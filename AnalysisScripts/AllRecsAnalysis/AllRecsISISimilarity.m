@@ -161,7 +161,7 @@ end
 NiceSave('ISISimilarity_BetweenCell',figfolder,'')
 %%
 figure
-
+subplot(2,2,1)
 imagesc(simmatrices.ALL.difft)
 alpha(gca,single(~isnan(simmatrices.ALL.difft)))
 colorbar
