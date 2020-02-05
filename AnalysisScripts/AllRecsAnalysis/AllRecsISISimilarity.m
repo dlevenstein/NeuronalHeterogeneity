@@ -48,7 +48,8 @@ for rr = 1:length(regions)
                 numISIs.(regions{rr}).(celltypes{cc}){ii,jj} = ...
                     cat(1,lowestpairISI.(regions{rr}).(celltypes{cc}){ii,jj,:});
                 abovethresh = numISIs.(regions{rr}).(celltypes{cc}){ii,jj}>ISIthreshold;
-                
+               
+            %Keeping the right region within each recording (i.e. bla/pir separation)    
             if rr >=5 & ~isempty(abovethresh)
                 pairregions.(regions{rr}).(celltypes{cc}){ii,jj} = ...
                     cat(1,whichregion.(regions{rr}).(celltypes{cc}){ii,jj,:});
@@ -178,30 +179,40 @@ NiceSave('ISISimilarity_AllCells',figfolder,'')
 
 %% Build the All ISI matrix
 %Subsample ISIs
-keepISIs.numPerregion = 2000;
+keepISIs.numPerregion = 1800;
 keepISIs.numISIthresh = 800;
 keepISIs.numISIthresh = 300; %Try with smoothing
 for rr = 1:length(regions)
     OKISIS = (allISIs.(regions{rr}).celltype.pE | allISIs.(regions{rr}).celltype.pI) & ...
         ~any(isnan(allISIs.(regions{rr}).hists),1) &  allISIs.(regions{rr}).numISIs>keepISIs.numISIthresh;
     %Here: inregion
-   keepISIs.(regions{rr}) = randsample(find(OKISIS), keepISIs.numPerregion);
+    if rr>=5
+        INREGION = cellfun(@(X) strcmp(X,rnames{rr}),allISIs.(regions{rr}).region);
+    else
+        INREGION = true(size(OKISIS));
+    end
+   keepISIs.(regions{rr}) = randsample(find(OKISIS & INREGION), keepISIs.numPerregion);
 end
 % allISIs = [ISIs.THAL(keepISIs.THAL),ISIs.vCTX(keepISIs.vCTX),...
 %     ISIs.fCTX(keepISIs.fCTX),ISIs.CA1(keepISIs.CA1)];
 %numISIs = cellfun(@length,allISIs);
 allISIhists.hists = [allISIs.THAL.hists(:,keepISIs.THAL),allISIs.vCTX.hists(:,keepISIs.vCTX),...
-     allISIs.fCTX.hists(:,keepISIs.fCTX),allISIs.CA1.hists(:,keepISIs.CA1)];
+     allISIs.fCTX.hists(:,keepISIs.fCTX),allISIs.CA1.hists(:,keepISIs.CA1),...
+     allISIs.BLA.hists(:,keepISIs.BLA),allISIs.PIR.hists(:,keepISIs.PIR)];
  
  %%
 ALLregions = [1.*ones(1,keepISIs.numPerregion),2.*ones(1,keepISIs.numPerregion),...
-    3.*ones(1,keepISIs.numPerregion),4.*ones(1,keepISIs.numPerregion)];
+    3.*ones(1,keepISIs.numPerregion),4.*ones(1,keepISIs.numPerregion),...
+    5.*ones(1,keepISIs.numPerregion),6.*ones(1,keepISIs.numPerregion)];
 ALLcelltypes.pI = [allISIs.THAL.celltype.pI(keepISIs.THAL),allISIs.vCTX.celltype.pI(keepISIs.vCTX),...
-    allISIs.fCTX.celltype.pI(keepISIs.fCTX),allISIs.CA1.celltype.pI(keepISIs.CA1)];
+    allISIs.fCTX.celltype.pI(keepISIs.fCTX),allISIs.CA1.celltype.pI(keepISIs.CA1),...
+    allISIs.BLA.celltype.pI(keepISIs.BLA),allISIs.PIR.celltype.pI(keepISIs.PIR)];
 ALLcelltypes.pE = [allISIs.THAL.celltype.pE(keepISIs.THAL),allISIs.vCTX.celltype.pE(keepISIs.vCTX),...
-    allISIs.fCTX.celltype.pE(keepISIs.fCTX),allISIs.CA1.celltype.pE(keepISIs.CA1)];
+    allISIs.fCTX.celltype.pE(keepISIs.fCTX),allISIs.CA1.celltype.pE(keepISIs.CA1),...
+    allISIs.BLA.celltype.pE(keepISIs.BLA),allISIs.PIR.celltype.pE(keepISIs.PIR)];
 states.ALL = [allISIs.THAL.state(keepISIs.THAL),allISIs.vCTX.state(keepISIs.vCTX),...
-    allISIs.fCTX.state(keepISIs.fCTX),allISIs.CA1.state(keepISIs.CA1)];
+    allISIs.fCTX.state(keepISIs.fCTX),allISIs.CA1.state(keepISIs.CA1),...
+    allISIs.BLA.state(keepISIs.BLA),allISIs.PIR.state(keepISIs.PIR)];
 
 [jregions,iregions] = meshgrid(ALLregions,ALLregions);
 [jiscelltype.pE,iiscelltype.pE] = meshgrid(ALLcelltypes.pE,ALLcelltypes.pE);
@@ -272,11 +283,11 @@ statecolors = {[0 0 0],[0 0 1],[1 0 0]};
 
 for ss = 1:3
     for cc = 1:2
-        simmatrices.(statenames{ss}).(celltypes{cc}) = nan(4);
-        simmatrices.ALLregions.(celltypes{cc}) = nan(4);
+        simmatrices.(statenames{ss}).(celltypes{cc}) = nan(length(regions));
+        simmatrices.ALLregions.(celltypes{cc}) = nan(length(regions));
     end
 end
-simmatrices.ALLregions.(celltypes{cc}) = nan(4);
+simmatrices.ALLregions.(celltypes{cc}) = nan(length(regions));
 for rr1 = 1:length(regions)
     for rr2 = rr1:-1:1
         for cc = 1:2
@@ -316,7 +327,7 @@ for cc = 1:2
             end
             box off
             crameri tokyo
-            set(gca,'ytick',[1:4]);set(gca,'xtick',[1:4])
+            set(gca,'ytick',[1:length(regions)]);set(gca,'xtick',[1:length(regions)])
             set(gca,'yticklabels',regions);set(gca,'xticklabels',regions)
     end
         subplot(3,3,6+cc)
@@ -330,7 +341,7 @@ for cc = 1:2
             end
             box off
             crameri tokyo
-            set(gca,'ytick',[1:4]);set(gca,'xtick',[1:4])
+            set(gca,'ytick',[1:length(regions)]);set(gca,'xtick',[1:length(regions)])
             set(gca,'yticklabels',regions);set(gca,'xticklabels',regions)
 end
 NiceSave('ISISimilarity_BetweenRegions',figfolder,'')
@@ -347,16 +358,16 @@ end
 %Try different perp parameters
 clear Y
 clear Ysq
-perps = 10:10:40;
+perps = 10:10:50;
 for pp = 1:length(perps)
 close all
 
 P = d2p(valid, perps(pp), 1e-6); 
-Y(:,:,pp) = tsne_p(P, ALLcelltypes.pE, 2, 2000);
+Y(:,:,pp) = tsne_p(P, ALLcelltypes.pE, 2, 1000);
 
 close all
 P = d2p(valid.^2, perps(pp), 1e-6); 
-Ysq(:,:,pp) = tsne_p(P, ALLcelltypes.pE, 2, 2000);
+Ysq(:,:,pp) = tsne_p(P, ALLcelltypes.pE, 2, 1000);
 end
 %% 2D
 figure
@@ -412,7 +423,7 @@ close all
 clear tSNEmap
 perplexity = 20;
 P = d2p(valid.^2, perplexity, 1e-6); 
-tSNEmap(:,:) = tsne_p(P, ALLcelltypes.pE, 2, 1000);
+tSNEmap(:,:) = tsne_p(P, ALLcelltypes.pE, 2, 1500);
 %%
 
 figure
