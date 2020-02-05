@@ -675,7 +675,7 @@ for rr = 1:length(regions)
             plot(log10(1./meanpercmedISI.(regions{rr}).(statenames{ss})(cc)),log10(1./meanpercmedISI.(regions{rr}).(statenames{ss})(cc)),'+','color',[0.6 0.4 0])
             plot(meanISIhist.logbins,bz_NormToRange(meanISIhist.(regions{rr}).(statenames{ss}).(percilenames{cc}),0.3),...
                 'color',statecolors{ss},'linewidth',0.5)
-            
+            UnityLine
             axis xy
             %xlim([-3 1.9])
             set(gca,'ytick',[]);set(gca,'xticklabel',[]);
@@ -690,7 +690,7 @@ for rr = 1:length(regions)
             if rr==1 
                 ylabel('ISI_n_+_1 (s)')
         
-                LogScale('x',10,'exp',true)
+               % LogScale('y',10,'exp',true)
             end
             %ylim([0 2]);
             %xlim([-2.5 1.7])
