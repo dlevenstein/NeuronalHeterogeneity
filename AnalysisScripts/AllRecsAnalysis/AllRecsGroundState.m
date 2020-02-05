@@ -453,6 +453,7 @@ for ss = 1:3
             else
                 set(gca,'xticklabels',[])
             end
+            set(gca,'ytick',[])
             %colorbar
           %  legend('1/Mean Firing Rate (s)','location','southeast')
           if rr ==1
