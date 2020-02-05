@@ -8,8 +8,8 @@ datasetPath.vCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Dataset
 datasetPath.THAL = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL';
 datasetPath.BLA = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/GG_BLA';
 datasetPath.PIR = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/GG_BLA';
-regions = {'THAL','vCTX','fCTX','CA1','BLA','PIR'};
-rnames =  {''    ,''    ,''    ,''   ,'bla','pir'};
+regions = {'THAL','vCTX','fCTX','BLA','PIR','CA1'};
+rnames =  {''    ,''    ,''    ,'bla','pir',''   };
 %regions = {'fCTX'};
 %%
 for rr = 1:length(regions)
@@ -18,7 +18,7 @@ for rr = 1:length(regions)
     numcells.(regions{rr}) = length(CellClass.(regions{rr}).UID);
     
     %Remove cells not in the proper region by removing their cell class!
-    if rr >=5
+    if ismember(rr,[4 5])
         inregion = cellfun(@(X) strcmp(X,rnames{rr}),ISIstats.(regions{rr}).cellinfo.regions);
         CellClass.(regions{rr}).label(~inregion)={[]};
         CellClass.(regions{rr}).pE(~inregion)=false;

@@ -179,7 +179,7 @@ NiceSave('ISISimilarity_AllCells',figfolder,'')
 
 %% Build the All ISI matrix
 %Subsample ISIs
-keepISIs.numPerregion = 1800;
+keepISIs.numPerregion = 2000;
 keepISIs.numISIthresh = 800;
 keepISIs.numISIthresh = 300; %Try with smoothing
 for rr = 1:length(regions)
@@ -191,7 +191,11 @@ for rr = 1:length(regions)
     else
         INREGION = true(size(OKISIS));
     end
-   keepISIs.(regions{rr}) = randsample(find(OKISIS & INREGION), keepISIs.numPerregion);
+    if length(find(OKISIS & INREGION))>keepISIs.numPerregion
+        keepISIs.(regions{rr}) = randsample(find(OKISIS & INREGION), keepISIs.numPerregion);
+    else
+        keepISIs.(regions{rr}) = find(OKISIS & INREGION);
+    end
 end
 % allISIs = [ISIs.THAL(keepISIs.THAL),ISIs.vCTX(keepISIs.vCTX),...
 %     ISIs.fCTX(keepISIs.fCTX),ISIs.CA1(keepISIs.CA1)];
@@ -201,9 +205,9 @@ allISIhists.hists = [allISIs.THAL.hists(:,keepISIs.THAL),allISIs.vCTX.hists(:,ke
      allISIs.BLA.hists(:,keepISIs.BLA),allISIs.PIR.hists(:,keepISIs.PIR)];
  
  %%
-ALLregions = [1.*ones(1,keepISIs.numPerregion),2.*ones(1,keepISIs.numPerregion),...
-    3.*ones(1,keepISIs.numPerregion),6.*ones(1,keepISIs.numPerregion),...
-    4.*ones(1,keepISIs.numPerregion),5.*ones(1,keepISIs.numPerregion)];
+ALLregions = [1.*ones(size(keepISIs.THAL)),2.*ones(size(keepISIs.vCTX)),...
+    3.*ones(size(keepISIs.fCTX)),6.*ones(size(keepISIs.CA1)),...
+    4.*ones(size(keepISIs.BLA)),5.*ones(size(keepISIs.PIR))];
 ALLcelltypes.pI = [allISIs.THAL.celltype.pI(keepISIs.THAL),allISIs.vCTX.celltype.pI(keepISIs.vCTX),...
     allISIs.fCTX.celltype.pI(keepISIs.fCTX),allISIs.CA1.celltype.pI(keepISIs.CA1),...
     allISIs.BLA.celltype.pI(keepISIs.BLA),allISIs.PIR.celltype.pI(keepISIs.PIR)];

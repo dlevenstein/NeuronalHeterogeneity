@@ -6,7 +6,10 @@ datasetPath.fCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Dataset
 datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AG_HPC';
 datasetPath.vCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/YS_CTX';
 datasetPath.THAL = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL';
-regions = {'THAL','vCTX','fCTX','CA1'};
+datasetPath.BLA = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/GG_BLA';
+datasetPath.PIR = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/GG_BLA';
+regions = {'THAL','vCTX','fCTX','BLA','PIR','CA1'};
+rnames =  {''    ,''    ,''    ,'bla','pir',''   };
 %regions = {'fCTX'};
 %%
 for rr = 1:length(regions)
@@ -23,13 +26,21 @@ for rr = 1:length(regions)
         'justcat',true );
     normISIhist.(regions{rr}) = bz_CollapseStruct(GroundStateAll.normISIhist,'match',...
         'justcat',true );
+    
+    %Remove cells not in the proper region by removing their cell class!
+    if ismember(rr,[4 5])
+        inregion = cellfun(@(X) strcmp(X,rnames{rr}),ISIstats.(regions{rr}).cellinfo.regions);
+        CellClass.(regions{rr}).label(~inregion)={[]};
+        CellClass.(regions{rr}).pE(~inregion)=false;
+        CellClass.(regions{rr}).pI(~inregion)=false;
+    end
+    clear GroundStateAll
 end
 
 %%
 statenames = fieldnames(ISIstats.(regions{1}).summstats);
 statecolors = {[0 0 0],[0 0 1],[1 0 0]};
 numstates = length(statenames);
-
 
 %% Sorts for plot
 sorttypes = {'rate','medISI','MTOrat'};
@@ -144,7 +155,7 @@ for rr = 1:length(regions)
 for ss = 1:3
         state = statenames{ss};
 
-subplot(3,4,(ss-1)*4+rr)
+subplot(3,6,(ss-1)*6+rr)
     s = imagesc(ISIoccupancy.(regions{rr}).logbins(1,:),[1 length(sorts.(regions{rr}).(statenames{ss}).ratebyclass)],...
         (ISIoccupancy.(regions{rr}).(state).loghist(:,sorts.(regions{rr}).(statenames{ss}).ratebyclass))');
     alpha(s,single(ISIoccupancy.(regions{rr}).(state).loghist(:,sorts.(regions{rr}).(statenames{ss}).ratebyclass)'~=0))
@@ -180,7 +191,7 @@ for rr = 1:length(regions)
 for ss = 1:3
         state = statenames{ss};
 
-subplot(3,4,(ss-1)*4+rr)
+subplot(3,6,(ss-1)*6+rr)
     s = imagesc(ISIoccupancy.(regions{rr}).logbins(1,:),[1 length(sorts.(regions{rr}).(statenames{ss}).ratepE)],...
         (ISIoccupancy.(regions{rr}).(state).loghist(:,sorts.(regions{rr}).(statenames{ss}).ratepE))');
     alpha(s,single(ISIoccupancy.(regions{rr}).(state).loghist(:,sorts.(regions{rr}).(statenames{ss}).ratepE)'~=0))
@@ -216,7 +227,7 @@ for rr = 1:length(regions)
 for ss = 1:3
         state = statenames{ss};
 
-subplot(3,4,(ss-1)*4+rr)
+subplot(3,6,(ss-1)*6+rr)
     s = imagesc(ISIoccupancy.(regions{rr}).logbins(1,:),[1 length(sorts.(regions{rr}).(statenames{ss}).medISIbyclass)],...
         (ISIoccupancy.(regions{rr}).(statenames{ss}).loghist(:,sorts.(regions{rr}).(statenames{ss}).medISIbyclass))');
     alpha(s,single(ISIoccupancy.(regions{rr}).(state).loghist(:,sorts.(regions{rr}).(statenames{ss}).medISIbyclass)'~=0))
@@ -253,7 +264,7 @@ for rr = 1:length(regions)
 for ss = 1:3
         state = statenames{ss};
 
-subplot(3,4,(ss-1)*4+rr)
+subplot(3,6,(ss-1)*6+rr)
     s = imagesc(ISIoccupancy.(regions{rr}).logbins(1,:),[1 length(sorts.(regions{rr}).(statenames{ss}).medISIpE)],...
         (ISIoccupancy.(regions{rr}).(statenames{ss}).loghist(:,sorts.(regions{rr}).(statenames{ss}).medISIpE))');
     alpha(s,single(ISIoccupancy.(regions{rr}).(state).loghist(:,sorts.(regions{rr}).(statenames{ss}).medISIpE)'~=0))
@@ -288,7 +299,7 @@ for rr = 1:length(regions)
 for ss = 1:3
         state = statenames{ss};
 
-subplot(3,4,(ss-1)*4+rr)
+subplot(3,6,(ss-1)*6+rr)
     s = imagesc(ISIoccupancy.(regions{rr}).logbins(1,:),[1 length(sorts.(regions{rr}).(statenames{ss}).ratebyclass)],...
         (ISIoccupancy.(regions{rr}).(state).normhist(:,sorts.(regions{rr}).(statenames{ss}).ratebyclass))');
     alpha(s,single(ISIoccupancy.(regions{rr}).(state).normhist(:,sorts.(regions{rr}).(statenames{ss}).ratebyclass)'~=0))
@@ -324,7 +335,7 @@ for rr = 1:length(regions)
 for ss = 1:3
         state = statenames{ss};
 
-subplot(3,4,(ss-1)*4+rr)
+subplot(3,6,(ss-1)*6+rr)
     s = imagesc(ISIoccupancy.(regions{rr}).logbins(1,:),[1 length(sorts.(regions{rr}).(statenames{ss}).ratebyclass)],...
         (ISIoccupancy.(regions{rr}).(state).mednormhist(:,sorts.(regions{rr}).(statenames{ss}).ratebyclass))');
     alpha(s,single(ISIoccupancy.(regions{rr}).(state).mednormhist(:,sorts.(regions{rr}).(statenames{ss}).ratebyclass)'~=0))
@@ -362,7 +373,7 @@ statecolormap = {histcolors,NREMhistcolors,REMhistcolors};
 figure
 for rr = 1:length(regions)
 for ss = 1:3
-    subplot(3,4,ss*4-3+(rr-1))
+    subplot(3,6,ss*6-5+(rr-1))
     colormap(gca,statecolormap{ss})
 
        % subplot(2,3,4)
@@ -419,7 +430,7 @@ statecolormap = {histcolors,NREMhistcolors,REMhistcolors};
 figure
 for rr = 1:length(regions)
 for ss = 1:3
-    subplot(3,4,ss*4-3+(rr-1))
+    subplot(3,6,ss*6-5+(rr-1))
     colormap(gca,statecolormap{ss})
 
        % subplot(2,3,4)
@@ -467,7 +478,7 @@ for rr = 1:length(regions)
 for ss = 1:3
         state = statenames{ss};
 
-subplot(3,4,(ss-1)*4+rr)
+subplot(3,6,(ss-1)*6+rr)
 colormap(gca,statecolormap{ss})
     s = imagesc(normISIhist.(regions{rr}).bins(1,:),[1 length(sorts.(regions{rr}).(statenames{ss}).medISIbyclass)],...
         (normISIhist.(regions{rr}).(statenames{ss}).mednorm(sorts.(regions{rr}).(statenames{ss}).medISIbyclass,:)));
@@ -504,7 +515,7 @@ for rr = 1:length(regions)
 for ss = 1:3
         state = statenames{ss};
 
-subplot(3,4,(ss-1)*4+rr)
+subplot(3,6,(ss-1)*6+rr)
 colormap(gca,statecolormap{ss})
     s = imagesc(normISIhist.(regions{rr}).bins(1,:),[1 length(sorts.(regions{rr}).(statenames{ss}).medISIpE)],...
         (normISIhist.(regions{rr}).(statenames{ss}).mednorm(sorts.(regions{rr}).(statenames{ss}).medISIpE,:)));
@@ -540,7 +551,7 @@ for rr = 1:length(regions)
 for ss = 1:3
         state = statenames{ss};
 
-subplot(3,4,(ss-1)*4+rr)
+subplot(3,6,(ss-1)*6+rr)
 colormap(gca,statecolormap{ss})
     s = imagesc(normISIhist.(regions{rr}).bins(1,:),[1 length(sorts.(regions{rr}).(statenames{ss}).MTOratpE)],...
         (normISIhist.(regions{rr}).(statenames{ss}).mednorm(sorts.(regions{rr}).(statenames{ss}).MTOratpE,:)));
@@ -581,7 +592,7 @@ for rr = 1:length(regions)
 for ss = 1:3
     pcolor = makeColorMap([0.7 0.7 0.7],statecolors{ss},numperciles);
 
-    subplot(5,4,(rr-1)+(ss-1)*4+1)
+    subplot(5,6,(rr-1)+(ss-1)*6+1)
         hold on
         for cc = 1:length(percilenames)
             plot(meanISIhist.logbins,meanISIhist.(regions{rr}).(statenames{ss}).(percilenames{cc}),...
@@ -605,7 +616,7 @@ for ss = 1:3
 end
 
 classcolors = {'k','r'};
-subplot(3,4,8+rr)
+subplot(3,6,12+rr)
 hold on
 for cc=1:2
 plot(log10(1./OccupancyStats.(regions{rr}).WAKEstate.median(CellClass.(regions{rr}).(classnames{cc}))),...
@@ -626,7 +637,7 @@ figure
 for rr = 1:length(regions)
 for ss = 1:3
 classcolors = {'k','r'};
-subplot(3,4,(ss-1)*4+rr)
+subplot(3,6,(ss-1)*6+rr)
 hold on
 for cc=1
 plot(log10(1./OccupancyStats.(regions{rr}).(statenames{ss}).median(CellClass.(regions{rr}).(classnames{cc}))),...
@@ -649,7 +660,7 @@ NiceSave('MTOandMeanRate',figfolder,[])
 
 %% Box plot comparing regions
 
-rnames = repmat(regions,2,1);
+regnames = repmat(regions,2,1);
 
 figure
 %for ss = 1:2
@@ -661,10 +672,14 @@ BoxAndScatterPlot({log10(1./OccupancyStats.(regions{1}).(statenames{1}).median(C
     log10(1./OccupancyStats.(regions{3}).(statenames{1}).median(CellClass.(regions{3}).(classnames{1}))),...
     log10(1./OccupancyStats.(regions{3}).(statenames{2}).median(CellClass.(regions{3}).(classnames{1}))),...
     log10(1./OccupancyStats.(regions{4}).(statenames{1}).median(CellClass.(regions{4}).(classnames{1}))),...
-    log10(1./OccupancyStats.(regions{4}).(statenames{2}).median(CellClass.(regions{4}).(classnames{1})))},...
-    'colors',repmat([0 0 0;0 0 1],4,1),...
-    'labels',rnames(:))
-ylim([-2.4 1.9])
+    log10(1./OccupancyStats.(regions{4}).(statenames{2}).median(CellClass.(regions{4}).(classnames{1}))),...
+    log10(1./OccupancyStats.(regions{5}).(statenames{1}).median(CellClass.(regions{5}).(classnames{1}))),...
+    log10(1./OccupancyStats.(regions{5}).(statenames{2}).median(CellClass.(regions{5}).(classnames{1}))),...
+    log10(1./OccupancyStats.(regions{6}).(statenames{1}).median(CellClass.(regions{6}).(classnames{1}))),...
+    log10(1./OccupancyStats.(regions{6}).(statenames{2}).median(CellClass.(regions{6}).(classnames{1})))},...
+    'colors',repmat([0 0 0;0 0 1],6,1),...
+    'labels',regnames(:))
+ylim([-3 1.9])
 box off
 ylabel('GS Rate')
 LogScale('y',10)
@@ -678,9 +693,13 @@ BoxAndScatterPlot({log10(OccupancyStats.(regions{1}).(statenames{1}).MTORatio(Ce
     log10(OccupancyStats.(regions{3}).(statenames{1}).MTORatio(CellClass.(regions{3}).(classnames{1}))),...
     log10(OccupancyStats.(regions{3}).(statenames{2}).MTORatio(CellClass.(regions{3}).(classnames{1}))),...
     log10(OccupancyStats.(regions{4}).(statenames{1}).MTORatio(CellClass.(regions{4}).(classnames{1}))),...
-    log10(OccupancyStats.(regions{4}).(statenames{2}).MTORatio(CellClass.(regions{4}).(classnames{1})))},...
-    'colors',repmat([0 0 0;0 0 1],4,1),...
-    'labels',rnames(:))
+    log10(OccupancyStats.(regions{4}).(statenames{2}).MTORatio(CellClass.(regions{4}).(classnames{1}))),...
+    log10(OccupancyStats.(regions{5}).(statenames{1}).MTORatio(CellClass.(regions{5}).(classnames{1}))),...
+    log10(OccupancyStats.(regions{5}).(statenames{2}).MTORatio(CellClass.(regions{5}).(classnames{1}))),...
+    log10(OccupancyStats.(regions{6}).(statenames{1}).MTORatio(CellClass.(regions{6}).(classnames{1}))),...
+    log10(OccupancyStats.(regions{6}).(statenames{2}).MTORatio(CellClass.(regions{6}).(classnames{1})))},...
+    'colors',repmat([0 0 0;0 0 1],6,1),...
+    'labels',regnames(:))
 box off
 ylabel('Activation Ratio')
 ylim([0 2])
@@ -690,7 +709,7 @@ NiceSave('MTORegins',figfolder,[])
 figure
 for rr = 1:length(regions)
 for ss =1:3
-subplot(6,4,rr+(ss-1)*4)
+subplot(6,6,rr+(ss-1)*6)
 scatter(log10(1./OccupancyStats.(regions{rr}).(statenames{ss}).median(CellClass.(regions{rr}).pE)),...
     log10(OccupancyStats.(regions{rr}).(statenames{ss}).MTORatio(CellClass.(regions{rr}).pE)),0.5,...
      log10(ISIstats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).pE)))
@@ -711,7 +730,7 @@ scatter(log10(1./OccupancyStats.(regions{rr}).(statenames{ss}).median(CellClass.
     ylabel('Activation Ratio') 
  end
 
-subplot(6,4,rr+(ss-1)*4+12)
+subplot(6,6,rr+(ss-1)*6+18)
 scatter(log10(1./OccupancyStats.(regions{rr}).(statenames{ss}).median(CellClass.(regions{rr}).pE)),...
     log10(OccupancyStats.(regions{rr}).(statenames{ss}).MTORatio(CellClass.(regions{rr}).pE)),0.5,...
      (ISIstats.(regions{rr}).summstats.(statenames{ss}).meanCV2(CellClass.(regions{rr}).pE))) 
@@ -742,7 +761,7 @@ figure
 %Rate
 for rr = 1:length(regions)
 for ss=1:3
-    subplot(4,4,(ss-1)*4+rr)
+    subplot(4,6,(ss-1)*6+rr)
     hold on
     for cc=1:2
         plot(log10(1./OccupancyStats.(regions{rr}).(plotstates{ss}).median(CellClass.(regions{rr}).(classnames{cc}))),...
@@ -776,7 +795,7 @@ figure
 %Rate
 for rr = 1:length(regions)
 for ss=1:3
-    subplot(4,4,(ss-1)*4+rr)
+    subplot(4,6,(ss-1)*6+rr)
     hold on
     for cc=1
         plot(log10(1./OccupancyStats.(regions{rr}).(plotstates{ss}).median(CellClass.(regions{rr}).(classnames{cc}))),...
@@ -832,7 +851,7 @@ for rr = 1:length(regions)
 for ss = 1:3
     pcolor = makeColorMap([0.7 0.7 0.7],statecolors{ss},numperciles);
 
-    subplot(5,4,(rr-1)+(ss-1)*4+1)
+    subplot(5,6,(rr-1)+(ss-1)*6+1)
         hold on
         for cc = 1:length(percilenames)
             plot(meannormISIhist.bins,meannormISIhist.(regions{rr}).(statenames{ss}).(percilenames{cc}),...
@@ -854,7 +873,7 @@ for ss = 1:3
                 set(gca,'xticklabels',[])
             end
             
-subplot(5,4,(rr-1)+17)
+subplot(5,6,(rr-1)+25)
  hold on
         for ss = 1:2
  
@@ -888,7 +907,7 @@ for ss = 1:3
     pcolor = makeColorMap([0.7 0.7 0.7],statecolors{ss},numperciles);
 
             
-    subplot(5,4,(rr-1)+(ss-1)*4+1)
+    subplot(5,6,(rr-1)+(ss-1)*6+1)
         hold on
         for cc = 1:length(percilenames)
             plot(meannormOcc.bins,meannormOcc.(regions{rr}).(statenames{ss}).(percilenames{cc}),...
@@ -911,7 +930,7 @@ for ss = 1:3
             end
 end
 
-subplot(5,4,(rr-1)+17)
+subplot(5,6,(rr-1)+25)
  hold on
         for ss = 1:2
            
@@ -942,7 +961,7 @@ NiceSave('occISIdistMedOccPercile',figfolder,[])
 
 %% Excells
 figure
-for rr =1:4
+for rr =1:length(regions)
 [~,excell(1)] = find(log10(OccupancyStats.(regions{rr}).WAKEstate.MTORatio)<0.3 & CellClass.(regions{rr}).pE,...
     1,'last')
 [~,excell(2)] = find(log10(OccupancyStats.(regions{rr}).WAKEstate.MTORatio)>0.8 & CellClass.(regions{rr}).pE,...
@@ -953,7 +972,7 @@ for rr =1:4
 for ss = 1:3
     for ee = 1:2
         log10(OccupancyStats.(regions{rr}).(statenames{ss}).MTORatio(excell(ee)))
-    subplot(6,4,(ss-1)*4+rr+(ee-1)*12)
+    subplot(6,6,(ss-1)*6+rr+(ee-1)*18)
     hold on
 plot((ISIstats.(regions{rr}).ISIhist.logbins(1,:)),...
                 ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(excell(ee),:),'linewidth',2,'color',statecolors{ss})
@@ -983,7 +1002,7 @@ for rr = 1:length(regions)
        
        [~,idx] = min(abs(10.^meanISIhist.logbins - 1./meanpercmedISI.(regions{rr}).(statenames{ss})(cc)));
        
-        subplot(length(percilenames),4,(cc-1)*4+rr)    
+        subplot(length(percilenames),6,(cc-1)*6+rr)    
         %colormap(gca,statecolormap{ss})
 
             imagesc(meanISIhist.logbins,ISIstats.(regions{rr}).CV2hist.bins(1,:),...
@@ -1040,7 +1059,7 @@ for cc = 1:2
         [~,idx] = min(abs(meannormISIhist.bins - 0));
         
         
-        subplot(6,4,rr+(ss-1)*4+(cc-1)*12)    
+        subplot(6,6,rr+(ss-1)*6+(cc-1)*18)    
         %colormap(gca,statecolormap{ss})
 
             imagesc(meannormISIhist.bins,ISIstats.(regions{rr}).CV2hist.bins(1,:),...
