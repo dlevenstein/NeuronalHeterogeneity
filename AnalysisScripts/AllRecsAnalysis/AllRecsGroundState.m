@@ -438,7 +438,7 @@ for ss = 1:3
                 ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(sorts.(regions{rr}).(statenames{ss}).medISIpE,:))
             hold on
             plot(log10((OccupancyStats.(regions{rr}).(statenames{ss}).median(sorts.(regions{rr}).(statenames{ss}).medISIpE))),...
-                [1:length(sorts.(regions{rr}).(statenames{ss}).medISIpE)],'k.','markersize',1)
+                [1:length(sorts.(regions{rr}).(statenames{ss}).medISIpE)],'r.','markersize',1)
 
             
             plot(meanISIhist.logbins,-meanISIhist.(regions{rr}).(statenames{ss}).pE*5000+...
