@@ -8,9 +8,9 @@ datasetPath.vCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Dataset
 datasetPath.THAL = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AP_THAL';
 datasetPath.BLA = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/GG_BLA';
 datasetPath.PIR = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/GG_BLA';
-regions = {'THAL','vCTX','fCTX','CA1','BLA','PIR'};
-rnames =  {''    ,''    ,''    ,''   ,'bla','pir'};
-
+regions = {'THAL','vCTX','fCTX','BLA','PIR','CA1'};
+rnames =  {''    ,''    ,''    ,'bla','pir',''   };
+regioncolors = crameri('batlow',length(regions));
 celltypes = {'pE','pI'};
 
 for rr = 1:length(regions)
@@ -27,7 +27,7 @@ for rr = 1:length(regions)
     allpairs.(regions{rr}) = bz_CollapseStruct(ISISimilarityAll.allpairs,3,'justcat',true);
     allISIs.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.allISIs,2,'justcat',true);
     lowestpairISI.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.lowestpairISI,3,'justcat',true);
-    if rr>=5
+    if ismember(rr,[4 5])
         whichregion.(regions{rr}) =bz_CollapseStruct(ISISimilarityAll.inregion,3,'justcat',true);
     end
     
@@ -50,7 +50,7 @@ for rr = 1:length(regions)
                 abovethresh = numISIs.(regions{rr}).(celltypes{cc}){ii,jj}>ISIthreshold;
                
             %Keeping the right region within each recording (i.e. bla/pir separation)    
-            if rr >=5 & ~isempty(abovethresh)
+            if ismember(rr,[4 5]) & ~isempty(abovethresh)
                 pairregions.(regions{rr}).(celltypes{cc}){ii,jj} = ...
                     cat(1,whichregion.(regions{rr}).(celltypes{cc}){ii,jj,:});
                 inregion = cellfun(@(X) strcmp(X,rnames{rr}),pairregions.(regions{rr}).(celltypes{cc}){ii,jj});
@@ -85,7 +85,7 @@ for rr = 1:length(regions)
                 cat(1,lowestpairISI.(regions{rr}).difft{ii,jj,:});
             abovethresh = numISIs.(regions{rr}).difft{ii,jj}>ISIthreshold;
             
-            if rr >=5 & ~isempty(abovethresh)
+            if ismember(rr,[4 5]) & ~isempty(abovethresh)
                 pairregions.(regions{rr}).difft{ii,jj} = ...
                     cat(1,whichregion.(regions{rr}).difft{ii,jj,:});
                 inregion = cellfun(@(X) strcmp(X,rnames{rr}),pairregions.(regions{rr}).difft{ii,jj});
@@ -165,7 +165,7 @@ figure
 imagesc(simmatrices.ALL.difft)
 alpha(gca,single(~isnan(simmatrices.ALL.difft)))
 colorbar
-caxis([0.25 2.5])
+caxis([0.5 2.5])
 title('Diff. Cells')
 box off
 crameri tokyo
@@ -186,7 +186,7 @@ for rr = 1:length(regions)
     OKISIS = (allISIs.(regions{rr}).celltype.pE | allISIs.(regions{rr}).celltype.pI) & ...
         ~any(isnan(allISIs.(regions{rr}).hists),1) &  allISIs.(regions{rr}).numISIs>keepISIs.numISIthresh;
     %Here: inregion
-    if rr>=5
+    if ismember(rr,[4 5])
         INREGION = cellfun(@(X) strcmp(X,rnames{rr}),allISIs.(regions{rr}).region);
     else
         INREGION = true(size(OKISIS));
@@ -202,8 +202,8 @@ allISIhists.hists = [allISIs.THAL.hists(:,keepISIs.THAL),allISIs.vCTX.hists(:,ke
  
  %%
 ALLregions = [1.*ones(1,keepISIs.numPerregion),2.*ones(1,keepISIs.numPerregion),...
-    3.*ones(1,keepISIs.numPerregion),4.*ones(1,keepISIs.numPerregion),...
-    5.*ones(1,keepISIs.numPerregion),6.*ones(1,keepISIs.numPerregion)];
+    3.*ones(1,keepISIs.numPerregion),6.*ones(1,keepISIs.numPerregion),...
+    4.*ones(1,keepISIs.numPerregion),5.*ones(1,keepISIs.numPerregion)];
 ALLcelltypes.pI = [allISIs.THAL.celltype.pI(keepISIs.THAL),allISIs.vCTX.celltype.pI(keepISIs.vCTX),...
     allISIs.fCTX.celltype.pI(keepISIs.fCTX),allISIs.CA1.celltype.pI(keepISIs.CA1),...
     allISIs.BLA.celltype.pI(keepISIs.BLA),allISIs.PIR.celltype.pI(keepISIs.PIR)];
@@ -427,7 +427,7 @@ tSNEmap(:,:) = tsne_p(P, ALLcelltypes.pE, 2, 1500);
 %%
 
 figure
-subplot(3,3,[5 8])
+subplot(2,3,2)
 hold on
 plot(tSNEmap(states.ALL==2,1),tSNEmap(states.ALL==2,2),'k.','markersize',4)
 plot(tSNEmap(states.ALL==1,1),tSNEmap(states.ALL==1,2),'b.','markersize',4)
@@ -435,26 +435,28 @@ plot(tSNEmap(states.ALL==3,1),tSNEmap(states.ALL==3,2),'r.','markersize',4)
 axis tight
 box on
 xticks(gca,[]);yticks(gca,[])
-legend(statenames,'location','northoutside')
+legend(statenames,'location','northwest')
 
 %legend('NREM','WAKE','REM')
-subplot(3,3,[6 9])
+subplot(2,3,3)
 hold on
 for rr = 1:length(regions)
-    plot(tSNEmap(ALLregions==rr,1),tSNEmap(ALLregions==rr,2),'.','markersize',4)
+    plot(tSNEmap(ALLregions==rr,1),tSNEmap(ALLregions==rr,2),...
+        '.','markersize',4,'color',regioncolors(rr,:))
 end
-legend(regions,'location','northoutside')
+plot(tSNEmap(ALLcelltypes.pI==1,1),tSNEmap(ALLcelltypes.pI==1,2),'.r','markersize',4)
+legend([regions,'pI'],'location','northwest')
 axis tight
 box on
 xticks(gca,[]);yticks(gca,[])
-subplot(3,3,[4 7])
+subplot(2,3,1)
 hold on
 axis tight
 box on
 xticks(gca,[]);yticks(gca,[])
 plot(tSNEmap(ALLcelltypes.pE==1,1),tSNEmap(ALLcelltypes.pE==1,2),'.k','markersize',4)
 plot(tSNEmap(ALLcelltypes.pI==1,1),tSNEmap(ALLcelltypes.pI==1,2),'.r','markersize',4)
-legend(celltypes,'location','northoutside')
+legend(celltypes,'location','northwest')
 NiceSave('tSNE_Map',figfolder,'')
 
 
@@ -475,9 +477,10 @@ subplot(2,3,ss)
 hold on
 for rr = 1:length(regions)
     plot(statetSNEmap.(statenames{ss})(ALLregions(states.ALL==ss)==rr,1),...
-        statetSNEmap.(statenames{ss})(ALLregions(states.ALL==ss)==rr,2),'.','markersize',4)
+        statetSNEmap.(statenames{ss})(ALLregions(states.ALL==ss)==rr,2),...
+        '.','markersize',4,'color',regioncolors(rr,:))
 end
-legend(regions,'location','northoutside')
+legend(regions,'location','northeast')
 axis tight
 box on
 xticks(gca,[]);yticks(gca,[])
@@ -490,7 +493,7 @@ plot(statetSNEmap.(statenames{ss})(ALLcelltypes.pE(states.ALL==ss)==1,1),...
     statetSNEmap.(statenames{ss})(ALLcelltypes.pE(states.ALL==ss)==1,2),'.k','markersize',4)
 plot(statetSNEmap.(statenames{ss})(ALLcelltypes.pI(states.ALL==ss)==1,1),...
     statetSNEmap.(statenames{ss})(ALLcelltypes.pI(states.ALL==ss)==1,2),'.r','markersize',4)
-legend(celltypes,'location','northoutside')
+legend(celltypes,'location','northeast')
 box on
 end
 NiceSave('tSNE_Map_SeparateStates',figfolder,'')
@@ -506,6 +509,8 @@ for ss = 1:3
     P = d2p(valid(ALLcelltypes.pE==1 & states.ALL==ss,ALLcelltypes.pE==1 & states.ALL ==ss).^2, perplexity, 1e-6); 
     statetSNEmap.pE.(statenames{ss}) = tsne_p(P, ALLregions(ALLcelltypes.pE==1 & states.ALL==ss), 2, 1000);
 end
+
+
 %%
 figure
 for ss = 1:3
@@ -514,7 +519,7 @@ for ss = 1:3
     for rr = 1:length(regions)
         plot(statetSNEmap.pE.(statenames{ss})(ALLregions(ALLcelltypes.pE==1 & states.ALL==ss)==rr,1),...
             statetSNEmap.pE.(statenames{ss})(ALLregions(ALLcelltypes.pE==1 & states.ALL==ss)==rr,2),...
-            '.','markersize',4)
+            '.','markersize',4,'color',regioncolors(rr,:))
     end
     axis tight
     box on
@@ -540,7 +545,7 @@ subplot(2,2,4)
 hold on
 for rr = 1:length(regions)
     plot(statetSNEmap.pE.all(ALLregions(ALLcelltypes.pE==1)==rr,1),statetSNEmap.pE.all(ALLregions(ALLcelltypes.pE==1)==rr,2),...
-        '.','markersize',4)
+        '.','markersize',4,'color',regioncolors(rr,:))
 end
 legend(regions,'location','northwest')
 axis tight
