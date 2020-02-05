@@ -381,7 +381,7 @@ for ss = 1:3
                 ISIstats.(regions{rr}).ISIhist.(statenames{ss}).log(sorts.(regions{rr}).(statenames{ss}).medISIbyclass,:))
             hold on
             plot(log10((OccupancyStats.(regions{rr}).(statenames{ss}).median(sorts.(regions{rr}).(statenames{ss}).medISIbyclass))),...
-                [1:sorts.(regions{rr}).numclassycells],'k.','markersize',1)
+                [1:sorts.(regions{rr}).numclassycells],'.','markersize',1,'color',[0.6 0.4 0])
             plot(ISIstats.(regions{rr}).ISIhist.logbins([1 end]),sum(inclasscells.(regions{rr}){1}).*[1 1]+0.5,'r')
             
             plot(meanISIhist.logbins,-meanISIhist.(regions{rr}).(statenames{ss}).pE*5000+...
