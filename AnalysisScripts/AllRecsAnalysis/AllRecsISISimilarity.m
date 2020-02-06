@@ -433,9 +433,9 @@ tSNEmap(:,:) = tsne_p(P, ALLcelltypes.pE, 2, 2000);
 figure
 subplot(2,2,1)
 hold on
-plot(tSNEmap(states.ALL==3,1),tSNEmap(states.ALL==3,2),'r.','markersize',2)
-plot(tSNEmap(states.ALL==1,1),tSNEmap(states.ALL==1,2),'b.','markersize',2)
-plot(tSNEmap(states.ALL==2,1),tSNEmap(states.ALL==2,2),'k.','markersize',2)
+plot(tSNEmap(states.ALL==3,1),tSNEmap(states.ALL==3,2),'r.','markersize',3)
+plot(tSNEmap(states.ALL==1,1),tSNEmap(states.ALL==1,2),'b.','markersize',3)
+plot(tSNEmap(states.ALL==2,1),tSNEmap(states.ALL==2,2),'k.','markersize',3)
 axis tight
 box on
 xticks(gca,[]);yticks(gca,[])
