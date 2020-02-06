@@ -433,9 +433,9 @@ tSNEmap(:,:) = tsne_p(P, ALLcelltypes.pE, 2, 2000);
 figure
 subplot(2,2,1)
 hold on
-plot(tSNEmap(states.ALL==3,1),tSNEmap(states.ALL==3,2),'r.','markersize',3)
-plot(tSNEmap(states.ALL==1,1),tSNEmap(states.ALL==1,2),'b.','markersize',3)
-plot(tSNEmap(states.ALL==2,1),tSNEmap(states.ALL==2,2),'k.','markersize',3)
+plot(tSNEmap(states.ALL==3,1),tSNEmap(states.ALL==3,2),'r.','markersize',2)
+plot(tSNEmap(states.ALL==1,1),tSNEmap(states.ALL==1,2),'b.','markersize',2)
+plot(tSNEmap(states.ALL==2,1),tSNEmap(states.ALL==2,2),'k.','markersize',2)
 axis tight
 box on
 xticks(gca,[]);yticks(gca,[])
@@ -446,9 +446,9 @@ subplot(2,2,2)
 hold on
 for rr = 1:length(regions)
     plot(tSNEmap(ALLregions==rr,1),tSNEmap(ALLregions==rr,2),...
-        '.','markersize',4,'color',regioncolors(rr,:))
+        '.','markersize',3,'color',regioncolors(rr,:))
 end
-plot(tSNEmap(ALLcelltypes.pI==1,1),tSNEmap(ALLcelltypes.pI==1,2),'.r','markersize',3)
+plot(tSNEmap(ALLcelltypes.pI==1,1),tSNEmap(ALLcelltypes.pI==1,2),'.r','markersize',2)
 legend([regions,'pI'],'location','northwest')
 axis tight
 box on
@@ -462,7 +462,7 @@ xticks(gca,[]);yticks(gca,[])
 % plot(tSNEmap(ALLcelltypes.pE==1,1),tSNEmap(ALLcelltypes.pE==1,2),'.k','markersize',3)
 % plot(tSNEmap(ALLcelltypes.pI==1,1),tSNEmap(ALLcelltypes.pI==1,2),'.r','markersize',3)
 % legend(celltypes,'location','northwest')
-% NiceSave('tSNE_Map',figfolder,'')
+ NiceSave('tSNE_Map',figfolder,'')
 
 
 %% Subsets...
