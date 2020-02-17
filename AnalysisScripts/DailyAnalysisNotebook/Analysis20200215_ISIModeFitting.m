@@ -73,7 +73,7 @@ plot(taus,multigamfun(fitparms),'r')
 
 
 %% Now let's try with a real ISI dist...
-excell =3;
+excell =5;
 logbase = 10;
 logISIbins = ISIStats.ISIhist.logbins;
 taubins = logISIbins.*log(logbase); %Convert to log base e
@@ -135,13 +135,13 @@ plot(trymodes,log10(fiterror),'o-')
 
 %% Try log rates and 1/k
 
-trymodes = [1:10,4];
+trymodes = [1:10,3];
 fiterror = zeros(size(trymodes));
 for nummodes = trymodes
 nummodes
 %Initialize parms
-init = [linspace(-1,5,nummodes)';...    %Lambda 
-    ones(nummodes,1);         %K 
+init = [linspace(-1.5,5.5,nummodes)';...    %Lambda 
+    0.8.*ones(nummodes,1);         %K 
     ones(nummodes,1)./(3.*nummodes)];             %Weights (normalize later)
 
 %The multigammafunction of all parameters
@@ -175,8 +175,8 @@ end
 
 %TO DO: Pad the edges with zeros....
 %%
-rates = fitparms(1:nummodes);
-ks  = fitparms(nummodes+1:end-nummodes);
+rates = fitparms(1:nummodes);  %log lambda
+ks  = fitparms(nummodes+1:end-nummodes); %1/k
 weights  = fitparms(end-nummodes+1:end);
 %%
 figure
