@@ -65,7 +65,7 @@ fitISIs = ISIStats.allspikes.ISIs{cc}(fitISIs);
 [~] = ...
     bz_FitISIGammaModes(fitISIs,...
     'showfig',true,'returnNmodes',Nmodes);
-    NiceSave(['ISImodefits_ExCell_',num2str(cc),(statenames{ss})],figfolder,baseName)
+    NiceSave(['ISImodefits_ExCell_',num2str(cc),'_',(statenames{ss})],figfolder,baseName)
 end
 %%
 for ss = 1:3
