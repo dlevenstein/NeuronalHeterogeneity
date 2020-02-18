@@ -58,12 +58,12 @@ end
 
 %% Example cell
 cc = 56;
-fitISIs = InIntervals(ISIStats.allspikes.times{cc},SleepState.ints.NREMstate);
+fitISIs = InIntervals(ISIStats.allspikes.times{cc},SleepState.ints.(statenames{ss}));
 fitISIs = ISIStats.allspikes.ISIs{cc}(fitISIs);
 [~] = ...
     bz_FitISIGammaModes(fitISIs,...
     'showfig',true,'returnNmodes',Nmodes);
-    NiceSave(['ISImodefits_ExCell_',(statenames{ss})],figfolder,baseName)
+    NiceSave(['ISImodefits_ExCell_',num2str(cc),(statenames{ss})],figfolder,baseName)
 
 %%
 for ss = 1:3
