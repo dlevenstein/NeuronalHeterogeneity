@@ -116,6 +116,8 @@ end
     ylim(log10([min(ISIStats.summstats.(statenames{ss}).meanrate) max(ISIStats.summstats.(statenames{ss}).meanrate)]))
     xlabel('Mode Rate');ylabel(' Cell Rate')
 
+    NiceSave(['ISImodefits',(statenames{ss})],figfolder,baseName)
+
 end
 %%
 % figure
