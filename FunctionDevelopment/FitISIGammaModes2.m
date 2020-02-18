@@ -1,10 +1,12 @@
-function [lambdas,ks,weights,fiterror] = bz_FitISIGammaModes(ISIs,varargin)
+function [lambdas,ks,weights,fiterror] = bz_FitISIGammaModes2(ISIs,varargin)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %
+%       working towards measuring log likelihood from raw ISIs
 %   INPUTS
 %       logbins
-%       logISIhist
+%       logISIhist  instead! fit likelihood to the probabilty
+%       distirbution... need normalization then
 %
 %   Options
 %       'logbase'       (default: 10)
@@ -13,7 +15,6 @@ function [lambdas,ks,weights,fiterror] = bz_FitISIGammaModes(ISIs,varargin)
 %       'returnNmodes'
 %       'showfig'
 %       'lambdabounds'
-%       'ISIs'          for measuing AIC (maybe just make hist from this?)
 %
 %   OUTPUTS
 %       lambdas: the beta parameter (mean ISI is ks/lambdas)
@@ -51,48 +52,29 @@ lambdabounds = p.Results.lambdabounds; %units: loglambda, e
 %     linspace(max(taubins),max(taubins)+5,numpad)];
 % logISIhist = [zeros(1,numpad),logISIhist,zeros(1,numpad)];
 
-taubins = linspace(-10,8,250);
-logISIhist = hist(log(ISIs),taubins);
-logISIhist = logISIhist./sum(logISIhist);
 %% The multigammafunction of all parameters
-
-%Sum of loggammas
-% multigamfun = @(lambkweit,tau) sum(...
-%     lambkweit(end/(3/2)+1:end).*...
-%     (exp(lambkweit(1:end/3)).^(1./lambkweit(end/3+1:end/(3/2)))).*...
-%     (exp((1./lambkweit(end/3+1:end/(3/2)))*tau)) ./ ...
-%     (gamma((1./lambkweit(end/3+1:end/(3/2)))).*...
-%     exp(exp(lambkweit(1:end/3))*exp(tau))),1);
-
-    %Sum of loggammas
-    function plogt = multigamfun(lambkweit,tau)
-        lambda = exp(lambkweit(1:end/3));  %beta
-        k = 1./lambkweit(end/3+1:end/(3/2)); %alpha
-        weight = lambkweit(end/(3/2)+1:end);
-        
-        plogt = sum(...
-            weight.*...
-            (lambda.^(k).*exp(k*tau)) ./ ...
-            (gamma(k).*exp(lambda*exp(tau))),1);
-          
-    end
+multigamfun = @(lambkweit,tau) sum(...
+    lambkweit(end/(3/2)+1:end).*...
+    (exp(lambkweit(1:end/3)).^(1./lambkweit(end/3+1:end/(3/2)))).*...
+    (exp((1./lambkweit(end/3+1:end/(3/2)))*tau)) ./ ...
+    (gamma((1./lambkweit(end/3+1:end/(3/2)))).*...
+    exp(exp(lambkweit(1:end/3))*exp(tau))),1)./sum(lambkweit(end/(3/2)+1:end));
 
 
 %% Try log rates and 1/k
 
 trymodes = [1:maxNmodes];
 fiterror = zeros(size(trymodes));
-initweightfactor = 10;
 
-for nummodes = trymodes
+for nummodes = 1
 
 %Initialize parms
 init = [linspace(-1.5,5.5,nummodes)';...    %Lambda 
     0.8.*ones(nummodes,1);         %K 
-    ones(nummodes,1)./(initweightfactor.*nummodes)];             %Weights (normalize later)
+    ones(nummodes,1)./(nummodes)];             %Weights (normalize later)
 
 
-difffun = @(lambkweit) sum((logISIhist-multigamfun(lambkweit,taubins)).^2);
+nlogliklihood = @(lambkweit) -sum(log(multigamfun(lambkweit,log(ISIs'))));
 
 
 ub = [lambdabounds(2).*ones(nummodes,1);...    %Lambda
@@ -108,13 +90,19 @@ options.MaxFunctionEvaluations = 1e5;
 options.MaxIterations = 1000; 
 
 %fitparms = fminsearch(difffun,init)
-fitparms{nummodes} = fmincon(difffun,init,[],[],[],[],lb,ub,[],options);
-fiterror(nummodes) = difffun(fitparms{nummodes});
+fitparms{nummodes} = fmincon(nlogliklihood,init,[],[],[],[],lb,ub,[],options);
+fiterror(nummodes) = nlogliklihood(fitparms{nummodes});
 
 end
 
-%% AIC/BIC
-%liklihood = sum(log(multigamfun(fitparms{returnNmodes},ISIs')));
+%%
+
+figure
+plot(log(ISIs'),log(multigamfun(init,log(ISIs'))),'.')
+%%
+aicbic
+
+%TO DO: Pad the edges with zeros....
 %%
 lambdas = exp(fitparms{returnNmodes}(1:returnNmodes));  %log lambda
 ks  = 1./fitparms{returnNmodes}(returnNmodes+1:end-returnNmodes); %1/k
@@ -128,15 +116,15 @@ meanISI = ks./lambdas;
 %Initialize parms
 init = [linspace(-1.5,5.5,returnNmodes)';...    %Lambda 
     0.8.*ones(returnNmodes,1);         %K 
-    ones(returnNmodes,1)./(initweightfactor.*returnNmodes)];             %Weights (normalize later)
+    ones(returnNmodes,1)./(3.*returnNmodes)];             %Weights (normalize later)
     
 figure
 subplot(4,2,1)
 plot(timebins,logISIhist,'k','linewidth',2)
 hold on
-plot(timebins,multigamfun(fitparms{returnNmodes},taubins),'r','linewidth',2)
+plot(timebins,multigamfun(fitparms{returnNmodes}),'r','linewidth',2)
 for mm = 1:returnNmodes
-    plot(timebins,multigamfun(fitparms{returnNmodes}(returnNmodes.*[0;1;2]+mm),taubins),'r')
+    plot(timebins,multigamfun(fitparms{returnNmodes}(returnNmodes.*[0;1;2]+mm)),'r')
 end
 LogScale('x',logbase)
 
@@ -160,9 +148,9 @@ ylabel('Error')
 subplot(4,2,3)
 plot(timebins,logISIhist,'k','linewidth',2)
 hold on
-plot(timebins,multigamfun(init,taubins),'r','linewidth',2)
+plot(timebins,multigamfun(init),'r','linewidth',2)
 for mm = 1:returnNmodes
-    plot(timebins,multigamfun(init(returnNmodes.*[0;1;2]+mm),taubins),'r')
+    plot(timebins,multigamfun(init(returnNmodes.*[0;1;2]+mm)),'r')
 end
 title('Initalization')
 

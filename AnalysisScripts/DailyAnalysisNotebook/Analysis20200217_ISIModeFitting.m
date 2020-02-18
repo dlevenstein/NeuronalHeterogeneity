@@ -20,7 +20,7 @@ baseName = bz_BasenameFromBasepath(basePath);
 sessionInfo = bz_getSessionInfo(basePath);
 %spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
-%SleepState = bz_LoadStates(basePath,'SleepState');
+SleepState = bz_LoadStates(basePath,'SleepState');
 ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 
 try
@@ -49,7 +49,7 @@ cc = 17;
 logISIhist = ISIStats.ISIhist.WAKEstate.log(cc,:);
 [~] = ...
     bz_FitISIGammaModes(logbins,logISIhist,...
-    'showfig',true,'returnNmodes',Nmodes);
+    'showfig',true,'returnNmodes',1);
 %%
 
 rates = 1./(ks./lambdas);
@@ -141,5 +141,13 @@ end
     LogScale('xy',10)
     %UnityLine
     xlabel('Weight');ylabel('mean rate')
+
+    
+%% Try fitting the ISIs directly...
+excell = 1;
+ISIs2fit = InIntervals(ISIStats.allspikes.times{excell},SleepState.ints.NREMstate);
+ISIs2fit = ISIStats.allspikes.ISIs{excell}(ISIs2fit);
+
+FitISIGammaModes2(ISIs2fit)
 
 end
