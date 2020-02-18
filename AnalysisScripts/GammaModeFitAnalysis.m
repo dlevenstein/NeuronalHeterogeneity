@@ -57,7 +57,7 @@ for ss = 1:3
 end
 
 %% Example cell
-cc = 56;
+cc = randi(numcells);
 fitISIs = InIntervals(ISIStats.allspikes.times{cc},SleepState.ints.NREMstate);
 fitISIs = ISIStats.allspikes.ISIs{cc}(fitISIs);
 [~] = ...

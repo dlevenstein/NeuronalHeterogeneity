@@ -165,8 +165,8 @@ ylabel('Error')
 
 %%
 taus = linspace(-7,3,100);
-lambda = [0.5;300]; %Multiple rates
-weights = [1;0.3];
+lambda = [0.5;400]; %Multiple rates
+weights = [1;0.2];
 ks =[1;20];
 
 total = sum(weights.*(lambda.^ks).*(exp(ks*taus)) ./ (gamma(ks).*exp(lambda*exp(taus))),1);

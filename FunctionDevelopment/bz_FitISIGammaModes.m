@@ -28,6 +28,7 @@ addParameter(p,'logbase',10)
 addParameter(p,'maxNmodes',10)
 addParameter(p,'lambdabounds',[-4 10])
 addParameter(p,'numpad',15)
+addParameter(p,'minISIs',100)
 
 parse(p,varargin{:})
 numpad = p.Results.numpad;
@@ -36,8 +37,15 @@ maxNmodes = p.Results.maxNmodes;
 returnNmodes = p.Results.returnNmodes;
 SHOWFIG = p.Results.showfig;
 lambdabounds = p.Results.lambdabounds; %units: loglambda, e
-
-
+minISIs = p.Results.minISIs;
+%% 
+if length(ISIs)<minISIs
+    lambdas = nan(returnNmodes,1);
+    ks = nan(returnNmodes,1);
+    weights = nan(returnNmodes,1);
+    fiterror = zeros(1,maxNmodes);
+    return
+end
 %% DEV
 %excell =5;
 
@@ -53,7 +61,7 @@ lambdabounds = p.Results.lambdabounds; %units: loglambda, e
 
 taubins = linspace(-10,8,500);
 logISIhist = hist(log(ISIs),taubins);
-logISIhist = logISIhist./sum(logISIhist);
+logISIhist = logISIhist./(sum(logISIhist).*mode(diff(taubins)));
 %% The multigammafunction of all parameters
 
 %Sum of loggammas
@@ -89,7 +97,7 @@ for nummodes = trymodes
 %Initialize parms
 init = [linspace(-1.5,5.5,nummodes)';...    %Lambda 
     0.8.*ones(nummodes,1);         %K 
-    ones(nummodes,1)./(initweightfactor.*nummodes)];             %Weights (normalize later)
+    ones(nummodes,1)./(nummodes)];             %Weights (normalize later)
 
 
 difffun = @(lambkweit) sum((logISIhist-multigamfun(lambkweit,taubins)).^2);
@@ -101,14 +109,18 @@ ub = [lambdabounds(2).*ones(nummodes,1);...    %Lambda
 lb =  [lambdabounds(1).*ones(nummodes,1);...    %Lambda
     zeros(nummodes,1);         %K 
     zeros(nummodes,1)];             %Weights (normalize later)
+
+%Constraint: weights sum to 1
+Aeq = [zeros(1,nummodes) zeros(1,nummodes) ones(1,nummodes)];
+beq = 1;
+
 options = optimoptions('fmincon','Algorithm','sqp','Display','off');%,'UseParallel',true);
 %try also: 'Algorithm','active-set'
 %Decrease tolerance.....
 options.MaxFunctionEvaluations = 1e5;
 options.MaxIterations = 1000; 
 
-%fitparms = fminsearch(difffun,init)
-fitparms{nummodes} = fmincon(difffun,init,[],[],[],[],lb,ub,[],options);
+fitparms{nummodes} = fmincon(difffun,init,[],[],Aeq,beq,lb,ub,[],options);
 fiterror(nummodes) = difffun(fitparms{nummodes});
 
 end
@@ -128,7 +140,7 @@ meanISI = ks./lambdas;
 %Initialize parms
 init = [linspace(-1.5,5.5,returnNmodes)';...    %Lambda 
     0.8.*ones(returnNmodes,1);         %K 
-    ones(returnNmodes,1)./(initweightfactor.*returnNmodes)];             %Weights (normalize later)
+    ones(returnNmodes,1)./(returnNmodes)];             %Weights (normalize later)
     
 figure
 subplot(4,2,1)
