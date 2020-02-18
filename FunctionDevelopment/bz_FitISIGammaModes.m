@@ -51,7 +51,7 @@ lambdabounds = p.Results.lambdabounds; %units: loglambda, e
 %     linspace(max(taubins),max(taubins)+5,numpad)];
 % logISIhist = [zeros(1,numpad),logISIhist,zeros(1,numpad)];
 
-taubins = linspace(-10,8,250);
+taubins = linspace(-10,8,500);
 logISIhist = hist(log(ISIs),taubins);
 logISIhist = logISIhist./sum(logISIhist);
 %% The multigammafunction of all parameters
