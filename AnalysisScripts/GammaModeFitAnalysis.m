@@ -57,12 +57,13 @@ for ss = 1:3
 end
 
 %% Example cell
-% cc = 17;
-% fitISIs = InIntervals(ISIStats.allspikes.times{cc},SleepState.ints.NREMstate);
-% fitISIs = ISIStats.allspikes.ISIs{cc}(fitISIs);
-% [~] = ...
-%     bz_FitISIGammaModes(fitISIs,...
-%     'showfig',true,'returnNmodes',Nmodes);
+cc = 56;
+fitISIs = InIntervals(ISIStats.allspikes.times{cc},SleepState.ints.NREMstate);
+fitISIs = ISIStats.allspikes.ISIs{cc}(fitISIs);
+[~] = ...
+    bz_FitISIGammaModes(fitISIs,...
+    'showfig',true,'returnNmodes',Nmodes);
+    NiceSave(['ISImodefits_ExCell_',(statenames{ss})],figfolder,baseName)
 
 %%
 for ss = 1:3
