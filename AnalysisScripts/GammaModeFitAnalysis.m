@@ -1,7 +1,7 @@
 function [ISIfits] = GammaModeFitAnalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
-%Question: 
+%Question:
 %
 %Plots
 %-
@@ -49,7 +49,7 @@ for ss = 1:3
         bz_FitISIGammaModes(fitISIs,...
         'showfig',false,'returnNmodes',Nmodes,'maxNmodes',maxNmodes);
     end
-    
+
     ISIfits.(statenames{ss}).rates = 1./(ISIfits.(statenames{ss}).ks./ISIfits.(statenames{ss}).lambdas);
     ISIfits.(statenames{ss}).CVs = 1./ISIfits.(statenames{ss}).ks;
     ISIfits.(statenames{ss}).rates(ISIfits.(statenames{ss}).weights == 0 | isnan(ISIfits.(statenames{ss}).weights)) = nan;
@@ -57,14 +57,16 @@ for ss = 1:3
 end
 
 %% Example cell
-cc = 56;
+
+cc = randi(numcells);
+for ss = 1:3
 fitISIs = InIntervals(ISIStats.allspikes.times{cc},SleepState.ints.(statenames{ss}));
 fitISIs = ISIStats.allspikes.ISIs{cc}(fitISIs);
 [~] = ...
     bz_FitISIGammaModes(fitISIs,...
     'showfig',true,'returnNmodes',Nmodes);
     NiceSave(['ISImodefits_ExCell_',num2str(cc),(statenames{ss})],figfolder,baseName)
-
+end
 %%
 for ss = 1:3
 figure
@@ -122,7 +124,7 @@ end
 end
 %%
 % figure
-% 
+%
 % subplot(2,2,1)
 % hold on
 % for cc = 1
@@ -136,9 +138,9 @@ end
 %     UnityLine
 %     %ylim(log10([min(ISIStats.summstats.NREMstate.meanrate) max(ISIStats.summstats.NREMstate.meanrate)]))
 %     xlabel('Mode Rate');ylabel(' Cell Rate')
-% 
+%
 % title('CA1 - NREM')
-% 
+%
 % subplot(2,2,2)
 % hold on
 % for cc = 1
