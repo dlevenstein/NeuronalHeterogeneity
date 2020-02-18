@@ -53,12 +53,13 @@ for ss = 1:3
     ISIfits.(statenames{ss}).rates = 1./(ISIfits.(statenames{ss}).ks./ISIfits.(statenames{ss}).lambdas);
     ISIfits.(statenames{ss}).CVs = 1./ISIfits.(statenames{ss}).ks;
     ISIfits.(statenames{ss}).rates(ISIfits.(statenames{ss}).weights == 0 | isnan(ISIfits.(statenames{ss}).weights)) = nan;
-    ISIfits.(statenames{ss}).weights(ISIfits.(statenames{ss}).weights == 0) = nan;
+    ISIfits.(statenames{ss}).weights(ISIfits.(statenames{ss}).weights<0.01) = nan;
 end
 
 %% Example cell
 cc = randi(numcells);
-fitISIs = InIntervals(ISIStats.allspikes.times{cc},SleepState.ints.NREMstate);
+cc=6
+fitISIs = InIntervals(ISIStats.allspikes.times{cc},SleepState.ints.WAKEstate);
 fitISIs = ISIStats.allspikes.ISIs{cc}(fitISIs);
 [~] = ...
     bz_FitISIGammaModes(fitISIs,...
@@ -79,17 +80,17 @@ for cc = 1:2
     LogScale('x',10)
     xlabel('Rate');ylabel('CV')
 end
-title('CA1 - NREM')
+title((statenames{ss}))
 
 subplot(2,2,2)
 %imagesc(log10(fiterror))
 hold on
 for cc = 1:2
-    plot(1:maxNmodes,mean(log10(ISIfits.(statenames{ss}).fiterror(CellClass.(celltypes{cc}),:)),1),...
+    plot(1:maxNmodes,nanmean(log10(ISIfits.(statenames{ss}).fiterror(CellClass.(celltypes{cc}),:)),1),...
         '-o','linewidth',2,'color',cellcolor{cc})
-    errorshade(1:maxNmodes,mean(log10(ISIfits.(statenames{ss}).fiterror(CellClass.(celltypes{cc}),:)),1),...
-        std(log10(ISIfits.(statenames{ss}).fiterror(CellClass.(celltypes{cc}),:)),[],1),...
-        std(log10(ISIfits.(statenames{ss}).fiterror(CellClass.(celltypes{cc}),:)),[],1),cellcolor{cc},'scalar');
+    errorshade(1:maxNmodes,nanmean(log10(ISIfits.(statenames{ss}).fiterror(CellClass.(celltypes{cc}),:)),1),...
+        nanstd(log10(ISIfits.(statenames{ss}).fiterror(CellClass.(celltypes{cc}),:)),[],1),...
+        nanstd(log10(ISIfits.(statenames{ss}).fiterror(CellClass.(celltypes{cc}),:)),[],1),cellcolor{cc},'scalar');
 end
 LogScale('y',10)
 xlabel('N Modes');ylabel('MSE')
@@ -99,9 +100,10 @@ hold on
 for cc = 1:2
     plot(log10(ISIfits.(statenames{ss}).rates(:,CellClass.(celltypes{cc}))),...
         log10(ISIfits.(statenames{ss}).weights(:,CellClass.(celltypes{cc}))),'.','color',cellcolor{cc})
-    LogScale('x',10)
-    xlabel('Rate');ylabel('Weight')
+
 end
+    LogScale('xy',10)
+    xlabel('Rate');ylabel('Weight')
 
 subplot(4,2,6)
 hold on
