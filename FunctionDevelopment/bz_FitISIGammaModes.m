@@ -146,11 +146,15 @@ errordrop = [0 diff(log10(fiterror))];
 putNmodes(P<promthresh) = [];
 savereturnNmodes = returnNmodes;
 if autoNmodes
-    returnNmodes = max(putNmodes(putNmodes<=returnNmodes));
+    returnNmodes = max(putNmodes(putNmodes<=savereturnNmodes));
     if isempty(returnNmodes)
+        [~,putNmodes,~,P] = findpeaks(-errordrop);
+        returnNmodes = max(putNmodes(putNmodes<=savereturnNmodes));
         %Need a better way to do this.... prominence is dependent on error
         %which is dependent on number of spikes
-        returnNmodes = savereturnNmodes;
+        if isempty(returnNmodes)
+            returnNmodes = savereturnNmodes;
+        end
     end
 end
 
