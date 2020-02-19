@@ -35,7 +35,7 @@ statenames = {'WAKEstate','NREMstate','REMstate'};
 %%
 %cc = 1
 Nmodes = 3;
-maxNmodes = 10;
+maxNmodes = 12;
 numcells = length(ISIStats.summstats.WAKEstate.meanrate);
 clear lambdas ks weights fiterror
 for ss = 1:3
@@ -59,21 +59,22 @@ end
 %% Example cell
 
 cc = randi(numcells);
-for ss = 1:3
-
+%for ss = 1:3
+%%
+ss =1
 fitISIs = InIntervals(ISIStats.allspikes.times{cc},SleepState.ints.(statenames{ss}));
 fitISIs = ISIStats.allspikes.ISIs{cc}(fitISIs);
 [~] = ...
     bz_FitISIGammaModes(fitISIs,...
     'showfig',true,'returnNmodes',Nmodes,'sequentialreduce',true,...
-    'maxNmodes',10);
+    'maxNmodes',12);
 
 % [~] = ...
 %     bz_FitISIGammaModes(fitISIs,...
 %     'showfig',true,'returnNmodes',Nmodes,'sequentialreduce',false,...
 %     'maxNmodes',10);
  %   NiceSave(['ISImodefits_ExCell_',num2str(cc),'_',(statenames{ss})],figfolder,baseName)
-end
+%end
 %%
 for ss = 1:3
 figure

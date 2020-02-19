@@ -26,7 +26,8 @@ addParameter(p,'returnNmodes',3)
 addParameter(p,'showfig',true)
 addParameter(p,'logbase',10)
 addParameter(p,'maxNmodes',10)
-addParameter(p,'lambdabounds',[-5 8])
+%addParameter(p,'lambdabounds',[-5 8])
+addParameter(p,'logratebounds',[-3 3])
 addParameter(p,'numpad',15)
 addParameter(p,'minISIs',200)
 addParameter(p,'sequentialreduce',false)
@@ -39,7 +40,7 @@ logbase = p.Results.logbase;
 maxNmodes = p.Results.maxNmodes;
 returnNmodes = p.Results.returnNmodes;
 SHOWFIG = p.Results.showfig;
-lambdabounds = p.Results.lambdabounds; %units: loglambda, e
+logratebounds = p.Results.logratebounds; %units: loglambda, e
 minISIs = p.Results.minISIs;
 sequentialreduce = p.Results.sequentialreduce;
 %lasso = p.Results.lasso; %lasso doesn't work because weights sum to 1...
@@ -69,25 +70,18 @@ logISIhist = hist(log(ISIs),taubins);
 logISIhist = logISIhist./(sum(logISIhist).*mode(diff(taubins)));
 %% The multigammafunction of all parameters
 
-%Sum of loggammas
-% multigamfun = @(lambkweit,tau) sum(...
-%     lambkweit(end/(3/2)+1:end).*...
-%     (exp(lambkweit(1:end/3)).^(1./lambkweit(end/3+1:end/(3/2)))).*...
-%     (exp((1./lambkweit(end/3+1:end/(3/2)))*tau)) ./ ...
-%     (gamma((1./lambkweit(end/3+1:end/(3/2)))).*...
-%     exp(exp(lambkweit(1:end/3))*exp(tau))),1);
-
     %Sum of loggammas
     function plogt = multigamfun(lambkweit,tau)
-        lambda = exp(lambkweit(1:end/3));  %beta
+        %Parameters: 1) log10 rate  2) log10CV . 3) weights
         k = 1./(10.^lambkweit(end/3+1:end/(3/2))); %alpha (log transform)
+        %lambda = exp(lambkweit(1:end/3));  %beta
+        lambda = (10.^lambkweit(1:end/3)).*k;
         weight = lambkweit(end/(3/2)+1:end);
         
         plogt = sum(...
             weight.*...
             (lambda.^(k).*exp(k*tau)) ./ ...
             (gamma(k).*exp(lambda*exp(tau))),1);
-          
     end
 
 
@@ -101,24 +95,28 @@ for nummodes = maxNmodes:-1:1
 
 %Initialize parms
 if nummodes ==maxNmodes || ~sequentialreduce
-    init = [linspace(-1.5,5.5,nummodes)';...    %Lambda 
+%     init = [linspace(-1.5,5.5,nummodes)';...    %Lambda 
+%         -0.3.*ones(nummodes,1);         %K  (used to be CV=0.8...)
+%         ones(nummodes,1)./(nummodes)];             %Weights (normalize later)
+    init = [linspace(-0.5,1.5,nummodes)';...    %Lambda 
         -0.3.*ones(nummodes,1);         %K  (used to be CV=0.8...)
         ones(nummodes,1)./(nummodes)];             %Weights (normalize later)
-else
+else  %Remove the lowest weight, keep rate/cv, renormalize the weights, refit
     init = fitparms{nummodes+1};
     [~,lowestweightmode] = min(init(end/(3/2)+1:end));
     init(lowestweightmode + (nummodes+1).*[0 1 2]) = [];
+    init(end/(3/2)+1:end) = ones(nummodes,1)./(nummodes);
 end
 
 
-difffun = @(lambkweit) mean((logISIhist-multigamfun(lambkweit,taubins)).^2);
+difffun = @(lambkweit) sum((logISIhist-multigamfun(lambkweit,taubins)).^2);
 
 
-ub = [lambdabounds(2).*ones(nummodes,1);...    %Lambda
-    1.2.*ones(nummodes,1);         %K (optimization parameter is log(CV)
+ub = [logratebounds(2).*ones(nummodes,1);...    %Lambda
+    1.5.*ones(nummodes,1);         %K (optimization parameter is log(CV)
     ones(nummodes,1)];             %Weights (normalize later)
-lb =  [lambdabounds(1).*ones(nummodes,1);...    %Lambda
-    -2.2*ones(nummodes,1);         %K (optimization parameter is log(CV)
+lb =  [logratebounds(1).*ones(nummodes,1);...    %Lambda
+    -2.5*ones(nummodes,1);         %K (optimization parameter is log(CV)
     zeros(nummodes,1)];             %Weights (normalize later)
 
 %Constraint: weights sum to 1
@@ -137,17 +135,23 @@ fiterror(nummodes) = difffun(fitparms{nummodes});
 end
 
 %%
-% figure
-% subplot(2,2,1)
-% plot(trymodes,fiterror)
-% subplot(2,2,2)
-% plot(trymodes(2:end),diff(fiterror))
+figure
+subplot(2,2,1)
+plot(trymodes,(fiterror))
+subplot(2,2,2)
+plot(trymodes(2:end),diff(fiterror))
+subplot(2,2,3)
+plot(trymodes,log10(fiterror))
+subplot(2,2,4)
+plot(trymodes(2:end),diff(log10(fiterror)))
 %% AIC/BIC
 %liklihood = sum(log(multigamfun(fitparms{returnNmodes},ISIs')));
 %%
-lambdas = exp(fitparms{returnNmodes}(1:returnNmodes));  %log lambda
+
 ks  = 1./(10.^fitparms{returnNmodes}(returnNmodes+1:end-returnNmodes)); %1/k
+lambdas = (10.^fitparms{returnNmodes}(1:returnNmodes)).*ks;  %log lambda
 weights  = fitparms{returnNmodes}(end-returnNmodes+1:end);
+
 %%
 if SHOWFIG
    
@@ -169,7 +173,7 @@ for mm = 1:returnNmodes
 end
 LogScale('x',logbase)
 
-subplot(2,2,2)
+subplot(4,2,4)
 stem(log10(1./meanISI),weights)
 LogScale('x',10)
 xlabel('Rate (Hz)')
@@ -181,11 +185,19 @@ scatter(log10(1./meanISI),1./ks,10)
 LogScale('x',10)
 xlabel('Rate (Hz)');ylabel('1/k (CV)')
 
-subplot(2,2,3)
-plot(trymodes,(fiterror),'o-')
+subplot(4,2,5)
+plot(trymodes(2:end),diff(log10(fiterror)),'o-')
 xlabel('Number of Modes')
 ylabel('Total Squared Error')
+LogScale('y',10)
 
+subplot(4,2,7)
+plot(trymodes,log10(fiterror),'o-')
+xlabel('Number of Modes')
+ylabel('Total Squared Error')
+LogScale('y',10)
+
+if ~sequentialreduce
 subplot(4,2,3)
 plot(timebins,logISIhist,'k','linewidth',2)
 hold on
@@ -194,6 +206,7 @@ for mm = 1:returnNmodes
     plot(timebins,multigamfun(init(returnNmodes.*[0;1;2]+mm),taubins),'r')
 end
 title('Initalization')
+end
 
 
 end
