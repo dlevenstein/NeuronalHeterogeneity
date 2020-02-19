@@ -22,8 +22,8 @@ for rr = 1:length(regions)
 
     [GammaFitAll,baseNames] = bz_LoadAnalysisResults(datasetPath.(regions{rr}),'GammaModeFitAnalysis','dataset',true);
     CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
-
-
+    ISIStats.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true,'baseNames',baseNames);
+    ISIStats.(regions{rr}) = rmfield( ISIStats.(regions{rr}),'allspikes');
     
     %PopActivityAll = GetMatResults(figfolder,'SpikeStatsbyPopActivityAnalysis','baseNames',baseNames);
     GammaFitAll = bz_CollapseStruct(GammaFitAll);
@@ -31,7 +31,6 @@ for rr = 1:length(regions)
     ISIfits.(regions{rr}) = bz_CollapseStruct(GammaFitAll.ISIfits,'match','justcat',true);
     %Remove cells not in the proper region by removing their cell class!
     if ismember(rr,[4 5])
-        ISIStats.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true,'baseNames',baseNames);
         inregion = cellfun(@(X) strcmp(X,rnames{rr}),ISIStats.(regions{rr}).cellinfo.regions);
         CellClass.(regions{rr}).label(~inregion)={[]};
         CellClass.(regions{rr}).pE(~inregion)=false;
@@ -44,7 +43,7 @@ end
 
 %%
 
-maxNmodes = 10;
+maxNmodes = 12;
 
 %%
 figure
