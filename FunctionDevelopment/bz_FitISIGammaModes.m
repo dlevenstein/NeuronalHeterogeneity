@@ -75,7 +75,7 @@ logISIhist = logISIhist./(sum(logISIhist).*mode(diff(taubins)));
     %Sum of loggammas
     function plogt = multigamfun(lambkweit,tau)
         lambda = exp(lambkweit(1:end/3));  %beta
-        k = 1./lambkweit(end/3+1:end/(3/2)); %alpha
+        k = 1./lambkweit(end/3+1:end/(3/2)); %alpha (log transform for fitting?)
         weight = lambkweit(end/(3/2)+1:end);
         
         plogt = sum(...

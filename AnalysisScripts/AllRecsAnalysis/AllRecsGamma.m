@@ -12,6 +12,8 @@ regions = {'THAL','vCTX','fCTX','BLA','PIR','CA1'};
 rnames =  {''    ,''    ,''    ,'bla','pir',''   };
 regioncolors = crameri('batlow',length(regions));
 celltypes = {'pE','pI'};
+cellcolor = {'k','r'};
+statenames = {'NREMstate','WAKEstate','REMstate'};
 
 for rr = 1:length(regions)
     disp(['Loading ',regions{rr}])
@@ -20,19 +22,21 @@ for rr = 1:length(regions)
 
     [GammaFitAll,baseNames] = bz_LoadAnalysisResults(datasetPath.(regions{rr}),'GammaModeFitAnalysis','dataset',true);
     CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
-    ISIStats.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true,'baseNames',baseNames);
+
 
     
     %PopActivityAll = GetMatResults(figfolder,'SpikeStatsbyPopActivityAnalysis','baseNames',baseNames);
     GammaFitAll = bz_CollapseStruct(GammaFitAll);
     
-    ISIfits.(regions{rr}) = bz_CollapseStruct(GammaFitAll.ISIfits,3,'justcat',true);
+    ISIfits.(regions{rr}) = bz_CollapseStruct(GammaFitAll.ISIfits,'match','justcat',true);
     %Remove cells not in the proper region by removing their cell class!
     if ismember(rr,[4 5])
-        inregion = cellfun(@(X) strcmp(X,rnames{rr}),ISIstats.(regions{rr}).cellinfo.regions);
+        ISIStats.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true,'baseNames',baseNames);
+        inregion = cellfun(@(X) strcmp(X,rnames{rr}),ISIStats.(regions{rr}).cellinfo.regions);
         CellClass.(regions{rr}).label(~inregion)={[]};
         CellClass.(regions{rr}).pE(~inregion)=false;
         CellClass.(regions{rr}).pI(~inregion)=false;
+        clear ISIStats
     end
     
     clear GammaFitAll
@@ -40,11 +44,67 @@ end
 
 %%
 
+maxNmodes = 10;
+
+%%
+figure
+for ss = 1:3
+for cc = 1:2
+subplot(3,2,(cc)+(ss-1)*2)
+%imagesc(log10(fiterror))
+hold on
+for rr = 1:length(regions)
+    plot(1:maxNmodes,nanmean(log10(ISIfits.(regions{rr}).(statenames{ss}).fiterror(CellClass.(regions{rr}).(celltypes{cc}),:)),1),...
+        '-o','linewidth',2,'color',regioncolors(rr,:))
+   % errorshade(1:maxNmodes,nanmean(log10(ISIfits.(regions{rr}).(statenames{ss}).fiterror(CellClass.(regions{rr}).(celltypes{cc}),:)),1),...
+    %    nanstd(log10(ISIfits.(regions{rr}).(statenames{ss}).fiterror(CellClass.(regions{rr}).(celltypes{cc}),:)),[],1),...
+    %    nanstd(log10(ISIfits.(regions{rr}).(statenames{ss}).fiterror(CellClass.(regions{rr}).(celltypes{cc}),:)),[],1),regioncolors(rr,:),'scalar');
+end
+LogScale('y',10)
+xlabel('N Modes');ylabel({statenames{ss},'MSE'})
+if ss == 1
+    title(celltypes{cc})
+    if cc == 1
+        legend(regions)
+    end
+end
+end
+end
 
 
 
 
 
+%%
+figure
+for ss = 1:3
+    for rr = 1:length(regions)
+        ISIfits.(regions{rr}).(statenames{ss}).weights(ISIfits.(regions{rr}).(statenames{ss}).weights<0.01) = nan;
+    ISIfits.(regions{rr}).(statenames{ss}).rates(isnan(ISIfits.(regions{rr}).(statenames{ss}).weights))=nan;
+
+subplot(length(regions),3,(rr-1)*3+ss)
+hold on
+for cc = 1:2
+    plot(log10(ISIfits.(regions{rr}).(statenames{ss}).rates(:,CellClass.(regions{rr}).(celltypes{cc}))),...
+        log10(ISIfits.(regions{rr}).(statenames{ss}).CVs(:,CellClass.(regions{rr}).(celltypes{cc}))),...
+        '.','color',cellcolor{cc},'markersize',1)
+    LogScale('x',10)
+    ylim([-2 0.75])
+    %ylim([0 4])
+    xlim([-2 2.5])
+    xlabel('Rate');ylabel('CV')
+end
+if rr == 1
+title((statenames{ss}))
+end
+if ss == 1
+    ylabel({(regions{rr}),'CV'})
+end
+
+    end 
+end
+
+NiceSave(['AllISImodes'],figfolder,[])
 
 
 

@@ -52,8 +52,9 @@ for ss = 1:3
 
     ISIfits.(statenames{ss}).rates = 1./(ISIfits.(statenames{ss}).ks./ISIfits.(statenames{ss}).lambdas);
     ISIfits.(statenames{ss}).CVs = 1./ISIfits.(statenames{ss}).ks;
-    ISIfits.(statenames{ss}).rates(ISIfits.(statenames{ss}).weights == 0 | isnan(ISIfits.(statenames{ss}).weights)) = nan;
     ISIfits.(statenames{ss}).weights(ISIfits.(statenames{ss}).weights<0.01) = nan;
+    ISIfits.(statenames{ss}).rates(isnan(ISIfits.(statenames{ss}).weights)) = nan;
+    
 end
 
 %% Example cell
