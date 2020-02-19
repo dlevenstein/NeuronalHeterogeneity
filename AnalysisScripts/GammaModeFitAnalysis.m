@@ -10,10 +10,10 @@ function [ISIfits] = GammaModeFitAnalysis(basePath,figfolder)
 %% Load Header
 %Initiate Paths
 %reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-%reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = pwd;
-%basePath = '/Users/dlevenstein/Dropbox/research/Datasets/Cicero_09102014';
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+basePath = '/Users/dlevenstein/Dropbox/research/Datasets/Cicero_09102014';
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -34,7 +34,7 @@ cellcolor = {'k','r'};
 statenames = {'WAKEstate','NREMstate','REMstate'};
 %%
 %cc = 1
-Nmodes = 4;
+Nmodes = 3;
 maxNmodes = 10;
 logbins = ISIStats.ISIhist.logbins;
 numcells = length(ISIStats.summstats.WAKEstate.meanrate);
@@ -47,7 +47,7 @@ for ss = 1:3
     [ISIfits.(statenames{ss}).lambdas(:,cc),ISIfits.(statenames{ss}).ks(:,cc),...
         ISIfits.(statenames{ss}).weights(:,cc),ISIfits.(statenames{ss}).fiterror(cc,:)] = ...
         bz_FitISIGammaModes(fitISIs,...
-        'showfig',false,'returnNmodes',Nmodes,'maxNmodes',maxNmodes);
+        'showfig',false,'returnNmodes',Nmodes,'maxNmodes',maxNmodes,'sequentialreduce',true);
     end
 
     ISIfits.(statenames{ss}).rates = 1./(ISIfits.(statenames{ss}).ks./ISIfits.(statenames{ss}).lambdas);
@@ -61,12 +61,20 @@ end
 
 cc = randi(numcells);
 for ss = 1:3
+
+ss = 2;
 fitISIs = InIntervals(ISIStats.allspikes.times{cc},SleepState.ints.(statenames{ss}));
 fitISIs = ISIStats.allspikes.ISIs{cc}(fitISIs);
 [~] = ...
     bz_FitISIGammaModes(fitISIs,...
-    'showfig',true,'returnNmodes',Nmodes);
-    NiceSave(['ISImodefits_ExCell_',num2str(cc),'_',(statenames{ss})],figfolder,baseName)
+    'showfig',true,'returnNmodes',Nmodes,'sequentialreduce',true,...
+    'maxNmodes',10);
+
+% [~] = ...
+%     bz_FitISIGammaModes(fitISIs,...
+%     'showfig',true,'returnNmodes',Nmodes,'sequentialreduce',false,...
+%     'maxNmodes',10);
+ %   NiceSave(['ISImodefits_ExCell_',num2str(cc),'_',(statenames{ss})],figfolder,baseName)
 end
 %%
 for ss = 1:3

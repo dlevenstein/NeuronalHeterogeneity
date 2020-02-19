@@ -29,6 +29,7 @@ addParameter(p,'maxNmodes',10)
 addParameter(p,'lambdabounds',[-4 7])
 addParameter(p,'numpad',15)
 addParameter(p,'minISIs',200)
+addParameter(p,'sequentialreduce',false)
 
 parse(p,varargin{:})
 numpad = p.Results.numpad;
@@ -38,6 +39,7 @@ returnNmodes = p.Results.returnNmodes;
 SHOWFIG = p.Results.showfig;
 lambdabounds = p.Results.lambdabounds; %units: loglambda, e
 minISIs = p.Results.minISIs;
+sequentialreduce = p.Results.sequentialreduce;
 %% 
 if length(ISIs)<minISIs
     lambdas = nan(returnNmodes,1);
@@ -92,12 +94,18 @@ trymodes = [1:maxNmodes];
 fiterror = zeros(size(trymodes));
 initweightfactor = 10;
 
-for nummodes = trymodes
+for nummodes = maxNmodes:-1:1
 
 %Initialize parms
-init = [linspace(-1.5,5,nummodes)';...    %Lambda 
-    0.8.*ones(nummodes,1);         %K 
-    ones(nummodes,1)./(nummodes)];             %Weights (normalize later)
+if nummodes ==maxNmodes || ~sequentialreduce
+    init = [linspace(-1.5,5,nummodes)';...    %Lambda 
+        0.8.*ones(nummodes,1);         %K 
+        ones(nummodes,1)./(nummodes)];             %Weights (normalize later)
+else
+    init = fitparms{nummodes+1};
+    [~,lowestweightmode] = min(init(end/(3/2)+1:end));
+    init(lowestweightmode + (nummodes+1).*[0 1 2]) = [];
+end
 
 
 difffun = @(lambkweit) sum((logISIhist-multigamfun(lambkweit,taubins)).^2);
@@ -125,6 +133,12 @@ fiterror(nummodes) = difffun(fitparms{nummodes});
 
 end
 
+%%
+% figure
+% subplot(2,2,1)
+% plot(trymodes,fiterror)
+% subplot(2,2,2)
+% plot(trymodes(2:end),diff(fiterror))
 %% AIC/BIC
 %liklihood = sum(log(multigamfun(fitparms{returnNmodes},ISIs')));
 %%
@@ -165,9 +179,9 @@ LogScale('x',10)
 xlabel('Rate (Hz)');ylabel('1/k (CV)')
 
 subplot(2,2,3)
-plot(trymodes,log10(fiterror),'o-')
+plot(trymodes,(fiterror),'o-')
 xlabel('Number of Modes')
-ylabel('Error')
+ylabel('Total Squared Error')
 
 subplot(4,2,3)
 plot(timebins,logISIhist,'k','linewidth',2)
