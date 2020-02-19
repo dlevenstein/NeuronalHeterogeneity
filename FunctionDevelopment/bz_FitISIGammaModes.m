@@ -1,4 +1,4 @@
-function [lambdas,ks,weights,fiterror] = bz_FitISIGammaModes(ISIs,varargin)
+function [lambdas,ks,weights,fiterror,returnNmodes] = bz_FitISIGammaModes(ISIs,varargin)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %
@@ -10,7 +10,8 @@ function [lambdas,ks,weights,fiterror] = bz_FitISIGammaModes(ISIs,varargin)
 %       'logbase'       (default: 10)
 %       'numpad'        (number of bins below/above to pad)
 %       'maxNmodes'  
-%       'returnNmodes'
+%       'returnNmodes'  'auto' (selects based on drop in error)
+%       'promthresh'    for auto selection (default: 0.01))
 %       'showfig'
 %       'lambdabounds'
 %       'ISIs'          for measuing AIC (maybe just make hist from this?)
@@ -22,14 +23,16 @@ function [lambdas,ks,weights,fiterror] = bz_FitISIGammaModes(ISIs,varargin)
 
 % parse args
 p = inputParser;
-addParameter(p,'returnNmodes',3)
+addParameter(p,'returnNmodes',6)
+addParameter(p,'autoNmodes',true)
 addParameter(p,'showfig',true)
 addParameter(p,'logbase',10)
 addParameter(p,'maxNmodes',10)
 %addParameter(p,'lambdabounds',[-5 8])
 addParameter(p,'logratebounds',[-3 3])
 addParameter(p,'numpad',15)
-addParameter(p,'minISIs',200)
+addParameter(p,'minISIs',250)
+addParameter(p,'promthresh',0.01)
 addParameter(p,'sequentialreduce',false)
 %addParameter(p,'lasso',0)
 
@@ -43,6 +46,8 @@ SHOWFIG = p.Results.showfig;
 logratebounds = p.Results.logratebounds; %units: loglambda, e
 minISIs = p.Results.minISIs;
 sequentialreduce = p.Results.sequentialreduce;
+promthresh = p.Results.promthresh;
+autoNmodes = p.Results.autoNmodes;
 %lasso = p.Results.lasso; %lasso doesn't work because weights sum to 1...
 %%
 if length(ISIs)<minISIs
@@ -123,7 +128,7 @@ lb =  [logratebounds(1).*ones(nummodes,1);...    %Lambda
 Aeq = [zeros(1,nummodes) zeros(1,nummodes) ones(1,nummodes)];
 beq = 1;
 
-options = optimoptions('fmincon','Algorithm','sqp','Display','off');%,'UseParallel',true);
+options = optimoptions('fmincon','Algorithm','sqp','Display','off','UseParallel',true);
 %try also: 'Algorithm','active-set'
 %Decrease tolerance.....
 options.MaxFunctionEvaluations = 1e5;
@@ -134,23 +139,32 @@ fiterror(nummodes) = difffun(fitparms{nummodes});
 
 end
 
-%%
-figure
-subplot(2,2,1)
-plot(trymodes,(fiterror))
-subplot(2,2,2)
-plot(trymodes(2:end),diff(fiterror))
-subplot(2,2,3)
-plot(trymodes,log10(fiterror))
-subplot(2,2,4)
-plot(trymodes(2:end),diff(log10(fiterror)))
-%% AIC/BIC
-%liklihood = sum(log(multigamfun(fitparms{returnNmodes},ISIs')));
+
+%% Pick the number of modes to return based on drop in error
+errordrop = [0 diff(log10(fiterror))];
+[~,putNmodes,~,P] = findpeaks(-errordrop);
+putNmodes(P<promthresh) = [];
+savereturnNmodes = returnNmodes;
+if autoNmodes
+    returnNmodes = max(putNmodes(putNmodes<=returnNmodes));
+    if isempty(returnNmodes)
+        %Need a better way to do this.... prominence is dependent on error
+        %which is dependent on number of spikes
+        returnNmodes = savereturnNmodes;
+    end
+end
+
+
+% AIC/BIC using liklihood...
 %%
 
 ks  = 1./(10.^fitparms{returnNmodes}(returnNmodes+1:end-returnNmodes)); %1/k
 lambdas = (10.^fitparms{returnNmodes}(1:returnNmodes)).*ks;  %log lambda
 weights  = fitparms{returnNmodes}(end-returnNmodes+1:end);
+
+ks(returnNmodes+1:savereturnNmodes) = nan;
+lambdas(returnNmodes+1:savereturnNmodes) = nan;
+weights(returnNmodes+1:savereturnNmodes) = nan;
 
 %%
 if SHOWFIG
@@ -186,10 +200,12 @@ LogScale('x',10)
 xlabel('Rate (Hz)');ylabel('1/k (CV)')
 
 subplot(4,2,5)
-plot(trymodes(2:end),diff(log10(fiterror)),'o-')
+plot(trymodes,errordrop,'o-')
+hold on
+plot(trymodes(putNmodes),errordrop(putNmodes),'r^')
 xlabel('Number of Modes')
 ylabel('Total Squared Error')
-LogScale('y',10)
+%LogScale('y',10)
 
 subplot(4,2,7)
 plot(trymodes,log10(fiterror),'o-')
