@@ -36,7 +36,6 @@ statenames = {'WAKEstate','NREMstate','REMstate'};
 %cc = 1
 Nmodes = 4;
 maxNmodes = 10;
-logbins = ISIStats.ISIhist.logbins;
 numcells = length(ISIStats.summstats.WAKEstate.meanrate);
 clear lambdas ks weights fiterror
 for ss = 1:3
@@ -61,6 +60,7 @@ end
 
 cc = randi(numcells);
 for ss = 1:3
+    %%
 fitISIs = InIntervals(ISIStats.allspikes.times{cc},SleepState.ints.(statenames{ss}));
 fitISIs = ISIStats.allspikes.ISIs{cc}(fitISIs);
 [~] = ...

@@ -29,6 +29,7 @@ addParameter(p,'maxNmodes',10)
 addParameter(p,'lambdabounds',[-4 7])
 addParameter(p,'numpad',15)
 addParameter(p,'minISIs',200)
+%addParameter(p,'lasso',0)
 
 parse(p,varargin{:})
 numpad = p.Results.numpad;
@@ -38,6 +39,7 @@ returnNmodes = p.Results.returnNmodes;
 SHOWFIG = p.Results.showfig;
 lambdabounds = p.Results.lambdabounds; %units: loglambda, e
 minISIs = p.Results.minISIs;
+%lasso = p.Results.lasso; %lasso doesn't work because weights sum to 1...
 %% 
 if length(ISIs)<minISIs
     lambdas = nan(returnNmodes,1);
@@ -75,7 +77,7 @@ logISIhist = logISIhist./(sum(logISIhist).*mode(diff(taubins)));
     %Sum of loggammas
     function plogt = multigamfun(lambkweit,tau)
         lambda = exp(lambkweit(1:end/3));  %beta
-        k = 1./lambkweit(end/3+1:end/(3/2)); %alpha (log transform for fitting?)
+        k = 1./(10.^lambkweit(end/3+1:end/(3/2))); %alpha (log transform)
         weight = lambkweit(end/(3/2)+1:end);
         
         plogt = sum(...
@@ -95,19 +97,19 @@ initweightfactor = 10;
 for nummodes = trymodes
 
 %Initialize parms
-init = [linspace(-1.5,5,nummodes)';...    %Lambda 
-    0.8.*ones(nummodes,1);         %K 
+init = [linspace(-1.5,5.5,nummodes)';...    %Lambda 
+    -0.3.*ones(nummodes,1);         %K  (used to be CV=0.8...)
     ones(nummodes,1)./(nummodes)];             %Weights (normalize later)
 
 
-difffun = @(lambkweit) sum((logISIhist-multigamfun(lambkweit,taubins)).^2);
+difffun = @(lambkweit) mean((logISIhist-multigamfun(lambkweit,taubins)).^2);
 
 
 ub = [lambdabounds(2).*ones(nummodes,1);...    %Lambda
-    6.*ones(nummodes,1);         %K 
+    1.*ones(nummodes,1);         %K (optimization parameter is log(CV)
     ones(nummodes,1)];             %Weights (normalize later)
 lb =  [lambdabounds(1).*ones(nummodes,1);...    %Lambda
-    zeros(nummodes,1);         %K 
+    -2*ones(nummodes,1);         %K (optimization parameter is log(CV)
     zeros(nummodes,1)];             %Weights (normalize later)
 
 %Constraint: weights sum to 1
@@ -129,7 +131,7 @@ end
 %liklihood = sum(log(multigamfun(fitparms{returnNmodes},ISIs')));
 %%
 lambdas = exp(fitparms{returnNmodes}(1:returnNmodes));  %log lambda
-ks  = 1./fitparms{returnNmodes}(returnNmodes+1:end-returnNmodes); %1/k
+ks  = 1./(10.^fitparms{returnNmodes}(returnNmodes+1:end-returnNmodes)); %1/k
 weights  = fitparms{returnNmodes}(end-returnNmodes+1:end);
 %%
 if SHOWFIG
@@ -138,8 +140,8 @@ if SHOWFIG
 timebins = taubins./log(logbase);
 meanISI = ks./lambdas;
 %Initialize parms
-init = [linspace(-1.5,5,returnNmodes)';...    %Lambda 
-    0.8.*ones(returnNmodes,1);         %K 
+init = [linspace(-1.5,5.5,returnNmodes)';...    %Lambda 
+    -0.3.*ones(returnNmodes,1);         %K  (used to be CV=0.8...)
     ones(returnNmodes,1)./(returnNmodes)];             %Weights (normalize later)
     
 figure

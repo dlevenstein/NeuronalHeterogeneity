@@ -54,13 +54,13 @@ subplot(3,2,(cc)+(ss-1)*2)
 %imagesc(log10(fiterror))
 hold on
 for rr = 1:length(regions)
-    plot(1:maxNmodes,nanmean(log10(ISIfits.(regions{rr}).(statenames{ss}).fiterror(CellClass.(regions{rr}).(celltypes{cc}),:)),1),...
+    plot(1:maxNmodes,nanmean((ISIfits.(regions{rr}).(statenames{ss}).fiterror(CellClass.(regions{rr}).(celltypes{cc}),:)),1),...
         '-o','linewidth',2,'color',regioncolors(rr,:))
    % errorshade(1:maxNmodes,nanmean(log10(ISIfits.(regions{rr}).(statenames{ss}).fiterror(CellClass.(regions{rr}).(celltypes{cc}),:)),1),...
     %    nanstd(log10(ISIfits.(regions{rr}).(statenames{ss}).fiterror(CellClass.(regions{rr}).(celltypes{cc}),:)),[],1),...
     %    nanstd(log10(ISIfits.(regions{rr}).(statenames{ss}).fiterror(CellClass.(regions{rr}).(celltypes{cc}),:)),[],1),regioncolors(rr,:),'scalar');
 end
-LogScale('y',10)
+%LogScale('y',10)
 xlabel('N Modes');ylabel({statenames{ss},'MSE'})
 if ss == 1
     title(celltypes{cc})
