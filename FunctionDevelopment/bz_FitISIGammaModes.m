@@ -128,7 +128,7 @@ lb =  [logratebounds(1).*ones(nummodes,1);...    %Lambda
 Aeq = [zeros(1,nummodes) zeros(1,nummodes) ones(1,nummodes)];
 beq = 1;
 
-options = optimoptions('fmincon','Algorithm','sqp','Display','off','UseParallel',true);
+options = optimoptions('fmincon','Algorithm','sqp','Display','off');%,'UseParallel',true);
 %try also: 'Algorithm','active-set'
 %Decrease tolerance.....
 options.MaxFunctionEvaluations = 1e5;
