@@ -26,9 +26,9 @@ addParameter(p,'returnNmodes',3)
 addParameter(p,'showfig',true)
 addParameter(p,'logbase',10)
 addParameter(p,'maxNmodes',10)
-addParameter(p,'lambdabounds',[-4 10])
+addParameter(p,'lambdabounds',[-4 7])
 addParameter(p,'numpad',15)
-addParameter(p,'minISIs',100)
+addParameter(p,'minISIs',200)
 
 parse(p,varargin{:})
 numpad = p.Results.numpad;
@@ -43,7 +43,7 @@ if length(ISIs)<minISIs
     lambdas = nan(returnNmodes,1);
     ks = nan(returnNmodes,1);
     weights = nan(returnNmodes,1);
-    fiterror = zeros(1,maxNmodes);
+    fiterror = nan(1,maxNmodes);
     return
 end
 %% DEV
@@ -95,7 +95,7 @@ initweightfactor = 10;
 for nummodes = trymodes
 
 %Initialize parms
-init = [linspace(-1.5,5.5,nummodes)';...    %Lambda 
+init = [linspace(-1.5,5,nummodes)';...    %Lambda 
     0.8.*ones(nummodes,1);         %K 
     ones(nummodes,1)./(nummodes)];             %Weights (normalize later)
 
@@ -104,8 +104,8 @@ difffun = @(lambkweit) sum((logISIhist-multigamfun(lambkweit,taubins)).^2);
 
 
 ub = [lambdabounds(2).*ones(nummodes,1);...    %Lambda
-    inf(nummodes,1);         %K 
-    5.*ones(nummodes,1)];             %Weights (normalize later)
+    6.*ones(nummodes,1);         %K 
+    ones(nummodes,1)];             %Weights (normalize later)
 lb =  [lambdabounds(1).*ones(nummodes,1);...    %Lambda
     zeros(nummodes,1);         %K 
     zeros(nummodes,1)];             %Weights (normalize later)
@@ -138,7 +138,7 @@ if SHOWFIG
 timebins = taubins./log(logbase);
 meanISI = ks./lambdas;
 %Initialize parms
-init = [linspace(-1.5,5.5,returnNmodes)';...    %Lambda 
+init = [linspace(-1.5,5,returnNmodes)';...    %Lambda 
     0.8.*ones(returnNmodes,1);         %K 
     ones(returnNmodes,1)./(returnNmodes)];             %Weights (normalize later)
     
@@ -162,7 +162,7 @@ subplot(2,2,4)
 scatter(log10(1./meanISI),1./ks,10)
 %crameri('bilbao')
 LogScale('x',10)
-xlabel('Lambda (Timescale)');ylabel('1/k (CV)')
+xlabel('Rate (Hz)');ylabel('1/k (CV)')
 
 subplot(2,2,3)
 plot(trymodes,log10(fiterror),'o-')
