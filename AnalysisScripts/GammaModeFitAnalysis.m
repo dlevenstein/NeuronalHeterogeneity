@@ -10,10 +10,10 @@ function [ISIfits] = GammaModeFitAnalysis(basePath,figfolder)
 %% Load Header
 %Initiate Paths
 %reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
+%reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = pwd;
-basePath = '/Users/dlevenstein/Dropbox/research/Datasets/Cicero_09102014';
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+%basePath = '/Users/dlevenstein/Dropbox/research/Datasets/Cicero_09102014';
+%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
