@@ -35,7 +35,7 @@ for rr = 1:length(regions)
         CellClass.(regions{rr}).label(~inregion)={[]};
         CellClass.(regions{rr}).pE(~inregion)=false;
         CellClass.(regions{rr}).pI(~inregion)=false;
-        clear ISIStats
+        %clear ISIStats
     end
     
     clear GammaFitAll
@@ -75,6 +75,7 @@ end
 
 
 %%
+for cc = 1:2
 figure
 for ss = 1:3
     for rr = 1:length(regions)
@@ -83,7 +84,7 @@ for ss = 1:3
 
 subplot(length(regions),3,(rr-1)*3+ss)
 hold on
-for cc = 1:2
+
     plot(log10(ISIfits.(regions{rr}).(statenames{ss}).rates(:,CellClass.(regions{rr}).(celltypes{cc}))),...
         log10(ISIfits.(regions{rr}).(statenames{ss}).CVs(:,CellClass.(regions{rr}).(celltypes{cc}))),...
         '.','color',cellcolor{cc},'markersize',1)
@@ -91,8 +92,8 @@ for cc = 1:2
     ylim([-2 0.75])
     %ylim([0 4])
     xlim([-2 2.5])
-    xlabel('Rate');ylabel('CV')
-end
+    xlabel('Mean ISI (1/rate)');ylabel('CV')
+
 if rr == 1
 title((statenames{ss}))
 end
@@ -101,14 +102,20 @@ if ss == 1
 end
 
     end 
+
+end
+NiceSave(['AllISImodes',(celltypes{cc})],figfolder,[])
 end
 
-NiceSave(['AllISImodes'],figfolder,[])
+%%
 
-
-
-
-
+figure
+for ss = 1:3
+    for rr = 1:length(regions)
+        subplot(length(regions),3,(rr-1)*3+ss)
+            hist(ISIfits.(regions{rr}).(statenames{ss}).Nmodes(CellClass.(regions{rr}).(celltypes{cc})))
+    end
+end
 
 
 %%
