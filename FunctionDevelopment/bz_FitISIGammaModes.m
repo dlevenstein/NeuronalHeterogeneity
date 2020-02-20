@@ -31,8 +31,8 @@ addParameter(p,'maxNmodes',10)
 %addParameter(p,'lambdabounds',[-5 8])
 addParameter(p,'logratebounds',[-3 3])
 addParameter(p,'numpad',15)
-addParameter(p,'minISIs',250)
-addParameter(p,'promthresh',0.01)
+addParameter(p,'minISIs',300)
+addParameter(p,'promthresh',0.05)
 addParameter(p,'sequentialreduce',false)
 %addParameter(p,'lasso',0)
 
@@ -70,7 +70,7 @@ end
 %     linspace(max(taubins),max(taubins)+5,numpad)];
 % logISIhist = [zeros(1,numpad),logISIhist,zeros(1,numpad)];
 
-taubins = linspace(-10,8,500);
+taubins = linspace(-10,8,300);
 logISIhist = hist(log(ISIs),taubins);
 logISIhist = logISIhist./(sum(logISIhist).*mode(diff(taubins)));
 %% The multigammafunction of all parameters
@@ -78,7 +78,7 @@ logISIhist = logISIhist./(sum(logISIhist).*mode(diff(taubins)));
     %Sum of loggammas
     function plogt = multigamfun(lambkweit,tau)
         %Parameters: 1) log10 rate  2) log10CV . 3) weights
-        k = 1./(10.^lambkweit(end/3+1:end/(3/2))); %alpha (log transform)
+        k = 1./(lambkweit(end/3+1:end/(3/2))); %alpha
         %lambda = exp(lambkweit(1:end/3));  %beta
         lambda = (10.^lambkweit(1:end/3)).*k;
         weight = lambkweit(end/(3/2)+1:end);
@@ -87,6 +87,7 @@ logISIhist = logISIhist./(sum(logISIhist).*mode(diff(taubins)));
             weight.*...
             (lambda.^(k).*exp(k*tau)) ./ ...
             (gamma(k).*exp(lambda*exp(tau))),1);
+        %plogt(isnan(plogt)) = 0;
     end
 
 
@@ -102,27 +103,34 @@ for nummodes = maxNmodes:-1:1
 if nummodes ==maxNmodes || ~sequentialreduce
 %     init = [linspace(-1.5,5.5,nummodes)';...    %Lambda 
 %         -0.3.*ones(nummodes,1);         %K  (used to be CV=0.8...)
-%         ones(nummodes,1)./(nummodes)];             %Weights (normalize later)
-    init = [linspace(-0.5,1.5,nummodes)';...    %Lambda 
-        -0.3.*ones(nummodes,1);         %K  (used to be CV=0.8...)
-        ones(nummodes,1)./(nummodes)];             %Weights (normalize later)
-else  %Remove the lowest weight, keep rate/cv, renormalize the weights, refit
+%         ones(nummodes,1)./(nummodes)];             %Weights
+    init = [linspace(-1,2,nummodes)';...    %Lambda 
+        0.8.*ones(nummodes,1);         %K  (used to be CV=0.8...)
+        ones(nummodes,1)./(nummodes)];             %Weights
+else  
     init = fitparms{nummodes+1};
     [~,lowestweightmode] = min(init(end/(3/2)+1:end));
+    %Remove the lowest weight
     init(lowestweightmode + (nummodes+1).*[0 1 2]) = [];
+    sigmodes = (init(end/(3/2)+1:end)>0.05);
+    %renormalize the weights
     init(end/(3/2)+1:end) = ones(nummodes,1)./(nummodes);
+    %redistirbute the insignificant rates between the significant modes
+    sigrates = init(sigmodes);
+    init(~sigmodes) = linspace(-0.5,2,sum(~sigmodes));
+    %set insignificant mode CV back to 0.8
+    init(find(~sigmodes)+nummodes) = 0.8;
 end
 
 
 difffun = @(lambkweit) sum((logISIhist-multigamfun(lambkweit,taubins)).^2);
 
-
+lb =  [logratebounds(1).*ones(nummodes,1);...    %Lambda (optimization parameter is log rate)
+    0*ones(nummodes,1);         %K (optimization parameter is log(CV)
+    zeros(nummodes,1)];             %Weights
 ub = [logratebounds(2).*ones(nummodes,1);...    %Lambda
-    1.5.*ones(nummodes,1);         %K (optimization parameter is log(CV)
-    ones(nummodes,1)];             %Weights (normalize later)
-lb =  [logratebounds(1).*ones(nummodes,1);...    %Lambda
-    -2.5*ones(nummodes,1);         %K (optimization parameter is log(CV)
-    zeros(nummodes,1)];             %Weights (normalize later)
+    10.*ones(nummodes,1);         %K (optimization parameter is log(CV)
+    ones(nummodes,1)];             %Weights
 
 %Constraint: weights sum to 1
 Aeq = [zeros(1,nummodes) zeros(1,nummodes) ones(1,nummodes)];
@@ -143,16 +151,25 @@ end
 %% Pick the number of modes to return based on drop in error
 errordrop = [0 diff(log10(fiterror))];
 [~,putNmodes,~,P] = findpeaks(-errordrop);
-putNmodes(P<promthresh) = [];
+
+ %Take the largest N peak over some prominence
+%putNmodes(P<promthresh) = [];
 savereturnNmodes = returnNmodes;
-if autoNmodes
-    returnNmodes = max(putNmodes(putNmodes<=savereturnNmodes));
-    if isempty(returnNmodes)
-        [~,putNmodes,~,P] = findpeaks(-errordrop);
-        returnNmodes = max(putNmodes(putNmodes<=savereturnNmodes));
-        %Need a better way to do this.... prominence is dependent on error
-        %which is dependent on number of spikes
-        if isempty(returnNmodes)
+if autoNmodes %If no peaks over that prominence, take the largest prominence peak
+    
+%     %Largest prominence peak      
+    [~,whichmode] = max(P(putNmodes<=savereturnNmodes));
+    returnNmodes = putNmodes(whichmode);
+
+    %Largest N peak with prominence over threshold
+%     [~,whichmode] = max(putNmodes(putNmodes<=savereturnNmodes & P>promthresh));
+%     returnNmodes = putNmodes(whichmode);
+    
+    if isempty(whichmode)
+        %Largest prominence peak
+        [~,whichmode] = max(P(putNmodes<=savereturnNmodes));
+        returnNmodes = putNmodes(whichmode);
+        if isempty(returnNmodes)  %if no peaks
             returnNmodes = savereturnNmodes;
         end
     end
@@ -162,7 +179,7 @@ end
 % AIC/BIC using liklihood...
 %%
 
-ks  = 1./(10.^fitparms{returnNmodes}(returnNmodes+1:end-returnNmodes)); %1/k
+ks  = 1./(fitparms{returnNmodes}(returnNmodes+1:end-returnNmodes)); %1/k
 lambdas = (10.^fitparms{returnNmodes}(1:returnNmodes)).*ks;  %log lambda
 weights  = fitparms{returnNmodes}(end-returnNmodes+1:end);
 

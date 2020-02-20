@@ -34,13 +34,13 @@ cellcolor = {'k','r'};
 statenames = {'WAKEstate','NREMstate','REMstate'};
 %%
 %cc = 1
-Nmodes = 7;
+Nmodes = 6;
 maxNmodes = 12;
 numcells = length(ISIStats.summstats.WAKEstate.meanrate);
-clear lambdas ks weights fiterror
+clear ISIfits
 for ss = 1:3
     for cc = 1:numcells
-      
+     
     bz_Counter(cc,numcells,'Cell')
     fitISIs = InIntervals(ISIStats.allspikes.times{cc},SleepState.ints.(statenames{ss}));
     fitISIs = ISIStats.allspikes.ISIs{cc}(fitISIs);
@@ -62,19 +62,15 @@ end
 %% Example cell
 
 cc = randi(numcells);
-for ss = 1:3
+for ss =1:3
 %
 fitISIs = InIntervals(ISIStats.allspikes.times{cc},SleepState.ints.(statenames{ss}));
 fitISIs = ISIStats.allspikes.ISIs{cc}(fitISIs);
 [~] = ...
     bz_FitISIGammaModes(fitISIs,...
     'showfig',true,'sequentialreduce',true,...
-    'maxNmodes',12);
+    'maxNmodes',maxNmodes,'returnNmodes',Nmodes,'autoNmodes',true);
 
-% [~] = ...
-%     bz_FitISIGammaModes(fitISIs,...
-%     'showfig',true,'returnNmodes',Nmodes,'sequentialreduce',false,...
-%     'maxNmodes',10);
     NiceSave(['ISImodefits_ExCell_',num2str(cc),'_',(statenames{ss})],figfolder,baseName)
 end
 %%
@@ -83,8 +79,11 @@ figure
 subplot(2,2,1)
 hold on
 for cc = 1:2
-    plot(log10(ISIfits.(statenames{ss}).rates(:,CellClass.(celltypes{cc}))),...
-        ISIfits.(statenames{ss}).CVs(:,CellClass.(celltypes{cc})),'.','color',cellcolor{cc})
+    for mm = 1:Nmodes
+    scatter(log10(ISIfits.(statenames{ss}).rates(mm,CellClass.(celltypes{cc}))),...
+        ISIfits.(statenames{ss}).CVs(mm,CellClass.(celltypes{cc})),...
+        10.*ISIfits.(statenames{ss}).weights(mm,CellClass.(celltypes{cc})),cellcolor{cc})
+    end
 %     scatter(log10(1./(ks(:,CellClass.(celltypes{cc}))./rates(:,CellClass.(celltypes{cc})))),...
 %         (1./ks(:,CellClass.(celltypes{cc}))),weights(:,CellClass.(celltypes{cc})),...
 %         repmat(ISIStats.summstats.NREMstate.meanrate(CellClass.(celltypes{cc})),4,1))
@@ -104,9 +103,9 @@ for cc = 1:2
         nanstd(log10(ISIfits.(statenames{ss}).fiterror(CellClass.(celltypes{cc}),:)),[],1),cellcolor{cc},'scalar');
 end
 LogScale('y',10)
-xlabel('N Modes');ylabel('MSE')
+xlabel('N Modes');ylabel('Total Squared Error')
 
-subplot(2,2,3)
+subplot(4,2,5)
 hold on
 for cc = 1:2
     plot(log10(ISIfits.(statenames{ss}).rates(:,CellClass.(celltypes{cc}))),...
@@ -116,20 +115,29 @@ end
     LogScale('xy',10)
     xlabel('Rate');ylabel('Weight')
 
-subplot(4,2,6)
+subplot(4,2,7)
 hold on
 for cc = 1:2
-    plot(log10(ISIfits.(statenames{ss}).rates(:,CellClass.(celltypes{cc}))),...
-        repmat(log10(ISIStats.summstats.(statenames{ss}).meanrate(CellClass.(celltypes{cc}))),Nmodes,1),'.','color',cellcolor{cc})
-%     scatter(log10(1./(ks(:,CellClass.(celltypes{cc}))./rates(:,CellClass.(celltypes{cc})))),...
-%         (1./ks(:,CellClass.(celltypes{cc}))),weights(:,CellClass.(celltypes{cc})),...
-%         repmat(ISIStats.summstats.NREMstate.meanrate(CellClass.(celltypes{cc})),4,1))
+    for mm = 1:Nmodes
+    scatter(log10(ISIfits.(statenames{ss}).rates(mm,CellClass.(celltypes{cc}))),...
+        log10(ISIStats.summstats.NREMstate.meanrate(CellClass.(celltypes{cc}))),...
+        10.*ISIfits.(statenames{ss}).weights(mm,CellClass.(celltypes{cc})),cellcolor{cc})
+    end
+    
+%    plot(log10(ISIfits.(statenames{ss}).rates(:,CellClass.(celltypes{cc}))),...
+%        repmat(log10(ISIStats.summstats.(statenames{ss}).meanrate(CellClass.(celltypes{cc}))),Nmodes,1),'.','color',cellcolor{cc})
+
 end
     LogScale('xy',10)
     UnityLine
     ylim(log10([min(ISIStats.summstats.(statenames{ss}).meanrate) max(ISIStats.summstats.(statenames{ss}).meanrate)]))
     xlabel('Mode Rate');ylabel(' Cell Rate')
 
+    for cc = 1:2
+subplot(4,2,6+(cc-1)*2)
+    hist(ISIfits.(statenames{ss}).Nmodes(CellClass.(celltypes{cc})))
+    end
+    
     NiceSave(['ISImodefits',(statenames{ss})],figfolder,baseName)
 
 end
