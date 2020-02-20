@@ -147,6 +147,9 @@ for nummodes = trymodes
                 resid = movmean(logISIhist-multigamfun(init,taubins),20);
                 [~,peakresid] = findpeaks(resid,'NPeaks',1+sum(~sigmodes),'SortStr','descend');
                 peakresid = (timebins(peakresid)); %units: log10(ISI)
+                if length(peakresid)<(1+sum(~sigmodes))
+                    peakresid(end+1:(1+sum(~sigmodes))) = linspace(-2.5,2,1+sum(~sigmodes)-length(peakresid));
+                end
                 init = [init(1:end/3) ; -peakresid';...  %convert to log10(1/ISI)
                     init(end/3+1:end/(3/2)); 0.8.*ones(size(peakresid'));...
                     ones(nummodes,1)];
@@ -154,7 +157,7 @@ for nummodes = trymodes
                 %renormalize the weights
                 init(end/(3/2)+1:end) = ones(nummodes,1)./(nummodes);
 
-                %Debug figure
+%                 %% Debug figure
 %                 figure
 %                 subplot(2,2,1)
 %                 plot(timebins,resid)
