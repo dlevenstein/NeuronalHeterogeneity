@@ -11,6 +11,7 @@ function [lambdas,ks,weights,fiterror,returnNmodes] = bz_FitISIGammaModes(ISIs,v
 %       'numpad'        (number of bins below/above to pad)
 %       'maxNmodes'  
 %       'returnNmodes'  'auto' (selects based on drop in error)
+%       'Nestimatemethod'  'ascending' or 'descending'
 %       'promthresh'    for auto selection (default: 0.01))
 %       'showfig'
 %       'lambdabounds'
@@ -25,6 +26,7 @@ function [lambdas,ks,weights,fiterror,returnNmodes] = bz_FitISIGammaModes(ISIs,v
 p = inputParser;
 addParameter(p,'returnNmodes',6)
 addParameter(p,'autoNmodes',true)
+addParameter(p,'Nestimatemethod','descending')
 addParameter(p,'showfig',true)
 addParameter(p,'logbase',10)
 addParameter(p,'maxNmodes',10)
@@ -48,6 +50,7 @@ minISIs = p.Results.minISIs;
 sequentialreduce = p.Results.sequentialreduce;
 promthresh = p.Results.promthresh;
 autoNmodes = p.Results.autoNmodes;
+Nestimatemethod = p.Results.Nestimatemethod;
 %lasso = p.Results.lasso; %lasso doesn't work because weights sum to 1...
 %%
 if length(ISIs)<minISIs
@@ -71,6 +74,7 @@ end
 % logISIhist = [zeros(1,numpad),logISIhist,zeros(1,numpad)];
 
 taubins = linspace(-10,8,300);
+timebins = taubins./log(logbase);
 logISIhist = hist(log(ISIs),taubins);
 logISIhist = logISIhist./(sum(logISIhist).*mode(diff(taubins)));
 %% The multigammafunction of all parameters
@@ -97,30 +101,74 @@ trymodes = [1:maxNmodes];
 fiterror = zeros(size(trymodes));
 initweightfactor = 10;
 
-for nummodes = maxNmodes:-1:1
-
-%Initialize parms
-if nummodes ==maxNmodes || ~sequentialreduce
-%     init = [linspace(-1.5,5.5,nummodes)';...    %Lambda 
-%         -0.3.*ones(nummodes,1);         %K  (used to be CV=0.8...)
-%         ones(nummodes,1)./(nummodes)];             %Weights
-    init = [linspace(-1,2,nummodes)';...    %Lambda 
-        0.8.*ones(nummodes,1);         %K  (used to be CV=0.8...)
-        ones(nummodes,1)./(nummodes)];             %Weights
-else  
-    init = fitparms{nummodes+1};
-    [~,lowestweightmode] = min(init(end/(3/2)+1:end));
-    %Remove the lowest weight
-    init(lowestweightmode + (nummodes+1).*[0 1 2]) = [];
-    sigmodes = (init(end/(3/2)+1:end)>0.05);
-    %renormalize the weights
-    init(end/(3/2)+1:end) = ones(nummodes,1)./(nummodes);
-    %redistirbute the insignificant rates between the significant modes
-    sigrates = init(sigmodes);
-    init(~sigmodes) = linspace(-0.5,2,sum(~sigmodes));
-    %set insignificant mode CV back to 0.8
-    init(find(~sigmodes)+nummodes) = 0.8;
+switch Nestimatemethod
+    case 'descending'
+        trymodes = [maxNmodes:-1:1];
+    case 'ascending'
+        trymodes = [1:maxNmodes];
 end
+
+for nummodes = trymodes
+    
+    sigmodeweight = 0.02;
+    switch Nestimatemethod
+        case 'descending'  
+            %Initialize parms
+            if nummodes ==maxNmodes || ~sequentialreduce
+                init = [linspace(-1,2,nummodes)';...    %log mean rate  
+                    0.8.*ones(nummodes,1);         % CV
+                    ones(nummodes,1)./(nummodes)];             %Weights
+            else  
+                init = fitparms{nummodes+1};
+                [~,lowestweightmode] = min(init(end/(3/2)+1:end));
+                %Remove the lowest weight
+                init(lowestweightmode + (nummodes+1).*[0 1 2]) = [];
+                sigmodes = (init(end/(3/2)+1:end)>sigmodeweight);
+                %renormalize the weights
+                init(end/(3/2)+1:end) = ones(nummodes,1)./(nummodes);
+                %redistirbute the insignificant rates between the significant modes
+                sigrates = init(sigmodes);
+                init(~sigmodes) = linspace(-0.5,2,sum(~sigmodes));
+                %set insignificant mode CV back to 0.8
+                init(find(~sigmodes)+nummodes) = 0.8;
+            end
+
+        case 'ascending'
+            if nummodes == 1
+                init = [0;0.8;1];    %log mean rate ; CV ; Weights
+            else
+                init = fitparms{nummodes-1};
+                sigmodes = (init(end/(3/2)+1:end)>sigmodeweight);
+                %Remove the insignificant modes
+                if any(~sigmodes)
+                    init(find(~sigmodes) + (nummodes-1).*[0 1 2]) = [];
+                end
+                %add a mode at the peaks of the (smoothed) residual (1+insigmodes)
+                resid = movmean(logISIhist-multigamfun(init,taubins),20);
+                [~,peakresid] = findpeaks(resid,'NPeaks',1+sum(~sigmodes),'SortStr','descend');
+                peakresid = (timebins(peakresid)); %units: log10(ISI)
+                init = [init(1:end/3) ; -peakresid';...  %convert to log10(1/ISI)
+                    init(end/3+1:end/(3/2)); 0.8.*ones(size(peakresid'));...
+                    ones(nummodes,1)];
+                %set CVs of the new modes
+                %renormalize the weights
+                init(end/(3/2)+1:end) = ones(nummodes,1)./(nummodes);
+
+                %Debug figure
+%                 figure
+%                 subplot(2,2,1)
+%                 plot(timebins,resid)
+%                 subplot(2,2,2)
+%                     plot(timebins,logISIhist,'k','linewidth',2)
+%                     hold on
+%                     plot(timebins,multigamfun(fitparms{nummodes-1},taubins),'r','linewidth',2)
+%                     plot(timebins,multigamfun(init,taubins),'r--','linewidth',2)
+%                     plot(peakresid,zeros(size(peakresid)),'r+');
+%                      %for mm = 1:returnNmodes
+%                      %    plot(timebins,multigamfun(fitparms{nummodes-1}(returnNmodes.*[0;1;2]+mm),taubins),'r')
+%                      %end
+            end
+    end
 
 
 difffun = @(lambkweit) sum((logISIhist-multigamfun(lambkweit,taubins)).^2);
@@ -150,20 +198,26 @@ end
 
 %% Pick the number of modes to return based on drop in error
 errordrop = [0 diff(log10(fiterror))];
-[~,putNmodes,~,P] = findpeaks(-errordrop);
+%[~,putNmodes,~,P] = findpeaks(-errordrop);
+inflection = diff(errordrop);
+[~,putNmodes,~,P] = findpeaks(inflection);
 
+%%
+% figure
+% plot(trymodes(2:end),diff(errordrop))
+%%
  %Take the largest N peak over some prominence
 %putNmodes(P<promthresh) = [];
 savereturnNmodes = returnNmodes;
 if autoNmodes %If no peaks over that prominence, take the largest prominence peak
     
-%     %Largest prominence peak      
-    [~,whichmode] = max(P(putNmodes<=savereturnNmodes));
-    returnNmodes = putNmodes(whichmode);
-
-    %Largest N peak with prominence over threshold
-%     [~,whichmode] = max(putNmodes(putNmodes<=savereturnNmodes & P>promthresh));
+%     %Largest prominence peak      (for error drop)
+%     [~,whichmode] = max(P(putNmodes<=savereturnNmodes));
 %     returnNmodes = putNmodes(whichmode);
+
+    %Largest N peak with prominence over threshold (for inflection)
+    [~,whichmode] = max(putNmodes(putNmodes<=savereturnNmodes & P>promthresh));
+    returnNmodes = putNmodes(whichmode);
     
     if isempty(whichmode)
         %Largest prominence peak
@@ -190,8 +244,7 @@ weights(returnNmodes+1:savereturnNmodes) = nan;
 %%
 if SHOWFIG
    
-    
-timebins = taubins./log(logbase);
+   
 meanISI = ks./lambdas;
 %Initialize parms
 init = [linspace(-1.5,5.5,returnNmodes)';...    %Lambda 
@@ -199,39 +252,42 @@ init = [linspace(-1.5,5.5,returnNmodes)';...    %Lambda
     ones(returnNmodes,1)./(returnNmodes)];             %Weights (normalize later)
     
 figure
+
 subplot(4,2,1)
-plot(timebins,logISIhist,'k','linewidth',2)
+plot(timebins,logISIhist,'color',[0.5 0.5 0.5],'linewidth',2)
 hold on
-plot(timebins,multigamfun(fitparms{returnNmodes},taubins),'r','linewidth',2)
+plot(timebins,multigamfun(fitparms{returnNmodes},taubins),'k','linewidth',2)
 for mm = 1:returnNmodes
     plot(timebins,multigamfun(fitparms{returnNmodes}(returnNmodes.*[0;1;2]+mm),taubins),'r')
 end
+axis tight
+box off
 LogScale('x',logbase)
 
-subplot(4,2,4)
+subplot(4,2,3)
 stem(log10(1./meanISI),weights)
 LogScale('x',10)
 xlabel('Rate (Hz)')
 ylabel('weight')
 
-subplot(2,2,4)
+subplot(2,2,2)
 scatter(log10(1./meanISI),1./ks,10)
 %crameri('bilbao')
 LogScale('x',10)
 xlabel('Rate (Hz)');ylabel('1/k (CV)')
 
-subplot(4,2,5)
+subplot(6,2,8)
 plot(trymodes,errordrop,'o-')
 hold on
 plot(trymodes(putNmodes),errordrop(putNmodes),'r^')
 xlabel('Number of Modes')
-ylabel('Total Squared Error')
+ylabel('dTSE')
 %LogScale('y',10)
 
-subplot(4,2,7)
+subplot(6,2,7)
 plot(trymodes,log10(fiterror),'o-')
 xlabel('Number of Modes')
-ylabel('Total Squared Error')
+ylabel('TSE')
 LogScale('y',10)
 
 if ~sequentialreduce
@@ -245,8 +301,21 @@ end
 title('Initalization')
 end
 
+for nn = 1:6
+subplot(6,3,nn+12)
+plot(timebins,logISIhist,'k','linewidth',2)
+hold on
+plot(timebins,multigamfun(fitparms{nn},taubins),'r','linewidth',2)
+for mm = 1:nn
+    plot(timebins,multigamfun(fitparms{nn}(nn.*[0;1;2]+mm),taubins),'r')
+end
+
+axis tight
+box off
+LogScale('x',logbase)
 
 end
 
 end
 
+end

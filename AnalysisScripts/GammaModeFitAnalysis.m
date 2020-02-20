@@ -34,7 +34,7 @@ cellcolor = {'k','r'};
 statenames = {'WAKEstate','NREMstate','REMstate'};
 %%
 %cc = 1
-Nmodes = 6;
+Nmodes = 5;
 maxNmodes = 12;
 numcells = length(ISIStats.summstats.WAKEstate.meanrate);
 clear ISIfits
@@ -69,7 +69,8 @@ fitISIs = ISIStats.allspikes.ISIs{cc}(fitISIs);
 [~] = ...
     bz_FitISIGammaModes(fitISIs,...
     'showfig',true,'sequentialreduce',true,...
-    'maxNmodes',maxNmodes,'returnNmodes',Nmodes,'autoNmodes',true);
+    'maxNmodes',maxNmodes,'returnNmodes',Nmodes,'autoNmodes',true,...
+    'Nestimatemethod','ascending');
 
     NiceSave(['ISImodefits_ExCell_',num2str(cc),'_',(statenames{ss})],figfolder,baseName)
 end
