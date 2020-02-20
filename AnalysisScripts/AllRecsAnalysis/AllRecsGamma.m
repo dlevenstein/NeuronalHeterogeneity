@@ -75,12 +75,14 @@ end
 
 
 %%
+weightthresh = 0.02; %perc of spikes
+
 close all
 for cc = 1:2
 figure
 for ss = 1:3
     for rr = 1:length(regions)
-        ISIfits.(regions{rr}).(statenames{ss}).weights(ISIfits.(regions{rr}).(statenames{ss}).weights<0.05) = nan;
+        ISIfits.(regions{rr}).(statenames{ss}).weights(ISIfits.(regions{rr}).(statenames{ss}).weights<weightthresh) = nan;
     ISIfits.(regions{rr}).(statenames{ss}).rates(isnan(ISIfits.(regions{rr}).(statenames{ss}).weights))=nan;
 
 subplot(length(regions),3,(rr-1)*3+ss)
