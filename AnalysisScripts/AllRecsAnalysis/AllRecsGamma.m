@@ -93,10 +93,12 @@ hold on
     ylim([-2 1])
     %ylim([0 4])
     xlim([-2 2.5])
-    xlabel('Rate (Hz)');ylabel('CV')
+    
 
 if rr == 1
 title((statenames{ss}))
+elseif rr ==length(regions)
+    xlabel('Rate (Hz)');
 end
 if ss == 1
     ylabel({(regions{rr}),'CV'})
