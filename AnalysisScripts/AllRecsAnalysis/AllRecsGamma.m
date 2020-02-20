@@ -87,13 +87,13 @@ hold on
 
     plot(log10(ISIfits.(regions{rr}).(statenames{ss}).rates(:,CellClass.(regions{rr}).(celltypes{cc}))),...
         log10(ISIfits.(regions{rr}).(statenames{ss}).CVs(:,CellClass.(regions{rr}).(celltypes{cc}))),...
-        '.','color',cellcolor{cc},'markersize',1)
+        '.','color',cellcolor{cc},'markersize',0.5)
     plot(xlim(gca),[0 0],'k--')
-    LogScale('xy',10)
+   
     ylim([-2 1])
     %ylim([0 4])
     xlim([-2 2.5])
-    
+     LogScale('xy',10)
 
 if rr == 1
 title((statenames{ss}))
