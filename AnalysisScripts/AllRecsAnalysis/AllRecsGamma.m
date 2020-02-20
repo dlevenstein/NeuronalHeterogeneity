@@ -124,6 +124,7 @@ for ss = 1:3
 end
 
 %%
+close all
 Nmodes = max(ISIfits.(regions{rr}).(statenames{ss}).Nmodes);
 figure
 for ss = 1:3
@@ -142,7 +143,16 @@ end
     yrange = ylim(gca);
     UnityLine
     %ylim(log10([min(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate) max(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate)]))
-    xlabel('Mode Rate');ylabel(' Cell Rate')
+    
+    if rr == 1
+    title((statenames{ss}))
+    elseif rr ==length(regions)
+        xlabel('Mode Rate (Hz)');
+    end
+    if ss == 1
+        ylabel({(regions{rr}),' Cell Rate (Hz)'})
+    end
+
     %axis tight
     xlim([-2 2.5])
     ylim(yrange)
@@ -152,19 +162,39 @@ end
 NiceSave(['ISImodeandRate'],figfolder,[])
 
 %%
-subplot(4,2,6)
+close all
+figure
+for ss = 1:3
+    for rr = 1:length(regions)
+subplot(length(regions),4,(rr-1)*4+ss)
 hold on
-for cc = 1:2
-    plot(log10(ISIfits.(statenames{ss}).rates(:,CellClass.(celltypes{cc}))),...
-        repmat(log10(ISIStats.summstats.(statenames{ss}).meanrate(CellClass.(celltypes{cc}))),Nmodes,1),'.','color',cellcolor{cc})
-%     scatter(log10(1./(ks(:,CellClass.(celltypes{cc}))./rates(:,CellClass.(celltypes{cc})))),...
-%         (1./ks(:,CellClass.(celltypes{cc}))),weights(:,CellClass.(celltypes{cc})),...
-%         repmat(ISIStats.summstats.NREMstate.meanrate(CellClass.(celltypes{cc})),4,1))
+for cc = 1
+    for mm = 1:Nmodes
+    scatter(log10(ISIfits.(regions{rr}).(statenames{ss}).rates(mm,CellClass.(regions{rr}).(celltypes{cc}))),...
+        log10(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).(celltypes{cc}))),...
+        1,ISIfits.(regions{rr}).(statenames{ss}).weights(mm,CellClass.(regions{rr}).(celltypes{cc})))
+    end
 end
-    LogScale('xy',10)
+    colorbar
+    axis tight
+    yrange = ylim(gca);
     UnityLine
-    ylim(log10([min(ISIStats.summstats.(statenames{ss}).meanrate) max(ISIStats.summstats.(statenames{ss}).meanrate)]))
-    xlabel('Mode Rate');ylabel(' Cell Rate')
+    %ylim(log10([min(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate) max(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate)]))
+    if rr == 1
+    title((statenames{ss}))
+    elseif rr ==length(regions)
+        xlabel('Mode Rate (Hz)');
+    end
+    if ss == 1
+        ylabel({(regions{rr}),' Cell Rate (Hz)'})
+    end
+    %axis tight
+    xlim([-2 1])
+    ylim(yrange)
+    LogScale('xy',10)
+    end
+end
+NiceSave(['GSModeandRate_pE'],figfolder,[])
 
 %%
 ISIthreshold = 800;
