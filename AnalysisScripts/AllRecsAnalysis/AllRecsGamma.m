@@ -79,7 +79,7 @@ for cc = 1:2
 figure
 for ss = 1:3
     for rr = 1:length(regions)
-        ISIfits.(regions{rr}).(statenames{ss}).weights(ISIfits.(regions{rr}).(statenames{ss}).weights<0.01) = nan;
+        ISIfits.(regions{rr}).(statenames{ss}).weights(ISIfits.(regions{rr}).(statenames{ss}).weights<0.05) = nan;
     ISIfits.(regions{rr}).(statenames{ss}).rates(isnan(ISIfits.(regions{rr}).(statenames{ss}).weights))=nan;
 
 subplot(length(regions),3,(rr-1)*3+ss)
@@ -88,11 +88,12 @@ hold on
     plot(log10(ISIfits.(regions{rr}).(statenames{ss}).rates(:,CellClass.(regions{rr}).(celltypes{cc}))),...
         log10(ISIfits.(regions{rr}).(statenames{ss}).CVs(:,CellClass.(regions{rr}).(celltypes{cc}))),...
         '.','color',cellcolor{cc},'markersize',1)
-    LogScale('x',10)
-    ylim([-2 0.75])
+    plot(xlim(gca),[0 0],'k--')
+    LogScale('xy',10)
+    ylim([-2 1])
     %ylim([0 4])
     xlim([-2 2.5])
-    xlabel('Mean ISI (1/rate)');ylabel('CV')
+    xlabel('Rate (Hz)');ylabel('CV')
 
 if rr == 1
 title((statenames{ss}))
