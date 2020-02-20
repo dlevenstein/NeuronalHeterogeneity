@@ -75,6 +75,7 @@ end
 
 
 %%
+close all
 for cc = 1:2
 figure
 for ss = 1:3
@@ -90,7 +91,7 @@ hold on
         '.','color',cellcolor{cc},'markersize',0.5)
     plot(xlim(gca),[0 0],'k--')
    
-    ylim([-2 1])
+    ylim([-2 0.75])
     %ylim([0 4])
     xlim([-2 2.5])
      LogScale('xy',10)
@@ -120,6 +121,48 @@ for ss = 1:3
     end
 end
 
+%%
+Nmodes = max(ISIfits.(regions{rr}).(statenames{ss}).Nmodes);
+figure
+for ss = 1:3
+    for rr = 1:length(regions)
+subplot(length(regions),3,(rr-1)*3+ss)
+hold on
+for cc = 1:2
+    plot(log10(ISIfits.(regions{rr}).(statenames{ss}).rates(:,CellClass.(regions{rr}).(celltypes{cc}))),...
+        repmat(log10(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).(celltypes{cc}))),Nmodes,1),...
+        '.','color',cellcolor{cc},'markersize',0.5)
+%     scatter(log10(1./(ks(:,CellClass.(celltypes{cc}))./rates(:,CellClass.(celltypes{cc})))),...
+%         (1./ks(:,CellClass.(celltypes{cc}))),weights(:,CellClass.(celltypes{cc})),...
+%         repmat(ISIStats.summstats.NREMstate.meanrate(CellClass.(celltypes{cc})),4,1))
+end
+    axis tight
+    yrange = ylim(gca);
+    UnityLine
+    %ylim(log10([min(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate) max(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate)]))
+    xlabel('Mode Rate');ylabel(' Cell Rate')
+    %axis tight
+    xlim([-2 2.5])
+    ylim(yrange)
+    LogScale('xy',10)
+    end
+end
+NiceSave(['ISImodeandRate'],figfolder,[])
+
+%%
+subplot(4,2,6)
+hold on
+for cc = 1:2
+    plot(log10(ISIfits.(statenames{ss}).rates(:,CellClass.(celltypes{cc}))),...
+        repmat(log10(ISIStats.summstats.(statenames{ss}).meanrate(CellClass.(celltypes{cc}))),Nmodes,1),'.','color',cellcolor{cc})
+%     scatter(log10(1./(ks(:,CellClass.(celltypes{cc}))./rates(:,CellClass.(celltypes{cc})))),...
+%         (1./ks(:,CellClass.(celltypes{cc}))),weights(:,CellClass.(celltypes{cc})),...
+%         repmat(ISIStats.summstats.NREMstate.meanrate(CellClass.(celltypes{cc})),4,1))
+end
+    LogScale('xy',10)
+    UnityLine
+    ylim(log10([min(ISIStats.summstats.(statenames{ss}).meanrate) max(ISIStats.summstats.(statenames{ss}).meanrate)]))
+    xlabel('Mode Rate');ylabel(' Cell Rate')
 
 %%
 ISIthreshold = 800;
