@@ -166,16 +166,16 @@ close all
 figure
 for ss = 1:3
     for rr = 1:length(regions)
-subplot(length(regions),4,(rr-1)*4+ss)
+subplot(length(regions),3,(rr-1)*3+ss)
 hold on
 for cc = 1
     for mm = 1:Nmodes
     scatter(log10(ISIfits.(regions{rr}).(statenames{ss}).rates(mm,CellClass.(regions{rr}).(celltypes{cc}))),...
         log10(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).(celltypes{cc}))),...
-        1,ISIfits.(regions{rr}).(statenames{ss}).weights(mm,CellClass.(regions{rr}).(celltypes{cc})))
+        0.5,ISIfits.(regions{rr}).(statenames{ss}).weights(mm,CellClass.(regions{rr}).(celltypes{cc})))
     end
 end
-    colorbar
+    %colorbar
     axis tight
     yrange = ylim(gca);
     UnityLine
@@ -189,7 +189,7 @@ end
         ylabel({(regions{rr}),' Cell Rate (Hz)'})
     end
     %axis tight
-    xlim([-2 1])
+    %xlim([-2 1])
     ylim(yrange)
     LogScale('xy',10)
     end
