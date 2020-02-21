@@ -12,6 +12,7 @@ function [lambdas,ks,weights,fiterror,returnNmodes] = bz_FitISIGammaModes(ISIs,v
 %       'maxNmodes'  
 %       'returnNmodes'  'auto' (selects based on drop in error)
 %       'Nestimatemethod'  'ascending' or 'descending'
+%       'autoNmodes'    'LargeInflection','TSEthresh'
 %       'promthresh'    for auto selection (default: 0.01))
 %       'showfig'
 %       'lambdabounds'
@@ -67,13 +68,9 @@ end
 %logISIhist = ISIStats.ISIhist.NREMstate.log(excell,:);
 
 %%
-% taubins = logbins.*log(logbase); %Convert to log base e
-% %Pad the ISI distirbution with zeros
-% taubins = [linspace(min(taubins)-5,min(taubins),numpad),taubins,...
-%     linspace(max(taubins),max(taubins)+5,numpad)];
-% logISIhist = [zeros(1,numpad),logISIhist,zeros(1,numpad)];
-
-taubins = linspace(-10,8,300);
+%numbins = min(max(round(length(ISIs)./30),150),350);
+numbins = 250;
+taubins = linspace(-10,8,numbins);
 timebins = taubins./log(logbase);
 logISIhist = hist(log(ISIs),taubins);
 logISIhist = logISIhist./(sum(logISIhist).*mode(diff(taubins)));
@@ -125,10 +122,21 @@ for nummodes = trymodes
                 init(lowestweightmode + (nummodes+1).*[0 1 2]) = [];
                 sigmodes = (init(end/(3/2)+1:end)>sigmodeweight);
                 %renormalize the weights
-                init(end/(3/2)+1:end) = ones(nummodes,1)./(nummodes);
+                init(end/(3/2)+1:end) = init(end/(3/2)+1:end)+ones(nummodes,1)./(nummodes);
+                init(end/(3/2)+1:end) = init(end/(3/2)+1:end)./sum(init(end/(3/2)+1:end));
                 %redistirbute the insignificant rates between the significant modes
-                sigrates = init(sigmodes);
-                init(~sigmodes) = linspace(-0.5,2,sum(~sigmodes));
+                %sigrates = init(sigmodes);
+                %init(~sigmodes) = linspace(-0.5,2,sum(~sigmodes));
+                %redistirbute the insignificant rates to residual peaks
+                if ~all(sigmodes)
+                    resid = movmean(logISIhist-multigamfun(init,taubins),10);
+                    [~,peakresid] = findpeaks(resid,'NPeaks',sum(~sigmodes),'SortStr','descend');
+                    peakresid = (timebins(peakresid)); %units: log10(ISI)
+                    if length(peakresid)<(sum(~sigmodes))
+                        peakresid(end+1:(sum(~sigmodes))) = linspace(-2.5,2,sum(~sigmodes)-length(peakresid));
+                    end
+                    init(find(~sigmodes))=-peakresid';
+                end
                 %set insignificant mode CV back to 0.8
                 init(find(~sigmodes)+nummodes) = 0.8;
             end
@@ -144,19 +152,26 @@ for nummodes = trymodes
                     init(find(~sigmodes) + (nummodes-1).*[0 1 2]) = [];
                 end
                 %add a mode at the peaks of the (smoothed) residual (1+insigmodes)
-                resid = movmean(logISIhist-multigamfun(init,taubins),20);
-                [~,peakresid] = findpeaks(resid,'NPeaks',1+sum(~sigmodes),'SortStr','descend');
-                peakresid = (timebins(peakresid)); %units: log10(ISI)
+                resid = movmean(logISIhist-multigamfun(init,taubins),10);
+%                 if nummodes == 2 %running into issues with low rate
+%                 peaks...
+%                     %[~,peakresid] = findpeaks(resid,'NPeaks',1+sum(~sigmodes));
+%                     peakresid = -1;
+%                 else
+                    [~,peakresid] = findpeaks(resid,'NPeaks',1+sum(~sigmodes),'SortStr','descend');
+                    peakresid = (timebins(peakresid)); %units: log10(ISI)
+%                end
+                
                 if length(peakresid)<(1+sum(~sigmodes))
                     peakresid(end+1:(1+sum(~sigmodes))) = linspace(-2.5,2,1+sum(~sigmodes)-length(peakresid));
                 end
                 init = [init(1:end/3) ; -peakresid';...  %convert to log10(1/ISI)
                     init(end/3+1:end/(3/2)); 0.8.*ones(size(peakresid'));...
-                    ones(nummodes,1)];
+                    init(end/(3/2)+1:end)+(1./nummodes); ones(size(peakresid'))./(nummodes)]; %keep the old weights, add the new weights at fraction
                 %set CVs of the new modes
                 %renormalize the weights
-                init(end/(3/2)+1:end) = ones(nummodes,1)./(nummodes);
-
+                %init(end/(3/2)+1:end) = ones(nummodes,1)./(nummodes);
+                init(end/(3/2)+1:end) = init(end/(3/2)+1:end)./sum(init(end/(3/2)+1:end));
 %                 %% Debug figure
 %                 figure
 %                 subplot(2,2,1)
@@ -193,17 +208,24 @@ options = optimoptions('fmincon','Algorithm','sqp','Display','off');%,'UseParall
 options.MaxFunctionEvaluations = 1e5;
 options.MaxIterations = 1000; 
 
+ICs{nummodes} = init;
 fitparms{nummodes} = fmincon(difffun,init,[],[],Aeq,beq,lb,ub,[],options);
 fiterror(nummodes) = difffun(fitparms{nummodes});
 
 end
 
+switch Nestimatemethod
+    case 'descending' 
+        trymodes = fliplr(trymodes);
+end
 
 %% Pick the number of modes to return based on drop in error
+fiterror_raw = fiterror;
+fiterror_norm = fiterror./min(fiterror);
+%fiterror_norm = zscore((fiterror));
 errordrop = [0 diff(log10(fiterror))];
-%[~,putNmodes,~,P] = findpeaks(-errordrop);
 inflection = diff(errordrop);
-[~,putNmodes,~,P] = findpeaks(inflection);
+%[~,putNmodes,~,P] = findpeaks(-errordrop);
 
 %%
 % figure
@@ -212,12 +234,12 @@ inflection = diff(errordrop);
  %Take the largest N peak over some prominence
 %putNmodes(P<promthresh) = [];
 savereturnNmodes = returnNmodes;
-if autoNmodes %If no peaks over that prominence, take the largest prominence peak
+if any(autoNmodes) %If no peaks over that prominence, take the largest prominence peak
+switch autoNmodes
+    case 'LargeInflection'    
     
-%     %Largest prominence peak      (for error drop)
-%     [~,whichmode] = max(P(putNmodes<=savereturnNmodes));
-%     returnNmodes = putNmodes(whichmode);
-
+    [~,putNmodes,~,P] = findpeaks(inflection);
+    
     %Largest N peak with prominence over threshold (for inflection)
     [~,whichmode] = max(putNmodes(putNmodes<=savereturnNmodes & P>promthresh));
     returnNmodes = putNmodes(whichmode);
@@ -226,9 +248,28 @@ if autoNmodes %If no peaks over that prominence, take the largest prominence pea
         %Largest prominence peak
         [~,whichmode] = max(P(putNmodes<=savereturnNmodes));
         returnNmodes = putNmodes(whichmode);
-        if isempty(returnNmodes)  %if no peaks
-            returnNmodes = savereturnNmodes;
+    end
+    
+    case 'dTSEDrop'
+        %Largest prominence peak      (for error drop)
+        [~,whichmode] = max(P(putNmodes<=savereturnNmodes));
+        returnNmodes = putNmodes(whichmode);
+        if isempty(whichmode)
+            %Largest prominence peak
+            [~,whichmode] = max(P(putNmodes<=savereturnNmodes));
+            returnNmodes = putNmodes(whichmode);
         end
+        
+        
+    case 'TSEthresh'
+        TSEthresh = 0.1;
+        returnNmodes = find(log(fiterror_norm)<TSEthresh,1,'first');
+        putNmodes = returnNmodes;
+end
+    
+
+    if isempty(returnNmodes)  %if no peaks
+        returnNmodes = savereturnNmodes;
     end
 end
 
@@ -279,19 +320,27 @@ scatter(log10(1./meanISI),1./ks,10)
 LogScale('x',10)
 xlabel('Rate (Hz)');ylabel('1/k (CV)')
 
-subplot(6,2,8)
+subplot(6,3,11)
 plot(trymodes,errordrop,'o-')
 hold on
 plot(trymodes(putNmodes),errordrop(putNmodes),'r^')
 xlabel('Number of Modes')
 ylabel('dTSE')
+
+subplot(6,3,12)
+plot(trymodes(1:end-1),inflection,'o-')
+hold on
+plot([0 trymodes(end)],[0 0],'r--')
+plot(trymodes(putNmodes),errordrop(putNmodes),'r^')
+xlabel('Number of Modes')
+ylabel('inflect.')
 %LogScale('y',10)
 
-subplot(6,2,7)
+subplot(6,3,10)
 plot(trymodes,log10(fiterror),'o-')
 xlabel('Number of Modes')
-ylabel('TSE')
-LogScale('y',10)
+ylabel('logTSE')
+%LogScale('y',10)
 
 if ~sequentialreduce
 subplot(4,2,3)
@@ -308,6 +357,7 @@ for nn = 1:6
 subplot(6,3,nn+12)
 plot(timebins,logISIhist,'k','linewidth',2)
 hold on
+plot(timebins,multigamfun(ICs{nn},taubins),'r--','linewidth',1)
 plot(timebins,multigamfun(fitparms{nn},taubins),'r','linewidth',2)
 for mm = 1:nn
     plot(timebins,multigamfun(fitparms{nn}(nn.*[0;1;2]+mm),taubins),'r')

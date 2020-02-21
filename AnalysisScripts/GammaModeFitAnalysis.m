@@ -10,10 +10,10 @@ function [ISIfits] = GammaModeFitAnalysis(basePath,figfolder)
 %% Load Header
 %Initiate Paths
 %reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-%reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = pwd;
-%basePath = '/Users/dlevenstein/Dropbox/research/Datasets/Cicero_09102014';
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+basePath = '/Users/dlevenstein/Dropbox/research/Datasets/Cicero_09102014';
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -49,7 +49,7 @@ for ss = 1:3
         ISIfits.(statenames{ss}).Nmodes(cc)] = ...
         bz_FitISIGammaModes(fitISIs,...
         'showfig',false,'returnNmodes',Nmodes,'maxNmodes',maxNmodes,...
-        'sequentialreduce',true,'Nestimatemethod','ascending');
+        'sequentialreduce',true,'Nestimatemethod','descending');
     end
 
     ISIfits.(statenames{ss}).rates = 1./(ISIfits.(statenames{ss}).ks./ISIfits.(statenames{ss}).lambdas);
@@ -70,8 +70,8 @@ fitISIs = ISIStats.allspikes.ISIs{cc}(fitISIs);
 [~] = ...
     bz_FitISIGammaModes(fitISIs,...
     'showfig',true,'sequentialreduce',true,...
-    'maxNmodes',maxNmodes,'returnNmodes',Nmodes,'autoNmodes',true,...
-    'Nestimatemethod','ascending');
+    'maxNmodes',maxNmodes,'returnNmodes',Nmodes,'autoNmodes','LargeInflection',...
+    'Nestimatemethod','descending');
 
     NiceSave(['ISImodefits_ExCell_',num2str(cc),'_',(statenames{ss})],figfolder,baseName)
 end
