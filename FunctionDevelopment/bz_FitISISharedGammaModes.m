@@ -229,7 +229,7 @@ GammaFit.sharedfit = sharedfit;
 GammaFit.logtimebins = logtimebins;
 GammaFit.numcells = numcells;
 %Collapse the structure
-singlecell_all = CollapseStruct(GammaFit.singlecell,1);
+singlecell_all = bz_CollapseStruct(GammaFit.singlecell,1);
 
 %%
 if SHOWFIG | figfolder
