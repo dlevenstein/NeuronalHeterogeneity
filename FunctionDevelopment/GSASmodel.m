@@ -2,6 +2,8 @@ function [allISIdist] = GSASmodel(GSASparms,logtbins,numcells,numAS)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 %
+%Note: vectr form uses logCV... for fitting
+
 if ~isstruct(GSASparms)
     GSASparms = convertGSASparms(GSASparms,numcells,numAS);
 end

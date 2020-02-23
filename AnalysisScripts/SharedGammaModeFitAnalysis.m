@@ -42,9 +42,9 @@ statenames = {'NREMstate','WAKEstate','REMstate'};
 
 
 %%
-numAS.NREMstate = 4;
-numAS.WAKEstate = 4;
-numAS.REMstate = 4;
+numAS.NREMstate = 5;
+numAS.WAKEstate = 5;
+numAS.REMstate = 5;
 
 %%
 spkthresh = 200;
@@ -58,7 +58,7 @@ for ss = 1:3
     GammaFit.(statenames{ss}) = bz_FitISISharedGammaModes(logISIhist,logtimebins,...
         'numAS',numAS.(statenames{ss}),...
         'figfolder',figfolder,'basePath',basePath,...
-        'AScost',0.1,'ASguess',true,'figname',(statenames{ss}));
+        'AScost',0.06,'ASguess',true,'MScost',1,'figname',(statenames{ss}));
 end
 
 
@@ -105,9 +105,10 @@ hold on
 scatter(-GammaFit.(statenames{ss}).singlecell(excell).GSlogrates,...
     log10(GammaFit.(statenames{ss}).singlecell(excell).GSCVs),...
     100*GammaFit.(statenames{ss}).singlecell(excell).GSweights+0.00001,GScolor,'filled')
-ylabel('CV');xlabel('mean ISI')
+plot(GammaFit.(statenames{ss}).logtimebins([1 end]),[0 0],'k--')
+ylabel('CV');xlabel('mean ISI (s)')
 xlim(logtimebins([1 end]))
-LogScale('x',10)
+LogScale('x',10,'exp',true)
 box on
 
 end
