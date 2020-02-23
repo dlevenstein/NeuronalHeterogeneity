@@ -153,7 +153,7 @@ for cc = 1:numcells
     Aeq(cc,:) = convertGSASparms(thiscell);
 end
 
-options = optimoptions('fmincon','Algorithm','sqp' ,'UseParallel',true,'Display','iter');%
+options = optimoptions('fmincon','Algorithm','sqp' ,'UseParallel',false,'Display','iter');%
 %try also: 'Algorithm','interior-point''active-set'
 %Decrease tolerance.....
 options.MaxFunctionEvaluations = 1e8;
@@ -209,7 +209,7 @@ for cc = 1:numcells
     cAeq = convertGSASparms(thiscell)';
 
 
-    options = optimoptions('fmincon','Algorithm','sqp','UseParallel',true,'Display','off');%
+    options = optimoptions('fmincon','Algorithm','sqp','UseParallel',false,'Display','off');%
     %try also: 'Algorithm','active-set', 'sqp'
     %Decrease tolerance.....
     options.MaxFunctionEvaluations = 1e8;
