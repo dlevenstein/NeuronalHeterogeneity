@@ -34,6 +34,7 @@ addParameter(p,'numAS',3)
 addParameter(p,'showfig',true)
 addParameter(p,'figfolder',false)
 addParameter(p,'basePath',pwd,@isstr)
+addParameter(p,'AScost',0)
 
 
 addParameter(p,'returnNmodes',6)
@@ -55,6 +56,8 @@ numAS = p.Results.numAS;
 SHOWFIG = p.Results.showfig;
 figfolder = p.Results.figfolder;
 basePath = p.Results.basePath;
+AScost = p.Results.AScost;
+
 
 numpad = p.Results.numpad;
 maxNmodes = p.Results.maxNmodes;
@@ -112,11 +115,11 @@ numcells = size(logISIhist,2);
 %Initial Conditions
 %init_struct.GSlogrates = -log10(meanISI)-0.5;
 init_struct.GSlogrates = -0.5.*ones(1,numcells);
-init_struct.GSCVs = ones(1,numcells);
+init_struct.GSCVs = 1.5.*ones(1,numcells);
 init_struct.GSweights = 0.5.*ones(1,numcells);
 
-init_struct.ASlogrates = linspace(0.5,2.25,numAS);
-init_struct.ASCVs = 0.5.*ones(1,numAS);
+init_struct.ASlogrates = linspace(1,2.5,numAS);
+init_struct.ASCVs = 0.3.*ones(1,numAS);
 init_struct.ASweights  = 0.5.*ones(numcells,numAS)./(numAS);
 init = convertGSASparms(init_struct);
 
@@ -125,7 +128,7 @@ clear lb ub
 lb.GSlogrates = -2.*ones(1,numcells);
 lb.GSCVs =      zeros(1,numcells);
 lb.GSweights =  zeros(1,numcells);
-lb.ASlogrates = -0.5.*ones(1,numAS);
+lb.ASlogrates = 0.5.*ones(1,numAS);
 lb.ASCVs =      zeros(1,numAS);
 lb.ASweights  = zeros(numcells,numAS);
 lb = convertGSASparms(lb);
@@ -140,6 +143,7 @@ ub = convertGSASparms(ub);
 
 %Make the constraint matrix for all weights to add to 1
 Aeq = zeros(numcells,length(ub));
+Aeq_ASonly = zeros(numcells,length(ub));
 Beq = ones(numcells,1);
 for cc = 1:numcells
     thiscell.GSlogrates = zeros(1,numcells);
@@ -148,8 +152,9 @@ for cc = 1:numcells
     thiscell.ASlogrates = zeros(1,numAS);
     thiscell.ASCVs =      zeros(1,numAS);
     thiscell.ASweights  = zeros(numcells,numAS);
-    thiscell.GSweights(cc) = 1;
     thiscell.ASweights(cc,:) = 1;
+    Aeq_ASonly(cc,:) = convertGSASparms(thiscell);
+    thiscell.GSweights(cc) = 1;
     Aeq(cc,:) = convertGSASparms(thiscell);
 end
 
@@ -161,7 +166,8 @@ options.MaxIterations = 1000;
 
 %% Fit all the distributions together
 %logISIhist = logISIhist(:,ISIStats.sorts.WAKEstate.ratepE);
-difffun = @(GSASparm_vect) sum(sum((logISIhist-GSASmodel(GSASparm_vect,taubins,numcells,numAS)).^2));
+difffun = @(GSASparm_vect) sum(sum((logISIhist-GSASmodel(GSASparm_vect,taubins,numcells,numAS)).^2)) ...
+    + AScost.*sum(Aeq_ASonly*GSASparm_vect);
 fitparms = fmincon(difffun,init,[],[],Aeq,Beq,lb,ub,[],options);
 sharedfit = convertGSASparms(fitparms,numcells,numAS);
 
@@ -184,7 +190,7 @@ for cc = 1:numcells
     clb.GSlogrates = -2.*ones(1,1);
     clb.GSCVs =      zeros(1,1);
     clb.GSweights =  zeros(1,1);
-    clb.ASlogrates = -0.5.*ones(1,numAS);
+    clb.ASlogrates = 0.*ones(1,numAS);
     clb.ASCVs =      zeros(1,numAS);
     clb.ASweights  = zeros(1,numAS);
     clb = convertGSASparms(clb);
@@ -233,6 +239,9 @@ singlecell_all = bz_CollapseStruct(GammaFit.singlecell,1);
 
 %%
 if SHOWFIG | figfolder
+    
+GScolor = [0.6 0.4 0];
+
 figure
 hist(singlecell_all.GSweights)
 %%
@@ -251,10 +260,10 @@ subplot(2,2,1)
 imagesc(logtimebins,[1 numcells],logISIhist(:,sortGSrate)')
 hold on
 plot(logtimebins,-bz_NormToRange(meanISIdist,0.3)+numcells,'k','linewidth',2)
-colorbar
+%colorbar
 subplot(2,2,2)
 imagesc(logtimebins,[1 numcells],fitISI(:,sortGSrate)')
-colorbar
+%colorbar
 
 subplot(2,2,2)
 
@@ -306,21 +315,34 @@ figure
 for ee = 1:numex
     excell = excells(ee);
 subplot(3,3,ee)
-plot(logtimebins,logISIhist(:,excell),'color',[0.5 0.5 0.5],'linewidth',2)
-hold on
-plot(logtimebins,fitISI(:,excell),'k','linewidth',2)
-hold on
-plot(logtimebins,LogGamma(singlecell_all.GSlogrates(excell),singlecell_all.GSCVs(excell),singlecell_all.GSweights(excell)',taubins'),'k');
-for aa = 1:numAS
-    plot(logtimebins,LogGamma(singlecell_all.ASlogrates(excell,aa),singlecell_all.ASCVs(excell,aa),singlecell_all.ASweights(excell,aa)+0.0001',taubins'),'k');
-end
-box off
-axis tight
+    plot(logtimebins,logISIhist(:,excell),'color',[0.5 0.5 0.5],'linewidth',2)
+    hold on
+    plot(logtimebins,fitISI(:,excell),'k--','linewidth',1)
+    plot(GammaFit.logtimebins,...
+        GSASmodel(GammaFit.singlecell(excell),...
+        GammaFit.taubins),...
+        'k','linewidth',2)
+    hold on
+    plot(logtimebins,...
+        LogGamma(singlecell_all.GSlogrates(excell),...
+        singlecell_all.GSCVs(excell),...
+        singlecell_all.GSweights(excell)',taubins'),'color',GScolor);
+    for aa = 1:numAS
+        plot(logtimebins,...
+            LogGamma(singlecell_all.ASlogrates(excell,aa),...
+            singlecell_all.ASCVs(excell,aa),...
+            singlecell_all.ASweights(excell,aa)',taubins'),'k');
+    end
+    box off
+    axis tight
+    %title(
 
 subplot(3,3,3+ee)
-scatter(-singlecell_all.ASlogrates(excell,:),singlecell_all.ASCVs(excell,:),50*singlecell_all.ASweights(excell,:)+0.00001,'filled')
+scatter(-singlecell_all.ASlogrates(excell,:),singlecell_all.ASCVs(excell,:),...
+    50*singlecell_all.ASweights(excell,:)+0.00001,'k','filled')
 hold on
-scatter(-singlecell_all.GSlogrates(excell),singlecell_all.GSCVs(excell),50*singlecell_all.GSweights(excell)+0.00001,'filled')
+scatter(-singlecell_all.GSlogrates(excell),singlecell_all.GSCVs(excell),...
+    50*singlecell_all.GSweights(excell)+0.00001,GScolor,'filled')
 ylabel('CV');xlabel('mean ISI')
 xlim(logtimebins([1 end]))
 LogScale('x',10)
