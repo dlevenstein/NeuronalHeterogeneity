@@ -39,6 +39,7 @@ addParameter(p,'figfolder',false)
 addParameter(p,'figname',[])
 addParameter(p,'basePath',pwd,@isstr)
 addParameter(p,'AScost',0)
+addParameter(p,'MScost',0)
 addParameter(p,'ASguess',[])
 
 
@@ -64,10 +65,10 @@ figname = p.Results.figname;
 basePath = p.Results.basePath;
 AScost = p.Results.AScost;
 ASguess = p.Results.ASguess;
+MScost = p.Results.MScost;
 
-
-educatedGuess.logrates =  [2.0 2.25 1.0 1.5]; %HiGamma Burst Theta LowGamma
-educatedGuess.CVs =       [0.2 0.05 0.1 0.3];
+educatedGuess.logrates =  [2.0 2.25 0.9 1.5 1.0]; %HiGamma Burst Theta LowGamma Irregular10Hz
+educatedGuess.CVs =       [0.2 0.05 0.05 0.3 0.6];
 
 numpad = p.Results.numpad;
 maxNmodes = p.Results.maxNmodes;
@@ -92,6 +93,8 @@ baseName = bz_BasenameFromBasepath(basePath);
 %logtimebins = ISIStats.ISIhist.logbins;
 taubins = logtimebins./log10(exp(1));
 logISIhist = logISIhist.* mode(diff(logtimebins))./mode(diff(taubins)); %convert to dtau
+
+sub1msbins = logtimebins<=-3;
 
 %meanISI = mean(taubins.*logISIhist)./sum(logISIhist);
 numcells = size(logISIhist,2);
@@ -172,6 +175,8 @@ for cc = 1:numcells
     thiscell.GSweights(cc) = 1;
     Aeq(cc,:) = convertGSASparms(thiscell);
 end
+Aeq_ASonly(Aeq_ASonly~=1)=0;
+Aeq(Aeq~=1)=0;
 
 options = optimoptions('fmincon','Algorithm','sqp' ,'UseParallel',false,'Display','iter');%
 %try also: 'Algorithm','interior-point''active-set'
@@ -182,7 +187,9 @@ options.MaxIterations = 1000;
 %% Fit all the distributions together
 %logISIhist = logISIhist(:,ISIStats.sorts.WAKEstate.ratepE);
 difffun = @(GSASparm_vect) sum(sum((logISIhist-GSASmodel(GSASparm_vect,taubins,numcells,numAS)).^2)) ...
-    + AScost.*sum((abs(Aeq_ASonly*GSASparm_vect)).^(2/3)); %L1/2 norm on AS weights to promote sparseness
+    + AScost.*sum((abs(Aeq_ASonly*GSASparm_vect)).^(2/3))...; %L1/2 norm on AS weights to promote sparseness
+    + MScost.*sum(sum((logISIhist(sub1msbins,:)-GSASmodel(GSASparm_vect,taubins(sub1msbins),numcells,numAS)).^2)); 
+
 fitparms = fmincon(difffun,init,[],[],Aeq,Beq,lb,ub,[],options);
 sharedfit = convertGSASparms(fitparms,numcells,numAS);
 
@@ -231,7 +238,8 @@ for cc = 1:numcells
     cAeq_ASonly = convertGSASparms(thiscell)';
     thiscell.GSweights =  ones(1,1);
     cAeq = convertGSASparms(thiscell)';
-    
+    cAeq_ASonly(cAeq_ASonly~=1)=0;
+    cAeq(cAeq~=1)=0;
     
     options = optimoptions('fmincon','Algorithm','sqp','UseParallel',false,'Display','off');%
     %try also: 'Algorithm','active-set', 'sqp'
@@ -241,8 +249,11 @@ for cc = 1:numcells
 
     %% Fit the single-cell distribution 
     thisdist = logISIhist(:,cc);
+    
     cdifffun = @(GSASparm_vect) sum(sum((thisdist-GSASmodel(GSASparm_vect,taubins,1,numAS)).^2)) ...
-    + AScost.*sum((abs(cAeq_ASonly*GSASparm_vect)).^(2/3)); %L2/3 norm on AS weights to promote sparseness
+    + AScost.*sum((abs(cAeq_ASonly*GSASparm_vect)).^(2/3))... ; %L2/3 norm on AS weights to promote sparseness
+    + MScost.*sum(sum((thisdist(sub1msbins)-GSASmodel(GSASparm_vect,taubins(sub1msbins),1,numAS)).^2)); 
+
     fitparms_singlecell = fmincon(cdifffun,cinit,[],[],cAeq,cBeq,clb,cub,[],options);
     GammaFit.singlecell(cc) = convertGSASparms(fitparms_singlecell,1,numAS);
     
@@ -299,10 +310,10 @@ hold on
 %     5.*singlecell_all.GSweights+0.00001,log10(ISIStats.summstats.WAKEstate.meanrate(ISIStats.sorts.WAKEstate.ratepE)),...
 %     'filled')
 scatter(-sharedfit.GSlogrates,log10(sharedfit.GSCVs),...
-    5.*singlecell_all.GSweights+0.00001,...
+    10.*singlecell_all.GSweights+0.00001,...
     'filled')
 for aa = 1:numAS
-scatter(-singlecell_all.ASlogrates(:,aa),log10(singlecell_all.ASCVs(:,aa)),20.*singlecell_all.ASweights(:,aa)+0.00001,...
+scatter(-singlecell_all.ASlogrates(:,aa),log10(singlecell_all.ASCVs(:,aa)),25.*singlecell_all.ASweights(:,aa)+0.00001,...
     'filled')
 end
 %axis tight
@@ -362,13 +373,14 @@ subplot(3,3,ee)
 
 subplot(3,3,3+ee)
 scatter(-singlecell_all.ASlogrates(excell,:),log10(singlecell_all.ASCVs(excell,:)),...
-    50*singlecell_all.ASweights(excell,:)+0.00001,'k','filled')
+    100*singlecell_all.ASweights(excell,:)+0.00001,'k','filled')
 hold on
 scatter(-singlecell_all.GSlogrates(excell),log10(singlecell_all.GSCVs(excell)),...
-    50*singlecell_all.GSweights(excell)+0.00001,GScolor,'filled')
-ylabel('CV');xlabel('mean ISI')
+    100*singlecell_all.GSweights(excell)+0.00001,GScolor,'filled')
+plot(logtimebins([1 end]),[0 0],'k--')
+ylabel('CV');xlabel('mean ISI (s)')
 xlim(logtimebins([1 end]))
-LogScale('x',10)
+LogScale('x',10,'exp',true)
 
 end
 if figfolder
