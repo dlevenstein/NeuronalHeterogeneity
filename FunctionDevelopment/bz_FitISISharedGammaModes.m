@@ -1,4 +1,4 @@
-function [sharedfit,singlecell] = bz_FitISISharedGammaModes(logISIhist,logtimebins,varargin)
+function [GammaFit] = bz_FitISISharedGammaModes(logISIhist,logtimebins,varargin)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %
@@ -9,6 +9,8 @@ function [sharedfit,singlecell] = bz_FitISISharedGammaModes(logISIhist,logtimebi
 %   Options
 %       'logbase'       (default: 10)
 %       'numAS'         number of activated states
+%       'figfolder'     a folder to save the figure in
+%       'basePath'
 %
 %       'numpad'        (number of bins below/above to pad)
 %       'maxNmodes'  
@@ -30,6 +32,8 @@ p = inputParser;
 addParameter(p,'logbase',10)
 addParameter(p,'numAS',3)
 addParameter(p,'showfig',true)
+addParameter(p,'figfolder',false)
+addParameter(p,'basePath',pwd,@isstr)
 
 
 addParameter(p,'returnNmodes',6)
@@ -49,6 +53,8 @@ parse(p,varargin{:})
 logbase = p.Results.logbase;
 numAS = p.Results.numAS;
 SHOWFIG = p.Results.showfig;
+figfolder = p.Results.figfolder;
+basePath = p.Results.basePath;
 
 numpad = p.Results.numpad;
 maxNmodes = p.Results.maxNmodes;
@@ -65,6 +71,9 @@ Nestimatemethod = p.Results.Nestimatemethod;
 %     return
 % end
 %% DEV
+
+
+baseName = bz_BasenameFromBasepath(basePath);
 
 %logISIhist = ISIStats.ISIhist.WAKEstate.log';
 %logtimebins = ISIStats.ISIhist.logbins;
@@ -102,13 +111,13 @@ numcells = size(logISIhist,2);
 
 %Initial Conditions
 %init_struct.GSlogrates = -log10(meanISI)-0.5;
-init_struct.GSlogrates = -ones(1,numcells);
+init_struct.GSlogrates = -0.5.*ones(1,numcells);
 init_struct.GSCVs = ones(1,numcells);
-init_struct.GSweights = ones(1,numcells)./(numAS+1);
+init_struct.GSweights = 0.5.*ones(1,numcells);
 
-init_struct.ASlogrates = linspace(0.5,2.2,numAS);
+init_struct.ASlogrates = linspace(0.5,2.25,numAS);
 init_struct.ASCVs = 0.5.*ones(1,numAS);
-init_struct.ASweights  = ones(numcells,numAS)./(numAS+1);
+init_struct.ASweights  = 0.5.*ones(numcells,numAS)./(numAS);
 init = convertGSASparms(init_struct);
 
 %Upper/Lower Bounds
@@ -210,16 +219,20 @@ for cc = 1:numcells
     thisdist = logISIhist(:,cc);
     cdifffun = @(GSASparm_vect) sum(sum((thisdist-GSASmodel(GSASparm_vect,taubins,1,numAS)).^2));
     fitparms_singlecell = fmincon(cdifffun,cinit,[],[],cAeq,cBeq,clb,cub,[],options);
-    singlecell(cc) = convertGSASparms(fitparms_singlecell,1,numAS);
+    GammaFit.singlecell(cc) = convertGSASparms(fitparms_singlecell,1,numAS);
     
     
 end
-
+GammaFit.taubins = taubins;
+GammaFit.ISIdists = logISIhist;
+GammaFit.sharedfit = sharedfit;
+GammaFit.logtimebins = logtimebins;
+GammaFit.numcells = numcells;
 %Collapse the structure
-singlecell_all = CollapseStruct(singlecell,1);
+singlecell_all = CollapseStruct(GammaFit.singlecell,1);
 
 %%
-if SHOWFIG
+if SHOWFIG | figfolder
 figure
 hist(singlecell_all.GSweights)
 %%
@@ -242,6 +255,10 @@ colorbar
 subplot(2,2,2)
 imagesc(logtimebins,[1 numcells],fitISI(:,sortGSrate)')
 colorbar
+
+subplot(2,2,2)
+
+
 
 subplot(2,2,3)
 plot(-sharedfit.ASlogrates,sharedfit.ASCVs,'o')
@@ -267,6 +284,9 @@ subplot(2,2,4)
 plot(singlecell_all.GSlogrates,sharedfit.GSlogrates,'.')
 xlabel('Single-cell GS rate');ylabel('Group Fit GS rate')
 
+if figfolder
+    NiceSave('GammaModes',figfolder,baseName);
+end
 
 %%
 figure
@@ -280,9 +300,12 @@ end
 
 
 %% Single cell example(s)
-excell = randi(numcells,1);
+numex = 3;
+excells = randi(numcells,numex);
 figure
-subplot(2,2,1)
+for ee = 1:numex
+    excell = excells(ee);
+subplot(3,3,ee)
 plot(logtimebins,logISIhist(:,excell),'color',[0.5 0.5 0.5],'linewidth',2)
 hold on
 plot(logtimebins,fitISI(:,excell),'k','linewidth',2)
@@ -294,7 +317,7 @@ end
 box off
 axis tight
 
-subplot(2,2,3)
+subplot(3,3,3+ee)
 scatter(-singlecell_all.ASlogrates(excell,:),singlecell_all.ASCVs(excell,:),50*singlecell_all.ASweights(excell,:),'filled')
 hold on
 scatter(-singlecell_all.GSlogrates(excell),singlecell_all.GSCVs(excell),50*singlecell_all.GSweights(excell),'filled')
@@ -302,7 +325,10 @@ ylabel('CV');xlabel('mean ISI')
 xlim(logtimebins([1 end]))
 LogScale('x',10)
 
-
+end
+if figfolder
+    NiceSave('CellExample',figfolder,baseName);
+end
 
 end
 

@@ -1,4 +1,4 @@
-function [] = SharedGammaModeFitAnalysis(basePath,figfolder)
+function [GammaFit] = SharedGammaModeFitAnalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question:
@@ -10,10 +10,10 @@ function [] = SharedGammaModeFitAnalysis(basePath,figfolder)
 %% Load Header
 %Initiate Paths
 %reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
+%reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = pwd;
-basePath = '/Users/dlevenstein/Dropbox/research/Datasets/Cicero_09102014';
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+%basePath = '/Users/dlevenstein/Dropbox/research/Datasets/Cicero_09102014';
+%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -35,36 +35,82 @@ statenames = {'NREMstate','WAKEstate','REMstate'};
 %%
 
 [ ISIstats ] = bz_ISIStats( spikes,'ints',SleepState.ints,...
-    'cellclass',CellClass.label,'figfolder',figfolder,'shuffleCV2',false,...
+    'cellclass',CellClass.label,'shuffleCV2',false,...
     'savecellinfo',false,'basePath',basePath,'forceRedetect',true,...
     'numISIbins',150);
 
 
 %%
 numAS.NREMstate = 3;
-numAS.WAKEstate = 5;
-numAS.REMstate = 5;
+numAS.WAKEstate = 4;
+numAS.REMstate = 4;
 %%
-for ss = 1
+for ss = 1:3
     logtimebins = ISIstats.ISIhist.logbins;
     logISIhist = ISIstats.ISIhist.(statenames{ss}).log(CellClass.pE,:)';
     logISIhist = logISIhist./mode(diff(logtimebins));
-    [sharedfit,singlecell] = bz_FitISISharedGammaModes(logISIhist,logtimebins,'numAS',numAS.(statenames{ss}));
+    GammaFit.(statenames{ss}) = bz_FitISISharedGammaModes(logISIhist,logtimebins,'numAS',numAS.(statenames{ss}),...
+        'figfolder',figfolder,'basePath',basePath);
 end
 
 
 
 
 
+%% Example cell: 3 states
+numex=1;
+excell = randi(GammaFit.NREMstate.numcells,numex);
+figure
+for ss = 1:3
+    %excell = excells(ee);
+subplot(3,3,ss)
+plot(GammaFit.(statenames{ss}).logtimebins,...
+    GammaFit.(statenames{ss}).ISIdists(:,excell),...
+    'color',[0.5 0.5 0.5],'linewidth',2)
+hold on
+plot(GammaFit.(statenames{ss}).logtimebins,...
+    GSASmodel(GammaFit.(statenames{ss}).singlecell(excell),GammaFit.(statenames{ss}).taubins),...
+    'k','linewidth',2)
+hold on
+plot(GammaFit.(statenames{ss}).logtimebins,...
+    LogGamma(GammaFit.(statenames{ss}).singlecell(excell).GSlogrates,...
+    GammaFit.(statenames{ss}).singlecell(excell).GSCVs,...
+    GammaFit.(statenames{ss}).singlecell(excell).GSweights',GammaFit.(statenames{ss}).taubins'),'k');
+for aa = 1:numAS.(statenames{ss})
+    plot(logtimebins,LogGamma(GammaFit.(statenames{ss}).singlecell(excell).ASlogrates(aa),...
+        GammaFit.(statenames{ss}).singlecell(excell).ASCVs(aa),...
+        GammaFit.(statenames{ss}).singlecell(excell).ASweights(aa)+0.0001',...
+        GammaFit.(statenames{ss}).taubins'),'k');
+end
+box off
+axis tight
 
+subplot(3,3,3+ss)
+scatter(-GammaFit.(statenames{ss}).singlecell(excell).ASlogrates(:),...
+    GammaFit.(statenames{ss}).singlecell(excell).ASCVs(:),...
+    50*GammaFit.(statenames{ss}).singlecell(excell).ASweights(:)+0.00001,'filled')
+hold on
+scatter(-GammaFit.(statenames{ss}).singlecell(excell).GSlogrates,...
+    GammaFit.(statenames{ss}).singlecell(excell).GSCVs,...
+    50*GammaFit.(statenames{ss}).singlecell(excell).GSweights+0.00001,'filled')
+ylabel('CV');xlabel('mean ISI')
+xlim(logtimebins([1 end]))
+LogScale('x',10)
+
+end
+if figfolder
+    NiceSave('CellExample_states',figfolder,baseName);
+end
+%% Mean and all points (single cell and group)
+%Mean dist with group AS. use mean weight.
 
 %% Mean rate and GS rate
-figure
-plot(sharedfit.GSlogrates,log10(ISIStats.summstats.WAKEstate.meanrate(ISIStats.sorts.WAKEstate.ratepE)),'.')
-hold on
-%UnityLine
-xlabel('GS Rate');
-ylabel('Mean Rate')
+% figure
+% plot(sharedfit.GSlogrates,log10(ISIStats.summstats.WAKEstate.meanrate(ISIStats.sorts.WAKEstate.ratepE)),'.')
+% hold on
+% %UnityLine
+% xlabel('GS Rate');
+% ylabel('Mean Rate')
 
 
 
