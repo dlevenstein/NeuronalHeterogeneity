@@ -47,18 +47,18 @@ numAS.WAKEstate = 5;
 numAS.REMstate = 5;
 
 %%
-spkthresh = 200;
-for ss = 1:3
+spkthresh = 250;
+for ss = 3
     numspks = cellfun(@sum,ISIstats.allspikes.instate.(statenames{ss}));
     logtimebins = ISIstats.ISIhist.logbins;
     logISIhist = ISIstats.ISIhist.(statenames{ss}).log;
-    logISIhist(numspks<spkthresh,:) = 0;
-    logISIhist = logISIhist(CellClass.pE,:)';
+    usecells = CellClass.pE & numspks>spkthresh;
+    logISIhist = logISIhist(usecells,:)';
     logISIhist = logISIhist./mode(diff(logtimebins));
     GammaFit.(statenames{ss}) = bz_FitISISharedGammaModes(logISIhist,logtimebins,...
         'numAS',numAS.(statenames{ss}),...
         'figfolder',figfolder,'basePath',basePath,...
-        'AScost',0.06,'ASguess',true,'MScost',1,'figname',(statenames{ss}));
+        'AScost',0.07,'ASguess',true,'MScost',1,'figname',(statenames{ss}));
 end
 
 
