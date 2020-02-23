@@ -59,6 +59,11 @@ for ss = 1:3
         'numAS',numAS.(statenames{ss}),...
         'figfolder',figfolder,'basePath',basePath,...
         'AScost',0.07,'ASguess',true,'MScost',1,'figname',(statenames{ss}));
+    
+    GammaFit.(statenames{ss}).cellstats.meanrate = ...
+        ISIstats.summstats.(statenames{ss}).meanrate(usecells);
+    GammaFit.(statenames{ss}).cellstats.region = spikes.region(usecells);
+    GammaFit.(statenames{ss}).cellstats.UID = spikes.UID(usecells);
 end
 
 
@@ -69,6 +74,7 @@ GScolor = [0.6 0.4 0];
 numex=1;
 excell = randi(GammaFit.(statenames{ss}).numcells,numex);
 figure
+
 for ss = 1:3
     %excell = excells(ee);
 subplot(6,3,ss+3)
@@ -96,6 +102,7 @@ end
 box off
 axis tight
 title(statenames{ss})
+
 
 subplot(3,3,3+ss)
 scatter(-GammaFit.(statenames{ss}).singlecell(excell).ASlogrates(:),...
