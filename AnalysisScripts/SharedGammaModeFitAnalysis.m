@@ -48,7 +48,7 @@ numAS.REMstate = 5;
 
 %%
 spkthresh = 250;
-for ss = 3
+for ss = 1:3
     numspks = cellfun(@sum,ISIstats.allspikes.instate.(statenames{ss}));
     logtimebins = ISIstats.ISIhist.logbins;
     logISIhist = ISIstats.ISIhist.(statenames{ss}).log;
@@ -67,7 +67,7 @@ GScolor = [0.6 0.4 0];
 
 %% Example cell: 3 states
 numex=1;
-excell = randi(GammaFit.NREMstate.numcells,numex);
+excell = randi(GammaFit.(statenames{ss}).numcells,numex);
 figure
 for ss = 1:3
     %excell = excells(ee);
