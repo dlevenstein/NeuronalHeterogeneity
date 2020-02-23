@@ -42,17 +42,21 @@ statenames = {'NREMstate','WAKEstate','REMstate'};
 
 
 %%
-numAS.NREMstate = 3;
+numAS.NREMstate = 4;
 numAS.WAKEstate = 4;
 numAS.REMstate = 4;
+
 %%
+
 for ss = 1:3
+   % numspks = sum(ISIstats.allspikes.instate.NREMstate.(statenames{ss}));
     logtimebins = ISIstats.ISIhist.logbins;
     logISIhist = ISIstats.ISIhist.(statenames{ss}).log(CellClass.pE,:)';
     logISIhist = logISIhist./mode(diff(logtimebins));
     GammaFit.(statenames{ss}) = bz_FitISISharedGammaModes(logISIhist,logtimebins,...
         'numAS',numAS.(statenames{ss}),...
-        'figfolder',figfolder,'basePath',basePath);
+        'figfolder',figfolder,'basePath',basePath,...
+        'AScost',0.2,'ASguess',true);
 end
 
 
@@ -93,11 +97,11 @@ title(statenames{ss})
 
 subplot(3,3,3+ss)
 scatter(-GammaFit.(statenames{ss}).singlecell(excell).ASlogrates(:),...
-    GammaFit.(statenames{ss}).singlecell(excell).ASCVs(:),...
+    log10(GammaFit.(statenames{ss}).singlecell(excell).ASCVs(:)),...
     100*GammaFit.(statenames{ss}).singlecell(excell).ASweights(:)+0.00001,'k','filled')
 hold on
 scatter(-GammaFit.(statenames{ss}).singlecell(excell).GSlogrates,...
-    GammaFit.(statenames{ss}).singlecell(excell).GSCVs,...
+    log10(GammaFit.(statenames{ss}).singlecell(excell).GSCVs),...
     100*GammaFit.(statenames{ss}).singlecell(excell).GSweights+0.00001,GScolor,'filled')
 ylabel('CV');xlabel('mean ISI')
 xlim(logtimebins([1 end]))

@@ -11,6 +11,8 @@ function [GammaFit] = bz_FitISISharedGammaModes(logISIhist,logtimebins,varargin)
 %       'numAS'         number of activated states
 %       'figfolder'     a folder to save the figure in
 %       'basePath'
+%       'AScost'
+%       'ASguess'
 %
 %       'numpad'        (number of bins below/above to pad)
 %       'maxNmodes'  
@@ -35,6 +37,7 @@ addParameter(p,'showfig',true)
 addParameter(p,'figfolder',false)
 addParameter(p,'basePath',pwd,@isstr)
 addParameter(p,'AScost',0)
+addParameter(p,'ASguess',[])
 
 
 addParameter(p,'returnNmodes',6)
@@ -57,7 +60,11 @@ SHOWFIG = p.Results.showfig;
 figfolder = p.Results.figfolder;
 basePath = p.Results.basePath;
 AScost = p.Results.AScost;
+ASguess = p.Results.ASguess;
 
+
+educatedGuess.logrates =  [2.0 2.25 1.0 1.5]; %HiGamma Burst Theta LowGamma
+educatedGuess.CVs =       [0.2 0.05 0.1 0.3];
 
 numpad = p.Results.numpad;
 maxNmodes = p.Results.maxNmodes;
@@ -118,8 +125,13 @@ init_struct.GSlogrates = -0.5.*ones(1,numcells);
 init_struct.GSCVs = 1.5.*ones(1,numcells);
 init_struct.GSweights = 0.5.*ones(1,numcells);
 
-init_struct.ASlogrates = linspace(1,2.5,numAS);
-init_struct.ASCVs = 0.3.*ones(1,numAS);
+if ASguess
+    init_struct.ASlogrates = educatedGuess.logrates(1:numAS);
+    init_struct.ASCVs = educatedGuess.CVs(1:numAS);
+else
+    init_struct.ASlogrates = linspace(1,2.5,numAS);
+    init_struct.ASCVs = 0.3.*ones(1,numAS);
+end
 init_struct.ASweights  = 0.5.*ones(numcells,numAS)./(numAS);
 init = convertGSASparms(init_struct);
 
@@ -128,7 +140,7 @@ clear lb ub
 lb.GSlogrates = -2.*ones(1,numcells);
 lb.GSCVs =      zeros(1,numcells);
 lb.GSweights =  zeros(1,numcells);
-lb.ASlogrates = 0.5.*ones(1,numAS);
+lb.ASlogrates = 0.3.*ones(1,numAS);
 lb.ASCVs =      zeros(1,numAS);
 lb.ASweights  = zeros(numcells,numAS);
 lb = convertGSASparms(lb);
@@ -137,7 +149,7 @@ ub.GSlogrates = 2.*ones(1,numcells);
 ub.GSCVs =      4.*ones(1,numcells);
 ub.GSweights =  ones(1,numcells);
 ub.ASlogrates = 3.*ones(1,numAS);
-ub.ASCVs =      4.*ones(1,numAS);
+ub.ASCVs =      2.*ones(1,numAS);
 ub.ASweights  = ones(numcells,numAS);
 ub = convertGSASparms(ub);
 
@@ -199,7 +211,7 @@ for cc = 1:numcells
     cub.GSCVs =      4.*ones(1,1);
     cub.GSweights =  ones(1,1);
     cub.ASlogrates = 2.5.*ones(1,numAS);
-    cub.ASCVs =      4.*ones(1,numAS);
+    cub.ASCVs =      2.*ones(1,numAS);
     cub.ASweights  = ones(1,numAS);
     cub = convertGSASparms(cub);
 
@@ -270,16 +282,16 @@ subplot(2,2,2)
 
 
 subplot(2,2,3)
-plot(-sharedfit.ASlogrates,sharedfit.ASCVs,'o')
+plot(-sharedfit.ASlogrates,log10(sharedfit.ASCVs),'o')
 hold on
 % scatter(-sharedfit.GSlogrates,sharedfit.GSCVs,...
 %     5.*singlecell_all.GSweights+0.00001,log10(ISIStats.summstats.WAKEstate.meanrate(ISIStats.sorts.WAKEstate.ratepE)),...
 %     'filled')
-scatter(-sharedfit.GSlogrates,sharedfit.GSCVs,...
+scatter(-sharedfit.GSlogrates,log10(sharedfit.GSCVs),...
     5.*singlecell_all.GSweights+0.00001,...
     'filled')
 for aa = 1:numAS
-scatter(-singlecell_all.ASlogrates(:,aa),singlecell_all.ASCVs(:,aa),20.*singlecell_all.ASweights(:,aa)+0.00001,...
+scatter(-singlecell_all.ASlogrates(:,aa),log10(singlecell_all.ASCVs(:,aa)),20.*singlecell_all.ASweights(:,aa)+0.00001,...
     'filled')
 end
 %axis tight
@@ -338,10 +350,10 @@ subplot(3,3,ee)
     %title(
 
 subplot(3,3,3+ee)
-scatter(-singlecell_all.ASlogrates(excell,:),singlecell_all.ASCVs(excell,:),...
+scatter(-singlecell_all.ASlogrates(excell,:),log10(singlecell_all.ASCVs(excell,:)),...
     50*singlecell_all.ASweights(excell,:)+0.00001,'k','filled')
 hold on
-scatter(-singlecell_all.GSlogrates(excell),singlecell_all.GSCVs(excell),...
+scatter(-singlecell_all.GSlogrates(excell),log10(singlecell_all.GSCVs(excell)),...
     50*singlecell_all.GSweights(excell)+0.00001,GScolor,'filled')
 ylabel('CV');xlabel('mean ISI')
 xlim(logtimebins([1 end]))
