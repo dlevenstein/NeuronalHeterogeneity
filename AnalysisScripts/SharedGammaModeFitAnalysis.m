@@ -62,8 +62,11 @@ for ss = 1:3
     
     GammaFit.(statenames{ss}).cellstats.meanrate = ...
         ISIstats.summstats.(statenames{ss}).meanrate(usecells);
-    GammaFit.(statenames{ss}).cellstats.region = spikes.region(usecells);
     GammaFit.(statenames{ss}).cellstats.UID = spikes.UID(usecells);
+    if isfield(spikes,'region')
+        GammaFit.(statenames{ss}).cellstats.region = spikes.region(usecells);
+    end
+    
 end
 
 
