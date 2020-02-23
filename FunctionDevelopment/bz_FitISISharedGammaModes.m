@@ -96,6 +96,8 @@ logISIhist = logISIhist.* mode(diff(logtimebins))./mode(diff(taubins)); %convert
 
 sub1msbins = logtimebins<=-3;
 
+%zerospkcells = sum(logISIhist,1)==0;
+
 %meanISI = mean(taubins.*logISIhist)./sum(logISIhist);
 numcells = size(logISIhist,2);
 %% Dev - fake distribution
@@ -255,10 +257,14 @@ for cc = 1:numcells
     + MScost.*sum(sum((thisdist(sub1msbins)-GSASmodel(GSASparm_vect,taubins(sub1msbins),1,numAS)).^2)); 
 
     fitparms_singlecell = fmincon(cdifffun,cinit,[],[],cAeq,cBeq,clb,cub,[],options);
+%     if(zerospkcells(cc))
+%         fitparms_singlecell = nan(size(fitparms_singlecell));
+%     end
     GammaFit.singlecell(cc) = convertGSASparms(fitparms_singlecell,1,numAS);
     
     
 end
+%GammaFit.singlecell(zerospkcells) = [];
 GammaFit.taubins = taubins;
 GammaFit.ISIdists = logISIhist;
 GammaFit.sharedfit = sharedfit;
