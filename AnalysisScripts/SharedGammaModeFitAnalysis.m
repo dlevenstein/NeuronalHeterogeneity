@@ -38,7 +38,7 @@ statenames = {'NREMstate','WAKEstate','REMstate'};
 [ ISIstats ] = bz_ISIStats( spikes,'ints',SleepState.ints,...
     'cellclass',CellClass.label,'shuffleCV2',false,...
     'savecellinfo',false,'basePath',basePath,'forceRedetect',true,...
-    'numISIbins',150,'logISIbounds',[0.0005 300]);
+    'numISIbins',150,'logISIbounds',[0.0001 500]);
 
 
 %%
@@ -47,16 +47,18 @@ numAS.WAKEstate = 4;
 numAS.REMstate = 4;
 
 %%
-
+spkthresh = 200;
 for ss = 1:3
-   % numspks = sum(ISIstats.allspikes.instate.NREMstate.(statenames{ss}));
+    numspks = cellfun(@sum,ISIstats.allspikes.instate.(statenames{ss}));
     logtimebins = ISIstats.ISIhist.logbins;
-    logISIhist = ISIstats.ISIhist.(statenames{ss}).log(CellClass.pE,:)';
+    logISIhist = ISIstats.ISIhist.(statenames{ss}).log;
+    logISIhist(numspks<spkthresh,:) = 0;
+    logISIhist = logISIhist(CellClass.pE,:)';
     logISIhist = logISIhist./mode(diff(logtimebins));
     GammaFit.(statenames{ss}) = bz_FitISISharedGammaModes(logISIhist,logtimebins,...
         'numAS',numAS.(statenames{ss}),...
         'figfolder',figfolder,'basePath',basePath,...
-        'AScost',0.2,'ASguess',true);
+        'AScost',0.1,'ASguess',true,'figname',(statenames{ss}));
 end
 
 

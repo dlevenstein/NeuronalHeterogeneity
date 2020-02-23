@@ -12,7 +12,8 @@ function [GammaFit] = bz_FitISISharedGammaModes(logISIhist,logtimebins,varargin)
 %       'figfolder'     a folder to save the figure in
 %       'basePath'
 %       'AScost'
-%       'ASguess'
+%       'ASguess'       A L1/2 norm cost on Activated states that tries to
+%                       push weights to 0 and avoid overlapping AS modes
 %
 %       'numpad'        (number of bins below/above to pad)
 %       'maxNmodes'  
@@ -35,6 +36,7 @@ addParameter(p,'logbase',10)
 addParameter(p,'numAS',3)
 addParameter(p,'showfig',true)
 addParameter(p,'figfolder',false)
+addParameter(p,'figname',[])
 addParameter(p,'basePath',pwd,@isstr)
 addParameter(p,'AScost',0)
 addParameter(p,'ASguess',[])
@@ -58,6 +60,7 @@ logbase = p.Results.logbase;
 numAS = p.Results.numAS;
 SHOWFIG = p.Results.showfig;
 figfolder = p.Results.figfolder;
+figname = p.Results.figname;
 basePath = p.Results.basePath;
 AScost = p.Results.AScost;
 ASguess = p.Results.ASguess;
@@ -179,7 +182,7 @@ options.MaxIterations = 1000;
 %% Fit all the distributions together
 %logISIhist = logISIhist(:,ISIStats.sorts.WAKEstate.ratepE);
 difffun = @(GSASparm_vect) sum(sum((logISIhist-GSASmodel(GSASparm_vect,taubins,numcells,numAS)).^2)) ...
-    + AScost.*sum(Aeq_ASonly*GSASparm_vect);
+    + AScost.*sum((abs(Aeq_ASonly*GSASparm_vect)).^(2/3)); %L1/2 norm on AS weights to promote sparseness
 fitparms = fmincon(difffun,init,[],[],Aeq,Beq,lb,ub,[],options);
 sharedfit = convertGSASparms(fitparms,numcells,numAS);
 
@@ -217,25 +220,29 @@ for cc = 1:numcells
 
     %Make the constraint matrix for all weights to add to 1
     cAeq = zeros(1,length(cub));
+    cAeq_ASonly = zeros(1,length(cub));
     cBeq = ones(1,1);
     thiscell.GSlogrates = zeros(1,1);
     thiscell.GSCVs =      zeros(1,1);
     thiscell.GSweights =  zeros(1,1);
     thiscell.ASlogrates = zeros(1,numAS);
     thiscell.ASCVs =      zeros(1,numAS);
-    thiscell.ASweights  = zeros(1,numAS);
+    thiscell.ASweights  = ones(1,numAS);
+    cAeq_ASonly = convertGSASparms(thiscell)';
+    thiscell.GSweights =  ones(1,1);
     cAeq = convertGSASparms(thiscell)';
-
-
+    
+    
     options = optimoptions('fmincon','Algorithm','sqp','UseParallel',false,'Display','off');%
     %try also: 'Algorithm','active-set', 'sqp'
     %Decrease tolerance.....
     options.MaxFunctionEvaluations = 1e8;
     options.MaxIterations = 1000; 
 
-    %% Fit all the distributions together
+    %% Fit the single-cell distribution 
     thisdist = logISIhist(:,cc);
-    cdifffun = @(GSASparm_vect) sum(sum((thisdist-GSASmodel(GSASparm_vect,taubins,1,numAS)).^2));
+    cdifffun = @(GSASparm_vect) sum(sum((thisdist-GSASmodel(GSASparm_vect,taubins,1,numAS)).^2)) ...
+    + AScost.*sum((abs(cAeq_ASonly*GSASparm_vect)).^(2/3)); %L2/3 norm on AS weights to promote sparseness
     fitparms_singlecell = fmincon(cdifffun,cinit,[],[],cAeq,cBeq,clb,cub,[],options);
     GammaFit.singlecell(cc) = convertGSASparms(fitparms_singlecell,1,numAS);
     
@@ -246,6 +253,8 @@ GammaFit.ISIdists = logISIhist;
 GammaFit.sharedfit = sharedfit;
 GammaFit.logtimebins = logtimebins;
 GammaFit.numcells = numcells;
+GammaFit.parms = p.Results;
+GammaFit.initialconditions = init_struct;
 %Collapse the structure
 singlecell_all = bz_CollapseStruct(GammaFit.singlecell,1);
 
@@ -273,6 +282,8 @@ imagesc(logtimebins,[1 numcells],logISIhist(:,sortGSrate)')
 hold on
 plot(logtimebins,-bz_NormToRange(meanISIdist,0.3)+numcells,'k','linewidth',2)
 %colorbar
+title(figname)
+
 subplot(2,2,2)
 imagesc(logtimebins,[1 numcells],fitISI(:,sortGSrate)')
 %colorbar
@@ -296,7 +307,7 @@ scatter(-singlecell_all.ASlogrates(:,aa),log10(singlecell_all.ASCVs(:,aa)),20.*s
 end
 %axis tight
 box off
-plot(logtimebins([1 end]),[1 1],'k--')
+plot(logtimebins([1 end]),[0 0],'k--')
 xlabel('Mean ISI (s)');ylabel('CV')
 xlim(logtimebins([1 end]))
 LogScale('x',10)
@@ -306,7 +317,7 @@ plot(singlecell_all.GSlogrates,sharedfit.GSlogrates,'.')
 xlabel('Single-cell GS rate');ylabel('Group Fit GS rate')
 
 if figfolder
-    NiceSave('GammaModes',figfolder,baseName);
+    NiceSave(['GammaModes',figname],figfolder,baseName);
 end
 
 %%
@@ -361,7 +372,7 @@ LogScale('x',10)
 
 end
 if figfolder
-    NiceSave('CellExample',figfolder,baseName);
+    NiceSave(['CellExample',figname],figfolder,baseName);
 end
 
 end
