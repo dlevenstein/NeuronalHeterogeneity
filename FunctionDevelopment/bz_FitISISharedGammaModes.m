@@ -318,9 +318,9 @@ box off
 axis tight
 
 subplot(3,3,3+ee)
-scatter(-singlecell_all.ASlogrates(excell,:),singlecell_all.ASCVs(excell,:),50*singlecell_all.ASweights(excell,:),'filled')
+scatter(-singlecell_all.ASlogrates(excell,:),singlecell_all.ASCVs(excell,:),50*singlecell_all.ASweights(excell,:)+0.00001,'filled')
 hold on
-scatter(-singlecell_all.GSlogrates(excell),singlecell_all.GSCVs(excell),50*singlecell_all.GSweights(excell),'filled')
+scatter(-singlecell_all.GSlogrates(excell),singlecell_all.GSCVs(excell),50*singlecell_all.GSweights(excell)+0.00001,'filled')
 ylabel('CV');xlabel('mean ISI')
 xlim(logtimebins([1 end]))
 LogScale('x',10)
