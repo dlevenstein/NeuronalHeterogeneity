@@ -48,6 +48,7 @@ numAS.REMstate = 5;
 for ss = 1
     logtimebins = ISIstats.ISIhist.logbins;
     logISIhist = ISIstats.ISIhist.(statenames{ss}).log(CellClass.pE,:)';
+    logISIhist = logISIhist./mode(diff(logtimebins));
     [sharedfit,singlecell] = bz_FitISISharedGammaModes(logISIhist,logtimebins,'numAS',numAS.(statenames{ss}));
 end
 
@@ -57,7 +58,13 @@ end
 
 
 
-
+%% Mean rate and GS rate
+figure
+plot(sharedfit.GSlogrates,log10(ISIStats.summstats.WAKEstate.meanrate(ISIStats.sorts.WAKEstate.ratepE)),'.')
+hold on
+%UnityLine
+xlabel('GS Rate');
+ylabel('Mean Rate')
 
 
 

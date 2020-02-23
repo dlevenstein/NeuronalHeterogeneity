@@ -70,6 +70,9 @@ Nestimatemethod = p.Results.Nestimatemethod;
 %logtimebins = ISIStats.ISIhist.logbins;
 taubins = logtimebins./log10(exp(1));
 logISIhist = logISIhist.* mode(diff(logtimebins))./mode(diff(taubins)); %convert to dtau
+
+%meanISI = mean(taubins.*logISIhist)./sum(logISIhist);
+numcells = size(logISIhist,2);
 %% Dev - fake distribution
 
 % numcells = 10;
@@ -95,8 +98,7 @@ logISIhist = logISIhist.* mode(diff(logtimebins))./mode(diff(taubins)); %convert
 % imagesc(taubins,[1 numcells],allISIdist3')
 
 %% Set up everything for fitting
-%meanISI = mean(taubins.*logISIhist)./sum(logISIhist);
-numcells = size(logISIhist,2);
+
 
 %Initial Conditions
 %init_struct.GSlogrates = -log10(meanISI)-0.5;
@@ -215,15 +217,9 @@ end
 
 %Collapse the structure
 singlecell_all = CollapseStruct(singlecell,1);
-%%
-figure
-plot(sharedfit.GSlogrates,log10(ISIStats.summstats.WAKEstate.meanrate(ISIStats.sorts.WAKEstate.ratepE)),'.')
-hold on
-%UnityLine
-xlabel('GS Rate');
-ylabel('Mean Rate')
 
 %%
+if SHOWFIG
 figure
 hist(singlecell_all.GSweights)
 %%
@@ -242,16 +238,19 @@ subplot(2,2,1)
 imagesc(logtimebins,[1 numcells],logISIhist(:,sortGSrate)')
 hold on
 plot(logtimebins,-bz_NormToRange(meanISIdist,0.3)+numcells,'k','linewidth',2)
-%colorbar
+colorbar
 subplot(2,2,2)
 imagesc(logtimebins,[1 numcells],fitISI(:,sortGSrate)')
-%colorbar
+colorbar
 
 subplot(2,2,3)
 plot(-sharedfit.ASlogrates,sharedfit.ASCVs,'o')
 hold on
+% scatter(-sharedfit.GSlogrates,sharedfit.GSCVs,...
+%     5.*singlecell_all.GSweights+0.00001,log10(ISIStats.summstats.WAKEstate.meanrate(ISIStats.sorts.WAKEstate.ratepE)),...
+%     'filled')
 scatter(-sharedfit.GSlogrates,sharedfit.GSCVs,...
-    5.*singlecell_all.GSweights+0.00001,log10(ISIStats.summstats.WAKEstate.meanrate(ISIStats.sorts.WAKEstate.ratepE)),...
+    5.*singlecell_all.GSweights+0.00001,...
     'filled')
 for aa = 1:numAS
 scatter(-singlecell_all.ASlogrates(:,aa),singlecell_all.ASCVs(:,aa),20.*singlecell_all.ASweights(:,aa)+0.00001,...
@@ -266,6 +265,7 @@ LogScale('x',10)
 
 subplot(2,2,4)
 plot(singlecell_all.GSlogrates,sharedfit.GSlogrates,'.')
+xlabel('Single-cell GS rate');ylabel('Group Fit GS rate')
 
 
 %%
@@ -295,16 +295,16 @@ box off
 axis tight
 
 subplot(2,2,3)
-scatter(-singlecell_all.ASlogrates(excell,:),singlecell_all.ASCVs(excell,:),20*singlecell_all.ASweights(excell,:),'filled')
+scatter(-singlecell_all.ASlogrates(excell,:),singlecell_all.ASCVs(excell,:),50*singlecell_all.ASweights(excell,:),'filled')
 hold on
-scatter(-singlecell_all.GSlogrates(excell),singlecell_all.GSCVs(excell),20*singlecell_all.GSweights(excell),'filled')
+scatter(-singlecell_all.GSlogrates(excell),singlecell_all.GSCVs(excell),50*singlecell_all.GSweights(excell),'filled')
 ylabel('CV');xlabel('mean ISI')
 xlim(logtimebins([1 end]))
 LogScale('x',10)
 
 
 
-
+end
 
 %%
    
