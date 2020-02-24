@@ -125,19 +125,24 @@ end
 
 %%
 close all
-Nmodes = max(ISIfits.(regions{rr}).(statenames{ss}).Nmodes);
+%Nmodes = max(ISIfits.(regions{rr}).(statenames{ss}).Nmodes);
+%Nmodes = 5;
 figure
 for ss = 1:3
-    for rr = 1:length(regions)
+    for rr = 2:length(regions)
 subplot(length(regions),3,(rr-1)*3+ss)
 hold on
-for cc = 1:2
-    plot(log10(ISIfits.(regions{rr}).(statenames{ss}).rates(:,CellClass.(regions{rr}).(celltypes{cc}))),...
-        repmat(log10(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate(CellClass.(regions{rr}).(celltypes{cc}))),Nmodes,1),...
-        '.','color',cellcolor{cc},'markersize',0.5)
-%     scatter(log10(1./(ks(:,CellClass.(celltypes{cc}))./rates(:,CellClass.(celltypes{cc})))),...
-%         (1./ks(:,CellClass.(celltypes{cc}))),weights(:,CellClass.(celltypes{cc})),...
-%         repmat(ISIStats.summstats.NREMstate.meanrate(CellClass.(celltypes{cc})),4,1))
+for cc = 1
+    scatter(GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSlogrates(GammaFit.(regions{rr}).(statenames{ss}).inregion),...
+        log10(GammaFit.(regions{rr}).(statenames{ss}).cellstats.meanrate(GammaFit.(regions{rr}).(statenames{ss}).inregion)),...
+        GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{rr}).(statenames{ss}).inregion),...
+        GScolor,'filled')
+   for aa = 1:5
+    scatter(GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASlogrates(GammaFit.(regions{rr}).(statenames{ss}).inregion,aa),...
+        log10(GammaFit.(regions{rr}).(statenames{ss}).cellstats.meanrate(GammaFit.(regions{rr}).(statenames{ss}).inregion)),...
+        GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASweights(GammaFit.(regions{rr}).(statenames{ss}).inregion,aa),...
+        cellcolor{cc},'filled')
+   end
 end
     axis tight
     yrange = ylim(gca);
