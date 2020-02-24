@@ -125,6 +125,7 @@ plot(GammaFit.(statenames{ss}).logtimebins([1 end]),[0 0],'k--')
 ylabel('CV');xlabel('mean ISI (s)')
 xlim(logtimebins([1 end]))
 LogScale('x',10,'exp',true)
+LogScale('y',10)
 box on
 
 end
