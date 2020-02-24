@@ -129,7 +129,7 @@ close all
 %Nmodes = 5;
 figure
 for ss = 1:3
-    for rr = 2:length(regions)
+    for rr = 1:length(regions)
 subplot(length(regions),3,(rr-1)*3+ss)
 hold on
 for cc = 1
