@@ -111,7 +111,7 @@ if ee == 1
     title(statenames{ss})
 end
 if ss == 1
-    ylabel('UID: ',num2str(GammaFit.(statenames{ss}).cellstats.UID(excell)))
+    ylabel(['UID: ',num2str(GammaFit.(statenames{ss}).cellstats.UID(excell))])
 end
 
 subplot(6,3,[3 6]+ss+(ee-1)*9)
