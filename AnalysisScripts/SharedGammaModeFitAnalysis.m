@@ -40,7 +40,7 @@ statenames = {'NREMstate','WAKEstate','REMstate'};
     'savecellinfo',false,'basePath',basePath,'forceRedetect',true,...
     'numISIbins',150,'logISIbounds',[0.0001 500]);
 
-
+cellinfofilename = fullfile(basePath,[baseName,'.GammaFit.cellinfo.mat']);
 %%
 numAS.NREMstate = 5;
 numAS.WAKEstate = 5;
@@ -69,18 +69,21 @@ for ss = 1:3
     
 end
 
-
+SAVECELLINFO = true;
+if SAVECELLINFO
+    save(cellinfofilename,'GammaFit')
+end
 
 GScolor = [0.6 0.4 0];
 
 %% Example cell: 3 states
-numex=1;
+numex=2;
 excell = randi(GammaFit.(statenames{ss}).numcells,numex);
 figure
-
+for ee = 1:2
 for ss = 1:3
     %excell = excells(ee);
-subplot(6,3,ss+3)
+subplot(6,3,ss+(ee-1)*9+cc)
 plot(GammaFit.(statenames{ss}).logtimebins,...
     GammaFit.(statenames{ss}).ISIdists(:,excell),...
     'color',[0.5 0.5 0.5],'linewidth',2)
@@ -104,10 +107,13 @@ for aa = 1:numAS.(statenames{ss})
 end
 box off
 axis tight
-title(statenames{ss})
+if ee == 1
+    title(statenames{ss})
+end
+if ss == 1
+    ylabel('UID: ',num2str(GammaFit.(statenames{ss}).cellstats.UID))
 
-
-subplot(3,3,3+ss)
+subplot(6,3,[3 6]+ss+(ee-1)*9)
 scatter(-GammaFit.(statenames{ss}).singlecell(excell).ASlogrates(:),...
     log10(GammaFit.(statenames{ss}).singlecell(excell).ASCVs(:)),...
     100*GammaFit.(statenames{ss}).singlecell(excell).ASweights(:)+0.00001,'k','filled')
@@ -121,6 +127,7 @@ xlim(logtimebins([1 end]))
 LogScale('x',10,'exp',true)
 box on
 
+end
 end
 if figfolder
     NiceSave('CellExample_states',figfolder,baseName);
