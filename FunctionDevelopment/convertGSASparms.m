@@ -3,9 +3,10 @@ function [parmstype2] = convertGSASparms(parmstype1,numcells,numAS)
 %   Detailed explanation goes here
 % If structure, returns vector (for use in fitting algorithms).
 % If vector, returns structure, (needs numcells, numAS)
-%Note: vectr form uses logCV... for fitting bounds and no infs. CV=0 is turned into 0.001
-%... could just do this in the fitting function instead... set min to 0.01
-zeroCV = 0.01;
+%Note: vectr form uses logCV... for fitting bounds and no infs. CV=0 is
+%turned into 0.005
+%... could just do this in the fitting function instead... set min to 0.005
+zeroCV = 0.005;
 
 if isstruct(parmstype1)
     parmstype1.GSCVs(parmstype1.GSCVs<=0) = zeroCV;
