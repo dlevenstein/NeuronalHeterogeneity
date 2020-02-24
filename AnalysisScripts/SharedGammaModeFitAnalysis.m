@@ -112,6 +112,7 @@ if ee == 1
 end
 if ss == 1
     ylabel('UID: ',num2str(GammaFit.(statenames{ss}).cellstats.UID(excell)))
+end
 
 subplot(6,3,[3 6]+ss+(ee-1)*9)
 scatter(-GammaFit.(statenames{ss}).singlecell(excell).ASlogrates(:),...
@@ -130,9 +131,9 @@ box on
 
 end
 end
-if figfolder
+%if figfolder
     NiceSave('CellExample_states',figfolder,baseName);
-end
+%end
 %% Mean and all points (single cell and group)
 %Mean dist with group AS. use mean weight.
 
