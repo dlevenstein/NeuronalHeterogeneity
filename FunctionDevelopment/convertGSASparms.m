@@ -6,7 +6,7 @@ function [parmstype2] = convertGSASparms(parmstype1,numcells,numAS)
 %Note: vectr form uses logCV... for fitting bounds and no infs. CV=0 is
 %turned into 0.005
 %... could just do this in the fitting function instead... set min to 0.005
-zeroCV = 0.005;
+zeroCV = 0.001;
 
 if isstruct(parmstype1)
     parmstype1.GSCVs(parmstype1.GSCVs<=0) = zeroCV;
