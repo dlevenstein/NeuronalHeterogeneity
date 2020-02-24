@@ -78,11 +78,11 @@ GScolor = [0.6 0.4 0];
 
 %% Example cell: 3 states
 numex=2;
-excell = randi(GammaFit.(statenames{ss}).numcells,numex);
+excells = randi(GammaFit.(statenames{ss}).numcells,numex);
 figure
 for ee = 1:2
 for ss = 1:3
-    %excell = excells(ee);
+    excell = excells(ee);
 subplot(6,3,ss+(ee-1)*9)
 plot(GammaFit.(statenames{ss}).logtimebins,...
     GammaFit.(statenames{ss}).ISIdists(:,excell),...
