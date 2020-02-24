@@ -83,7 +83,7 @@ figure
 for ee = 1:2
 for ss = 1:3
     %excell = excells(ee);
-subplot(6,3,ss+(ee-1)*9+cc)
+subplot(6,3,ss+(ee-1)*9)
 plot(GammaFit.(statenames{ss}).logtimebins,...
     GammaFit.(statenames{ss}).ISIdists(:,excell),...
     'color',[0.5 0.5 0.5],'linewidth',2)
