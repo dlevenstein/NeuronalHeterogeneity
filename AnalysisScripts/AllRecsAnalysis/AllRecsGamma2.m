@@ -94,10 +94,11 @@ hold on
         cellcolor{cc},'filled')
    end
     plot(xlim(gca),[0 0],'k--')
-    ylim([-2 0.75])
+    ylim([-2 1])
     %ylim([0 4])
     xlim([-3 1.9])
-     LogScale('xy',10)
+     LogScale('y',10)
+     LogScale('x',10,'exp',true)
 
 if rr == 1
     ylabel({(statenames{ss}),'CV'})
@@ -106,6 +107,7 @@ else
 end
 if ss == 1
     title((regions{rr}))
+    
 elseif ss ==3
     xlabel('Mean ISI (s)');
 end
