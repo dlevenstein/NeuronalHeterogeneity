@@ -11,7 +11,8 @@ function [GammaFit] = bz_FitISISharedGammaModes(logISIhist,logtimebins,varargin)
 %       'numAS'         number of activated states
 %       'figfolder'     a folder to save the figure in
 %       'basePath'
-%       'AScost'
+%       'AScost_lambda'
+%       'AScost_p'
 %       'ASguess'       A L1/2 norm cost on Activated states that tries to
 %                       push weights to 0 and avoid overlapping AS modes
 %
@@ -38,7 +39,8 @@ addParameter(p,'showfig',true)
 addParameter(p,'figfolder',false)
 addParameter(p,'figname',[])
 addParameter(p,'basePath',pwd,@isstr)
-addParameter(p,'AScost',0)
+addParameter(p,'AScost_lambda',0)
+addParameter(p,'AScost_p',2/3)
 addParameter(p,'MScost',0)
 addParameter(p,'ASguess',[])
 
@@ -49,7 +51,7 @@ addParameter(p,'autoNmodes',true)
 addParameter(p,'Nestimatemethod','descending')
 addParameter(p,'maxNmodes',10)
 %addParameter(p,'lambdabounds',[-5 8])
-addParameter(p,'logratebounds',[-3 3])
+addParameter(p,'logratebounds',[-3.25 3.25])
 addParameter(p,'numpad',15)
 addParameter(p,'minISIs',300)
 addParameter(p,'promthresh',0.05)
@@ -64,7 +66,8 @@ SHOWFIG = p.Results.showfig;
 figfolder = p.Results.figfolder;
 figname = p.Results.figname;
 basePath = p.Results.basePath;
-AScost = p.Results.AScost;
+AScost_lambda = p.Results.AScost_lambda;
+AScost_p = p.Results.AScost_p;
 ASguess = p.Results.ASguess;
 MScost = p.Results.MScost;
 
@@ -188,12 +191,12 @@ options.MaxFunctionEvaluations = 1e8;
 options.MaxIterations = 1000; 
 
 %% Fit all the distributions together
-%logISIhist = logISIhist(:,ISIStats.sorts.WAKEstate.ratepE);
-difffun = @(GSASparm_vect) sum(sum((logISIhist-GSASmodel(GSASparm_vect,taubins,numcells,numAS)).^2)) ...
-    + AScost.*sum((abs(Aeq_ASonly*GSASparm_vect)).^(2/3))...; %L1/2 norm on AS weights to promote sparseness
+                                    %TO DO: chance distance to KS
+costfun = @(GSASparm_vect) sum(sum((logISIhist-GSASmodel(GSASparm_vect,taubins,numcells,numAS)).^2)) ...
+    + AScost_lambda.*sum((abs(Aeq_ASonly*GSASparm_vect)).^(AScost_p))...; %L1/2 norm on AS weights to promote sparseness
     + MScost.*sum(sum((logISIhist(sub1msbins,:)-GSASmodel(GSASparm_vect,taubins(sub1msbins),numcells,numAS)).^2)); 
 
-fitparms = fmincon(difffun,init,[],[],Aeq,Beq,lb,ub,[],options);
+fitparms = fmincon(costfun,init,[],[],Aeq,Beq,lb,ub,[],options);
 sharedfit = convertGSASparms(fitparms,numcells,numAS);
 
 %% Fit Each cell distribution, starting from the group dists
@@ -252,9 +255,9 @@ for cc = 1:numcells
 
     %% Fit the single-cell distribution 
     thisdist = logISIhist(:,cc);
-    
+                                    
     cdifffun = @(GSASparm_vect) sum(sum((thisdist-GSASmodel(GSASparm_vect,taubins,1,numAS)).^2)) ...
-    + AScost.*sum((abs(cAeq_ASonly*GSASparm_vect)).^(2/3))... ; %L2/3 norm on AS weights to promote sparseness
+    + AScost_lambda.*sum((abs(cAeq_ASonly*GSASparm_vect)).^(AScost_p))... ; %L2/3 norm on AS weights to promote sparseness
     + MScost.*sum(sum((thisdist(sub1msbins)-GSASmodel(GSASparm_vect,taubins(sub1msbins),1,numAS)).^2)); 
 
     fitparms_singlecell = fmincon(cdifffun,cinit,[],[],cAeq,cBeq,clb,cub,[],options);
@@ -301,10 +304,12 @@ hold on
 plot(logtimebins,-bz_NormToRange(meanISIdist,0.3)+numcells,'k','linewidth',2)
 %colorbar
 title(figname)
+xlim([-3 2])
 
 subplot(2,2,2)
 imagesc(logtimebins,[1 numcells],fitISI(:,sortGSrate)')
 %colorbar
+xlim([-3 2])
 
 subplot(2,2,2)
 
@@ -327,7 +332,7 @@ end
 box off
 plot(logtimebins([1 end]),[0 0],'k--')
 xlabel('Mean ISI (s)');ylabel('CV')
-xlim(logtimebins([1 end]))
+xlim([-3 2])
 LogScale('x',10)
 
 subplot(2,2,4)
@@ -386,7 +391,7 @@ scatter(-singlecell_all.GSlogrates(excell),log10(singlecell_all.GSCVs(excell)),.
     100*singlecell_all.GSweights(excell)+0.00001,GScolor,'filled')
 plot(logtimebins([1 end]),[0 0],'k--')
 ylabel('CV');xlabel('mean ISI (s)')
-xlim(logtimebins([1 end]))
+xlim(logtimebins([1 end]));ylim([-2 1])
 LogScale('x',10,'exp',true)
 
 end
