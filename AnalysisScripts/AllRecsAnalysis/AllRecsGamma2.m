@@ -73,7 +73,8 @@ for ss = 1:3
         GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASweights(GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASweights<weightthresh) = nan;
         GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASlogrates(isnan(GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASweights))=nan;
 
-subplot(length(regions),3,(rr-1)*3+ss)
+%subplot(length(regions),3,(rr-1)*3+ss)
+subplot(5,length(regions),(ss-1)*length(regions)+rr)
 hold on
         
 %     plot(GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSlogrates(GammaFit.(regions{rr}).(statenames{ss}).inregion),...
@@ -99,13 +100,16 @@ hold on
      LogScale('xy',10)
 
 if rr == 1
-title((statenames{ss}))
-elseif rr ==length(regions)
-    xlabel('Mean ISI (s)');
+    ylabel({(statenames{ss}),'CV'})
+else
+    set(gca,'ytick',[])
 end
 if ss == 1
-    ylabel({(regions{rr}),'CV'})
+    title((regions{rr}))
+elseif ss ==3
+    xlabel('Mean ISI (s)');
 end
+
 
     end 
 
