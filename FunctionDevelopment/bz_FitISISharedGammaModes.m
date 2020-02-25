@@ -192,11 +192,11 @@ options.MaxIterations = 1000;
 
 %% Fit all the distributions together
                                     %TO DO: chance distance to KS
-difffun = @(GSASparm_vect) sum(sum((logISIhist-GSASmodel(GSASparm_vect,taubins,numcells,numAS)).^2)) ...
+costfun = @(GSASparm_vect) sum(sum((logISIhist-GSASmodel(GSASparm_vect,taubins,numcells,numAS)).^2)) ...
     + AScost_lambda.*sum((abs(Aeq_ASonly*GSASparm_vect)).^(AScost_p))...; %L1/2 norm on AS weights to promote sparseness
     + MScost.*sum(sum((logISIhist(sub1msbins,:)-GSASmodel(GSASparm_vect,taubins(sub1msbins),numcells,numAS)).^2)); 
 
-fitparms = fmincon(difffun,init,[],[],Aeq,Beq,lb,ub,[],options);
+fitparms = fmincon(costfun,init,[],[],Aeq,Beq,lb,ub,[],options);
 sharedfit = convertGSASparms(fitparms,numcells,numAS);
 
 %% Fit Each cell distribution, starting from the group dists
@@ -391,7 +391,7 @@ scatter(-singlecell_all.GSlogrates(excell),log10(singlecell_all.GSCVs(excell)),.
     100*singlecell_all.GSweights(excell)+0.00001,GScolor,'filled')
 plot(logtimebins([1 end]),[0 0],'k--')
 ylabel('CV');xlabel('mean ISI (s)')
-xlim(logtimebins([1 end]))
+xlim(logtimebins([1 end]));ylim([-2 1])
 LogScale('x',10,'exp',true)
 
 end
