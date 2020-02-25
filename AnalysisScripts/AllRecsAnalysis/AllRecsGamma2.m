@@ -53,15 +53,42 @@ end
 GammaFit.BLA.NREMstate.singlecell.GSCVs
 
 %%
+weightthresh = 0.05; %perc of spikes
 figure
 for ss = 1:3
 for rr = 1:length(regions)
     subplot(length(regions),3,(rr-1)*3+ss)
     hist(log10(GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASweights(GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASweights>0)))
+    hold on
+    plot(log10(weightthresh).*[1 1],ylim(gca),'r--')
+    
 end
 end
+figure
+for ss = 1:3
+for rr = 1:length(regions)
+    GammaFit.(regions{rr}).(statenames{ss}).singlecell.numAS = sum(GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASweights(GammaFit.(regions{rr}).(statenames{ss}).inregion,:)>weightthresh,2);
+    subplot(length(regions),3,(rr-1)*3+ss)
+    histogram(GammaFit.(regions{rr}).(statenames{ss}).singlecell.numAS,0:5,'facecolor',regioncolors(rr,:))
+    axis tight
+    box off
+    set(gca,'yticklabel',[])
+    if ss == 1
+        ylabel({(regions{rr}),'% Cells'})
+    end
+    if rr == 1
+        title((statenames{ss}))
+        set(gca,'xticklabel',[])
+    elseif rr == length(regions)
+        xlabel('# Activated States')
+    else
+        set(gca,'xticklabel',[])
+    end
+end
+end
+NiceSave(['NumModes'],figfolder,[])
 %%
-weightthresh = 0.05; %perc of spikes
+
 GScolor = [0.6 0.4 0];
 close all
 for cc = 1
@@ -227,5 +254,31 @@ subplot(length(regions),3,(rr-1)*3+ss)
         2,log10(GammaFit.(regions{rr}).(statenames{ss}).cellstats.meanrate(GammaFit.(regions{rr}).(statenames{ss}).inregion)),...
         'filled')
     xlabel('GS rate');ylabel('Total AS weight')
+    colorbar
+    LogScale('c',10,'exp',true)
     end
 end
+NiceSave(['GSASandRate_pE'],figfolder,[])
+
+%%
+regnames = repmat(regions,2,1);
+
+figure
+for ss = 1:2
+subplot(3,2,ss)
+BoxAndScatterPlot({GammaFit.(regions{1}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{1}).(statenames{ss}).inregion),...
+    GammaFit.(regions{2}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{2}).(statenames{ss}).inregion),...
+    GammaFit.(regions{3}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{3}).(statenames{ss}).inregion),...
+    GammaFit.(regions{4}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{4}).(statenames{ss}).inregion),...
+    GammaFit.(regions{5}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{5}).(statenames{ss}).inregion),...
+    GammaFit.(regions{6}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{6}).(statenames{ss}).inregion)},...
+    'colors',regioncolors,...
+    'labels',regions)
+    plot(xlim(gca),[0.5 0.5],'k--')
+ylim([0 1])
+%box off
+ylabel('p_G_S')
+%LogScale('y',10)
+end
+NiceSave('PGS',figfolder,[])
+

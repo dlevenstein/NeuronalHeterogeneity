@@ -16,6 +16,7 @@ function [GammaFit] = SharedGammaModeFitAnalysis(basePath,figfolder)
 %basePath = '/Users/dlevenstein/Dropbox/research/Datasets/20140526_277um';
 %figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
+SAVECELLINFO = true;
 
 %Load Stuff
 sessionInfo = bz_getSessionInfo(basePath);
@@ -58,7 +59,7 @@ for ss = 1:3
     GammaFit.(statenames{ss}) = bz_FitISISharedGammaModes(logISIhist,logtimebins,...
         'numAS',numAS.(statenames{ss}),...
         'figfolder',figfolder,'basePath',basePath,...
-        'AScost_lambda',0.15,'AScost_p',1/2,'ASguess',true,'MScost',1.25,'figname',(statenames{ss}));
+        'AScost_lambda',0.125,'AScost_p',1/2,'ASguess',true,'MScost',2,'figname',(statenames{ss}));
     
     GammaFit.(statenames{ss}).cellstats.meanrate = ...
         ISIstats.summstats.(statenames{ss}).meanrate(usecells);
@@ -69,7 +70,6 @@ for ss = 1:3
     
 end
 
-SAVECELLINFO = true;
 if SAVECELLINFO
     save(cellinfofilename,'GammaFit')
 end
