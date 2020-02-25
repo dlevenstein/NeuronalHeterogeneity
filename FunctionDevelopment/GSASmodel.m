@@ -12,7 +12,7 @@ end
 %Here: if logtbins = 'sample'. Put in a very large vector of possible times
 %to sample from, save that we're sampling.
 if strcmp(logtbins,'sample')
-    logtbins = 
+    %logtbins = 
 end
 
 GSISI = LogGamma(GSASparms.GSlogrates,GSASparms.GSCVs,GSASparms.GSweights,logtbins');
