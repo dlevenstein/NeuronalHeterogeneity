@@ -31,6 +31,7 @@ catch
     celltypes = unique(CellClass.label);
 end
 cellcolor = {'k','r'};
+statecolor = {'b','k','r'};
 
 %%
 statenames = {'NREMstate','WAKEstate','REMstate'};
@@ -53,26 +54,37 @@ for ss = 1:3
     numspks = cellfun(@sum,ISIstats.allspikes.instate.(statenames{ss}));
     logtimebins = ISIstats.ISIhist.logbins;
     logISIhist = ISIstats.ISIhist.(statenames{ss}).log;
-    usecells = CellClass.pE & numspks>spkthresh;
-    logISIhist = logISIhist(usecells,:)';
+    usecells{ss} = find(CellClass.pE & numspks>spkthresh);
+    logISIhist = logISIhist(usecells{ss},:)';
     logISIhist = logISIhist./mode(diff(logtimebins));
     GammaFit.(statenames{ss}) = bz_FitISISharedGammaModes(logISIhist,logtimebins,...
         'numAS',numAS.(statenames{ss}),...
         'figfolder',figfolder,'basePath',basePath,...
-        'AScost_lambda',0.12,'AScost_p',1/2,'ASguess',true,'MScost',2,'figname',(statenames{ss}));
+        'AScost_lambda',0.13,'AScost_p',1/2,'ASguess',true,'MScost',2.2,'figname',(statenames{ss}));
     
     
     GammaFit.(statenames{ss}).cellstats.meanrate = ...
-        ISIstats.summstats.(statenames{ss}).meanrate(usecells);
-    GammaFit.(statenames{ss}).cellstats.UID = spikes.UID(usecells);
+        ISIstats.summstats.(statenames{ss}).meanrate(usecells{ss});
+    GammaFit.(statenames{ss}).cellstats.UID = spikes.UID(usecells{ss});
     if isfield(spikes,'region')
-        GammaFit.(statenames{ss}).cellstats.region = spikes.region(usecells);
+        GammaFit.(statenames{ss}).cellstats.region = spikes.region(usecells{ss});
     end
     if length(GammaFit.(statenames{ss}).cellstats.meanrate) ~= ...
             length(GammaFit.(statenames{ss}).singlecell)
         error('bad number of cells')
     end
+    
+
+
 end
+
+%Wake/NREM joint indexing
+GammaFit.(statenames{1}).cellstats.NW = false(size(GammaFit.(statenames{1}).cellstats.meanrate));
+GammaFit.(statenames{2}).cellstats.NW = false(size(GammaFit.(statenames{2}).cellstats.meanrate));
+[~,NW1,NW2]=intersect(usecells{1},usecells{2});
+GammaFit.(statenames{1}).cellstats.NW(NW1)=true;
+GammaFit.(statenames{2}).cellstats.NW(NW2)=true;
+
 
 if SAVECELLINFO
     save(cellinfofilename,'GammaFit')
@@ -80,6 +92,58 @@ end
 
 GScolor = [0.6 0.4 0];
 
+%%
+
+
+%%
+diffrate = log10(GammaFit.WAKEstate.cellstats.meanrate(GammaFit.WAKEstate.cellstats.NW))-...
+    log10(GammaFit.NREMstate.cellstats.meanrate(GammaFit.NREMstate.cellstats.NW));
+diffGS = [GammaFit.WAKEstate.singlecell(GammaFit.WAKEstate.cellstats.NW).GSlogrates]-...
+     [GammaFit.NREMstate.singlecell(GammaFit.NREMstate.cellstats.NW).GSlogrates];
+ diffAR = (1-[GammaFit.WAKEstate.singlecell(GammaFit.WAKEstate.cellstats.NW).GSweights]) - ...
+      (1-[GammaFit.NREMstate.singlecell(GammaFit.NREMstate.cellstats.NW).GSweights]);
+%%
+figure
+subplot(2,3,1)
+plot(log10(GammaFit.WAKEstate.cellstats.meanrate(GammaFit.WAKEstate.cellstats.NW)),...
+    log10(GammaFit.NREMstate.cellstats.meanrate(GammaFit.NREMstate.cellstats.NW)),'.');
+hold on
+UnityLine
+xlabel('WAKE');ylabel('NREM')
+subplot(2,3,2)
+plot([GammaFit.WAKEstate.singlecell(GammaFit.WAKEstate.cellstats.NW).GSlogrates],...
+    [GammaFit.NREMstate.singlecell(GammaFit.NREMstate.cellstats.NW).GSlogrates],'.');
+hold on
+UnityLine
+xlabel('WAKE ');ylabel('NREM')
+subplot(2,3,3)
+plot(1-[GammaFit.WAKEstate.singlecell(GammaFit.WAKEstate.cellstats.NW).GSweights],...
+    1-[GammaFit.NREMstate.singlecell(GammaFit.NREMstate.cellstats.NW).GSweights],'.');
+hold on
+UnityLine
+xlabel('WAKE');ylabel('NREM')
+subplot(2,3,4)
+    plot(diffrate,diffGS,'.')
+    hold on
+    UnityLine
+    plot([0 0],ylim(gca),'k')
+    plot(xlim(gca),[0 0],'k')
+    xlabel('NW Rate Diff');ylabel('NW GSRate Diff')
+subplot(2,3,5)
+    plot(diffrate,diffAR,'.')
+    hold on
+    UnityLine
+    plot([0 0],ylim(gca),'k')
+    plot(xlim(gca),[0 0],'k')
+    xlabel('NW Rate Diff');ylabel('NW ASWeight Diff')
+subplot(2,3,6)
+    plot(diffGS,diffAR,'.')
+    hold on
+    UnityLine
+    plot([0 0],ylim(gca),'k')
+    plot(xlim(gca),[0 0],'k')
+    xlabel('NW GSRate Diff');ylabel('NW ASWeight Diff')
+        NiceSave('NWDiff',figfolder,baseName);
 
 %% Example cell: 3 states
 for ff = 1:3
@@ -97,7 +161,7 @@ subplot(6,3,ss+(ee-1)*9)
     plot(GammaFit.(statenames{ss}).logtimebins,...
         GSASmodel(GammaFit.(statenames{ss}).singlecell(excell),...
         GammaFit.(statenames{ss}).taubins),...
-        'k','linewidth',2)
+        statecolor{ss},'linewidth',2)
     hold on
     plot(GammaFit.(statenames{ss}).logtimebins,...
         LogGamma(GammaFit.(statenames{ss}).singlecell(excell).GSlogrates,...

@@ -104,7 +104,7 @@ end
 taubins = logtimebins./log10(exp(1));
 logISIhist = logISIhist.* mode(diff(logtimebins))./mode(diff(taubins)); %convert to dtau
 
-sub1msbins = logtimebins<=-3;
+sub1msbins = logtimebins<=-2.7;
 
 %zerospkcells = sum(logISIhist,1)==0;
 

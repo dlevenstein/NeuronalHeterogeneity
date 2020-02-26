@@ -39,8 +39,8 @@ for rr = 1:length(regions)
 %         CellClass.(regions{rr}).pI(~inregion)=false;
 %         %clear ISIStats
         
-    elseif rr==1
-        GammaFit.(regions{rr}).(statenames{ss}).inregion = true(size(GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSweights));
+    %elseif rr==1
+    %    GammaFit.(regions{rr}).(statenames{ss}).inregion = true(size(GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSweights));
     else
         GammaFit.(regions{rr}).(statenames{ss}).inregion = true(size(GammaFit.(regions{rr}).(statenames{ss}).cellstats.meanrate));
     end
@@ -49,9 +49,13 @@ for rr = 1:length(regions)
 end
 
 %%
-
+%%
+test = bz_LoadCellinfo(datasetPath.(regions{1}),'GammaFit','dataset',true,'catall',false)
 %GammaFit.BLA.NREMstate.singlecell.GSCVs
-
+%for tt = 1:length(test)
+    %display(num2str(tt),num2str(length(test
+    
+%end
 %%
 weightthresh = 0.01; %perc of spikes
 figure
@@ -145,16 +149,6 @@ end
 
 end
 NiceSave(['AllISImodes',(celltypes{cc})],figfolder,[])
-end
-
-%%
-
-figure
-for ss = 1:3
-    for rr = 1:length(regions)
-        subplot(length(regions),3,(rr-1)*3+ss)
-            hist(ISIfits.(regions{rr}).(statenames{ss}).Nmodes(CellClass.(regions{rr}).(celltypes{cc})))
-    end
 end
 
 %%
@@ -263,7 +257,8 @@ close all
 figure
 for ss = 1:3
     for rr = 1:length(regions)
-subplot(length(regions),3,(rr-1)*3+ss)
+%subplot(length(regions),3,(rr-1)*3+ss)
+subplot(5,length(regions),(ss-1)*length(regions)+rr)
     scatter(GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSlogrates(GammaFit.(regions{rr}).(statenames{ss}).inregion),...
         1-GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{rr}).(statenames{ss}).inregion),...
         2,log10(GammaFit.(regions{rr}).(statenames{ss}).cellstats.meanrate(GammaFit.(regions{rr}).(statenames{ss}).inregion)),...
@@ -273,6 +268,22 @@ subplot(length(regions),3,(rr-1)*3+ss)
     LogScale('c',10,'exp',true)
     end
 end
+
+subplot(3,3,7)
+for ss = 1:2
+    for rr = 1:length(regions)
+        hold on
+    scatter(GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSlogrates(GammaFit.(regions{rr}).(statenames{ss}).inregion),...
+        1-GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{rr}).(statenames{ss}).inregion),...
+        2,log10(GammaFit.(regions{rr}).(statenames{ss}).cellstats.meanrate(GammaFit.(regions{rr}).(statenames{ss}).inregion)),...
+        'filled')
+    end
+end
+ColorbarWithAxis([-1.5 1.5],'Mean FR')
+xlabel('GS Rate')
+LogScale('c',10)
+ylabel('Total AS Weight')
+LogScale('x',10,'exp',true)
 NiceSave(['GSASandRate_pE'],figfolder,[])
 
 %%
