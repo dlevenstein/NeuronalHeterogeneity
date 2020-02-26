@@ -186,7 +186,7 @@ end
     %axis tight
     xlim([-1.5 2.5])
     ylim(yrange)
-    LogScale('xy',10,'exp',true)
+    LogScale('xy',10,'exp',true,'nohalf',true)
     if ss == 1
     title(regions{rr})
     end
