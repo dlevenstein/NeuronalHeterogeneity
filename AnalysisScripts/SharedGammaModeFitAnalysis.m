@@ -68,7 +68,10 @@ for ss = 1:3
     if isfield(spikes,'region')
         GammaFit.(statenames{ss}).cellstats.region = spikes.region(usecells);
     end
-    
+    if length(GammaFit.(statenames{ss}).cellstats.meanrate) ~= ...
+            length(GammaFit.(statenames{ss}).singlecell)
+        error('bad number of cells')
+    end
 end
 
 if SAVECELLINFO
