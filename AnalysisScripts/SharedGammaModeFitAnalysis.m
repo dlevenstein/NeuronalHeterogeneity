@@ -59,7 +59,7 @@ for ss = 1:3
     GammaFit.(statenames{ss}) = bz_FitISISharedGammaModes(logISIhist,logtimebins,...
         'numAS',numAS.(statenames{ss}),...
         'figfolder',figfolder,'basePath',basePath,...
-        'AScost_lambda',0.125,'AScost_p',1/2,'ASguess',true,'MScost',2,'figname',(statenames{ss}));
+        'AScost_lambda',0.12,'AScost_p',1/2,'ASguess',true,'MScost',2,'figname',(statenames{ss}));
     
     
     GammaFit.(statenames{ss}).cellstats.meanrate = ...
@@ -79,6 +79,7 @@ GScolor = [0.6 0.4 0];
 
 
 %% Example cell: 3 states
+for ff = 1:3
 numex=2;
 excells = randi(GammaFit.(statenames{ss}).numcells,numex);
 figure
@@ -136,8 +137,9 @@ subplot(6,3,[3 6]+ss+(ee-1)*9)
 end
 end
 %if figfolder
-    NiceSave('CellExample_states',figfolder,baseName);
+    NiceSave(['CellExample_states',num2str(ff)],figfolder,baseName);
 %end
+end
 %% Mean and all points (single cell and group)
 %Mean dist with group AS. use mean weight.
 
