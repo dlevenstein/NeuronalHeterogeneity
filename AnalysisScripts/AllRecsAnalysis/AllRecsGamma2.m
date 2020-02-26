@@ -279,9 +279,11 @@ for ss = 1:2
         'filled')
     end
 end
+
+
 ColorbarWithAxis([-1.5 1.5],'Mean FR')
 xlabel('GS Rate')
-LogScale('c',10)
+LogScale('c',10,'nohalf',true)
 ylabel('Total AS Weight')
 LogScale('x',10,'exp',true)
 NiceSave(['GSASandRate_pE'],figfolder,[])
