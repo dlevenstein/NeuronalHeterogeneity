@@ -163,7 +163,8 @@ close all
 figure
 for ss = 1:3
     for rr = 1:length(regions)
-subplot(length(regions),3,(rr-1)*3+ss)
+%subplot(length(regions),3,(rr-1)*3+ss)
+subplot(5,length(regions),(ss-1)*length(regions)+rr)
 hold on
 for cc = 1
     scatter(GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSlogrates(GammaFit.(regions{rr}).(statenames{ss}).inregion),...
@@ -181,20 +182,26 @@ end
     yrange = ylim(gca);
     UnityLine
     %ylim(log10([min(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate) max(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate)]))
-    
-    if rr == 1
-    title((statenames{ss}))
-    elseif rr ==length(regions)
-        xlabel('Mode Rate (Hz)');
-    end
-    if ss == 1
-        ylabel({(regions{rr}),' Cell Rate (Hz)'})
-    end
 
     %axis tight
     xlim([-2 2.5])
     ylim(yrange)
-    LogScale('xy',10)
+    LogScale('xy',10,'exp',true)
+    if ss == 1
+    title(regions{rr})
+    end
+    
+    if ss ==3
+        xlabel('Mode Rate (Hz)');
+    else
+        set(gca,'xticklabels',[])
+    end
+    if rr == 1
+        ylabel({(statenames{ss}),' Cell Rate (Hz)'})
+    else
+        set(gca,'yticklabels',[])
+    end
+
     end
 end
 NiceSave(['ISImodeandRate'],figfolder,[])

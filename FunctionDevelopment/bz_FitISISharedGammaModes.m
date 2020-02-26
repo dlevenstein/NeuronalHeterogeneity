@@ -3,7 +3,7 @@ function [GammaFit] = bz_FitISISharedGammaModes(logISIhist,logtimebins,varargin)
 %   Detailed explanation goes here
 %
 %   INPUTS
-%       logbins         [numtimebins x 1]
+%       logbins         [numtimebins x 1] (or ISIs)
 %       logISIhist      [numtimebins x numcells]  probability density (N/(sum*dbin))
 %
 %   Options
@@ -93,8 +93,14 @@ Nestimatemethod = p.Results.Nestimatemethod;
 
 baseName = bz_BasenameFromBasepath(basePath);
 
-%logISIhist = ISIStats.ISIhist.WAKEstate.log';
-%logtimebins = ISIStats.ISIhist.logbins;
+KSfit = false;
+if strcmp(logtimebins,'KSfit')
+    KSfit = true;
+    logtimebins = linspace(-3.5,2.5,100);
+    logISIs = log(ISIs);
+    logISIhist = hist(logISIs,logtimebins);
+end
+
 taubins = logtimebins./log10(exp(1));
 logISIhist = logISIhist.* mode(diff(logtimebins))./mode(diff(taubins)); %convert to dtau
 
@@ -191,11 +197,16 @@ options.MaxFunctionEvaluations = 1e8;
 options.MaxIterations = 1000; 
 
 %% Fit all the distributions together
-                                    %TO DO: chance distance to KS
+
+if KSfit
+costfun = @(GSASparm_vect) ksstat(logISIs,GSASmodel(GSASparm_vect,'sample',numcells,numAS)) ...
+    + AScost_lambda.*sum((abs(Aeq_ASonly*GSASparm_vect)).^(AScost_p))...; %L1/2 norm on AS weights to promote sparseness
+    + MScost.*sum(sum((logISIhist(sub1msbins,:)-GSASmodel(GSASparm_vect,taubins(sub1msbins),numcells,numAS)).^2)); 
+else                                  
 costfun = @(GSASparm_vect) sum(sum((logISIhist-GSASmodel(GSASparm_vect,taubins,numcells,numAS)).^2)) ...
     + AScost_lambda.*sum((abs(Aeq_ASonly*GSASparm_vect)).^(AScost_p))...; %L1/2 norm on AS weights to promote sparseness
     + MScost.*sum(sum((logISIhist(sub1msbins,:)-GSASmodel(GSASparm_vect,taubins(sub1msbins),numcells,numAS)).^2)); 
-
+end
 fitparms = fmincon(costfun,init,[],[],Aeq,Beq,lb,ub,[],options);
 sharedfit = convertGSASparms(fitparms,numcells,numAS);
 

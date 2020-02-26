@@ -61,6 +61,7 @@ for ss = 1:3
         'figfolder',figfolder,'basePath',basePath,...
         'AScost_lambda',0.125,'AScost_p',1/2,'ASguess',true,'MScost',2,'figname',(statenames{ss}));
     
+    
     GammaFit.(statenames{ss}).cellstats.meanrate = ...
         ISIstats.summstats.(statenames{ss}).meanrate(usecells);
     GammaFit.(statenames{ss}).cellstats.UID = spikes.UID(usecells);
@@ -75,6 +76,7 @@ if SAVECELLINFO
 end
 
 GScolor = [0.6 0.4 0];
+
 
 %% Example cell: 3 states
 numex=2;

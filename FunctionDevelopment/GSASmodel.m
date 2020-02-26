@@ -11,19 +11,25 @@ end
 
 %Here: if logtbins = 'sample'. Put in a very large vector of possible times
 %to sample from, save that we're sampling.
+sample = false;
 if strcmp(logtbins,'sample')
-    %logtbins = 
+    sample = true;
+    logtbins = linspace(-10,7,1000);
 end
 
 GSISI = LogGamma(GSASparms.GSlogrates,GSASparms.GSCVs,GSASparms.GSweights,logtbins');
 %%
+ASISI = zeros([size(GSISI),length(GSASparms.ASlogrates)]);
 for aa = 1:length(GSASparms.ASlogrates)
     ASISI(:,:,aa) = LogGamma(GSASparms.ASlogrates(aa),GSASparms.ASCVs(aa),GSASparms.ASweights(:,aa)',logtbins');
 end
 %%
 allISIdist = sum(ASISI,3)+GSISI;
 
-%Here: multiply allISIdist by some (large) number to get counts and return
-%a sample with those counts... (for KS test). use CUMsum
+if sample
+    numsamps = 20000;
+    allISIdist = randsample(logtbins,numsamps,true,allISIdist); 
+end
+
 end
 
