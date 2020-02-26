@@ -50,15 +50,16 @@ end
 
 %%
 
-GammaFit.BLA.NREMstate.singlecell.GSCVs
+%GammaFit.BLA.NREMstate.singlecell.GSCVs
 
 %%
-weightthresh = 0.05; %perc of spikes
+weightthresh = 0.01; %perc of spikes
 figure
 for ss = 1:3
 for rr = 1:length(regions)
     subplot(length(regions),3,(rr-1)*3+ss)
-    hist(log10(GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASweights(GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASweights>0)))
+    histogram(log10(GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASweights(GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASweights>0)),...
+        linspace(-3,0,50))
     hold on
     plot(log10(weightthresh).*[1 1],ylim(gca),'r--')
     
