@@ -184,7 +184,7 @@ end
     %ylim(log10([min(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate) max(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate)]))
 
     %axis tight
-    xlim([-2 2.5])
+    xlim([-1.5 2.5])
     ylim(yrange)
     LogScale('xy',10,'exp',true)
     if ss == 1
