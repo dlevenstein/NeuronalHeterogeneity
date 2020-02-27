@@ -120,15 +120,16 @@ for ss = 1:3
         try
     scatter([GammaFit.(regions{rr}).WAKEstate.singlecell.GSlogrates(GammaFit.(regions{rr}).WAKEstate.cellstats.NW & GammaFit.(regions{rr}).WAKEstate.inregion)],...
         [GammaFit.(regions{rr}).NREMstate.singlecell.GSlogrates(GammaFit.(regions{rr}).NREMstate.cellstats.NW& GammaFit.(regions{rr}).NREMstate.inregion)],...
-        0.5,regioncolors(rr,:),'filled');
+        1,regioncolors(rr,:),'filled');
         catch
             continue
         end
     end
 end
-    
+    axis tight
     UnityLine
     xlabel('WAKE ');ylabel('NREM')
+    LogScale('xy',10)
     title('GS Rate')
 
         
@@ -139,13 +140,13 @@ for ss = 1:3
         try
     scatter(1-[GammaFit.(regions{rr}).WAKEstate.singlecell.GSweights(GammaFit.(regions{rr}).WAKEstate.cellstats.NW& GammaFit.(regions{rr}).WAKEstate.inregion)],...
         1-[GammaFit.(regions{rr}).NREMstate.singlecell.GSweights(GammaFit.(regions{rr}).NREMstate.cellstats.NW & GammaFit.(regions{rr}).NREMstate.inregion )],...
-        0.5,regioncolors(rr,:),'filled');
+        1,regioncolors(rr,:),'filled');
             catch
             continue
         end
         end
 end
-    
+    axis tight
     UnityLine
     xlabel('WAKE');ylabel('NREM')
     title('AS Ratio')
@@ -159,7 +160,7 @@ for ss = 1:3
     scatter([GammaFit.(regions{rr}).NREMstate.singlecell.GSlogrates(GammaFit.(regions{rr}).NREMstate.cellstats.NW& GammaFit.(regions{rr}).NREMstate.inregion)],...
         (1-[GammaFit.(regions{rr}).NREMstate.singlecell.GSweights(GammaFit.(regions{rr}).NREMstate.cellstats.NW & GammaFit.(regions{rr}).NREMstate.inregion)] )-...
         (1-[GammaFit.(regions{rr}).WAKEstate.singlecell.GSweights(GammaFit.(regions{rr}).WAKEstate.cellstats.NW& GammaFit.(regions{rr}).WAKEstate.inregion)]),...
-        0.5,regioncolors(rr,:),'filled');
+        1,regioncolors(rr,:),'filled');
             catch
             continue
         end
@@ -179,7 +180,7 @@ for ss = 1:3
     scatter([GammaFit.(regions{rr}).NREMstate.singlecell.GSlogrates(GammaFit.(regions{rr}).NREMstate.cellstats.NW& GammaFit.(regions{rr}).NREMstate.inregion)],...
         ([GammaFit.(regions{rr}).NREMstate.singlecell.GSlogrates(GammaFit.(regions{rr}).NREMstate.cellstats.NW & GammaFit.(regions{rr}).NREMstate.inregion)] )-...
         ([GammaFit.(regions{rr}).WAKEstate.singlecell.GSlogrates(GammaFit.(regions{rr}).WAKEstate.cellstats.NW& GammaFit.(regions{rr}).WAKEstate.inregion)]),...
-        0.5,regioncolors(rr,:),'filled');
+        1,regioncolors(rr,:),'filled');
             catch
             continue
         end
