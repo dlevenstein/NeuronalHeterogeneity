@@ -149,6 +149,7 @@ end
     UnityLine
     xlabel('WAKE');ylabel('NREM')
     title('AS Ratio')
+NiceSave(['GAARcArossStates'],figfolder,[])
 
 %%
 
