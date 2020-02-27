@@ -149,6 +149,46 @@ end
     UnityLine
     xlabel('WAKE');ylabel('NREM')
     title('AS Ratio')
+    
+    
+subplot(3,3,7)
+for ss = 1:3
+    hold on
+    for rr = 1:length(regions)
+        try
+    scatter([GammaFit.(regions{rr}).NREMstate.singlecell.GSlogrates(GammaFit.(regions{rr}).NREMstate.cellstats.NW& GammaFit.(regions{rr}).NREMstate.inregion)],...
+        (1-[GammaFit.(regions{rr}).NREMstate.singlecell.GSweights(GammaFit.(regions{rr}).NREMstate.cellstats.NW & GammaFit.(regions{rr}).NREMstate.inregion)] )-...
+        (1-[GammaFit.(regions{rr}).WAKEstate.singlecell.GSweights(GammaFit.(regions{rr}).WAKEstate.cellstats.NW& GammaFit.(regions{rr}).WAKEstate.inregion)]),...
+        0.5,regioncolors(rr,:),'filled');
+            catch
+            continue
+        end
+        end
+end
+    axis tight
+    plot(xlim(gca),[0 0],'k--')
+    xlabel('GS Rate');ylabel('Change in AR')
+    title('AS Ratio')
+    
+    
+subplot(3,3,8)
+for ss = 1:3
+    hold on
+    for rr = 1:length(regions)
+        try
+    scatter([GammaFit.(regions{rr}).NREMstate.singlecell.GSlogrates(GammaFit.(regions{rr}).NREMstate.cellstats.NW& GammaFit.(regions{rr}).NREMstate.inregion)],...
+        ([GammaFit.(regions{rr}).NREMstate.singlecell.GSlogrates(GammaFit.(regions{rr}).NREMstate.cellstats.NW & GammaFit.(regions{rr}).NREMstate.inregion)] )-...
+        ([GammaFit.(regions{rr}).WAKEstate.singlecell.GSlogrates(GammaFit.(regions{rr}).WAKEstate.cellstats.NW& GammaFit.(regions{rr}).WAKEstate.inregion)]),...
+        0.5,regioncolors(rr,:),'filled');
+            catch
+            continue
+        end
+        end
+end
+    axis tight
+    plot(xlim(gca),[0 0],'k--')
+    xlabel('GS Rate');ylabel('Change in GS')
+    title('AS Ratio')
 NiceSave(['GAARcArossStates'],figfolder,[])
 
 %%
