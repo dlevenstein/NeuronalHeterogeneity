@@ -48,14 +48,7 @@ for rr = 1:length(regions)
     clear GammaFitAll
 end
 
-%%
-%%
-test = bz_LoadCellinfo(datasetPath.(regions{1}),'GammaFit','dataset',true,'catall',false)
-%GammaFit.BLA.NREMstate.singlecell.GSCVs
-%for tt = 1:length(test)
-    %display(num2str(tt),num2str(length(test
-    
-%end
+
 %%
 weightthresh = 0.01; %perc of spikes
 figure
@@ -92,6 +85,71 @@ for rr = 1:length(regions)
 end
 end
 NiceSave(['NumModes'],figfolder,[])
+%%
+figure
+for ss = 1:3
+    for rr = 1:length(regions)
+        try
+subplot(6,length(regions),(ss-1)*length(regions)+rr)
+    plot([GammaFit.(regions{rr}).WAKEstate.singlecell.GSlogrates(GammaFit.(regions{rr}).WAKEstate.cellstats.NW & GammaFit.(regions{rr}).WAKEstate.inregion)],...
+        [GammaFit.(regions{rr}).NREMstate.singlecell.GSlogrates(GammaFit.(regions{rr}).NREMstate.cellstats.NW& GammaFit.(regions{rr}).NREMstate.inregion)],'.');
+    hold on
+    UnityLine
+    xlabel('WAKE ');ylabel('NREM')
+    title('GS Rate')
+
+subplot(6,length(regions),(ss-1)*length(regions)+rr+3*length(regions))
+    plot(1-[GammaFit.(regions{rr}).WAKEstate.singlecell.GSweights(GammaFit.(regions{rr}).WAKEstate.cellstats.NW& GammaFit.(regions{rr}).WAKEstate.inregion)],...
+        1-[GammaFit.(regions{rr}).NREMstate.singlecell.GSweights(GammaFit.(regions{rr}).NREMstate.cellstats.NW & GammaFit.(regions{rr}).NREMstate.inregion )],'.');
+    hold on
+    UnityLine
+    xlabel('WAKE');ylabel('NREM')
+    title('AS Ratio')
+        catch
+            continue
+        end
+    end
+end
+%%
+
+figure
+subplot(3,3,1)
+for ss = 1:3
+    for rr = 1:length(regions)
+        hold on
+        try
+    scatter([GammaFit.(regions{rr}).WAKEstate.singlecell.GSlogrates(GammaFit.(regions{rr}).WAKEstate.cellstats.NW & GammaFit.(regions{rr}).WAKEstate.inregion)],...
+        [GammaFit.(regions{rr}).NREMstate.singlecell.GSlogrates(GammaFit.(regions{rr}).NREMstate.cellstats.NW& GammaFit.(regions{rr}).NREMstate.inregion)],...
+        0.5,regioncolors(rr,:),'filled');
+        catch
+            continue
+        end
+    end
+end
+    
+    UnityLine
+    xlabel('WAKE ');ylabel('NREM')
+    title('GS Rate')
+
+        
+subplot(3,3,2)
+for ss = 1:3
+    hold on
+    for rr = 1:length(regions)
+        try
+    scatter(1-[GammaFit.(regions{rr}).WAKEstate.singlecell.GSweights(GammaFit.(regions{rr}).WAKEstate.cellstats.NW& GammaFit.(regions{rr}).WAKEstate.inregion)],...
+        1-[GammaFit.(regions{rr}).NREMstate.singlecell.GSweights(GammaFit.(regions{rr}).NREMstate.cellstats.NW & GammaFit.(regions{rr}).NREMstate.inregion )],...
+        0.5,regioncolors(rr,:),'filled');
+            catch
+            continue
+        end
+        end
+end
+    
+    UnityLine
+    xlabel('WAKE');ylabel('NREM')
+    title('AS Ratio')
+
 %%
 
 GScolor = [0.6 0.4 0];
@@ -212,14 +270,12 @@ hold on
 for cc = 1
     scatter(GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSlogrates(GammaFit.(regions{rr}).(statenames{ss}).inregion),...
         log10(GammaFit.(regions{rr}).(statenames{ss}).cellstats.meanrate(GammaFit.(regions{rr}).(statenames{ss}).inregion)),...
-        GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{rr}).(statenames{ss}).inregion),...
-        GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{rr}).(statenames{ss}).inregion),...
+        0.5,GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{rr}).(statenames{ss}).inregion),...
         'filled')
    for aa = 1:5
     scatter(GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASlogrates(GammaFit.(regions{rr}).(statenames{ss}).inregion,aa),...
         log10(GammaFit.(regions{rr}).(statenames{ss}).cellstats.meanrate(GammaFit.(regions{rr}).(statenames{ss}).inregion)),...
-        GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASweights(GammaFit.(regions{rr}).(statenames{ss}).inregion,aa),...
-        GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASweights(GammaFit.(regions{rr}).(statenames{ss}).inregion,aa),...
+        0.5,GammaFit.(regions{rr}).(statenames{ss}).singlecell.ASweights(GammaFit.(regions{rr}).(statenames{ss}).inregion,aa),...
         'filled')
    end
 end
