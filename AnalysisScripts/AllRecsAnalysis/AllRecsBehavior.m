@@ -37,20 +37,20 @@ set(gca,'yticklabels',{'W','N','R','M'});
 crameri('vik','pivot',1)
 colorbar
 
-subplot(2,2,3)
+subplot(4,2,5)
 hold on
 for ss = 1:3
-    plot(mean(BehAnalysis.durhist.bins,3),mean(BehAnalysis.durhist.(statenames{ss}),3),statecolors{ss})
+    plot(mean(BehAnalysis.durhist.bins,3),mean(BehAnalysis.durhist.(statenames{ss}),3),statecolors{ss},'linewidth',2)
 
 end
         hold on
         axis tight
-        plot(log10(durhist.MAthresh).*[1 1],ylim(gca),'r--')
-        title(statenames{ss})
-        LogScale('x',10)
+        plot(log10(durhist.MAthresh).*[1 1],ylim(gca),'r--','linewidth',2)
+        LogScale('x',10,'nohalf',true)
+        xlabel('Duration (s)')
     
 colors = [0 0 0;0 0 1;1 0 0;0 0 0];
-subplot(2,2,4)     
+subplot(4,2,6)     
 	BoxAndScatterPlot(alltime([end,3:end-1]),'colors',colors,'labels',{'WAKE','NREM','REM','MA'})   
     ylim([0 1])
     ylabel('P[time]')
