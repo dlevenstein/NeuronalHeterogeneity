@@ -27,7 +27,8 @@ set(gca,'ytick',[1 2 3 4]);set(gca,'xtick',[1 2 3 4])
 set(gca,'xticklabels',{'W','N','R','M'});
 set(gca,'yticklabels',{'W','N','R','M'});
 crameri bilbao
-colorbar
+ColorbarWithAxis([0 1],'P[Trans]')
+
 
 subplot(2,2,2)
 imagesc(mean(BehAnalysis.normprob,3))
@@ -54,6 +55,7 @@ subplot(4,2,6)
 	BoxAndScatterPlot(alltime([end,3:end-1]),'colors',colors,'labels',{'WAKE','NREM','REM','MA'})   
     ylim([0 1])
     ylabel('P[time]')
+    box off
         NiceSave('BehaviorTransition',figfolder,[]);
 
 %%
