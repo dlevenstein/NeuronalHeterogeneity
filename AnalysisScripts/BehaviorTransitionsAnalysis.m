@@ -1,4 +1,4 @@
-function [ transprob,normprob,durhist] = BehaviorTransitionsAnalysis(basePath,figfolder)
+function [ transprob,normprob,durhist,tottime] = BehaviorTransitionsAnalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -47,10 +47,17 @@ for ss = 1:3
     durhist.(statenames{ss}) = durhist.(statenames{ss})./totnumstates;
 end
 
-MAthresh = 180;
-SleepState.ints.MA = SleepState.ints.WAKEstate(SleepState.dur.WAKEstate<=MAthresh,:);
-SleepState.ints.WAKE = SleepState.ints.WAKEstate(SleepState.dur.WAKEstate>MAthresh,:);
+durhist.MAthresh = 180;
+MAwakes = SleepState.dur.WAKEstate<=durhist.MAthresh;
+SleepState.ints.MA = SleepState.ints.WAKEstate(MAwakes,:);
+SleepState.ints.WAKE = SleepState.ints.WAKEstate(~MAwakes,:);
 
+tottime.rec = sum([SleepState.dur.(statenames{1});SleepState.dur.(statenames{2});SleepState.dur.(statenames{3})]);
+for ss = 1:3
+    tottime.(statenames{ss}) = sum(SleepState.dur.(statenames{ss}))./tottime.rec;
+end
+tottime.MA =  sum(SleepState.dur.WAKEstate(MAwakes))./tottime.rec;
+tottime.LWAKE =  sum(SleepState.dur.WAKEstate(~MAwakes))./tottime.rec;
 %%
 
 
@@ -84,7 +91,7 @@ for ss = 1:3
 end
         hold on
         axis tight
-        plot(log10(MAthresh).*[1 1],ylim(gca),'r--')
+        plot(log10(durhist.MAthresh).*[1 1],ylim(gca),'r--')
         title(statenames{ss})
         LogScale('x',10)
 NiceSave('BehaviorTransition',figfolder,baseName);

@@ -5,6 +5,20 @@ datasetPath = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onP
 [BehAnalysis,baseNames] = bz_LoadAnalysisResults(datasetPath,'BehaviorTransitionsAnalysis','dataset',true);
 BehAnalysis = bz_CollapseStruct(BehAnalysis,3,'justcat',true);
 %%
+statenames = {'WAKEstate','NREMstate','REMstate','MA','LWAKE'};
+statecolors = {'k','b','r','k'};
+
+for ss = 1:5
+    tottime.(statenames{ss}) = mean(BehAnalysis.tottime.(statenames{ss}),3);
+end
+% tottime.MA = mean(BehAnalysis.tottime.MA,3);
+% tottime.LWAKE = mean(BehAnalysis.tottime.LWAKE,3);
+
+%%
+alltime = struct2cell(BehAnalysis.tottime);
+alltime = cellfun(@squeeze,alltime,'UniformOutput',false);
+%%
+durhist.MAthresh = 180;
 
 figure
 subplot(2,2,1)
@@ -26,13 +40,20 @@ colorbar
 subplot(2,2,3)
 hold on
 for ss = 1:3
-    plot(durhist.bins,mean(BehAnalysis.durhist.(statenames{ss}),3),statecolors{ss})
+    plot(mean(BehAnalysis.durhist.bins,3),mean(BehAnalysis.durhist.(statenames{ss}),3),statecolors{ss})
 
 end
         hold on
         axis tight
-        plot(log10(MAthresh).*[1 1],ylim(gca),'r--')
+        plot(log10(durhist.MAthresh).*[1 1],ylim(gca),'r--')
         title(statenames{ss})
         LogScale('x',10)
-        
+    
+colors = [0 0 0;0 0 1;1 0 0;0 0 0];
+subplot(2,2,4)     
+	BoxAndScatterPlot(alltime([end,3:end-1]),'colors',colors,'labels',{'WAKE','NREM','REM','MA'})   
+    ylim([0 1])
+    ylabel('P[time]')
         NiceSave('BehaviorTransition',figfolder,[]);
+
+%%
