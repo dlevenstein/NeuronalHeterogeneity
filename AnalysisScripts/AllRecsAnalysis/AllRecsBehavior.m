@@ -27,6 +27,7 @@ set(gca,'ytick',[1 2 3 4]);set(gca,'xtick',[1 2 3 4])
 set(gca,'xticklabels',{'W','N','R','M'});
 set(gca,'yticklabels',{'W','N','R','M'});
 crameri bilbao
+xlabel('To State');ylabel('From State')
 ColorbarWithAxis([0 1],'P[Trans]')
 
 

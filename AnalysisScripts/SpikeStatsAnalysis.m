@@ -174,30 +174,32 @@ NiceSave(['CV2Examples'],figfolder,baseName);
 
 %% All the return Maps
 
+for ss = 1:3
 figure
 colormap(histcolors)
 ff=0;
 for cc = 1:ISIstats.sorts.numclassycells
     cellnum = ISIstats.sorts.NREMstate.CV2byclass(cc);   %%sortrate.NREMstate(cc);
     subplot(6,7,mod(cc-1,42)+1)
-    imagesc((ISIstats.ISIhist.logbins),(ISIstats.ISIhist.logbins),(ISIstats.ISIhist.NREMstate.return(:,:,cellnum)))
+    imagesc((ISIstats.ISIhist.logbins),(ISIstats.ISIhist.logbins),(ISIstats.ISIhist.(statenames{ss}).return(:,:,cellnum)))
     hold on
-    plot(log10(1./ISIstats.summstats.NREMstate.meanrate(cellnum)),log10(1./ISIstats.summstats.NREMstate.meanrate(cellnum)),'k+')
+    plot(log10(1./ISIstats.summstats.(statenames{ss}).meanrate(cellnum)),log10(1./ISIstats.summstats.(statenames{ss}).meanrate(cellnum)),'k+')
     axis xy
     LogScale('xy',10)
     set(gca,'ytick',[]);set(gca,'xtick',[]);
     caxis([0 0.003])
     xlim(ISIstats.ISIhist.logbins([1 end]));ylim(ISIstats.ISIhist.logbins([1 end]))
     %xlabel(['FR: ',num2str(round(ISIstats.summstats.NREMstate.meanrate(cellnum),2)),'Hz'])
-    xlabel(['CV2: ',num2str(round(ISIstats.summstats.NREMstate.meanCV2(cellnum),2))])
+    xlabel(['CV2: ',num2str(round(ISIstats.summstats.(statenames{ss}).meanCV2(cellnum),2))])
     if mod(cc,42) == 0 || cc ==ISIstats.sorts.numclassycells
         ff= ff+1;
-        NiceSave(['ISIreturnmap',num2str(ff)],figfolder,baseName);
+        NiceSave(['ISIreturnmap_',(statenames{ss}),num2str(ff)],figfolder,baseName);
         figure
         colormap(histcolors)
     end
 end
 close
+end
 %% Measuring Similarity between ISI maps (same cell different state)
 %Need to run PCA denoise on all maps
 %     linearizedreturn1 = reshape(ISIstats.ISIhist.NREMstate.return,[],spikes.numcells);
