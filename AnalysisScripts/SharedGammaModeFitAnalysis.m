@@ -60,7 +60,7 @@ for ss = 1:3
     GammaFit.(statenames{ss}) = bz_FitISISharedGammaModes(logISIhist,logtimebins,...
         'numAS',numAS.(statenames{ss}),...
         'figfolder',figfolder,'basePath',basePath,...
-        'AScost_lambda',0.13,'AScost_p',1/2,'ASguess',true,'MScost',2.5,'figname',(statenames{ss}));
+        'AScost_lambda',0.13,'AScost_p',1/2,'ASguess',true,'MScost',3,'figname',(statenames{ss}));
     
     
     GammaFit.(statenames{ss}).cellstats.meanrate = ...
@@ -104,46 +104,81 @@ diffGS = [GammaFit.WAKEstate.singlecell(GammaFit.WAKEstate.cellstats.NW).GSlogra
       (1-[GammaFit.NREMstate.singlecell(GammaFit.NREMstate.cellstats.NW).GSweights]);
 %%
 figure
-subplot(2,3,1)
-plot(log10(GammaFit.WAKEstate.cellstats.meanrate(GammaFit.WAKEstate.cellstats.NW)),...
-    log10(GammaFit.NREMstate.cellstats.meanrate(GammaFit.NREMstate.cellstats.NW)),'.');
-hold on
-UnityLine
-xlabel('WAKE');ylabel('NREM')
-subplot(2,3,2)
-plot([GammaFit.WAKEstate.singlecell(GammaFit.WAKEstate.cellstats.NW).GSlogrates],...
-    [GammaFit.NREMstate.singlecell(GammaFit.NREMstate.cellstats.NW).GSlogrates],'.');
-hold on
-UnityLine
-xlabel('WAKE ');ylabel('NREM')
-subplot(2,3,3)
-plot(1-[GammaFit.WAKEstate.singlecell(GammaFit.WAKEstate.cellstats.NW).GSweights],...
-    1-[GammaFit.NREMstate.singlecell(GammaFit.NREMstate.cellstats.NW).GSweights],'.');
-hold on
-UnityLine
-xlabel('WAKE');ylabel('NREM')
-subplot(2,3,4)
+subplot(3,3,1)
+    plot(log10(GammaFit.WAKEstate.cellstats.meanrate(GammaFit.WAKEstate.cellstats.NW)),...
+        log10(GammaFit.NREMstate.cellstats.meanrate(GammaFit.NREMstate.cellstats.NW)),'.');
+    hold on
+    UnityLine
+    xlabel('WAKE');ylabel('NREM')
+    title('Mean Rate')
+
+subplot(3,3,2)
+    plot([GammaFit.WAKEstate.singlecell(GammaFit.WAKEstate.cellstats.NW).GSlogrates],...
+        [GammaFit.NREMstate.singlecell(GammaFit.NREMstate.cellstats.NW).GSlogrates],'.');
+    hold on
+    UnityLine
+    xlabel('WAKE ');ylabel('NREM')
+    title('GS Rate')
+
+subplot(3,3,3)
+    plot(1-[GammaFit.WAKEstate.singlecell(GammaFit.WAKEstate.cellstats.NW).GSweights],...
+        1-[GammaFit.NREMstate.singlecell(GammaFit.NREMstate.cellstats.NW).GSweights],'.');
+    hold on
+    UnityLine
+    xlabel('WAKE');ylabel('NREM')
+    title('AS Ratio')
+
+subplot(3,3,4)
     plot(diffrate,diffGS,'.')
     hold on
     UnityLine
     plot([0 0],ylim(gca),'k')
     plot(xlim(gca),[0 0],'k')
-    xlabel('NW Rate Diff');ylabel('NW GSRate Diff')
-subplot(2,3,5)
+    xlabel('NW Rate Diff (W-N)');ylabel('NW GSRate Diff (W-N)')
+subplot(3,3,5)
     plot(diffrate,diffAR,'.')
     hold on
     UnityLine
     plot([0 0],ylim(gca),'k')
     plot(xlim(gca),[0 0],'k')
-    xlabel('NW Rate Diff');ylabel('NW ASWeight Diff')
-subplot(2,3,6)
+    xlabel('NW Rate Diff (W-N)');ylabel('NW ASWeight Diff (W-N)')
+subplot(3,3,6)
     plot(diffGS,diffAR,'.')
     hold on
     UnityLine
     plot([0 0],ylim(gca),'k')
     plot(xlim(gca),[0 0],'k')
-    xlabel('NW GSRate Diff');ylabel('NW ASWeight Diff')
+    xlabel('NW GSRate Diff (W-N)');ylabel('NW ASWeight Diff (W-N)')
+    
+    
+subplot(3,4,9)
+    plot(log10(GammaFit.NREMstate.cellstats.meanrate(GammaFit.NREMstate.cellstats.NW)),diffGS,'.')
+    hold on
+    plot(xlim(gca),[0 0],'k')
+    xlabel('N Rate');ylabel('NW GSRate Diff (W-N)')
+subplot(3,4,10)
+    plot(log10(GammaFit.NREMstate.cellstats.meanrate(GammaFit.NREMstate.cellstats.NW)),diffAR,'.')
+    hold on
+    plot(xlim(gca),[0 0],'k')
+    xlabel('N Rate');ylabel('NW ASWeight Diff (W-N)')
+    
+subplot(3,4,11)
+    plot(log10(GammaFit.WAKEstate.cellstats.meanrate(GammaFit.WAKEstate.cellstats.NW)),diffGS,'.')
+    hold on
+    plot(xlim(gca),[0 0],'k')
+    xlabel('N Rate');ylabel('NW GSRate Diff (W-N)')
+subplot(3,4,12)
+    plot(log10(GammaFit.WAKEstate.cellstats.meanrate(GammaFit.WAKEstate.cellstats.NW)),diffAR,'.')
+    hold on
+    plot(xlim(gca),[0 0],'k')
+    xlabel('N Rate');ylabel('NW ASWeight Diff (W-N)')
+    
         NiceSave('NWDiff',figfolder,baseName);
+    
+    
+
+        
+        
 
 %% Example cell: 3 states
 for ff = 1:3
@@ -161,19 +196,19 @@ subplot(6,3,ss+(ee-1)*9)
     plot(GammaFit.(statenames{ss}).logtimebins,...
         GSASmodel(GammaFit.(statenames{ss}).singlecell(excell),...
         GammaFit.(statenames{ss}).taubins),...
-        statecolor{ss},'linewidth',2)
+        statecolor{ss},'linewidth',1)
     hold on
     plot(GammaFit.(statenames{ss}).logtimebins,...
         LogGamma(GammaFit.(statenames{ss}).singlecell(excell).GSlogrates,...
         GammaFit.(statenames{ss}).singlecell(excell).GSCVs,...
         GammaFit.(statenames{ss}).singlecell(excell).GSweights',...
-        GammaFit.(statenames{ss}).taubins'),'color',GScolor);
+        GammaFit.(statenames{ss}).taubins'),'color',GScolor,'linewidth',0.25);
     for aa = 1:numAS.(statenames{ss})
         plot(GammaFit.(statenames{ss}).logtimebins,...
             LogGamma(GammaFit.(statenames{ss}).singlecell(excell).ASlogrates(aa),...
             GammaFit.(statenames{ss}).singlecell(excell).ASCVs(aa),...
             GammaFit.(statenames{ss}).singlecell(excell).ASweights(aa)',...
-            GammaFit.(statenames{ss}).taubins'),'k');
+            GammaFit.(statenames{ss}).taubins'),'k','linewidth',0.25);
     end
     box off
     axis tight

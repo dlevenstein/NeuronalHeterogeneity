@@ -13,7 +13,7 @@ rnames =  {''    ,''    ,''    ,'bla','pir',''   };
 regioncolors = crameri('batlow',length(regions));
 celltypes = {'pE','pI'};
 cellcolor = {'k','r'};
-statenames = {'NREMstate','WAKEstate','REMstate'};
+statenames = {'WAKEstate','NREMstate','REMstate'};
 
 for rr = 1:length(regions)
     disp(['Loading ',regions{rr}])
@@ -48,16 +48,9 @@ for rr = 1:length(regions)
     clear GammaFitAll
 end
 
+
 %%
-%%
-test = bz_LoadCellinfo(datasetPath.(regions{1}),'GammaFit','dataset',true,'catall',false)
-%GammaFit.BLA.NREMstate.singlecell.GSCVs
-%for tt = 1:length(test)
-    %display(num2str(tt),num2str(length(test
-    
-%end
-%%
-weightthresh = 0.01; %perc of spikes
+weightthresh = 0.02; %perc of spikes
 figure
 for ss = 1:3
 for rr = 1:length(regions)
@@ -92,6 +85,133 @@ for rr = 1:length(regions)
 end
 end
 NiceSave(['NumModes'],figfolder,[])
+%%
+figure
+for ss = 1:3
+    for rr = 1:length(regions)
+        try
+subplot(6,length(regions),(ss-1)*length(regions)+rr)
+    plot([GammaFit.(regions{rr}).WAKEstate.singlecell.GSlogrates(GammaFit.(regions{rr}).WAKEstate.cellstats.NW & GammaFit.(regions{rr}).WAKEstate.inregion)],...
+        [GammaFit.(regions{rr}).NREMstate.singlecell.GSlogrates(GammaFit.(regions{rr}).NREMstate.cellstats.NW& GammaFit.(regions{rr}).NREMstate.inregion)],'.');
+    hold on
+    UnityLine
+    xlabel('WAKE ');ylabel('NREM')
+    title('GS Rate')
+
+subplot(6,length(regions),(ss-1)*length(regions)+rr+3*length(regions))
+    plot(1-[GammaFit.(regions{rr}).WAKEstate.singlecell.GSweights(GammaFit.(regions{rr}).WAKEstate.cellstats.NW& GammaFit.(regions{rr}).WAKEstate.inregion)],...
+        1-[GammaFit.(regions{rr}).NREMstate.singlecell.GSweights(GammaFit.(regions{rr}).NREMstate.cellstats.NW & GammaFit.(regions{rr}).NREMstate.inregion )],'.');
+    hold on
+    UnityLine
+    xlabel('WAKE');ylabel('NREM')
+    title('AS Ratio')
+        catch
+            continue
+        end
+    end
+end
+%%
+
+figure
+subplot(3,3,1)
+for ss = 1:3
+    for rr = 1:length(regions)
+        hold on
+        try
+    scatter([GammaFit.(regions{rr}).WAKEstate.singlecell.GSlogrates(GammaFit.(regions{rr}).WAKEstate.cellstats.NW & GammaFit.(regions{rr}).WAKEstate.inregion)],...
+        [GammaFit.(regions{rr}).NREMstate.singlecell.GSlogrates(GammaFit.(regions{rr}).NREMstate.cellstats.NW& GammaFit.(regions{rr}).NREMstate.inregion)],...
+        1,regioncolors(rr,:),'filled');
+        catch
+            continue
+        end
+    end
+end
+    axis tight
+    UnityLine
+    xlabel('WAKE ');ylabel('NREM')
+    LogScale('xy',10)
+    title('GS Rate')
+
+        
+subplot(3,3,2)
+for ss = 1:3
+    hold on
+    for rr = 1:length(regions)
+        try
+    scatter(1-[GammaFit.(regions{rr}).WAKEstate.singlecell.GSweights(GammaFit.(regions{rr}).WAKEstate.cellstats.NW& GammaFit.(regions{rr}).WAKEstate.inregion)],...
+        1-[GammaFit.(regions{rr}).NREMstate.singlecell.GSweights(GammaFit.(regions{rr}).NREMstate.cellstats.NW & GammaFit.(regions{rr}).NREMstate.inregion )],...
+        1,regioncolors(rr,:),'filled');
+            catch
+            continue
+        end
+        end
+end
+    axis tight
+    UnityLine
+    xlabel('WAKE');ylabel('NREM')
+    title('AS Ratio')
+    
+    
+subplot(3,3,3)
+for ss = 1:3
+    for rr = 1:length(regions)
+        hold on
+
+    scatter(log10([GammaFit.(regions{rr}).WAKEstate.singlecell.GSCVs(GammaFit.(regions{rr}).WAKEstate.cellstats.NW & GammaFit.(regions{rr}).WAKEstate.inregion)]),...
+        log10([GammaFit.(regions{rr}).NREMstate.singlecell.GSCVs(GammaFit.(regions{rr}).NREMstate.cellstats.NW& GammaFit.(regions{rr}).NREMstate.inregion)]),...
+        1,regioncolors(rr,:),'filled');
+
+    end
+end
+    %axis tight
+    ylim([-0.5 0.7]);xlim([-0.5 0.7])
+    plot([0 0],ylim(gca),'k--')
+    plot(ylim(gca),[0 0],'k--')
+    UnityLine
+    
+    xlabel('WAKE ');ylabel('NREM')
+    LogScale('xy',10)
+    title('GS CV')
+
+    
+subplot(3,3,7)
+for ss = 1:3
+    hold on
+    for rr = 1:length(regions)
+        try
+    scatter([GammaFit.(regions{rr}).NREMstate.singlecell.GSlogrates(GammaFit.(regions{rr}).NREMstate.cellstats.NW& GammaFit.(regions{rr}).NREMstate.inregion)],...
+        (1-[GammaFit.(regions{rr}).NREMstate.singlecell.GSweights(GammaFit.(regions{rr}).NREMstate.cellstats.NW & GammaFit.(regions{rr}).NREMstate.inregion)] )-...
+        (1-[GammaFit.(regions{rr}).WAKEstate.singlecell.GSweights(GammaFit.(regions{rr}).WAKEstate.cellstats.NW& GammaFit.(regions{rr}).WAKEstate.inregion)]),...
+        1,regioncolors(rr,:),'filled');
+            catch
+            continue
+        end
+        end
+end
+    axis tight
+    plot(xlim(gca),[0 0],'k--')
+    xlabel('GS Rate');ylabel('Change in AR')
+    title('AS Ratio')
+    
+    
+subplot(3,3,8)
+for ss = 1:3
+    hold on
+    for rr = 1:length(regions)
+    scatter([GammaFit.(regions{rr}).NREMstate.singlecell.GSlogrates(GammaFit.(regions{rr}).NREMstate.cellstats.NW& GammaFit.(regions{rr}).NREMstate.inregion)],...
+        ([GammaFit.(regions{rr}).NREMstate.singlecell.GSlogrates(GammaFit.(regions{rr}).NREMstate.cellstats.NW & GammaFit.(regions{rr}).NREMstate.inregion)] )-...
+        ([GammaFit.(regions{rr}).WAKEstate.singlecell.GSlogrates(GammaFit.(regions{rr}).WAKEstate.cellstats.NW& GammaFit.(regions{rr}).WAKEstate.inregion)]),...
+        1,regioncolors(rr,:),'filled');
+
+        end
+        end
+end
+    axis tight
+    plot(xlim(gca),[0 0],'k--')
+    xlabel('GS Rate');ylabel('Change in GS')
+    title('AS Ratio')
+NiceSave(['GAARcArossStates'],figfolder,[])
+
 %%
 
 GScolor = [0.6 0.4 0];
@@ -275,36 +395,86 @@ for ss = 1:2
         hold on
     scatter(GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSlogrates(GammaFit.(regions{rr}).(statenames{ss}).inregion),...
         1-GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{rr}).(statenames{ss}).inregion),...
-        2,log10(GammaFit.(regions{rr}).(statenames{ss}).cellstats.meanrate(GammaFit.(regions{rr}).(statenames{ss}).inregion)),...
+        0.5,log10(GammaFit.(regions{rr}).(statenames{ss}).cellstats.meanrate(GammaFit.(regions{rr}).(statenames{ss}).inregion)),...
         'filled')
     end
 end
+
+
 ColorbarWithAxis([-1.5 1.5],'Mean FR')
 xlabel('GS Rate')
-LogScale('c',10)
+LogScale('c',10,'nohalf',true)
 ylabel('Total AS Weight')
 LogScale('x',10,'exp',true)
 NiceSave(['GSASandRate_pE'],figfolder,[])
 
 %%
 regnames = repmat(regions,2,1);
+scolors = repmat([0 0 0;0 0 1],length(regions),1);
 
 figure
-for ss = 1:2
-subplot(3,2,ss)
-BoxAndScatterPlot({GammaFit.(regions{1}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{1}).(statenames{ss}).inregion),...
-    GammaFit.(regions{2}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{2}).(statenames{ss}).inregion),...
-    GammaFit.(regions{3}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{3}).(statenames{ss}).inregion),...
-    GammaFit.(regions{4}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{4}).(statenames{ss}).inregion),...
-    GammaFit.(regions{5}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{5}).(statenames{ss}).inregion),...
-    GammaFit.(regions{6}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{6}).(statenames{ss}).inregion)},...
-    'colors',regioncolors,...
-    'labels',regions)
+%for ss = 1:2
+subplot(3,2,1)
+BoxAndScatterPlot({GammaFit.(regions{1}).(statenames{1}).singlecell.GSlogrates(GammaFit.(regions{1}).(statenames{1}).inregion),...
+    GammaFit.(regions{1}).(statenames{2}).singlecell.GSlogrates(GammaFit.(regions{1}).(statenames{2}).inregion),...
+    GammaFit.(regions{2}).(statenames{1}).singlecell.GSlogrates(GammaFit.(regions{2}).(statenames{1}).inregion),...
+    GammaFit.(regions{2}).(statenames{2}).singlecell.GSlogrates(GammaFit.(regions{2}).(statenames{2}).inregion),...
+    GammaFit.(regions{3}).(statenames{1}).singlecell.GSlogrates(GammaFit.(regions{3}).(statenames{1}).inregion),...
+    GammaFit.(regions{3}).(statenames{2}).singlecell.GSlogrates(GammaFit.(regions{3}).(statenames{2}).inregion),...
+    GammaFit.(regions{4}).(statenames{1}).singlecell.GSlogrates(GammaFit.(regions{4}).(statenames{1}).inregion),...
+    GammaFit.(regions{4}).(statenames{2}).singlecell.GSlogrates(GammaFit.(regions{4}).(statenames{2}).inregion),...
+    GammaFit.(regions{5}).(statenames{1}).singlecell.GSlogrates(GammaFit.(regions{5}).(statenames{1}).inregion),...
+    GammaFit.(regions{5}).(statenames{2}).singlecell.GSlogrates(GammaFit.(regions{5}).(statenames{2}).inregion),...
+    GammaFit.(regions{6}).(statenames{1}).singlecell.GSlogrates(GammaFit.(regions{6}).(statenames{1}).inregion),...
+    GammaFit.(regions{6}).(statenames{2}).singlecell.GSlogrates(GammaFit.(regions{6}).(statenames{2}).inregion)},...
+    'colors',scolors,...
+    'labels',regnames(:))
+    %plot(xlim(gca),[0.5 0.5],'k--')
+%ylim([0 1])
+box off
+ylabel('GS rate')
+LogScale('y',10)
+%end
+
+subplot(3,2,2)
+BoxAndScatterPlot({log10(GammaFit.(regions{1}).(statenames{1}).sharedfit.GSCVs(GammaFit.(regions{1}).(statenames{1}).inregion)),...
+    log10(GammaFit.(regions{1}).(statenames{2}).sharedfit.GSCVs(GammaFit.(regions{1}).(statenames{2}).inregion)),...
+    log10(GammaFit.(regions{2}).(statenames{1}).sharedfit.GSCVs(GammaFit.(regions{2}).(statenames{1}).inregion)),...
+    log10(GammaFit.(regions{2}).(statenames{2}).sharedfit.GSCVs(GammaFit.(regions{2}).(statenames{2}).inregion)),...
+    log10(GammaFit.(regions{3}).(statenames{1}).sharedfit.GSCVs(GammaFit.(regions{3}).(statenames{1}).inregion)),...
+    log10(GammaFit.(regions{3}).(statenames{2}).sharedfit.GSCVs(GammaFit.(regions{3}).(statenames{2}).inregion)),...
+    log10(GammaFit.(regions{4}).(statenames{1}).sharedfit.GSCVs(GammaFit.(regions{4}).(statenames{1}).inregion)),...
+    log10(GammaFit.(regions{4}).(statenames{2}).sharedfit.GSCVs(GammaFit.(regions{4}).(statenames{2}).inregion)),...
+    log10(GammaFit.(regions{5}).(statenames{1}).sharedfit.GSCVs(GammaFit.(regions{5}).(statenames{1}).inregion)),...
+    log10(GammaFit.(regions{5}).(statenames{2}).sharedfit.GSCVs(GammaFit.(regions{5}).(statenames{2}).inregion)),...
+    log10(GammaFit.(regions{6}).(statenames{1}).sharedfit.GSCVs(GammaFit.(regions{6}).(statenames{1}).inregion)),...
+    log10(GammaFit.(regions{6}).(statenames{2}).sharedfit.GSCVs(GammaFit.(regions{6}).(statenames{2}).inregion))},...
+    'colors',scolors,...
+    'labels',regnames(:))
+    plot(xlim(gca),[0 0],'k--')
+ylim([-0.5 0.7])
+LogScale('y',10)
+box off
+ylabel('GS CV')
+
+subplot(3,2,3)
+BoxAndScatterPlot({GammaFit.(regions{1}).(statenames{1}).singlecell.GSweights(GammaFit.(regions{1}).(statenames{1}).inregion),...
+    GammaFit.(regions{1}).(statenames{2}).singlecell.GSweights(GammaFit.(regions{1}).(statenames{2}).inregion),...
+    GammaFit.(regions{2}).(statenames{1}).singlecell.GSweights(GammaFit.(regions{2}).(statenames{1}).inregion),...
+    GammaFit.(regions{2}).(statenames{2}).singlecell.GSweights(GammaFit.(regions{2}).(statenames{2}).inregion),...
+    GammaFit.(regions{3}).(statenames{1}).singlecell.GSweights(GammaFit.(regions{3}).(statenames{1}).inregion),...
+    GammaFit.(regions{3}).(statenames{2}).singlecell.GSweights(GammaFit.(regions{3}).(statenames{2}).inregion),...
+    GammaFit.(regions{4}).(statenames{1}).singlecell.GSweights(GammaFit.(regions{4}).(statenames{1}).inregion),...
+    GammaFit.(regions{4}).(statenames{2}).singlecell.GSweights(GammaFit.(regions{4}).(statenames{2}).inregion),...
+    GammaFit.(regions{5}).(statenames{1}).singlecell.GSweights(GammaFit.(regions{5}).(statenames{1}).inregion),...
+    GammaFit.(regions{5}).(statenames{2}).singlecell.GSweights(GammaFit.(regions{5}).(statenames{2}).inregion),...
+    GammaFit.(regions{6}).(statenames{1}).singlecell.GSweights(GammaFit.(regions{6}).(statenames{1}).inregion),...
+    GammaFit.(regions{6}).(statenames{2}).singlecell.GSweights(GammaFit.(regions{6}).(statenames{2}).inregion)},...
+    'colors',scolors,...
+    'labels',regnames(:))
     plot(xlim(gca),[0.5 0.5],'k--')
 ylim([0 1])
 %box off
 ylabel('p_G_S')
-%LogScale('y',10)
-end
 NiceSave('PGS',figfolder,[])
 
