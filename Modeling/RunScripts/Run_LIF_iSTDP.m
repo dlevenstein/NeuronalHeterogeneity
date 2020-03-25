@@ -183,7 +183,7 @@ if isfield(PopParams,'ex_rate') && isfield(PopParams,'N_FF')  && ...
 	if length(PopParams.J_FF)==2
         Jff = [PopParams.J_FF(1).*ones(PopParams.N_FF,EPopNum),...
             PopParams.J_FF(2).*ones(PopParams.N_FF,IPopNum)];
-    elseif length(PopParams.J_FF)==2
+    else%if length(PopParams.J_FF)==2
         Jff = PopParams.J_FF;
     end
     

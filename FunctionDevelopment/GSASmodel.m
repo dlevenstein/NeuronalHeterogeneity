@@ -27,7 +27,7 @@ end
 allISIdist = sum(ASISI,3)+GSISI;
 
 if sample
-    numsamps = 20000;
+    numsamps = 30000;
     allISIdist = randsample(logtbins,numsamps,true,allISIdist); 
 end
 
