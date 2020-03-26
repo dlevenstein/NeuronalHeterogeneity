@@ -40,6 +40,8 @@ parms.Kie = parms.Kee;
 parms.Kei = parms.Kee.*gamma;
 parms.Kii = parms.Kee.*gamma;
 
+%%USE R_EX
+
 
 netname = 'weaklybalanced';
 switch netname
