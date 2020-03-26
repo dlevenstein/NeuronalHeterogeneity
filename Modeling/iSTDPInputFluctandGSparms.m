@@ -5,7 +5,7 @@ savepath = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/Modeling/Simu
 
 %%
 TimeParams.dt = 0.1;
-TimeParams.SimTime = 10000;
+TimeParams.SimTime = 2000;
 
 %Poisson Rate (add to Brunel sim)
 g = 5;
@@ -42,42 +42,65 @@ parms.Kii = parms.Kee.*gamma;
 
 %%USE R_EX
 
-
+theta = 1./100; %100ms timescale
+sigma = 10;
+duration = TimeParams.SimTime;
+dt = 0.1;
+save_dt = 1;
+numsignals = 1;
+[ X,T ] = OUNoise(theta,sigma,duration,dt,save_dt,numsignals);
+meanrate = 40;
+parms.ex_rate = @(t) interp1(T,X,t,'nearest')+meanrate;
+%%
 netname = 'weaklybalanced';
-switch netname
-    case 'weaklybalanced'
-        parms.J = 0.4;
-        parms.ex_rate = 20;
-        parms.ex_rate = 40; %Not same as other script...
-    case 'strongrecurrent'
-        parms.J = 1.5; 
-        parms.ex_rate = 20;
-    case 'CA1like'
-        parms.J = 0.4;
-        parms.ex_rate = 30; 
-        parms.Kee = 0; 
-end
+parms.J = 0.4;
+% switch netname
+%     case 'weaklybalanced'
+%         parms.J = 0.4;
+%         %parms.ex_rate = 20;
+%         %parms.ex_rate = 40; %Not same as other script...
+%     case 'strongrecurrent'
+%         parms.J = 1.5; 
+%         parms.ex_rate = 20;
+%     case 'CA1like'
+%         parms.J = 0.4;
+%         parms.ex_rate = 30; 
+%         parms.Kee = 0; 
+% end
 
 
 parms.LearningRate = 1e-2;
 parms.TargetRate = [sort(exp(randn(parms.EPopNum,1)));nan(parms.IPopNum,1)]; %Target Rate for Excitatory cells (units of Hz)
 parms.tauSTDP = 20;    %Time Constant for the STDP curve (Units of ms)
 
+[SimValues] = Run_LIF_iSTDP(parms,TimeParams,'showprogress',true,...
+    'cellout',true,'save_dt',1);
 
-%v_th = th/(C_e.*J.*tau);
-gammas_E = [0.1 0.3 0.5 0.7];
-%gammas_E = [0.5];
-clear SimValues
-for gg = 1:length(gammas_E)
-    loopparms = parms;
-    loopparms.Kei = loopparms.Kee.*gammas_E(gg);
-    loopparms.Kii = loopparms.Kee.*gammas_E(gg);
-    loopparms.g = (6./4)./gammas_E(gg);
-tic 
-[SimValues{gg}] = Run_LIF_iSTDP(loopparms,TimeParams,'showprogress',true,...
-    'cellout',true,'save_dt',100);
-toc
-end
+
+    
+%%
+PlotSimRaster(SimValues,TimeParams.SimTime-[2000 0])
+subplot(4,1,4)
+hold off
+    plot(SimValues.t,parms.ex_rate(SimValues.t))
+    xlim(TimeParams.SimTime-[2000 0])
+    
+    
+%%
+% %v_th = th/(C_e.*J.*tau);
+% gammas_E = [0.1 0.3 0.5 0.7];
+% %gammas_E = [0.5];
+% clear SimValues
+% for gg = 1:length(gammas_E)
+%     loopparms = parms;
+%     loopparms.Kei = loopparms.Kee.*gammas_E(gg);
+%     loopparms.Kii = loopparms.Kee.*gammas_E(gg);
+%     loopparms.g = (6./4)./gammas_E(gg);
+% tic 
+% [SimValues{gg}] = Run_LIF_iSTDP(loopparms,TimeParams,'showprogress',true,...
+%     'cellout',true,'save_dt',100);
+% toc
+% end
 %%
 for gg = 1:length(gammas_E)
     PlotSimRaster(SimValues{gg},TimeParams.SimTime-[1000 0])
