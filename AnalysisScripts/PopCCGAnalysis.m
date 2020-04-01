@@ -110,7 +110,7 @@ for tt = 1:2
             else 
                 ColorbarWithAxis([0 30],'I Pop Rate')
             end
-            xlabel(['t lag (s) - ',(celltypes{tt})]);ylabel('ISI (s)')
+            xlabel(['t lag (s) - ',(celltypes{tt2})]);ylabel('ISI (s)')
             
     end
     
