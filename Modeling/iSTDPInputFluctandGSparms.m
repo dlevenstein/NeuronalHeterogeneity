@@ -124,7 +124,10 @@ CellClass(SimValues_fluct{ss}.IcellIDX) = {'I'};
 ISIstats(ss) = bz_ISIStats(spikes(ss),'showfig',true,'cellclass',CellClass);
     end
 
-    
+    %% CCG
+for ss = 1:length(sigmas)
+    [popCCG(ss)] = PopCCG(spikes(ss),'showfig',true,'cellclass',CellClass);
+end
 %%
 AScost = 0.0001; %0.13 for data
 for ss = 1:length(sigmas)
@@ -143,6 +146,7 @@ end
 
 
 %%
+classnames = {'E','I'};
 figure
 for ss = 1:length(sigmas)
     
@@ -150,28 +154,43 @@ for ss = 1:length(sigmas)
         subplot(2,1,1)
             plot(SimValues_fluct{ss}.t,bz_NormToRange(ex_rate_fun{ss}(SimValues_fluct{ss}.t),1,[-50 100]),'linewidth',2,'color',sigmacolors(ss,:))
         
-        subplot(4,2,7)
+        subplot(4,3,10)
             plot(-GammaFit(ss).sharedfit.GSlogrates,log10(GammaFit(ss).sharedfit.GSCVs),'.')
             hold on
             plot(ISIstats(ss).ISIhist.logbins([1 end]),[0 0],'k--')
             plot(-GammaFit(ss).sharedfit.ASlogrates,log10(GammaFit(ss).sharedfit.ASCVs),'o')
             xlim(ISIstats(ss).ISIhist.logbins([1 end]))
+            box off
             
             
-        subplot(4,2,5)
+        subplot(4,3,7)
             imagesc(ISIstats(ss).ISIhist.logbins,SimValues.EcellIDX,...
                 ISIstats(ss).ISIhist.ALL.log(ISIstats(ss).sorts.ALL.ratebyclass,:))
             %colorbar
             caxis([0 0.15])
+            
+%         for tt = 1:2
+%             subplot(3,3,tt+7)
+%                 imagesc(popCCG(ss).t_ccg,[0 length(spikes(ss).times)],log10(popCCG(ss).cells.(classnames{tt}))')
+%                 hold on
+% 
+%                 plot(popCCG(ss).t_ccg,bz_NormToRange(-popCCG(ss).pop.(classnames{tt})(:,1),[1 length(SimValues_fluct{ss}.EcellIDX)-1]),'linewidth',2);%,'color',cellcolor{tt})
+% 
+%                 for tt2 = 2:numclasses
+%                     plot(xlim(gca),sum(inclasscells{tt2-1}).*[1 1],'w')
+%                     plot(popCCG(ss).t_ccg,bz_NormToRange(-popccg(:,tt2,tt),sum(inclasscells{tt2-1})+[1 sum(inclasscells{tt2})-1]),'linewidth',2);%,'color',cellcolor{tt})
+%                 end
+%                 %plot(t_ccg,bz_NormToRange(-popccg(:,tt,2),sum(CellClass.pE)+[1 sum(CellClass.pI)]),'color',cellcolor{tt})
+%                 %plot(xlim(gca),sum(CellClass.pE).*[1 1],'w')
+%                 colorbar
+%                 title(classnames{tt})
+%                 xlabel('t lag')
+%         end
+            
 	NiceSave('RasterEtc',savepath,[netname,'_Sigma',num2str(round(sigmas(ss)))],'includeDate',true)
 
 end
 
-%%
-%ss = 1;
-for ss = 1:length(sigmas)
-    [popCCG(ss)] = PopCCG(spikes(ss),'showfig',true,'cellclass',CellClass);
-end
 
 
 %%
@@ -219,151 +238,9 @@ for ss = 1:length(sigmas)
 end
 
 NiceSave('CV_CCG',savepath,netname)
-%% Pop autocorrelation
-ss = 4;
 
-allspikes = SimValues_fluct{ss}.spikesbycell;
-%allspikes{end+1} = SimValues_fluct{ss}.spikes(:,1); 
-
-[allccg,t_ccg] = CCG(allspikes,[],'binSize',2,'duration',250,'norm','rate');  
-
-%%
-Espikes = ismember(SimValues_fluct{ss}.spikes(:,2),SimValues_fluct{ss}.EcellIDX);
-Ispikes = ismember(SimValues_fluct{ss}.spikes(:,2),SimValues_fluct{ss}.IcellIDX);
-popSpikes{1} = SimValues_fluct{ss}.spikes(Espikes,1);
-popSpikes{2} = SimValues_fluct{ss}.spikes(Ispikes,1);
-[popccg,t_ccg] = CCG(popSpikes,[],'binSize',2,'duration',250,'norm','rate'); 
-%%
-clear cellpopccg
-clear cellspikes
-%cellpopccg = struct('t');
-numcellsccg = SimValues_fluct{ss}.PopParams.EPopNum+SimValues_fluct{ss}.PopParams.IPopNum;
-numcellsccg = 10;
-for cc = 1:numcellsccg
-    bz_Counter(cc,numcellsccg,'Calculating PopCCG: Cell');
-    thiscellspikes = ismember(SimValues_fluct{ss}.spikes(:,2),cc);
-    Espikes = ismember(SimValues_fluct{ss}.spikes(:,2),SimValues_fluct{ss}.EcellIDX);
-    Ispikes = ismember(SimValues_fluct{ss}.spikes(:,2),SimValues_fluct{ss}.IcellIDX);
-    cellspikes = SimValues_fluct{ss}.spikes(thiscellspikes,1);
-    otherEspikes = SimValues_fluct{ss}.spikes(Espikes&~thiscellspikes,1);
-    otherIspikes = SimValues_fluct{ss}.spikes(Ispikes&~thiscellspikes,1);
-    [temp,t] = CCG({cellspikes,otherEspikes,otherIspikes},[],'binSize',2,'duration',400,'norm','rate'); 
-    Epop(:,cc) = temp(:,1,2).*1000./sum(~ismember(SimValues_fluct{ss}.EcellIDX,cc));
-    Ipop(:,cc) = temp(:,1,3).*1000./sum(~ismember(SimValues_fluct{ss}.IcellIDX,cc));
-end
-
-%%
-figure
-subplot(2,2,1)
-imagesc(log10(cellpopccg.Epop)')
-colorbar
-
-
-subplot(2,2,2)
-imagesc(log10(cellpopccg.Ipop'))
-%%
-% figure
-% plot(temp(:,1,2),'k')
-% hold on
-% plot(temp(:,1,3),'r')
-%%
-figure
-plot(t_ccg,popccg(:,1,1),'k')
-hold on
-plot(t_ccg,popccg(:,2,2),'r')
-plot(t_ccg,popccg(:,1,2),'r--')
-plot(t_ccg,popccg(:,2,1),'k--')
-
-%%
-for cc = 1:length(allspikes)
-    
-end
-%Time units: ms
-%%
-figure
-plot(t_ccg,allccg(:,end,end))
-%%
-imagesc(t_ccg,[0 1],log10(squeeze(allccg(:,900,:))'.*1000))
-colorbar
-%caxis([0 100])
-%%
-% %v_th = th/(C_e.*J.*tau);
-% gammas_E = [0.1 0.3 0.5 0.7];
-% %gammas_E = [0.5];
-% clear SimValues
-% for gg = 1:length(gammas_E)
-%     loopparms = parms;
-%     loopparms.Kei = loopparms.Kee.*gammas_E(gg);
-%     loopparms.Kii = loopparms.Kee.*gammas_E(gg);
-%     loopparms.g = (6./4)./gammas_E(gg);
-% tic 
-% [SimValues{gg}] = Run_LIF_iSTDP(loopparms,TimeParams,'showprogress',true,...
-%     'cellout',true,'save_dt',100);
-% toc
-% end
-%%
-for gg = 1:length(gammas_E)
-    PlotSimRaster(SimValues{gg},TimeParams.SimTime-[1000 0])
-    NiceSave('iSTDPRaster',savepath,['gamma',num2str(gammas_E(gg))])
-end
 %% Save/load
-filename = fullfile(savepath,['TrainedNet_',netname]);
-save(filename,'SimValues','parms','TimeParams','netname','gammas_E')
+% filename = fullfile(savepath,['TrainedNet_',netname]);
+% save(filename,'SimValues','parms','TimeParams','netname','gammas_E')
 %load(filename)
-
-
-%% ISI 
-for gg = 1:length(gammas_E) 
-clear spikes
-spikes.times = cellfun(@(X) X./1000,SimValues{gg}.spikesbycell,'UniformOutput',false);
-spikes.UID = 1:length(SimValues{gg}.spikesbycell);
-CellClass = cell(1,length(spikes.times));
-CellClass(SimValues{gg}.EcellIDX) = {'E'};
-CellClass(SimValues{gg}.IcellIDX) = {'I'};
-timewindows.initialization = [0 20];
-timewindows.equib = [20 TimeParams.SimTime./1000];
-ISIstats(gg) = bz_ISIStats(spikes,'ints',timewindows,'showfig',true,'cellclass',CellClass);
-end
-%%
-NiceSave('ISIStats',savepath,netname)
-%%
-figure
-subplot(2,2,1)
-plot(log10(parms.TargetRate),log10(ISIstats.summstats.equib.meanrate),'k.','markersize',2)
-axis tight
-box off
-hold on
-xlabel('Target Rate');ylabel('Simulated Rate')
-UnityLine
-LogScale('xy',10)
-NiceSave('RateTarget',savepath,netname)
-
-%% Fit the gamma model...
-%Use high rate cells...
-AScost = 0.0000; %0.13 for data
-for gg = 1:length(gammas_E)
-    logISIhist = ISIstats(gg).ISIhist.equib.log;
-    usecells = randsample(SimValues{gg}.EcellIDX([end-500:end]),100);
-    logISIhist = logISIhist(usecells,:)';
-    logtimebins = ISIstats(gg).ISIhist.logbins;
-    logISIhist = logISIhist./mode(diff(logtimebins));
-
-GammaFit(gg) = bz_FitISISharedGammaModes(logISIhist,logtimebins,...
-    'numAS',1,...
-    'figfolder',savepath,'basePath',savepath,'figname',netname,...
-    'AScost_lambda',AScost,'AScost_p',1/2,'ASguess',true,'MScost',3);
-
-end
-
-%%
-figure %GS_CV values
-subplot(3,2,1)
-BoxAndScatterPlot({log10(GammaFit(1).sharedfit.GSCVs),...
-    log10(GammaFit(2).sharedfit.GSCVs),log10(GammaFit(3).sharedfit.GSCVs),...
-    log10(GammaFit(4).sharedfit.GSCVs)},'labels',parms.Kee.*gammas_E)
-hold on
-ylabel('Ground State CV');xlabel('K_E_I')
-plot(xlim(gca),[0 0],'k--')
-LogScale('y',10)
-box off
-NiceSave('CV',savepath,netname)
+save('-v7.3')
