@@ -97,7 +97,7 @@ for tt = 1:2
 end
 
 %%
-ISIStats = rmfield(ISIStats,'allspikes');
+
 %%
 figure
 for tt = 1:2
@@ -121,6 +121,8 @@ end
 NiceSave(['CCGbyISI_',(states{ss})],figfolder,baseName)
 
 end
+
+ISIStats = rmfield(ISIStats,'allspikes');
 %% example cell
 % figure
 % for tt = 1:2
