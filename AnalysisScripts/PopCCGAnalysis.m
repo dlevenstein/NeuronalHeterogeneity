@@ -55,7 +55,7 @@ ISIStats.allspikes.instate = cellfun(@(X) InIntervals(X,double(SleepState.ints.(
 
 
 nspkthresh = 20;
-clear ISICCG
+%clear ISICCG
 for cc = 1:spikes.numcells
 bz_Counter(cc,spikes.numcells,'Cell')
 clear binccg
