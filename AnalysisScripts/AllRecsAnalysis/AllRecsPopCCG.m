@@ -18,9 +18,48 @@ for rr = 1:length(regions)
     ISICCG.(regions{rr}) = bz_CollapseStruct(PopCCGAll.ISICCG,'match','justcat',true);
     popCCG.(regions{rr}) = bz_CollapseStruct(PopCCGAll.popCCG,'match','justcat',true);
     CellClass.(regions{rr}) = bz_CollapseStruct(PopCCGAll.CellClass,'match','justcat',true);
-
+   % ISIStats.(regions{rr}) = bz_CollapseStruct(PopCCGAll.ISIStats,'match','justcat',true);
 end
 
+%%
+states = {'WAKEstate','NREMstate','REMstate'};
+celltypes = {'pE','pI'};
+for ss = 1:3
+for tt = 1:2
+    for tt2 = 1:2
+        ISICCG.(regions{rr}).(states{ss}).popmean.(celltypes{tt}).(celltypes{tt2}) = ...
+            nanmean(ISICCG.(regions{rr}).(states{ss}).(celltypes{tt})(:,:,CellClass.(regions{rr}).(celltypes{tt2})),3);
+    end
+end
+end
+
+%%
+figure
+for tt = 1:2
+    for tt2 = 1:2
+        subplot(2,2,(tt-1)*2+tt2)
+            imagesc(ISICCG.(regions{rr}).t_ccg,...
+                ISIStats.ISIhist.logbins,ISICCG.(regions{rr}).(states{ss}).popmean.(celltypes{tt}).(celltypes{tt2})')
+            hold on
+            %plot(ISIStats.ISIhist.(state).log(cc,:),ISIStats.ISIhist.logbins,'k')
+            LogScale('y',10)
+            
+            if tt == 1
+                ColorbarWithAxis([0 2.5],'E Pop Rate')
+            else 
+                ColorbarWithAxis([0 30],'I Pop Rate')
+            end
+            xlabel(['t lag (s) - ',(celltypes{tt2})]);ylabel('ISI (s)')
+            
+    end
+    
+end
+
+
+
+
+
+%%
 
 
     %%

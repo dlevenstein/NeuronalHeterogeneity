@@ -66,11 +66,12 @@ for tt = 1:length(celltypes)
     cellISIspikes{tt} = cat(1,ccgspikes{popothercells});
 end
 
-for ii = 2:length(ISIStats.ISIhist.logbins)
-   inbinspikes = ((log10(ISIStats.allspikes.ISIs{cc}) >= ISIStats.ISIhist.logbins(ii-1)) & ...
-       (log10(ISIStats.allspikes.ISIs{cc}) <= ISIStats.ISIhist.logbins(ii))) | ...
-       ((log10(ISIStats.allspikes.ISInp1{cc}) >= ISIStats.ISIhist.logbins(ii-1)) & ...
-       (log10(ISIStats.allspikes.ISInp1{cc}) <= ISIStats.ISIhist.logbins(ii)));
+ISICCG.logISIbins  = ISIStats.ISIhist.logbins;
+for ii = 2:length(ISICCG.logISIbins)
+   inbinspikes = ((log10(ISIStats.allspikes.ISIs{cc}) >= ISICCG.logISIbins(ii-1)) & ...
+       (log10(ISIStats.allspikes.ISIs{cc}) <= ISICCG.logISIbins(ii))) | ...
+       ((log10(ISIStats.allspikes.ISInp1{cc}) >= ISICCG.logISIbins(ii-1)) & ...
+       (log10(ISIStats.allspikes.ISInp1{cc}) <= ISICCG.logISIbins(ii)));
    
     inbinspiketimes = ISIStats.allspikes.times{cc}(inbinspikes & ISIStats.allspikes.instate{cc});
     if length(inbinspiketimes)<nspkthresh
@@ -103,9 +104,9 @@ figure
 for tt = 1:2
     for tt2 = 1:2
         subplot(2,2,(tt-1)*2+tt2)
-            imagesc(ISICCG.t_ccg,ISIStats.ISIhist.logbins,ISICCG.(states{ss}).popmean.(celltypes{tt}).(celltypes{tt2})')
+            imagesc(ISICCG.t_ccg,ISICCG.logISIbins,ISICCG.(states{ss}).popmean.(celltypes{tt}).(celltypes{tt2})')
             hold on
-            %plot(ISIStats.ISIhist.(state).log(cc,:),ISIStats.ISIhist.logbins,'k')
+            %plot(ISIStats.ISIhist.(state).log(cc,:),ISICCG.logISIbins,'k')
             LogScale('y',10)
             
             if tt == 1
