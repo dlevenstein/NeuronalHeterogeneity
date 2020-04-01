@@ -1,4 +1,4 @@
-function [popCCG, ISICCG, CellClass ] = PopCCGAnalysis(basePath,figfolder)
+function [popCCG, ISICCG, CellClass,ISIStats ] = PopCCGAnalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -95,6 +95,9 @@ for tt = 1:2
             nanmean(ISICCG.(states{ss}).(celltypes{tt})(:,:,CellClass.(celltypes{tt2})),3);
     end
 end
+
+%%
+ISIStats = rmfield(ISIStats,'allspikes');
 %%
 figure
 for tt = 1:2
