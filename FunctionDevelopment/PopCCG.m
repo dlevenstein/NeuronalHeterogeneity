@@ -27,6 +27,7 @@ addParameter(p,'showfig',false,@islogical);
 addParameter(p,'cellclass',[]);
 addParameter(p,'binsize',0.001);
 addParameter(p,'duration',0.4);
+addParameter(p,'sortcells',[]);
 
 parse(p,varargin{:})
 ints = p.Results.ints;
@@ -34,6 +35,7 @@ cellclass = p.Results.cellclass;
 SHOWFIG = p.Results.showfig;
 binsize = p.Results.binsize;
 duration = p.Results.duration;
+sortcells = p.Results.sortcells;
 
 %%
 spikes.instate = cellfun(@(X) InIntervals(X,ints),spikes.times,'UniformOutput',false);
@@ -84,10 +86,13 @@ for tt = 1:2
     popCCG.pop.(classnames{tt}) = popccg(:,:,tt)./sum(inclasscells{tt});
 end
 %%
+if isempty(sortcells)
+   sortcells = [1:length(spikes.times)]; 
+end
 figure
 for tt = 1:2
     subplot(2,2,tt)
-        imagesc(popCCG.t_ccg,[0 spikes.numcells],log10(popCCG.cells.(classnames{tt}))')
+        imagesc(popCCG.t_ccg,[0 spikes.numcells],(popCCG.cells.(classnames{tt})(:,sortcells))')
         hold on
         
         plot(popCCG.t_ccg,bz_NormToRange(-popccg(:,1,tt),[1 sum(inclasscells{1})-1]),'linewidth',2);%,'color',cellcolor{tt})

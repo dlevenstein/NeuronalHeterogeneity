@@ -10,12 +10,12 @@ function [popCCG, ISICCG, CellClass,ISIStats ] = PopCCGAnalysis(basePath,figfold
 %% Load Header
 %Initiate Paths
 %reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
-%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 %basePath = pwd;
 %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -41,10 +41,16 @@ ISIStats.allspikes.ISInp1 = cellfun(@(X) [X(2:end);nan],ISIStats.allspikes.ISIs,
 %%
 for ss = 1:3
     %%
-   % ss = 1;
+  % ss = 2;
     
 [popCCG.(states{ss})] = PopCCG(spikes,'showfig',true,'cellclass',CellClass.label,...
-    'ints',SleepState.ints.(states{ss}));
+    'ints',SleepState.ints.(states{ss}),'sort',ISIStats.sorts.(states{ss}).ratebyclass);
+
+subplot(2,2,1)
+caxis([0 2])
+subplot(2,2,2)
+caxis([0 25])
+NiceSave(['PopCCG_',states{ss}],figfolder,baseName)
 
 %%
 ISIStats.allspikes.instate = cellfun(@(X) InIntervals(X,double(SleepState.ints.(states{ss}))),...
@@ -54,7 +60,7 @@ ISIStats.allspikes.instate = cellfun(@(X) InIntervals(X,double(SleepState.ints.(
  ccgspikes = cellfun(@(X,Y) X(Y),ISIStats.allspikes.times,ISIStats.allspikes.instate,'UniformOutput',false);
 
 
-nspkthresh = 20;
+nspkthresh = 25;
 %clear ISICCG
 for cc = 1:spikes.numcells
 bz_Counter(cc,spikes.numcells,'Cell')
@@ -124,6 +130,17 @@ NiceSave(['CCGbyISI_',(states{ss})],figfolder,baseName)
 end
 
 ISIStats = rmfield(ISIStats,'allspikes');
+if isfield(ISIStats,'cellinfo')
+    ISIStats = rmfield(ISIStats,'cellinfo');
+end
+
+try
+    popCCG.cellinfo.regions = spikes.region;
+catch
+    popCCG.cellinfo.regions = nan(size(spikes.UID));
+end
+
+
 %% example cell
 % figure
 % for tt = 1:2
