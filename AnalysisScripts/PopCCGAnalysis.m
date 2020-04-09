@@ -44,6 +44,7 @@ for ss = 1:3
   % ss = 2;
     
 [popCCG.(states{ss})] = PopCCG(spikes,'showfig',true,'cellclass',CellClass.label,...
+    'classnames',{'pE','pI'},...
     'ints',SleepState.ints.(states{ss}),'sort',ISIStats.sorts.(states{ss}).ratebyclass);
 
 subplot(2,2,1)

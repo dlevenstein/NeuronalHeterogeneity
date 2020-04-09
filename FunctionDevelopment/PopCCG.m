@@ -12,6 +12,7 @@ function [popCCG] = PopCCG(spikes,varargin)
 %                       (Can also 'load' from SleepState.states.mat)
 %       'cellclass'     Cell array of strings - label for each cell. 
 %                       (Can also 'load' from CellClass.cellinfo.mat)
+%       'classnames'  (To expect)
 
 
 
@@ -28,6 +29,7 @@ addParameter(p,'cellclass',[]);
 addParameter(p,'binsize',0.001);
 addParameter(p,'duration',0.4);
 addParameter(p,'sortcells',[]);
+addParameter(p,'classnames',[]);
 
 parse(p,varargin{:})
 ints = p.Results.ints;
@@ -36,6 +38,7 @@ SHOWFIG = p.Results.showfig;
 binsize = p.Results.binsize;
 duration = p.Results.duration;
 sortcells = p.Results.sortcells;
+classnames = p.Results.classnames;
 
 %%
 spikes.instate = cellfun(@(X) InIntervals(X,ints),spikes.times,'UniformOutput',false);
@@ -61,7 +64,9 @@ if ~isempty(cellclass)
     noclass = cellfun(@isempty,cellclass);
     sorts.numclassycells = sum(~noclass);
     %cellclass(noclass)={'none'};
-    classnames = unique(cellclass(~noclass));
+    if ~isempty(classnames)
+        classnames = unique(cellclass(~noclass));
+    end
     numclasses = length(classnames);
     for tt = 1:numclasses
         inclasscells{tt} = strcmp(classnames{tt},cellclass);
@@ -82,7 +87,7 @@ end
 %%
 %popspikes = {cat(1,ccgspikes{CellClass.pE}),cat(1,ccgspikes{CellClass.pI})};
 [popccg,~] = CCG(popspikes,[],'binSize',binsize,'duration',duration,'norm','rate'); 
-for tt = 1:2
+for tt = 1:numclasses
     popCCG.pop.(classnames{tt}) = popccg(:,:,tt)./sum(inclasscells{tt});
 end
 %%
@@ -90,16 +95,20 @@ if isempty(sortcells)
    sortcells = [1:length(spikes.times)]; 
 end
 figure
-for tt = 1:2
+for tt = 1:numclasses
     subplot(2,2,tt)
         imagesc(popCCG.t_ccg,[0 spikes.numcells],(popCCG.cells.(classnames{tt})(:,sortcells))')
         hold on
         
         plot(popCCG.t_ccg,bz_NormToRange(-popccg(:,1,tt),[1 sum(inclasscells{1})-1]),'linewidth',2);%,'color',cellcolor{tt})
 
+        try
         for tt2 = 2:numclasses
             plot(xlim(gca),sum(inclasscells{tt2-1}).*[1 1],'w')
             plot(popCCG.t_ccg,bz_NormToRange(-popccg(:,tt2,tt),sum(inclasscells{tt2-1})+[1 sum(inclasscells{tt2})-1]),'linewidth',2);%,'color',cellcolor{tt})
+        end
+        catch
+           disp('Only one class') 
         end
         %plot(t_ccg,bz_NormToRange(-popccg(:,tt,2),sum(CellClass.pE)+[1 sum(CellClass.pI)]),'color',cellcolor{tt})
         %plot(xlim(gca),sum(CellClass.pE).*[1 1],'w')
