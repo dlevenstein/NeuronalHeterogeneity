@@ -39,6 +39,7 @@ function [SimValues] = Run_LIF_iSTDP(PopParams,TimeParams,varargin)
 %   'save_dt'       (optional) dt for the saved output (default: 0.1ms)
 %   'cellout'
 %   'estrate'       (default: 10Hz) lowering this saves RAM,
+%   'J_mat'         put in a weight matrix to start with
 %
 
 %--------------------------------------------------------------------------
@@ -53,6 +54,7 @@ addParameter(p,'onsettime',0,@isnumeric)
 addParameter(p,'save_dt',0.5,@isnumeric)
 addParameter(p,'cellout',false,@islogical)
 addParameter(p,'estrate',20)
+addParameter(p,'J_mat',[])
 parse(p,varargin{:})
 SHOWFIG = p.Results.showfig;
 SHOWPROGRESS = p.Results.showprogress;
@@ -60,6 +62,7 @@ onsettime = p.Results.onsettime;
 save_dt = p.Results.save_dt;
 cellout = p.Results.cellout;
 estrate = p.Results.estrate; 
+J_mat = p.Results.J_mat; 
 
 %% Default Parameters
 DefaultParms.EPopNum = 8000;
@@ -118,55 +121,62 @@ alpha = 2.*(TargetRate./1000).*tauSTDP; %Alpha parameter from Vogels eqn5
 
 %--------------------------------------------------------------------------
 %Weight Matrices
+Ecells = 1:EPopNum;             EcellIDX = ismember(1:PopNum,Ecells)';
+Icells = EPopNum+1:PopNum;      IcellIDX = ismember(1:PopNum,Icells)';
 EE_mat = zeros(PopNum);
 II_mat = zeros(PopNum);
 IE_mat = zeros(PopNum);
 EI_mat = zeros(PopNum);
 
-Ecells = 1:EPopNum;             EcellIDX = ismember(1:PopNum,Ecells)';
-Icells = EPopNum+1:PopNum;      IcellIDX = ismember(1:PopNum,Icells)';
+if ~isempty(J_mat)
+    EE_mat(Ecells,Ecells) = J_mat(Ecells,Ecells);
+    II_mat(Icells,Icells) = J_mat(Icells,Icells);
+    IE_mat(Icells,Ecells) = J_mat(Icells,Ecells);
+    EI_mat(Ecells,Icells) = J_mat(Ecells,Icells);
+else
 
-%Here we assign four 2x2 matrices of matrix. There are positive values on the locations where there are connections.
-%For example, there are values for the EE connections on the 1x1 matrix, II
-%on the 2x2 matrix, and etc (this is based on the indexing of the neuron population). 
+    %Here we assign four 2x2 matrices of matrix. There are positive values on the locations where there are connections.
+    %For example, there are values for the EE connections on the 1x1 matrix, II
+    %on the 2x2 matrix, and etc (this is based on the indexing of the neuron population). 
 
-%NOTE: presynaptic neurons are columns (dim2) and postsynaptic neurons are rows (dim1).
+    %NOTE: presynaptic neurons are columns (dim2) and postsynaptic neurons are rows (dim1).
 
-%E->E Synapses
-Wee = PopParams.J;
-Kee = PopParams.Kee;
-Pee = Kee./(EPopNum-1); %-1 to account for self-connections (which are then removed)
+    %E->E Synapses
+    Wee = PopParams.J;
+    Kee = PopParams.Kee;
+    Pee = Kee./(EPopNum-1); %-1 to account for self-connections (which are then removed)
 
-EE_mat(Ecells,Ecells) = rand(EPopNum)<=Pee;
-EE_mat = EE_mat.*Wee;
-EE_mat(diag(diag(true(size(EE_mat)))))=0; %Remove selfconnections
+    EE_mat(Ecells,Ecells) = rand(EPopNum)<=Pee;
+    EE_mat = EE_mat.*Wee;
+    EE_mat(diag(diag(true(size(EE_mat)))))=0; %Remove selfconnections
 
-%I->I Synapses
-Wii = -PopParams.J.*PopParams.g;
-Kii = PopParams.Kii;
-Pii = Kii./(IPopNum-1);
+    %I->I Synapses
+    Wii = -PopParams.J.*PopParams.g;
+    Kii = PopParams.Kii;
+    Pii = Kii./(IPopNum-1);
 
-II_mat(Icells,Icells) = rand(IPopNum)<=Pii;
-II_mat = II_mat.*Wii;
-II_mat(diag(diag(true(size(II_mat)))))=0; %Remove selfconnections
+    II_mat(Icells,Icells) = rand(IPopNum)<=Pii;
+    II_mat = II_mat.*Wii;
+    II_mat(diag(diag(true(size(II_mat)))))=0; %Remove selfconnections
 
-%E->I Synapses
-Wie = PopParams.J;
-Kie = PopParams.Kie;
-Pie = Kie./EPopNum;
+    %E->I Synapses
+    Wie = PopParams.J;
+    Kie = PopParams.Kie;
+    Pie = Kie./EPopNum;
 
-IE_mat(Icells,Ecells) = rand(IPopNum,EPopNum)<=Pie;
-IE_mat = IE_mat.*Wie;
+    IE_mat(Icells,Ecells) = rand(IPopNum,EPopNum)<=Pie;
+    IE_mat = IE_mat.*Wie;
 
-%I->E Synapses
-Wei = -PopParams.J.*PopParams.g;
-Kei = PopParams.Kei;
-Pei = Kei./IPopNum;
+    %I->E Synapses
+    Wei = -PopParams.J.*PopParams.g;
+    Kei = PopParams.Kei;
+    Pei = Kei./IPopNum;
 
-EI_mat(Ecells,Icells) = rand(EPopNum,IPopNum)<=Pei;
-EI_mat = EI_mat.*Wei;
+    EI_mat(Ecells,Icells) = rand(EPopNum,IPopNum)<=Pei;
+    EI_mat = EI_mat.*Wei;
 
-J_mat = EE_mat + EI_mat + II_mat + IE_mat;
+    J_mat = EE_mat + EI_mat + II_mat + IE_mat;
+end
 isconnected = J_mat~=0;
 %% Poisson spiking input
 
@@ -183,7 +193,7 @@ if isfield(PopParams,'ex_rate') && isfield(PopParams,'N_FF')  && ...
 	if length(PopParams.J_FF)==2
         Jff = [PopParams.J_FF(1).*ones(PopParams.N_FF,EPopNum),...
             PopParams.J_FF(2).*ones(PopParams.N_FF,IPopNum)];
-    elseif length(PopParams.J_FF)==2
+    else%if length(PopParams.J_FF)==2
         Jff = PopParams.J_FF;
     end
     
@@ -204,8 +214,8 @@ end
 
 %Simulation Variables
 V = zeros(PopNum,1);    %Membrane Potential
-x = zeros(PopNum,1); %Synaptic trace
-t_s = zeros(PopNum,1)-dt;  %synapse delay counter
+x = zeros(size(delay_s)); %Synaptic trace
+t_s = zeros(size(delay_s))-dt;  %synapse delay counter
 t_r = zeros(PopNum,1); 	%refratory period counter
 RI = 0;
 
@@ -248,6 +258,10 @@ for tt=1:SimTimeLength
         bz_Counter(round(100.*tt./SimTimeLength),100,'Percent Complete')
         %disp([num2str(round(100.*tt./SimTimeLength)),'% Done!']) %clearly, this needs improvement
     end
+%     if SHOWPROGRESS && mod(tt,round(SimTimeLength./100))==0
+%         %bz_Counter(round(100.*tt./SimTimeLength),100,'Percent Complete')
+%         disp([num2str(round(100.*tt./SimTimeLength)),'% Done!']) %clearly, this needs improvement
+%     end
     %% Dynamics: update noise, V,s,w based on values in previous timestep
     
 	%V - Voltage Equation
@@ -285,31 +299,32 @@ for tt=1:SimTimeLength
     end
 
     %%  Refractory period Countdowns
-    if any(t_r > 0 | t_s >= 0)
+    if any(t_r > 0) || any(t_s(:) >= 0)
         refractoryneurons = t_r > 0;
-        delayneurons = t_s >= 0;
+        delaysynapses = t_s >= 0;
         
         %Hold voltage at rest
         V(refractoryneurons) = V_reset;
         %Count down the refractory periods
         t_r(refractoryneurons) = t_r(refractoryneurons) - dt;
-        t_s(delayneurons) = t_s(delayneurons) - dt;
+        t_s(delaysynapses) = t_s(delaysynapses) - dt;
         
         %Pass along the spikes - cells that were in delay, but are now below
-        s = delayneurons & t_s<0;   %activated synapses
+        s = delaysynapses & t_s<0;   %activated synapses
         
-        if any(s)
+        if any(s(:))
             %Jump the synaptic trace
-            x(s) = x(s) + 1;  %Do this later... after delay
-
+            x(s) = x(s) + 1;
+            
+            %HERE: implement matrix delays...
             if LearningRate ~= 0
                 %Implement STDP (Vogels 2011 SuppEqn 4/5) I->E only
-                %Presynaptic I Cells - adjust synapses postsynaptic to spiking I cells
+                %Presynaptic I Cells - adjust all synapses postsynaptic to spiking I cells
                 PreIspikes = s & IcellIDX;
-                %Postsynaptic E cells - adjust synapses presynaptic to spiking E cells
-                PostEspikes = s & EcellIDX;            
-
                 J_mat(EcellIDX,PreIspikes) = J_mat(EcellIDX,PreIspikes) - LearningRate.*(x(EcellIDX)-alpha(EcellIDX)); 
+
+                %Postsynaptic E cells - adjust all synapses presynaptic to spiking E cells
+                PostEspikes = s & EcellIDX;            
                 J_mat(PostEspikes,IcellIDX) = J_mat(PostEspikes,IcellIDX) - LearningRate.*(x(IcellIDX)');
                 %(Negative because inhibitory)
         

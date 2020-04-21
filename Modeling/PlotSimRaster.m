@@ -1,13 +1,15 @@
-function [] = PlotSimRaster(SimValues,timewin,varargin)
+function [spikemat] = PlotSimRaster(SimValues,timewin,varargin)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %%
 p = inputParser;
 addParameter(p,'cellsort',[])
 addParameter(p,'overlay',[])
+addParameter(p,'ratebin',5) %ms
 parse(p,varargin{:})
 cellsort = p.Results.cellsort;
 overlay = p.Results.overlay;
+ratebin = p.Results.ratebin;
 
 
 %%
@@ -27,7 +29,9 @@ overlay = p.Results.overlay;
         classspikes = spikes(cellspikes.(celltypes{cc}),:);
         classspikes(:,2) = classspikes(:,2)-min(classspikes(:,2))+1;
         spikemat.(celltypes{cc}) = ...
-            bz_SpktToSpkmat(classspikes,'dt',1,'binsize',5,'units','rate','win',timewin);
+            bz_SpktToSpkmat(classspikes,'dt',1,'binsize',ratebin,'units','rate','win',timewin);
+        
+        spikemat.(celltypes{cc}).poprate = mean(spikemat.(celltypes{cc}).data,2).*1000;
     end
     
 exneuron = randsample(Ecells,1);
@@ -60,7 +64,7 @@ subplot(2,1,1)
 subplot(4,1,3)
     hold on
     for cc = 1:length(celltypes)
-        plot(spikemat.(celltypes{cc}).timestamps,mean(spikemat.(celltypes{cc}).data,2).*1000,cellcolors{cc})
+        plot(spikemat.(celltypes{cc}).timestamps,spikemat.(celltypes{cc}).poprate,cellcolors{cc})
     end
     ylabel('Pop Rate (Hz)')
     raterange = ylim;

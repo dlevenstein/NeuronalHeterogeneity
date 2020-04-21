@@ -50,6 +50,24 @@ end
 
 
 %%
+figure
+for ss = 1:3
+    
+subplot(2,length(regions),ss)
+hold on
+    for rr = 1:length(regions)
+        [cdfX,cdfY] = PlotCDF(GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSlogrates(GammaFit.(regions{rr}).(statenames{ss}).inregion));
+    
+    plot(cdfX,cfdY,'color',regioncolors(rr,:));
+    end
+    xlabel('GS Rate');
+    title(statenames{ss})
+    
+        
+    
+end
+NiceSave(['GSCDFs'],figfolder,[])
+%%
 weightthresh = 0.02; %perc of spikes
 figure
 for ss = 1:3
@@ -203,7 +221,7 @@ for ss = 1:3
         ([GammaFit.(regions{rr}).WAKEstate.singlecell.GSlogrates(GammaFit.(regions{rr}).WAKEstate.cellstats.NW& GammaFit.(regions{rr}).WAKEstate.inregion)]),...
         1,regioncolors(rr,:),'filled');
 
-        end
+        %end
         end
 end
     axis tight

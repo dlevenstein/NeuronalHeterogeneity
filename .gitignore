@@ -3,3 +3,5 @@
 
 *.out
 .DS_Store
+Modeling/Simulation_Data/iSTDPandGSparms/TrainedNet_weaklybalanced.mat
+matlab.mat
