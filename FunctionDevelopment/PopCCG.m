@@ -64,7 +64,7 @@ if ~isempty(cellclass)
     noclass = cellfun(@isempty,cellclass);
     sorts.numclassycells = sum(~noclass);
     %cellclass(noclass)={'none'};
-    if ~isempty(classnames)
+    if isempty(classnames)
         classnames = unique(cellclass(~noclass));
     end
     numclasses = length(classnames);
