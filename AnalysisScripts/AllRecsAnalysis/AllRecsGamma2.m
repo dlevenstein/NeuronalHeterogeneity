@@ -452,8 +452,9 @@ BoxAndScatterPlot({log10(GammaFit.(regions{1}).(statenames{1}).sharedfit.GSCVs(G
     'colors',scolors,...
     'labels',regnames(:))
     plot(xlim(gca),[0 0],'k--')
-ylim([-0.5 0.7])
+
 LogScale('y',10)
+ylim([-0.5 0.7])
 box off
 ylabel('GS CV')
 
