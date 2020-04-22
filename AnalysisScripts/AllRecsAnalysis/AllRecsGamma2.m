@@ -53,12 +53,12 @@ end
 figure
 for ss = 1:3
     
-subplot(2,length(regions),ss)
+subplot(2,3,ss)
 hold on
-    for rr = 1:length(regions)
+    for rr = 2:length(regions)
         [cdfX,cdfY] = PlotCDF(GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSlogrates(GammaFit.(regions{rr}).(statenames{ss}).inregion));
     
-    plot(cdfX,cfdY,'color',regioncolors(rr,:));
+    plot(cdfX,cdfY,'color',regioncolors(rr,:));
     end
     xlabel('GS Rate');
     title(statenames{ss})
@@ -67,6 +67,48 @@ hold on
     
 end
 NiceSave(['GSCDFs'],figfolder,[])
+
+%%
+close all
+figure
+for ss = 1:3
+    
+%subplot(length(regions),3,(rr-1)*3+ss)
+subplot(3,3,ss)
+hold on
+for rr = 2:length(regions)
+
+    scatter(GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSlogrates(GammaFit.(regions{rr}).(statenames{ss}).inregion),...
+        log10(GammaFit.(regions{rr}).(statenames{ss}).cellstats.meanrate(GammaFit.(regions{rr}).(statenames{ss}).inregion)),...
+        0.1,GammaFit.(regions{rr}).(statenames{ss}).singlecell.GSweights(GammaFit.(regions{rr}).(statenames{ss}).inregion),...
+        'filled')
+end
+    colorbar
+    axis tight
+    yrange = ylim(gca);
+    UnityLine
+    %ylim(log10([min(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate) max(ISIStats.(regions{rr}).summstats.(statenames{ss}).meanrate)]))
+    LogScale('xy',10,'exp',true,'nohalf',true)
+  %  if ss == 1
+    title(statenames{ss})
+   % end
+    
+   % if ss ==3
+        xlabel('Mode Rate (Hz)');
+   % else
+       % set(gca,'xticklabels',[])
+   % end
+   % if ss == 1
+        ylabel({' Cell Rate (Hz)'})
+    %else
+     %   set(gca,'yticklabels',[])
+    %end
+    %axis tight
+    %xlim([-2 1])
+    ylim(yrange);xlim(yrange)
+end
+
+NiceSave(['GSModeandRate_ALLreg'],figfolder,[])
 %%
 weightthresh = 0.02; %perc of spikes
 figure
