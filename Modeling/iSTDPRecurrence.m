@@ -1,7 +1,7 @@
 function iSTDPRecurrence(savepath)
 
 %%
-savepath = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/Modeling/Simulation_Data/Recurrence';
+%savepath = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/Modeling/Simulation_Data/Recurrence';
 
 
 % pc = parcluster('local');
@@ -16,8 +16,8 @@ TimeParams.dt = 0.1;
 
 clear parms
 
-parms.EPopNum = 2000;
-parms.IPopNum = 500;
+parms.EPopNum = 1000;
+parms.IPopNum = 250;
 parms.u_0 = 0;
 
 parms.V_rest = 0;
@@ -30,8 +30,8 @@ parms.V_reset = 10;
 parms.t_ref = 1;
 
 %Feedforward parameters
-parms.N_FF = 2000;
-parms.K_FF = 500;
+parms.N_FF = 1000;
+parms.K_FF = 250;
 %Root K scaling for FF
 %parms.J_FF = 0.1;
 parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF.^0.5);
@@ -78,8 +78,10 @@ numsignals = 1;
 theta = 1./2000; %1s (1000ms) timescale
 sigma = v_th;
 
+disp('Making OU noise...')
 [ X,T ] = OUNoise(theta,sigma,duration,OU_simdt,OU_savedt,numsignals);
 ex_rate_fun = @(t) interp1(T,X,t,'nearest')+meanrate;
+disp('DONE!')
 %
 parms.ex_rate = ex_rate_fun;
 %%

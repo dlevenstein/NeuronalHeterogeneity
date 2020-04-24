@@ -182,6 +182,7 @@ isconnected = J_mat~=0;
 
 if isfield(PopParams,'ex_rate') && isfield(PopParams,'N_FF')  && ...
         isfield(PopParams,'K_FF') && isfield(PopParams,'J_FF')
+    disp('Making FF inputs...')
     %check that FFweights is the right size matrix (N_FF x PopNum?)
     Pff = PopParams.K_FF./PopParams.N_FF;
     if length(Pff)==2
@@ -211,7 +212,7 @@ elseif isfield(PopParams,'ex_rate')
 end
 
 %% Initialize Variables
-
+disp('Initializing variables...')
 %Simulation Variables
 V = zeros(PopNum,1);    %Membrane Potential
 x = zeros(size(delay_s)); %Synaptic trace
@@ -251,6 +252,7 @@ end
 savecounter = 1;
 timecounter = -onsettime-dt;
 spikecounter = 0;
+disp('Starting Simulation...')
 for tt=1:SimTimeLength
     %% Time Counter
     timecounter = round(timecounter+dt,4);  %Round to deal with computational error
