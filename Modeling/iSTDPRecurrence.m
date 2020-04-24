@@ -3,24 +3,26 @@ function iSTDPRecurrence(savepath)
 %%
 savepath = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/Modeling/Simulation_Data/Recurrence';
 
+
+% pc = parcluster('local');
+% % store temporary files in the 'scratch' drive on the cluster, labeled by job ID
+% pc.JobStorageLocation = strcat(getenv('SCRATCH'), '/', getenv('SLURM_JOB_ID'));
+% % enable MATLAB to utilize the multiple cores allocated in the job script
+% % SLURM_NTASKS_PER_NODE is a variable set in the job script by the flag --tasks-per-node
+% % we use SLURM_NTASKS_PER_NODE - 1, because one of these tasks is the original MATLAB script itself
+% parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1);
 %%
 TimeParams.dt = 0.1;
-TimeParams.SimTime = 80000;
-
-%Poisson Rate (add to Brunel sim)
-g = 5;
-%g = 4; %Initial strength of Inhibitoon (relative to excitation)
-v_norm = 2;
 
 clear parms
 
-parms.EPopNum = 1000;
-parms.IPopNum = 250;
+parms.EPopNum = 2000;
+parms.IPopNum = 500;
 parms.u_0 = 0;
 
 parms.V_rest = 0;
 parms.delay_s = 8.9.*rand(parms.EPopNum+parms.IPopNum,1)+1.1; %grid later
-parms.g = g;
+parms.g = 5; %Initial strength of Inhibitoon (relative to excitation)
 
 parms.V_th =20;
 parms.tau_m = 20;
@@ -28,33 +30,56 @@ parms.V_reset = 10;
 parms.t_ref = 1;
 
 %Feedforward parameters
-parms.N_FF = 1000;
-parms.K_FF = 250;
-parms.J_FF = 0.5;
+parms.N_FF = 2000;
+parms.K_FF = 500;
+%Root K scaling for FF
+%parms.J_FF = 0.1;
+parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF.^0.5);
 
 %Conectivity: In degree
-gamma = 0.25;
-parms.Kee = 250;
+gamma = 0.25; %4x less inhibitory cells
+parms.Kee = 500;
 parms.Kie = parms.Kee;
 parms.Kei = parms.Kee.*gamma;
 parms.Kii = parms.Kee.*gamma;
 
 
-parms.J = 0.4;
-parms.ex_rate = 20;
+
+%%
+numJs = 1;
+alphas = linspace(0,1,numJs)
+alphas = 0.5;
+Js = (parms.V_th-parms.V_rest)./(parms.Kee.^alphas)
+%Js = logspace(log10(rootKscale),1,numJs);
+
 %
+%%
+numInputs = 5;
+%v_th = th/(C_e.*J.*tau);
+v_th = 1000*(parms.V_th-parms.V_rest)/(parms.K_FF.*parms.J_FF.*parms.tau_m);
+inputrates = logspace(-0.5,1,numInputs).*v_th;
+
+
+%%
+for jj = 1:numJs
+TimeParams.SimTime = 120000;
+TimeParams.SimTime = 50000;
+
+%parms.J = 1.5;
+parms.J = Js(jj);
 
 %Train with fluctuating rate
+meanrate = v_th.*3;
 duration = TimeParams.SimTime;
-dt = 0.1;
-save_dt = 1;
+OU_simdt = 0.1;
+OU_savedt = 1;
 numsignals = 1;
 
 theta = 1./2000; %1s (1000ms) timescale
-sigma = 10;
+sigma = v_th;
 
-[ X,T ] = OUNoise(theta,sigma,duration,dt,save_dt,numsignals);
-ex_rate_fun = @(t) interp1(T,X,t,'nearest')+parms.ex_rate;
+[ X,T ] = OUNoise(theta,sigma,duration,OU_simdt,OU_savedt,numsignals);
+ex_rate_fun = @(t) interp1(T,X,t,'nearest')+meanrate;
 %
 parms.ex_rate = ex_rate_fun;
 %%
@@ -62,9 +87,21 @@ parms.LearningRate = 1e-2;
 parms.TargetRate = [sort(exp(randn(parms.EPopNum,1)));nan(parms.IPopNum,1)]; %Target Rate for Excitatory cells (units of Hz)
 parms.tauSTDP = 20;    %Time Constant for the STDP curve (Units of ms)
 
-[SimValues] = Run_LIF_iSTDP(parms,TimeParams,'showprogress',true,...
+[SimValues_train(jj)] = Run_LIF_iSTDP(parms,TimeParams,'showprogress',true,...
     'cellout',true,'save_dt',1000);
 
+%% Different inputs
+TimeParams.SimTime = 10000;
+for rr = 1:length(inputrates)
+    loopparms = parms;
+    loopparms.ex_rate = inputrates(rr);
+tic 
+[SimValues_inputs(jj,rr)] = Run_LIF_iSTDP(loopparms,TimeParams,'showprogress',true,...
+    'cellout',true,'save_dt',2,'J_mat',SimValues.WeightMat);
+toc
+end
+
+end
 %%
 twin = [10000 TimeParams.SimTime];
 spikemat = PlotSimRaster(SimValues,twin,'ratebin',100);
@@ -99,7 +136,7 @@ hold off
  ylabel('Cell (sorted by target FR')
  axis xy
 %%
-TimeParams.SimTime = 20000;
+TimeParams.SimTime = 40000;
 
 %v_th = th/(C_e.*J.*tau);
 inputrates = logspace(0.5,1.5,8);
@@ -206,9 +243,10 @@ subplot(3,3,7)
 imagesc(log10(inputrates),FIStats.popCCG.bins,FIStats.popCCG.E)
 axis xy
 %LogScale('xy',10)
+NiceSave('FIStats',pwd,'HiJ')
 
 %%
-%save('-v7.3')
+save('-v7.3')
 
 %%
 
