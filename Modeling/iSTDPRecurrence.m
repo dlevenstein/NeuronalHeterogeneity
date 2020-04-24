@@ -44,6 +44,10 @@ parms.Kei = parms.Kee.*gamma;
 parms.Kii = parms.Kee.*gamma;
 
 
+parms.LearningRate = 1e-2;
+parms.TargetRate = [sort(exp(randn(parms.EPopNum,1)));nan(parms.IPopNum,1)]; %Target Rate for Excitatory cells (units of Hz)
+parms.tauSTDP = 20;    %Time Constant for the STDP curve (Units of ms)
+
 
 %%
 numJs = 1;
@@ -62,15 +66,18 @@ inputrates = logspace(-0.5,1,numInputs).*v_th;
 
 %%
 for jj = 1:numJs
-TimeParams.SimTime = 120000;
-TimeParams.SimTime = 50000;
+    parms_Jloop = parms;
+    TimeParams_Jloop = TimeParams;
+    
+TimeParams_Jloop.SimTime = 120000;
+TimeParams_Jloop.SimTime = 50000;
 
 %parms.J = 1.5;
-parms.J = Js(jj);
+parms_Jloop.J = Js(jj);
 
 %Train with fluctuating rate
 meanrate = v_th.*3;
-duration = TimeParams.SimTime;
+duration = TimeParams_Jloop.SimTime;
 OU_simdt = 0.1;
 OU_savedt = 1;
 numsignals = 1;
@@ -80,26 +87,23 @@ sigma = v_th;
 
 disp('Making OU noise...')
 [ X,T ] = OUNoise(theta,sigma,duration,OU_simdt,OU_savedt,numsignals);
-ex_rate_fun = @(t) interp1(T,X,t,'nearest')+meanrate;
+parms_Jloop.ex_rate = @(t) interp1(T,X,t,'nearest')+meanrate;
 disp('DONE!')
 %
-parms.ex_rate = ex_rate_fun;
 %%
-parms.LearningRate = 1e-2;
-parms.TargetRate = [sort(exp(randn(parms.EPopNum,1)));nan(parms.IPopNum,1)]; %Target Rate for Excitatory cells (units of Hz)
-parms.tauSTDP = 20;    %Time Constant for the STDP curve (Units of ms)
 
-[SimValues_train(jj)] = Run_LIF_iSTDP(parms,TimeParams,'showprogress',true,...
+[SimValues_train(jj)] = Run_LIF_iSTDP(parms_Jloop,TimeParams_Jloop,'showprogress',true,...
     'cellout',true,'save_dt',1000);
 
 %% Different inputs
-TimeParams.SimTime = 10000;
+TimeParams_Iloop = TimeParams
+TimeParams_Iloop.SimTime = 10000;
 for rr = 1:length(inputrates)
-    loopparms = parms;
+    loopparms = parms_Jloop;
     loopparms.ex_rate = inputrates(rr);
 tic 
-[SimValues_inputs(jj,rr)] = Run_LIF_iSTDP(loopparms,TimeParams,'showprogress',true,...
-    'cellout',true,'save_dt',2,'J_mat',SimValues.WeightMat);
+[SimValues_inputs(jj,rr)] = Run_LIF_iSTDP(loopparms,TimeParams_Iloop,'showprogress',true,...
+    'cellout',true,'save_dt',2,'J_mat',SimValues_train(jj).WeightMat);
 toc
 end
 
