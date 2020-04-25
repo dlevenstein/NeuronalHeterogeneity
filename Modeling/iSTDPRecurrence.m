@@ -71,14 +71,13 @@ inputrates = logspace(-0.5,1,numInputs).*v_th;
 
 
 %%
-parfor jj = 1:numJs
-    parms_Jloop = parms;
-    TimeParams_Jloop = TimeParams;
+for jj = 1:numJs
     
+    TimeParams_Jloop = TimeParams;
     TimeParams_Jloop.SimTime = 120000;
-    %TimeParams_Jloop.SimTime = 5000;
+    %TimeParams_Jloop.SimTime = 100;
 
-    %parms.J = 1.5;
+    parms_Jloop = parms;
     parms_Jloop.J = Js(jj);
 
     %Train with fluctuating rate
@@ -104,15 +103,16 @@ parfor jj = 1:numJs
     NiceSave('TrainingFigure',savepath,['alpha',num2str(round(alphas(jj),1))])
 
     %% Different inputs
-    TimeParams_Iloop = TimeParams
+    TimeParams_Iloop = TimeParams;
     TimeParams_Iloop.SimTime = 30000;
+    %TimeParams_Iloop.SimTime = 30;
     for rr = 1:numInputs
-        loopparms = parms_Jloop;
+        loopparms = parms;
         loopparms.ex_rate = inputrates(rr);
-        tic 
+        %tic 
         [SimValues_inputs(jj,rr)] = Run_LIF_iSTDP(loopparms,TimeParams_Iloop,'showprogress',true,...
             'cellout',true,'save_dt',2,'J_mat',SimValues_train(jj).WeightMat);
-        toc
+        %toc
         NiceSave('SimFig',savepath,['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))])
     end
 

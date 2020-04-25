@@ -260,10 +260,10 @@ for tt=1:SimTimeLength
         bz_Counter(round(100.*tt./SimTimeLength),100,'Percent Complete')
         %disp([num2str(round(100.*tt./SimTimeLength)),'% Done!']) %clearly, this needs improvement
     end
-    if SHOWPROGRESS && mod(tt,round(SimTimeLength./10))==0
-        %bz_Counter(round(100.*tt./SimTimeLength),100,'Percent Complete')
-        disp([num2str(round(100.*tt./SimTimeLength)),'% Done!']) %clearly, this needs improvement
-    end
+%     if SHOWPROGRESS && mod(tt,round(SimTimeLength./10))==0
+%         %bz_Counter(round(100.*tt./SimTimeLength),100,'Percent Complete')
+%         disp([num2str(round(100.*tt./SimTimeLength)),'% Done!']) %clearly, this needs improvement
+%     end
     %% Dynamics: update noise, V,s,w based on values in previous timestep
     
 	%V - Voltage Equation
