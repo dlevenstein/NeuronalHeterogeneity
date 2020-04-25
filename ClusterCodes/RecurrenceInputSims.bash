@@ -5,7 +5,7 @@
 #SBATCH --time=24:00:00
 #SBATCH --mem-per-cpu=16G
 
-$savepath = /gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/SimSaves/iSTDPRecurrence
+savepath=/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/SimSaves/iSTDPRecurrence
 
 module load matlab/R2018a
 
