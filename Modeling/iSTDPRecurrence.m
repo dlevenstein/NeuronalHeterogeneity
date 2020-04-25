@@ -7,13 +7,9 @@ if ~exist(savepath,'dir')
 end
 %%
 display(['Will save to ',savepath])
-    parcluster
-    try
-        pc = parcluster('local');
-    catch
-        disp('catch')
-        pc = parcluster
-    end
+
+pc = parcluster('local');
+
     % sto
 % % store temporary files in the 'scratch' drive on the cluster, labeled by job ID
 pc.JobStorageLocation = strcat(getenv('SCRATCH'), '/', getenv('SLURM_JOB_ID'));
@@ -103,13 +99,13 @@ parfor jj = 1:numJs
     %%
 
     [SimValues_train(jj)] = Run_LIF_iSTDP(parms_Jloop,TimeParams_Jloop,'showprogress',true,...
-        'cellout',true,'save_dt',1000,'estrate',500);
+        'cellout',true,'save_dt',1000);
     
     NiceSave('TrainingFigure',savepath,['alpha',num2str(round(alphas(jj),1))])
 
     %% Different inputs
     TimeParams_Iloop = TimeParams
-    TimeParams_Iloop.SimTime = 20000;
+    TimeParams_Iloop.SimTime = 30000;
     for rr = 1:numInputs
         loopparms = parms_Jloop;
         loopparms.ex_rate = inputrates(rr);
