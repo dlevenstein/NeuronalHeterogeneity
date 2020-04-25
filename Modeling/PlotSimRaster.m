@@ -11,6 +11,10 @@ cellsort = p.Results.cellsort;
 overlay = p.Results.overlay;
 ratebin = p.Results.ratebin;
 
+%%
+if ~exist('timewin','var')
+    timewin = [0 SimValues.TimeParams.SimTime];
+end
 
 %%
     spikes = SimValues.spikes;

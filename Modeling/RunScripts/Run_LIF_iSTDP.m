@@ -182,7 +182,7 @@ isconnected = J_mat~=0;
 
 if isfield(PopParams,'ex_rate') && isfield(PopParams,'N_FF')  && ...
         isfield(PopParams,'K_FF') && isfield(PopParams,'J_FF')
-    disp('Making FF inputs...')
+    %disp('Making FF inputs...')
     %check that FFweights is the right size matrix (N_FF x PopNum?)
     Pff = PopParams.K_FF./PopParams.N_FF;
     if length(Pff)==2
@@ -212,7 +212,7 @@ elseif isfield(PopParams,'ex_rate')
 end
 
 %% Initialize Variables
-disp('Initializing variables...')
+%disp('Initializing variables...')
 %Simulation Variables
 V = zeros(PopNum,1);    %Membrane Potential
 x = zeros(size(delay_s)); %Synaptic trace
@@ -363,7 +363,7 @@ if isempty(spikes); spikes = [nan nan]; end
 
 %Remove onset time
 
-display(['Used ',num2str(spikecounter./estnumspikes.*100),'% of prediced spikes'])
+disp(['Used ',num2str(spikecounter./estnumspikes.*100),'% of prediced spikes'])
 
  spikes(spikes(:,1)<=0,:) = [];
 
@@ -390,7 +390,7 @@ if SHOWFIG
     try
         PlotSimRaster(SimValues,[-onsettime SimTime]);
     catch
-        display('Failed to plot...')
+        disp('Failed to plot...')
     end
 end
 end
