@@ -107,10 +107,10 @@ for jj = 1:numJs
     TimeParams_Iloop.SimTime = 30000;
     %TimeParams_Iloop.SimTime = 30;
     for rr = 1:numInputs
-        loopparms = parms;
-        loopparms.ex_rate = inputrates(rr);
+        parms_Iloop = parms;
+        parms_Iloop.ex_rate = inputrates(rr);
         %tic 
-        [SimValues_inputs(jj,rr)] = Run_LIF_iSTDP(loopparms,TimeParams_Iloop,'showprogress',true,...
+        [SimValues_inputs(jj,rr)] = Run_LIF_iSTDP(parms_Iloop,TimeParams_Iloop,'showprogress',true,...
             'cellout',true,'save_dt',2,'J_mat',SimValues_train(jj).WeightMat);
         %toc
         NiceSave('SimFig',savepath,['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))])
