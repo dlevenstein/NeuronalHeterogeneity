@@ -44,6 +44,7 @@ swins = 1:25;
 
 
     %% Set up for parallel in cluster
+    parcluster
     pc = parcluster('local');
     % store temporary files in the 'scratch' drive on the cluster, labeled by job ID
     pc.JobStorageLocation = strcat(getenv('SCRATCH'), '/', getenv('SLURM_JOB_ID'));
