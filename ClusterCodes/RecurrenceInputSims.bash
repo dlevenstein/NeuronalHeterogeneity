@@ -3,7 +3,7 @@
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=12
 #SBATCH --time=12:00:00
-#SBATCH --mem-per-cpu=32G
+#SBATCH --mem-per-cpu=24G
 
 savepath=/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/SimSaves/iSTDPRecurrence
 
