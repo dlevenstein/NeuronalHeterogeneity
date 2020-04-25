@@ -71,7 +71,7 @@ inputrates = logspace(-0.5,1,numInputs).*v_th;
 
 
 %%
-for jj = 1:numJs
+parfor jj = 1:numJs
     
     TimeParams_Jloop = TimeParams;
     TimeParams_Jloop.SimTime = 120000;
