@@ -7,7 +7,14 @@ if ~exist(savepath,'dir')
 end
 %%
 display(['Will save to ',savepath])
-pc = parcluster('local');
+    parcluster
+    try
+        pc = parcluster('local');
+    catch
+        disp('catch')
+        pc = parcluster
+    end
+    % sto
 % % store temporary files in the 'scratch' drive on the cluster, labeled by job ID
 pc.JobStorageLocation = strcat(getenv('SCRATCH'), '/', getenv('SLURM_JOB_ID'));
 % % enable MATLAB to utilize the multiple cores allocated in the job script

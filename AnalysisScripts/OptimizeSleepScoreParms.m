@@ -44,13 +44,7 @@ swins = 1:25;
 
 
     %% Set up for parallel in cluster
-    parcluster
-    try
-        pc = parcluster('local');
-    catch
-        disp('catch')
-        pc = parcluster
-    end
+    pc = parcluster('local');
     % store temporary files in the 'scratch' drive on the cluster, labeled by job ID
     pc.JobStorageLocation = strcat(getenv('SCRATCH'), '/', getenv('SLURM_JOB_ID'));
     % enable MATLAB to utilize the multiple cores allocated in the job script
