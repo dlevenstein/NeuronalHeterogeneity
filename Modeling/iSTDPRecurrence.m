@@ -113,11 +113,12 @@ parfor jj = 1:numJs
         parms_Iloop.ex_rate = inputrates(rr);
         %tic 
         disp('Starting Input Sim')
-        [SimValues_inputs(jj,rr)] = Run_LIF_iSTDP(parms_Iloop,TimeParams_Iloop,'showprogress',true,...
+        [temp] = Run_LIF_iSTDP(parms_Iloop,TimeParams_Iloop,'showprogress',true,...
             'cellout',true,'save_dt',2,'J_mat',SimValues_train(jj).WeightMat);
         %toc
         disp('Input sim done')
         NiceSave('SimFig',savepath,['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))])
+        SimValues_inputs(jj,rr) = temp;
     end
 
 end
