@@ -97,8 +97,13 @@ parfor jj = 1:numJs
     %
     %%
 
-    [SimValues_train(jj)] = Run_LIF_iSTDP(parms_Jloop,TimeParams_Jloop,'showprogress',false,...
+    [tempj] = Run_LIF_iSTDP(parms_Jloop,TimeParams_Jloop,'showprogress',false,...
         'cellout',true,'save_dt',1000,'estrate',50);
+	try
+         SimValues_train(jj) = tempj;
+	catch
+            error('Jerror')
+    end
     
     NiceSave('TrainingFigure',savepath,['alpha',num2str(round(alphas(jj),1))])
 
@@ -118,7 +123,11 @@ parfor jj = 1:numJs
         %toc
         disp('Input sim done')
         NiceSave('SimFig',savepath,['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))])
+        try
         SimValues_inputs(jj,rr) = temp;
+        catch
+            error('inputerror')
+        end
     end
 
 end
