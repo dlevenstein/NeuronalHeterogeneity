@@ -398,6 +398,7 @@ if SHOWFIG
     try
         disp('Plotting')
         PlotSimRaster(SimValues,[-onsettime SimTime]);
+        disp('Plot Success!')
     catch
         disp('Failed to plot...')
     end
