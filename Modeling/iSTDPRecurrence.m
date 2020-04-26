@@ -71,7 +71,7 @@ inputrates = logspace(-0.5,1,numInputs).*v_th;
 
 
 %%
-for jj = 1:numJs
+parfor jj = 1:numJs
     
     TimeParams_Jloop = TimeParams;
     TimeParams_Jloop.SimTime = 120000;
@@ -98,7 +98,7 @@ for jj = 1:numJs
     %%
 
     [SimValues_train(jj)] = Run_LIF_iSTDP(parms_Jloop,TimeParams_Jloop,'showprogress',true,...
-        'cellout',true,'save_dt',1000);
+        'cellout',true,'save_dt',1000,'estrate',50);
     
     NiceSave('TrainingFigure',savepath,['alpha',num2str(round(alphas(jj),1))])
 
@@ -126,6 +126,7 @@ if ~exist(savepath,'dir')
     mkdir(savepath)
 end
 savefilename = fullfile(savepath,'simresults.mat');
+
 save(savefilename,'-v7.3')
 
 %% Plot Rasters
