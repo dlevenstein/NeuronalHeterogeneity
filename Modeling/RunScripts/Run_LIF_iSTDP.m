@@ -370,7 +370,7 @@ if isempty(spikes); spikes = [nan nan]; end
 
 disp(['Used ',num2str(spikecounter./estnumspikes.*100),'% of prediced spikes'])
 
- spikes(spikes(:,1)<=0,:) = [];
+spikes(spikes(:,1)<=0,:) = [];
 
 if cellout
     for cc = 1:PopNum %This can go very slow with lots of spikes....
@@ -379,20 +379,24 @@ if cellout
     SimValues.spikesbycell    = spikesbycell;
 end
 
-SimValues.spikes          = spikes;
 
+SimValues.spikes          = spikes;
 SimValues.EcellIDX        = Ecells;
 SimValues.IcellIDX        = Icells;
 SimValues.WeightMat_initial       = EE_mat+II_mat+EI_mat+IE_mat;
 SimValues.WeightMat       = J_mat;
-
 SimValues.PopParams = PopParams;
 SimValues.TimeParams = TimeParams;
 SimValues.optionalinputs = p.Results;
 
+if SHOWPROGRESS
+disp('Saved to Structure')
+end
+
 %%
 if SHOWFIG
     try
+        disp('Plotting')
         PlotSimRaster(SimValues,[-onsettime SimTime]);
     catch
         disp('Failed to plot...')
