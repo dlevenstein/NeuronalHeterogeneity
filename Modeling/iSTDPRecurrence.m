@@ -99,7 +99,7 @@ parfor jj = 1:numJs
 
     [tempj] = Run_LIF_iSTDP(parms_Jloop,TimeParams_Jloop,'showprogress',false,...
         'cellout',true,'save_dt',1000,'estrate',50);
-    SimValues_train(jj) = tempj;
+    SimValues_train{jj} = tempj;
     
     NiceSave('TrainingFigure',savepath,['alpha',num2str(round(alphas(jj),1))])
 
@@ -115,12 +115,12 @@ parfor jj = 1:numJs
         %tic 
         disp('Starting Input Sim')
         [temp] = Run_LIF_iSTDP(parms_Iloop,TimeParams_Iloop,'showprogress',true,...
-            'cellout',true,'save_dt',2,'J_mat',SimValues_train(jj).WeightMat);
+            'cellout',true,'save_dt',2,'J_mat',SimValues_train{jj}.WeightMat);
         %toc
         disp('Input sim done')
         NiceSave('SimFig',savepath,['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))])
         disp('savedfig')
-        SimValues_inputs(jj,rr) = temp;
+        SimValues_inputs{jj,rr} = temp;
         disp('tempassigned')
     end
 
