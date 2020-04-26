@@ -75,7 +75,7 @@ parfor jj = 1:numJs
     
     TimeParams_Jloop = TimeParams;
     TimeParams_Jloop.SimTime = 120000;
-    TimeParams_Jloop.SimTime = 100;
+    %TimeParams_Jloop.SimTime = 100;
 
     parms_Jloop = parms;
     parms_Jloop.J = Js(jj);
@@ -106,7 +106,7 @@ parfor jj = 1:numJs
     %% Different inputs
     TimeParams_Iloop = TimeParams;
     TimeParams_Iloop.SimTime = 30000;
-    TimeParams_Iloop.SimTime = 30;
+    %TimeParams_Iloop.SimTime = 30;
     for rr = 1:numInputs
         
         parms_Iloop = parms;
@@ -114,7 +114,7 @@ parfor jj = 1:numJs
         %tic 
         %disp('Starting Input Sim')
         [SimValues_inputs{jj,rr}] = Run_LIF_iSTDP(parms_Iloop,TimeParams_Iloop,'showprogress',true,...
-            'cellout',true,'save_dt',2,'J_mat',SimValues_train{jj}.WeightMat);
+            'cellout',true,'save_dt',10,'J_mat',SimValues_train{jj}.WeightMat);
         %toc
         %disp('Input sim done')
         NiceSave('SimFig',savepath,['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))])
