@@ -253,7 +253,9 @@ end
 savecounter = 1;
 timecounter = -onsettime-dt;
 spikecounter = 0;
+if SHOWPROGRESS
 disp('Starting Simulation...')
+end
 for tt=1:SimTimeLength
     %% Time Counter
     timecounter = round(timecounter+dt,4);  %Round to deal with computational error
@@ -353,7 +355,9 @@ for tt=1:SimTimeLength
     
     %%Idea: add a catch for silent network or excessive firing network?
 end
+if SHOWPROGRESS
 disp('Simulation finished...')
+end
 %%
 %Catch for no spiking in simulation error
 spikes(spikecounter+1:end,:)=[];
