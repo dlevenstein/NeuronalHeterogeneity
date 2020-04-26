@@ -129,6 +129,7 @@ IE_mat = zeros(PopNum);
 EI_mat = zeros(PopNum);
 
 if ~isempty(J_mat)
+    disp('Using weight matrix provided...')
     EE_mat(Ecells,Ecells) = J_mat(Ecells,Ecells);
     II_mat(Icells,Icells) = J_mat(Icells,Icells);
     IE_mat(Icells,Ecells) = J_mat(Icells,Ecells);
@@ -352,7 +353,7 @@ for tt=1:SimTimeLength
     
     %%Idea: add a catch for silent network or excessive firing network?
 end
-
+disp('Simulation finished...')
 %%
 %Catch for no spiking in simulation error
 spikes(spikecounter+1:end,:)=[];
