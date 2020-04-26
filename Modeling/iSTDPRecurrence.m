@@ -74,20 +74,20 @@ inputrates = logspace(-0.5,1,numInputs).*v_th;
 parfor jj = 1:numJs
     
     TimeParams_Jloop = TimeParams;
-    TimeParams_Jloop.SimTime = 120000;
+    TimeParams_Jloop.SimTime = 150000;
     %TimeParams_Jloop.SimTime = 100;
 
     parms_Jloop = parms;
     parms_Jloop.J = Js(jj);
 
     %Train with fluctuating rate
-    meanrate = v_th.*3;
+    meanrate = v_th.*2;
     duration = TimeParams_Jloop.SimTime;
     OU_simdt = 0.1;
     OU_savedt = 1;
     numsignals = 1;
 
-    theta = 1./2000; %1s (1000ms) timescale
+    theta = 1./2500; %1s (1000ms) timescale
     sigma = v_th;
 
     %disp('Making OU noise...')
@@ -98,14 +98,14 @@ parfor jj = 1:numJs
     %%
 
     [SimValues_train{jj}] = Run_LIF_iSTDP(parms_Jloop,TimeParams_Jloop,'showprogress',true,...
-        'cellout',true,'save_dt',1000,'estrate',50);
+        'cellout',true,'save_dt',2000,'estrate',100);
     
     NiceSave('TrainingFigure',savepath,['alpha',num2str(round(alphas(jj),1))])
 
     %disp('J sim done')
     %% Different inputs
     TimeParams_Iloop = TimeParams;
-    TimeParams_Iloop.SimTime = 30000;
+    TimeParams_Iloop.SimTime = 20000;
     %TimeParams_Iloop.SimTime = 30;
     for rr = 1:numInputs
         
@@ -114,7 +114,7 @@ parfor jj = 1:numJs
         %tic 
         %disp('Starting Input Sim')
         [SimValues_inputs{jj,rr}] = Run_LIF_iSTDP(parms_Iloop,TimeParams_Iloop,'showprogress',true,...
-            'cellout',true,'save_dt',10,'J_mat',SimValues_train{jj}.WeightMat);
+            'cellout',true,'save_dt',10,'J_mat',SimValues_train{jj}.WeightMat,'estrate',50);
         %toc
         %disp('Input sim done')
         NiceSave('SimFig',savepath,['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))])
