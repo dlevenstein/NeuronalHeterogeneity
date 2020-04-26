@@ -102,7 +102,7 @@ parfor jj = 1:numJs
 	try
          SimValues_train(jj) = tempj;
 	catch
-            error('Jerror')
+            disp('Jerror')
     end
     
     NiceSave('TrainingFigure',savepath,['alpha',num2str(round(alphas(jj),1))])
@@ -124,9 +124,9 @@ parfor jj = 1:numJs
         disp('Input sim done')
         NiceSave('SimFig',savepath,['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))])
         try
-        SimValues_inputs(jj,rr) = temp;
+            SimValues_inputs(jj,rr) = temp;
         catch
-            error('inputerror')
+            disp('inputerror')
         end
     end
 
