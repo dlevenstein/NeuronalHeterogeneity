@@ -107,27 +107,27 @@ parfor jj = 1:numJs
     TimeParams_Iloop = TimeParams;
     TimeParams_Iloop.SimTime = 30000;
     TimeParams_Iloop.SimTime = 30;
-    for rr = 1:numInputs
-        
-        parms_Iloop = parms;
-        parms_Iloop.ex_rate = inputrates(rr);
-        %tic 
-        disp('Starting Input Sim')
-        [SimValues_inputs(jj,rr)] = Run_LIF_iSTDP(parms_Iloop,TimeParams_Iloop,'showprogress',true,...
-            'cellout',true,'save_dt',2,'J_mat',SimValues_train(jj).WeightMat);
-        %toc
-        disp('Input sim done')
-        NiceSave('SimFig',savepath,['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))])
-    end
+%     for rr = 1:numInputs
+%         
+%         parms_Iloop = parms;
+%         parms_Iloop.ex_rate = inputrates(rr);
+%         %tic 
+%         disp('Starting Input Sim')
+%         [SimValues_inputs(jj,rr)] = Run_LIF_iSTDP(parms_Iloop,TimeParams_Iloop,'showprogress',true,...
+%             'cellout',true,'save_dt',2,'J_mat',SimValues_train(jj).WeightMat);
+%         %toc
+%         disp('Input sim done')
+%         NiceSave('SimFig',savepath,['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))])
+%     end
 
 end
 %%
-if ~exist(savepath,'dir')
-    mkdir(savepath)
-end
-savefilename = fullfile(savepath,'simresults.mat');
-
-save(savefilename,'-v7.3')
+% if ~exist(savepath,'dir')
+%     mkdir(savepath)
+% end
+% savefilename = fullfile(savepath,'simresults.mat');
+% 
+% save(savefilename,'-v7.3')
 
 %% Plot Rasters
 
