@@ -6,3 +6,5 @@
 Modeling/Simulation_Data/iSTDPandGSparms/TrainedNet_weaklybalanced.mat
 matlab.mat
 Modeling/Simulation_Data/Recurrence/simresults.mat
+
+*.DS_Store
