@@ -22,32 +22,33 @@ TimeParams.dt = 0.1;
 
 clear parms
 
-parms.EPopNum = 2000;
-parms.IPopNum = 500;
+parms.EPopNum = 1200;
+parms.IPopNum = 300;
 parms.u_0 = 0;
+
+%Conectivity: In degree
+gamma = 0.5; %initally 0.25 to match 4x less inhibitory cells
+parms.Kee = 300;
+parms.Kie = parms.Kee;
+parms.Kei = parms.Kee.*gamma;
+parms.Kii = parms.Kee.*gamma;
+
 
 parms.V_rest = 0;
 parms.delay_s = 8.9.*rand(parms.EPopNum+parms.IPopNum,1)+1.1; %grid later
-parms.g = 4; %Initial strength of Inhibitoon (relative to excitation)
+parms.g = 6; %Initial strength of Inhibitoon (relative to excitation)
 
 parms.V_th =20;
-parms.tau_m = 20;
+parms.tau_m = 20; %ms
 parms.V_reset = 10;
 parms.t_ref = 1;
 
 %Feedforward parameters
-parms.N_FF = 2000;
-parms.K_FF = 500;
+parms.N_FF = 1200;
+parms.K_FF = 300;
 %Root K scaling for FF
 %parms.J_FF = 0.1;
 parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF.^0.5); %Root K scaling
-
-%Conectivity: In degree
-gamma = 0.5; %4x less inhibitory cells
-parms.Kee = 500;
-parms.Kie = parms.Kee;
-parms.Kei = parms.Kee.*gamma;
-parms.Kii = parms.Kee.*gamma;
 
 
 parms.LearningRate = 1e-2;
@@ -105,7 +106,7 @@ parfor jj = 1:numJs
     %disp('J sim done')
     %% Different inputs
     TimeParams_Iloop = TimeParams;
-    TimeParams_Iloop.SimTime = 30000;
+    TimeParams_Iloop.SimTime = 25000;
     %TimeParams_Iloop.SimTime = 30;
     for rr = 1:numInputs
         
@@ -127,7 +128,7 @@ end
 if ~exist(savepath,'dir')
     mkdir(savepath)
 end
-clear SimValues_train
+%clear SimValues_train
 clear pc
 savefilename = fullfile(savepath,'simresults.mat');
 
@@ -135,8 +136,12 @@ save(savefilename,'-v7.3')
 
 %% Plot Rasters
 
+totalsims = numJs * length(inputrates);
 for jj = 1:numJs
     for rr = 1:length(inputrates) 
+        simnum = (jj-1).*length(inputrates) + rr;
+        bz_Counter(simnum,totalsims,'Simulation')
+        
         %clear spikes
         spikes(jj,rr).times = cellfun(@(X) X./1000,SimValues_inputs{jj,rr}.spikesbycell,'UniformOutput',false);
         spikes(jj,rr).UID = 1:length(SimValues_inputs{jj,rr}.spikesbycell);
@@ -146,7 +151,7 @@ for jj = 1:numJs
         %timewindows.initialization = [0 20];
         %timewindows.equib = [0 TimeParams.SimTime];
         ISIstats(jj,rr) = bz_ISIStats(spikes(jj,rr),'showfig',false,'cellclass',CellClass);
-        %[popCCG(ss)] = PopCCG(spikes(ss),'showfig',true,'cellclass',CellClass);
+        %[popCCG(jj,rr)] = PopCCG(spikes(jj,rr),'showfig',true,'cellclass',CellClass);
 
         %close all
     end
