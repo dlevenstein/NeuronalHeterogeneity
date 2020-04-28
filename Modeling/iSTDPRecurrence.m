@@ -106,14 +106,14 @@ parfor jj = 1:numJs
     %disp('J sim done')
     %% Different inputs
     TimeParams_Iloop = TimeParams;
-    TimeParams_Iloop.SimTime = 25000;
+    TimeParams_Iloop.SimTime = 30000;
     %TimeParams_Iloop.SimTime = 30;
     for rr = 1:numInputs
         
         parms_Iloop = parms;
         parms_Iloop.ex_rate = inputrates(rr);
         %tic 
-        %disp('Starting Input Sim')
+        disp(['Starting Input Sim: j',num2str(jj),' r',num2str(rr)])
         [SimValues_inputs{jj,rr}] = Run_LIF_iSTDP(parms_Iloop,TimeParams_Iloop,'showprogress',true,...
             'cellout',true,'save_dt',10,'J_mat',SimValues_train{jj}.WeightMat,'estrate',50);
         %toc
