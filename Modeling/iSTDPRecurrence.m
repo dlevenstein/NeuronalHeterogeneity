@@ -22,13 +22,13 @@ TimeParams.dt = 0.1;
 
 clear parms
 
-parms.EPopNum = 1000;
-parms.IPopNum = 250;
+parms.EPopNum = 2000;
+parms.IPopNum = 500;
 parms.u_0 = 0;
 
 parms.V_rest = 0;
 parms.delay_s = 8.9.*rand(parms.EPopNum+parms.IPopNum,1)+1.1; %grid later
-parms.g = 6; %Initial strength of Inhibitoon (relative to excitation)
+parms.g = 4; %Initial strength of Inhibitoon (relative to excitation)
 
 parms.V_th =20;
 parms.tau_m = 20;
@@ -36,15 +36,15 @@ parms.V_reset = 10;
 parms.t_ref = 1;
 
 %Feedforward parameters
-parms.N_FF = 1000;
-parms.K_FF = 250;
+parms.N_FF = 2000;
+parms.K_FF = 500;
 %Root K scaling for FF
 %parms.J_FF = 0.1;
-parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF.^0.5);
+parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF.^0.5); %Root K scaling
 
 %Conectivity: In degree
-gamma = 0.25; %4x less inhibitory cells
-parms.Kee = 250;
+gamma = 0.5; %4x less inhibitory cells
+parms.Kee = 500;
 parms.Kie = parms.Kee;
 parms.Kei = parms.Kee.*gamma;
 parms.Kii = parms.Kee.*gamma;
@@ -74,21 +74,21 @@ inputrates = logspace(-0.5,1,numInputs).*v_th;
 parfor jj = 1:numJs
     
     TimeParams_Jloop = TimeParams;
-    TimeParams_Jloop.SimTime = 150000;
+    TimeParams_Jloop.SimTime = 200000;
     %TimeParams_Jloop.SimTime = 100;
 
     parms_Jloop = parms;
     parms_Jloop.J = Js(jj);
 
     %Train with fluctuating rate
-    meanrate = v_th.*2;
+    meanrate = v_th.*4;
     duration = TimeParams_Jloop.SimTime;
     OU_simdt = 0.1;
     OU_savedt = 1;
     numsignals = 1;
 
-    theta = 1./2500; %1s (1000ms) timescale
-    sigma = v_th;
+    theta = 1./3000; %1s (1000ms) timescale
+    sigma = 2.*v_th;
 
     %disp('Making OU noise...')
     [ X,T ] = OUNoise(theta,sigma,duration,OU_simdt,OU_savedt,numsignals);
@@ -105,7 +105,7 @@ parfor jj = 1:numJs
     %disp('J sim done')
     %% Different inputs
     TimeParams_Iloop = TimeParams;
-    TimeParams_Iloop.SimTime = 20000;
+    TimeParams_Iloop.SimTime = 30000;
     %TimeParams_Iloop.SimTime = 30;
     for rr = 1:numInputs
         
@@ -127,31 +127,87 @@ end
 if ~exist(savepath,'dir')
     mkdir(savepath)
 end
+clear SimValues_train
+clear pc
 savefilename = fullfile(savepath,'simresults.mat');
 
 save(savefilename,'-v7.3')
 
 %% Plot Rasters
 
+for jj = 1:numJs
+    for rr = 1:length(inputrates) 
+        %clear spikes
+        spikes(jj,rr).times = cellfun(@(X) X./1000,SimValues_inputs{jj,rr}.spikesbycell,'UniformOutput',false);
+        spikes(jj,rr).UID = 1:length(SimValues_inputs{jj,rr}.spikesbycell);
+        CellClass = cell(1,length(spikes(jj,rr).times));
+        CellClass(SimValues_inputs{jj,rr}.EcellIDX) = {'E'};
+        CellClass(SimValues_inputs{jj,rr}.IcellIDX) = {'I'};
+        %timewindows.initialization = [0 20];
+        %timewindows.equib = [0 TimeParams.SimTime];
+        ISIstats(jj,rr) = bz_ISIStats(spikes(jj,rr),'showfig',false,'cellclass',CellClass);
+        %[popCCG(ss)] = PopCCG(spikes(ss),'showfig',true,'cellclass',CellClass);
 
-% 
-% 
-% %%
-% 
-% for ss = 1:length(inputrates) 
-%     %clear spikes
-%     spikes(ss).times = cellfun(@(X) X./1000,SimValues_inputs(ss).spikesbycell,'UniformOutput',false);
-%     spikes(ss).UID = 1:length(SimValues_inputs(ss).spikesbycell);
-%     CellClass = cell(1,length(spikes(ss).times));
-%     CellClass(SimValues_inputs(ss).EcellIDX) = {'E'};
-%     CellClass(SimValues_inputs(ss).IcellIDX) = {'I'};
-%     %timewindows.initialization = [0 20];
-%     %timewindows.equib = [0 TimeParams.SimTime];
-%     ISIstats(ss) = bz_ISIStats(spikes(ss),'showfig',true,'cellclass',CellClass);
-%     [popCCG(ss)] = PopCCG(spikes(ss),'showfig',true,'cellclass',CellClass);
-%     
-%     close all
-% end
+        %close all
+    end
+end
+
+
+
+%%
+clear JIStats
+for jj = 1:numJs
+    for rr = 1:length(inputrates) 
+        JIStats.meanrate(jj,rr) = mean(ISIstats(jj,rr).summstats.ALL.meanrate(SimValues_inputs{jj,rr}.EcellIDX));
+        JIStats.meanCV2(jj,rr) = nanmean(ISIstats(jj,rr).summstats.ALL.meanCV2(SimValues_inputs{jj,rr}.EcellIDX));
+        JIStats.meanCV2_I(jj,rr) = nanmean(ISIstats(jj,rr).summstats.ALL.meanCV2(SimValues_inputs{jj,rr}.IcellIDX));
+        JIStats.meanrate_I(jj,rr) = mean(ISIstats(jj,rr).summstats.ALL.meanrate(SimValues_inputs{jj,rr}.IcellIDX));
+        
+        JIStats.ISIdist.meanE(:,rr,jj) = nanmean(ISIstats(jj,rr).ISIhist.ALL.log(SimValues_inputs{jj,rr}.EcellIDX,:),1);
+
+
+    end
+end
+
+%%
+figure
+imagesc(JIStats.ISIdist.meanE(:,:,6))
+
+%%
+figure
+subplot(2,2,1)
+imagesc(log10(inputrates./v_th),alphas,log10(JIStats.meanrate))
+colorbar
+LogScale('c',10)
+LogScale('x',10)
+
+subplot(2,2,2)
+imagesc(log10(inputrates./v_th),alphas,(JIStats.meanCV2))
+colorbar
+caxis([0.5 1.5])
+LogScale('x',10)
+crameri('berlin','pivot',1)
+%LogScale('c',10)
+
+subplot(2,2,3)
+imagesc(log10(inputrates./v_th),alphas,log10(JIStats.meanrate_I))
+colorbar
+LogScale('c',10)
+LogScale('x',10)
+
+subplot(2,2,4)
+imagesc(log10(inputrates./v_th),alphas,(JIStats.meanCV2_I))
+colorbar
+caxis([0.5 1.5])
+LogScale('x',10)
+crameri('berlin','pivot',1)
+%LogScale('c',10)
+
+
+
+
+
+%%
 % 
 % %%
 % numratebins = 40;
