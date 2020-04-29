@@ -75,7 +75,7 @@ inputrates = logspace(-0.5,1,numInputs).*v_th;
 parfor jj = 1:numJs
     
     TimeParams_Jloop = TimeParams;
-    TimeParams_Jloop.SimTime = 150000;
+    TimeParams_Jloop.SimTime = 50000;
     %TimeParams_Jloop.SimTime = 100;
 
     parms_Jloop = parms;
@@ -88,7 +88,7 @@ parfor jj = 1:numJs
     OU_savedt = 1;
     numsignals = 1;
 
-    theta = 1./3000; %1s (1000ms) timescale
+    theta = 1./2000; %1s (1000ms) timescale
     sigma = 2.*v_th;
 
     %disp('Making OU noise...')
@@ -98,15 +98,15 @@ parfor jj = 1:numJs
     %
     %%
 
-    [SimValues_train{jj}] = Run_LIF_iSTDP(parms_Jloop,TimeParams_Jloop,'showprogress',true,...
-        'cellout',true,'save_dt',2000,'estrate',100);
+    [SimValues_train{jj}] = Run_LIF_iSTDP(parms_Jloop,TimeParams_Jloop,'showprogress','parloop',...
+        'cellout',true,'save_dt',2000,'estrate',50);
     
     NiceSave('TrainingFigure',savepath,['alpha',num2str(round(alphas(jj),1))])
 
     %disp('J sim done')
     %% Different inputs
     TimeParams_Iloop = TimeParams;
-    TimeParams_Iloop.SimTime = 30000;
+    TimeParams_Iloop.SimTime = 20000;
     %TimeParams_Iloop.SimTime = 30;
     for rr = 1:numInputs
         
@@ -114,8 +114,8 @@ parfor jj = 1:numJs
         parms_Iloop.ex_rate = inputrates(rr);
         %tic 
         disp(['Starting Input Sim: j',num2str(jj),' r',num2str(rr)])
-        [SimValues_inputs{jj,rr}] = Run_LIF_iSTDP(parms_Iloop,TimeParams_Iloop,'showprogress',true,...
-            'cellout',true,'save_dt',10,'J_mat',SimValues_train{jj}.WeightMat,'estrate',50);
+        [SimValues_inputs{jj,rr}] = Run_LIF_iSTDP(parms_Iloop,TimeParams_Iloop,'showprogress','parloop',...
+            'cellout',true,'save_dt',10,'J_mat',SimValues_train{jj}.WeightMat,'estrate',20);
         %toc
         %disp('Input sim done')
         NiceSave('SimFig',savepath,['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))])
@@ -133,9 +133,10 @@ clear pc
 savefilename = fullfile(savepath,'simresults.mat');
 
 save(savefilename,'-v7.3')
+disp('mat file saved')
 
 %% Plot Rasters
-
+figfolder = fullfile(savepath,'AnalysisFigs');
 totalsims = numJs * length(inputrates);
 for jj = 1:numJs
     for rr = 1:length(inputrates) 
@@ -150,10 +151,16 @@ for jj = 1:numJs
         CellClass(SimValues_inputs{jj,rr}.IcellIDX) = {'I'};
         %timewindows.initialization = [0 20];
         %timewindows.equib = [0 TimeParams.SimTime];
-        ISIstats(jj,rr) = bz_ISIStats(spikes(jj,rr),'showfig',false,'cellclass',CellClass);
+        ISIstats(jj,rr) = bz_ISIStats(spikes(jj,rr),'showfig',false,'cellclass',CellClass,...
+            'figfolder',figfolder,'figname',['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))]);
         %[popCCG(jj,rr)] = PopCCG(spikes(jj,rr),'showfig',true,'cellclass',CellClass);
+        
+        
+        plotwin = [-500 0] + SimValues_inputs{1,1}.TimeParams.SimTime;  
+        PlotSimRaster(SimValues_inputs{jj,rr},plotwin);
+        NiceSave('SimFig',figfolder,['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))])
 
-        %close all
+        close all
     end
 end
 
@@ -182,12 +189,15 @@ imagesc(JIStats.ISIdist.meanE(:,:,6))
 figure
 subplot(2,2,1)
 imagesc(log10(inputrates./v_th),alphas,log10(JIStats.meanrate))
+alpha(single(JIStats.meanrate>0.1))
 colorbar
+caxis([-1 2])
 LogScale('c',10)
 LogScale('x',10)
 
 subplot(2,2,2)
 imagesc(log10(inputrates./v_th),alphas,(JIStats.meanCV2))
+alpha(single(JIStats.meanrate>0.1))
 colorbar
 caxis([0.5 1.5])
 LogScale('x',10)
@@ -196,12 +206,16 @@ crameri('berlin','pivot',1)
 
 subplot(2,2,3)
 imagesc(log10(inputrates./v_th),alphas,log10(JIStats.meanrate_I))
+alpha(single(JIStats.meanrate>0.1))
 colorbar
+caxis([-1 2.5])
 LogScale('c',10)
 LogScale('x',10)
 
 subplot(2,2,4)
 imagesc(log10(inputrates./v_th),alphas,(JIStats.meanCV2_I))
+alpha(single(JIStats.meanrate>0.1))
+
 colorbar
 caxis([0.5 1.5])
 LogScale('x',10)
@@ -233,18 +247,30 @@ end
 for jj = 1:numJs
     for rr = 1:length(inputrates) 
         JIStats.GSweight(jj,rr) = mean(GammaFit(jj,rr).sharedfit.GSweights);
+        JIStats.GSCV(jj,rr) = mean(GammaFit(jj,rr).sharedfit.GSCVs);
         
     end
 end
 %%
 figure
-imagesc(JIStats.GSweight)
+subplot(2,2,1)
+imagesc(log10(inputrates./v_th),alphas,JIStats.GSweight)
+alpha(single(JIStats.meanrate>0.1))
+
 colorbar
 
+subplot(2,2,2)
+imagesc(log10(inputrates./v_th),alphas,JIStats.GSCV)
+alpha(single(JIStats.meanrate>0.1))
+colorbar
+%caxis([0.5 1.5])
+LogScale('x',10)
+crameri('berlin','pivot',1)
+
 %%
-plotwin = [-1000 0] + SimValues_inputs{1,1}.TimeParams.SimTime;  
-jj = 6;
-rr = 6;
+plotwin = [-500 0] + SimValues_inputs{1,1}.TimeParams.SimTime;  
+jj = 7;
+rr = 3;
 
 PlotSimRaster(SimValues_inputs{jj,rr},plotwin)
 

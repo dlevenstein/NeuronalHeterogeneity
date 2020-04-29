@@ -1,11 +1,11 @@
 #!/bin/bash
 #SBATCH -p fn_medium
 #SBATCH --nodes=1
-#SBATCH --tasks-per-node=11
+#SBATCH --tasks-per-node=12
 #SBATCH --time=24:00:00
-#SBATCH --mem-per-cpu=32G
+#SBATCH --mem-per-cpu=10G
 
-savepath=/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/Modeling/Simulation_Data/Recurrence2
+savepath=/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/Modeling/Simulation_Data/Recurrence3
 
 module load matlab/R2018a
 

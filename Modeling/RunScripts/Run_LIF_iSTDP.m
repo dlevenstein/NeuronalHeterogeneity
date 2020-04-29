@@ -262,14 +262,12 @@ end
 for tt=1:SimTimeLength
     %% Time Counter
     timecounter = round(timecounter+dt,4);  %Round to deal with computational error
-    if SHOWPROGRESS && mod(tt,round(SimTimeLength./100))==0
+    if strcmp(SHOWPROGRESS,'parloop')   && mod(tt,round(SimTimeLength./10))==1
+        disp([num2str(round(100.*tt./SimTimeLength)),'% Done!'])
+    elseif SHOWPROGRESS && mod(tt,round(SimTimeLength./100))==0
         bz_Counter(round(100.*tt./SimTimeLength),100,'Percent Complete')
-        %disp([num2str(round(100.*tt./SimTimeLength)),'% Done!']) %clearly, this needs improvement
     end
-%     if SHOWPROGRESS && mod(tt,round(SimTimeLength./10))==0
-%         %bz_Counter(round(100.*tt./SimTimeLength),100,'Percent Complete')
-%         disp([num2str(round(100.*tt./SimTimeLength)),'% Done!']) %clearly, this needs improvement
-%     end
+
     %% Dynamics: update noise, V,s,w based on values in previous timestep
     
 	%V - Voltage Equation
@@ -358,8 +356,8 @@ for tt=1:SimTimeLength
     
     %%Idea: add a catch for silent network or excessive firing network?
 end
-if SHOWPROGRESS
-    %disp('Simulation finished...')
+if strcmp(SHOWPROGRESS,'parloop')
+    disp('Simulation finished...')
 end
 %%
 %Catch for no spiking in simulation error
