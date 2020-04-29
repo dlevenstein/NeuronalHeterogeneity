@@ -262,8 +262,10 @@ end
 for tt=1:SimTimeLength
     %% Time Counter
     timecounter = round(timecounter+dt,4);  %Round to deal with computational error
-    if strcmp(SHOWPROGRESS,'parloop')   && mod(tt,round(SimTimeLength./10))==1
-        disp([num2str(round(100.*tt./SimTimeLength)),'% Done!'])
+    if strcmp(SHOWPROGRESS,'parloop')   
+        if mod(tt,round(SimTimeLength./10))==1
+            disp([num2str(round(100.*tt./SimTimeLength)),'% Done!'])
+        end
     elseif SHOWPROGRESS && mod(tt,round(SimTimeLength./100))==0
         bz_Counter(round(100.*tt./SimTimeLength),100,'Percent Complete')
     end
