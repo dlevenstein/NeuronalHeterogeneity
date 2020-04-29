@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH -p cpu_medium
 #SBATCH --nodes=1
-#SBATCH --tasks-per-node=8
+#SBATCH --tasks-per-node=6
 #SBATCH --time=24:00:00
-#SBATCH --mem-per-cpu=26G
+#SBATCH --mem-per-cpu=24G
 
 savepath=/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/Modeling/Simulation_Data/Recurrence2
 
