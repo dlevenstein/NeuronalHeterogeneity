@@ -49,7 +49,7 @@ function [SimValues] = Run_LIF_iSTDP(PopParams,TimeParams,varargin)
 %Parse optional inputs
 p = inputParser;
 addParameter(p,'showfig',true,@islogical)
-addParameter(p,'showprogress',false,@islogical)
+addParameter(p,'showprogress',false)
 addParameter(p,'onsettime',0,@isnumeric)
 addParameter(p,'save_dt',0.5,@isnumeric)
 addParameter(p,'cellout',false,@islogical)
