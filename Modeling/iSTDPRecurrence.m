@@ -22,13 +22,13 @@ TimeParams.dt = 0.1;
 
 clear parms
 
-parms.EPopNum = 1200;
-parms.IPopNum = 300;
+parms.EPopNum = 2000;
+parms.IPopNum = 500;
 parms.u_0 = 0;
 
 %Conectivity: In degree
 gamma = 0.5; %initally 0.25 to match 4x less inhibitory cells
-parms.Kee = 300;
+parms.Kee = 500;
 parms.Kie = parms.Kee;
 parms.Kei = parms.Kee.*gamma;
 parms.Kii = parms.Kee.*gamma;
@@ -44,8 +44,8 @@ parms.V_reset = 10;
 parms.t_ref = 1;
 
 %Feedforward parameters
-parms.N_FF = 1200;
-parms.K_FF = 300;
+parms.N_FF = 2000;
+parms.K_FF = 500;
 %Root K scaling for FF
 %parms.J_FF = 0.1;
 parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF.^0.5); %Root K scaling
@@ -75,7 +75,7 @@ inputrates = logspace(-0.5,1,numInputs).*v_th;
 parfor jj = 1:numJs
     
     TimeParams_Jloop = TimeParams;
-    TimeParams_Jloop.SimTime = 200000;
+    TimeParams_Jloop.SimTime = 150000;
     %TimeParams_Jloop.SimTime = 100;
 
     parms_Jloop = parms;
@@ -209,6 +209,44 @@ crameri('berlin','pivot',1)
 %LogScale('c',10)
 
 
+
+%%
+AScost = 0.0001; %0.13 for data
+for jj = 1:numJs
+    for rr = 1:length(inputrates) 
+        simnum = (jj-1).*length(inputrates) + rr
+        %bz_Counter(simnum,totalsims,'Simulation')
+        
+    logISIhist =  ISIstats(jj,rr).ISIhist.ALL.log;
+    usecells = randsample(SimValues_inputs{jj,rr}.EcellIDX([500:end]),100);
+    logISIhist = logISIhist(usecells,:)';
+    logtimebins = ISIstats(jj,rr).ISIhist.logbins;
+    logISIhist = logISIhist./mode(diff(logtimebins));
+
+    GammaFit(jj,rr) = bz_FitISISharedGammaModes(logISIhist,logtimebins,...
+        'numAS',2,'AScost_lambda',AScost,'AScost_p',1/2,'ASguess',true,'MScost',3);
+    close all
+    end
+end
+
+%%
+for jj = 1:numJs
+    for rr = 1:length(inputrates) 
+        JIStats.GSweight(jj,rr) = mean(GammaFit(jj,rr).sharedfit.GSweights);
+        
+    end
+end
+%%
+figure
+imagesc(JIStats.GSweight)
+colorbar
+
+%%
+plotwin = [-1000 0] + SimValues_inputs{1,1}.TimeParams.SimTime;  
+jj = 6;
+rr = 6;
+
+PlotSimRaster(SimValues_inputs{jj,rr},plotwin)
 
 
 
