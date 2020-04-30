@@ -351,6 +351,11 @@ for tt=1:SimTimeLength
     if mod(timecounter,save_dt)==0 && timecounter>=0
          SimValues.t(savecounter)                 = timecounter;
          SimValues.V(:,savecounter)               = V;
+         
+         EIconnections = J_mat(Ecells,Icells);
+         
+         SimValues.meanEI = mean(EIconnections(isconnected)); 
+         SimValues.stdEI = std(EIconnections(isconnected)); 
          %SimValues.Input(:,savecounter)          = I_e(timecounter);
          %SimValues.J_mat(:,:,savecounter)         = J_mat;
          savecounter = savecounter+1;

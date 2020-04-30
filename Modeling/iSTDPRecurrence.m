@@ -37,7 +37,7 @@ parms.Kii = parms.Kee.*gamma;
 
 parms.V_rest = 0;
 parms.delay_s = 8.9.*rand(parms.EPopNum+parms.IPopNum,1)+1.1; %grid later
-parms.g = 4; %Initial strength of Inhibitoon (relative to excitation)
+parms.g = 3; %Initial strength of Inhibitoon (relative to excitation)
 
 parms.V_th =20;
 parms.tau_m = 20; %ms
@@ -50,10 +50,10 @@ parms.K_FF = 500;
 %Root K scaling for FF
 %parms.J_FF = 0.1;
 parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF.^0.5); %1/RootK scaling
-parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF); %1/K scaling
+%parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF); %1/K scaling
 
 
-parms.LearningRate = 1e-2;
+parms.LearningRate = 2e-2;
 parms.TargetRate = [sort(exp(randn(parms.EPopNum,1)));nan(parms.IPopNum,1)]; %Target Rate for Excitatory cells (units of Hz)
 parms.tauSTDP = 20;    %Time Constant for the STDP curve (Units of ms)
 
@@ -78,7 +78,7 @@ parfor jj = 1:numJs
     
     TimeParams_Jloop = TimeParams;
     TimeParams_Jloop.SimTime = 120000;
-    TimeParams_Jloop.SimTime = 5000;
+    TimeParams_Jloop.SimTime = 10000;
 
     parms_Jloop = parms;
     parms_Jloop.J = Js(jj);
