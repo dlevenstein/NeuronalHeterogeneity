@@ -22,21 +22,22 @@ TimeParams.dt = 0.1;
 
 clear parms
 
-parms.EPopNum = 2000;
-parms.IPopNum = 500;
+parms.EPopNum = 1200;
+parms.IPopNum = 300;
 parms.u_0 = 0;
 
 %Conectivity: In degree
 gamma = 0.5; %initally 0.25 to match 4x less inhibitory cells
-parms.Kee = 500;
-parms.Kie = parms.Kee;
+gammaI = 2; %relative E->I connectivity
+parms.Kee = 300;
+parms.Kie = parms.Kee.*gammaI;
 parms.Kei = parms.Kee.*gamma;
 parms.Kii = parms.Kee.*gamma;
 
 
 parms.V_rest = 0;
 parms.delay_s = 8.9.*rand(parms.EPopNum+parms.IPopNum,1)+1.1; %grid later
-parms.g = 6; %Initial strength of Inhibitoon (relative to excitation)
+parms.g = 4; %Initial strength of Inhibitoon (relative to excitation)
 
 parms.V_th =20;
 parms.tau_m = 20; %ms
@@ -48,7 +49,8 @@ parms.N_FF = 2000;
 parms.K_FF = 500;
 %Root K scaling for FF
 %parms.J_FF = 0.1;
-parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF.^0.5); %Root K scaling
+parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF.^0.5); %1/RootK scaling
+parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF); %1/K scaling
 
 
 parms.LearningRate = 1e-2;
@@ -58,7 +60,7 @@ parms.tauSTDP = 20;    %Time Constant for the STDP curve (Units of ms)
 
 %%
 numJs = 11;
-alphas = linspace(0,1,numJs)
+alphas = linspace(0.0,1.0,numJs)
 %alphas = 0.5;
 Js = (parms.V_th-parms.V_rest)./(parms.Kee.^alphas)
 %Js = logspace(log10(rootKscale),1,numJs);
@@ -75,8 +77,8 @@ inputrates = logspace(-0.5,1,numInputs).*v_th;
 parfor jj = 1:numJs
     
     TimeParams_Jloop = TimeParams;
-    TimeParams_Jloop.SimTime = 50000;
-    %TimeParams_Jloop.SimTime = 100;
+    TimeParams_Jloop.SimTime = 120000;
+    TimeParams_Jloop.SimTime = 5000;
 
     parms_Jloop = parms;
     parms_Jloop.J = Js(jj);
@@ -106,7 +108,7 @@ parfor jj = 1:numJs
     %disp('J sim done')
     %% Different inputs
     TimeParams_Iloop = TimeParams;
-    TimeParams_Iloop.SimTime = 20000;
+    TimeParams_Iloop.SimTime = 1000;
     %TimeParams_Iloop.SimTime = 30;
     for rr = 1:numInputs
         
@@ -194,6 +196,7 @@ colorbar
 caxis([-1 2])
 LogScale('c',10)
 LogScale('x',10)
+title('E Rate')
 
 subplot(2,2,2)
 imagesc(log10(inputrates./v_th),alphas,(JIStats.meanCV2))
@@ -203,6 +206,7 @@ caxis([0.5 1.5])
 LogScale('x',10)
 crameri('berlin','pivot',1)
 %LogScale('c',10)
+title('E CV2')
 
 subplot(2,2,3)
 imagesc(log10(inputrates./v_th),alphas,log10(JIStats.meanrate_I))
@@ -211,6 +215,7 @@ colorbar
 caxis([-1 2.5])
 LogScale('c',10)
 LogScale('x',10)
+title('I Rate')
 
 subplot(2,2,4)
 imagesc(log10(inputrates./v_th),alphas,(JIStats.meanCV2_I))
@@ -221,6 +226,9 @@ caxis([0.5 1.5])
 LogScale('x',10)
 crameri('berlin','pivot',1)
 %LogScale('c',10)
+title('I CV2')
+
+NiceSave('SimFig',figfolder,[])
 
 
 
@@ -258,6 +266,7 @@ imagesc(log10(inputrates./v_th),alphas,JIStats.GSweight)
 alpha(single(JIStats.meanrate>0.1))
 
 colorbar
+title('GS Weight')
 
 subplot(2,2,2)
 imagesc(log10(inputrates./v_th),alphas,JIStats.GSCV)
@@ -266,14 +275,7 @@ colorbar
 %caxis([0.5 1.5])
 LogScale('x',10)
 crameri('berlin','pivot',1)
-
-%%
-plotwin = [-500 0] + SimValues_inputs{1,1}.TimeParams.SimTime;  
-jj = 7;
-rr = 3;
-
-PlotSimRaster(SimValues_inputs{jj,rr},plotwin)
-
+title('GS CV')
 
 
 %%
