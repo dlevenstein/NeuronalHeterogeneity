@@ -354,8 +354,8 @@ for tt=1:SimTimeLength
          
          EIconnections = J_mat(Ecells,Icells);
          
-         SimValues.meanEI = mean(EIconnections(isconnected)); 
-         SimValues.stdEI = std(EIconnections(isconnected)); 
+         SimValues.meanEI = mean(EIconnections(isconnected(Ecells,Icells))); 
+         SimValues.stdEI = std(EIconnections(isconnected(Ecells,Icells))); 
          %SimValues.Input(:,savecounter)          = I_e(timecounter);
          %SimValues.J_mat(:,:,savecounter)         = J_mat;
          savecounter = savecounter+1;
