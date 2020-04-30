@@ -37,7 +37,7 @@ parms.Kii = parms.Kee.*gamma;
 
 parms.V_rest = 0;
 parms.delay_s = 8.9.*rand(parms.EPopNum+parms.IPopNum,1)+1.1; %grid later
-parms.g = 3; %Initial strength of Inhibitoon (relative to excitation)
+parms.g = 2; %Initial strength of Inhibitoon (relative to excitation)
 
 parms.V_th =20;
 parms.tau_m = 20; %ms
@@ -78,7 +78,7 @@ parfor jj = 1:numJs
     
     TimeParams_Jloop = TimeParams;
     TimeParams_Jloop.SimTime = 120000;
-    TimeParams_Jloop.SimTime = 10000;
+    %TimeParams_Jloop.SimTime = 10000;
 
     parms_Jloop = parms;
     parms_Jloop.J = Js(jj);
@@ -90,7 +90,7 @@ parfor jj = 1:numJs
     OU_savedt = 1;
     numsignals = 1;
 
-    theta = 1./2000; %1s (1000ms) timescale
+    theta = 1./2500; %1s (1000ms) timescale
     sigma = 2.*v_th;
 
     %disp('Making OU noise...')
@@ -108,7 +108,7 @@ parfor jj = 1:numJs
     %disp('J sim done')
     %% Different inputs
     TimeParams_Iloop = TimeParams;
-    TimeParams_Iloop.SimTime = 1000;
+    TimeParams_Iloop.SimTime = 25000;
     %TimeParams_Iloop.SimTime = 30;
     for rr = 1:numInputs
         
