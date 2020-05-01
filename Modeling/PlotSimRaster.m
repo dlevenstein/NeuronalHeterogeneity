@@ -5,11 +5,13 @@ function [spikemat] = PlotSimRaster(SimValues,timewin,varargin)
 p = inputParser;
 addParameter(p,'cellsort',[])
 addParameter(p,'overlay',[])
+addParameter(p,'plotEIweight',false)
 addParameter(p,'ratebin',5) %ms
 parse(p,varargin{:})
 cellsort = p.Results.cellsort;
 overlay = p.Results.overlay;
 ratebin = p.Results.ratebin;
+PLOTEI = p.Results.plotEIweight;
 
 %%
 if ~exist('timewin','var')
@@ -48,7 +50,7 @@ if ~isempty(cellsort)
 end
 
 
-      
+   %%   
 figure
 subplot(2,1,1)
     hold on
@@ -75,22 +77,35 @@ subplot(4,1,3)
     ylim([0 raterange(2)]);xlim(timewin)
     box off
     
-   try
-        V_th = SimValues.PopParams.V_th(1); %excitatory... assuming first
-        V_rest = SimValues.PopParams.V_rest(1); %excitatory... assuming first
-        
+    
+    if PLOTEI
+        try
         subplot(4,1,4)
-            plot(SimValues.t,SimValues.V(exneuron,:),'k')
-            hold on
-            plot(exspiketimes,V_th.*ones(size(exspiketimes))+2,'k.')
-            box off
-            plot(xlim,V_th.*[1 1],'k--')
-           % plot(spikes
+            plot(SimValues.t,SimValues.EImean,'k')
+            errorshade(SimValues.t,SimValues.EImean,...
+                SimValues.EImean+SimValues.EIstd,SimValues.EImean-SimValues.EIstd,...
+                'k','vector')
+        catch
+            display('something wrong with EIweight data. Womp Womp')
+        end
+    else
+       try
+            V_th = SimValues.PopParams.V_th(1); %excitatory... assuming first
+            V_rest = SimValues.PopParams.V_rest(1); %excitatory... assuming first
 
-            xlabel('Time (ms)');ylabel('V, example cell')
-            xlim(timewin);ylim([V_rest V_th+2])
-   catch
-       display('something wrong with voltage data. Womp Womp')
-   end
+            subplot(4,1,4)
+                plot(SimValues.t,SimValues.V(exneuron,:),'k')
+                hold on
+                plot(exspiketimes,V_th.*ones(size(exspiketimes))+2,'k.')
+                box off
+                plot(xlim,V_th.*[1 1],'k--')
+               % plot(spikes
+
+                xlabel('Time (ms)');ylabel('V, example cell')
+                xlim(timewin);ylim([V_rest V_th+2])
+       catch
+           display('something wrong with voltage data. Womp Womp')
+       end
+    end
 end
 

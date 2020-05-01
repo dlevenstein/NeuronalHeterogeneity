@@ -55,6 +55,7 @@ addParameter(p,'save_dt',0.5,@isnumeric)
 addParameter(p,'cellout',false,@islogical)
 addParameter(p,'estrate',20)
 addParameter(p,'J_mat',[])
+addParameter(p,'plotEIweight',false)
 parse(p,varargin{:})
 SHOWFIG = p.Results.showfig;
 SHOWPROGRESS = p.Results.showprogress;
@@ -63,6 +64,7 @@ save_dt = p.Results.save_dt;
 cellout = p.Results.cellout;
 estrate = p.Results.estrate; 
 J_mat = p.Results.J_mat; 
+PLOTEI = p.Results.plotEIweight; 
 
 %% Default Parameters
 DefaultParms.EPopNum = 8000;
@@ -219,7 +221,9 @@ end
 disp('Initializing variables...')
 %Simulation Variables
 V = zeros(PopNum,1);    %Membrane Potential
-x = zeros(size(delay_s)); %Synaptic trace
+% xpre = zeros(size(delay_s)); %PreSynaptic trace
+% xpost = zeros(size(delay_s)); %PostSynaptic trace
+x = zeros(size(delay_s)); %PostSynaptic trace
 t_s = zeros(size(delay_s))-dt;  %synapse delay counter
 t_r = zeros(PopNum,1); 	%refratory period counter
 RI = 0;
@@ -236,7 +240,7 @@ SimValues.Input = nan(PopNum,SaveTimeLength);
 %SimValues.J_mat = nan(PopNum,PopNum,SaveTimeLength);
 
 estnumspikes = PopNum.*(SimTime+onsettime).*estrate./1000;
-spikes = nan(estnumspikes,2,'single'); %assume mean rate 10Hz
+spikes = nan(estnumspikes,2,'single');
 haswarned = false; %to warn the user if their estimate is low.
 %% Initial Conditions - random voltages
 %Improvement: set # initial spiking neurons instead of hard coding 
@@ -278,32 +282,47 @@ for tt=1:SimTimeLength
              + RI  ...                                   %Synapses
              + u_ext(timecounter))./tau_m;                           %Time varying input
          
-	%x - Synaptic Trace for STDP
+	%x - Synaptic Trace for STDP. Note, if only EI plasticity, could make
+	%only one trace, where e is presynaptic and i is postsynaptic
+    %dxpredt =  - xpre./tauSTDP;
+    %dxpostdt =  - xpost./tauSTDP;
     dxdt =  - x./tauSTDP;
     
     V  = V + dVdt.*dt;
+%     xpre   = xpre + dxpredt.*dt;
+%     xpost   = xpost + dxpostdt.*dt;
     x   = x + dxdt.*dt;
 
     %% Spiking
-    RI = 0; %reset the synaptic input to 0.
-    %For Jump decay synapses, use differential eqn for s: s = s - s.*dt
+    RI = 0;  %reset the synaptic input to 0.
     if any(V > V_th)
         %Find neurons that crossed threshold and record the spiketimes 
-        spikeneurons = find(V > V_th);
+        spikeneurons = V > V_th;
         %Register the cell ID/timestamp of the spiked neurons in the spikes vector
-        numspikers = length(spikeneurons);
+        numspikers = sum(spikeneurons);
         spikes(spikecounter+1:spikecounter+numspikers,:) = ...
-            [timecounter.*ones(numspikers,1),spikeneurons];
+            [timecounter.*ones(numspikers,1),find(spikeneurons)];
         spikecounter = spikecounter+numspikers;
         if spikecounter > estnumspikes &~ haswarned
             display('WARNING - NUMBER SPIKES IS ABOVE ESTIMATED. GOING MUCH SLOWER NOW')
             haswarned = true;
         end
         
-        %Start the synaptic delay counter
-        t_s(spikeneurons) = delay_s(spikeneurons);
+        %Start the synaptic delay counter %BIG PROBLEM HERE! IF cell spikes
+        %during delay, delay resets and spike doesn't get through! (e.g. inhibitory cells...). Keep
+        %delays short to fix this as a bandaid for now.......
+        %Another option is to not jump delay if neuron is mid delay... (implemented)
+        %Switch the order of spiking and refractory period countdowns?
+        t_s(spikeneurons & t_s<0) = delay_s(spikeneurons & t_s<0);
         %Set spiking neurons refractory period 
         t_r(spikeneurons) = t_ref;
+        
+        %Jump the postsynaptic trace of the spiking neurons (E only for iSTDP)
+        x(spikeneurons & EcellIDX) = x(spikeneurons & EcellIDX) + 1;
+        %xpost(spikeneurons) = xpost(spikeneurons) + 1;
+        
+    else
+        numspikers=0;
     end
 
     %%  Refractory period Countdowns
@@ -319,33 +338,39 @@ for tt=1:SimTimeLength
         
         %Pass along the spikes - cells that were in delay, but are now below
         s = delaysynapses & t_s<0;   %activated synapses
-        
         if any(s(:))
-            %Jump the synaptic trace
-            x(s) = x(s) + 1;
-            
-            %HERE: implement matrix delays...
-            if LearningRate ~= 0
-                %Implement STDP (Vogels 2011 SuppEqn 4/5) I->E only
-                %Presynaptic I Cells - adjust all synapses postsynaptic to spiking I cells
-                PreIspikes = s & IcellIDX;
-                J_mat(EcellIDX,PreIspikes) = J_mat(EcellIDX,PreIspikes) - LearningRate.*(x(EcellIDX)-alpha(EcellIDX)); 
-
-                %Postsynaptic E cells - adjust all synapses presynaptic to spiking E cells
-                PostEspikes = s & EcellIDX;            
-                J_mat(PostEspikes,IcellIDX) = J_mat(PostEspikes,IcellIDX) - LearningRate.*(x(IcellIDX)');
-                %(Negative because inhibitory)
-        
-                J_mat(~isconnected) = 0; %Get rid of any negative synapses and unconnected pairs...
-                J_mat(J_mat(:,IcellIDX)>0) = 0;
-            end
+            %Jump the presynaptic trace (I only for iSTDP)
+            x(s & IcellIDX) = x(s & IcellIDX) + 1;
+            %xpre(s) = xpre(s) + 1;
 
             %Apply the current in the next timestep
-            RI = tau_m.*J_mat*s./dt; 
+            RI = tau_m.*J_mat*s./dt;
         end
-        
+    else 
+        s = 0;
     end
         
+        %HERE: implement matrix delays...
+    if (any(s(:)) || numspikers>0) && (LearningRate ~= 0) 
+        %Implement STDP (Vogels 2011 SuppEqn 4/5) I->E only
+        %Presynaptic I Cells -  adjust all synapses postsynaptic to spiking I cells
+        %                       strengthen I->E if recently active, weaken if not
+        PreIspikes = s & IcellIDX;
+        J_mat(EcellIDX,PreIspikes) = J_mat(EcellIDX,PreIspikes) - LearningRate.*(x(EcellIDX)-alpha(EcellIDX)); 
+
+        %Postsynaptic E cells - adjust all (recently active inhibitory) 
+        %                       synapses presynaptic to spiking E cells
+        PostEspikes = spikeneurons & EcellIDX;            
+        J_mat(PostEspikes,IcellIDX) = J_mat(PostEspikes,IcellIDX) - LearningRate.*(x(IcellIDX)');
+        %(Negative because inhibitory)
+        
+        %if sum(PreIspikes)>1
+         %   keyboard
+        %end
+
+        J_mat(~isconnected) = 0; %Get rid of any negative synapses and unconnected pairs...
+        J_mat(J_mat(:,IcellIDX)>0) = 0;
+    end
     %% Add data to the output variables
     %Question: is accessing structure slower than doubles?
     if mod(timecounter,save_dt)==0 && timecounter>=0
@@ -354,8 +379,8 @@ for tt=1:SimTimeLength
          
          EIconnections = J_mat(Ecells,Icells);
          
-         SimValues.meanEI = mean(EIconnections(isconnected(Ecells,Icells))); 
-         SimValues.stdEI = std(EIconnections(isconnected(Ecells,Icells))); 
+         SimValues.EImean(savecounter)   = mean(EIconnections(isconnected(Ecells,Icells))); 
+         SimValues.EIstd(savecounter)   = std(EIconnections(isconnected(Ecells,Icells))); 
          %SimValues.Input(:,savecounter)          = I_e(timecounter);
          %SimValues.J_mat(:,:,savecounter)         = J_mat;
          savecounter = savecounter+1;
@@ -405,7 +430,7 @@ end
 if SHOWFIG
     try
         %disp('Plotting')
-        PlotSimRaster(SimValues,[-onsettime SimTime]);
+        PlotSimRaster(SimValues,[-onsettime SimTime],'plotEIweight',PLOTEI);
         %disp('Plot Success!')
     catch
         disp('Failed to plot...')

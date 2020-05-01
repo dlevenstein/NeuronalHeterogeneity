@@ -36,8 +36,10 @@ parms.Kii = parms.Kee.*gamma;
 
 
 parms.V_rest = 0;
-parms.delay_s = 8.9.*rand(parms.EPopNum+parms.IPopNum,1)+1.1; %grid later
+%parms.delay_s = 8.9.*rand(parms.EPopNum+parms.IPopNum,1)+1.1; %grid later
+parms.delay_s = 4.5.*rand(parms.EPopNum+parms.IPopNum,1)+0.5; %minimum 0.5 to prevent refractory loops
 parms.g = 2; %Initial strength of Inhibitoon (relative to excitation)
+
 
 parms.V_th =20;
 parms.tau_m = 20; %ms
@@ -45,15 +47,15 @@ parms.V_reset = 10;
 parms.t_ref = 1;
 
 %Feedforward parameters
-parms.N_FF = 2000;
-parms.K_FF = 500;
+parms.N_FF = 2400;
+parms.K_FF = 600;
 %Root K scaling for FF
 %parms.J_FF = 0.1;
 parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF.^0.5); %1/RootK scaling
 %parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF); %1/K scaling
 
 
-parms.LearningRate = 2e-2;
+parms.LearningRate = 1e-2;
 parms.TargetRate = [sort(exp(randn(parms.EPopNum,1)));nan(parms.IPopNum,1)]; %Target Rate for Excitatory cells (units of Hz)
 parms.tauSTDP = 20;    %Time Constant for the STDP curve (Units of ms)
 
@@ -61,6 +63,9 @@ parms.tauSTDP = 20;    %Time Constant for the STDP curve (Units of ms)
 %%
 numJs = 11;
 alphas = linspace(0.0,1.0,numJs)
+% numJs = 13;
+% alphas = linspace(0.25,1.0,numJs)
+%alphas = 0.5;
 %alphas = 0.5;
 Js = (parms.V_th-parms.V_rest)./(parms.Kee.^alphas)
 %Js = logspace(log10(rootKscale),1,numJs);
@@ -74,7 +79,7 @@ inputrates = logspace(-0.5,1,numInputs).*v_th;
 
 
 %%
-parfor jj = 1:numJs
+for jj = 1:numJs
     
     TimeParams_Jloop = TimeParams;
     TimeParams_Jloop.SimTime = 120000;
@@ -101,9 +106,9 @@ parfor jj = 1:numJs
     %%
 
     [SimValues_train{jj}] = Run_LIF_iSTDP(parms_Jloop,TimeParams_Jloop,'showprogress','parloop',...
-        'cellout',true,'save_dt',2000,'estrate',50);
+        'cellout',true,'save_dt',100,'estrate',50,'plotEIweight',true);
     
-    NiceSave('TrainingFigure',savepath,['alpha',num2str(round(alphas(jj),1))])
+   NiceSave('TrainingFigure',savepath,['alpha',num2str(round(alphas(jj),1))])
 
     %disp('J sim done')
     %% Different inputs
@@ -117,7 +122,8 @@ parfor jj = 1:numJs
         %tic 
         disp(['Starting Input Sim: j',num2str(jj),' r',num2str(rr)])
         [SimValues_inputs{jj,rr}] = Run_LIF_iSTDP(parms_Iloop,TimeParams_Iloop,'showprogress','parloop',...
-            'cellout',true,'save_dt',10,'J_mat',SimValues_train{jj}.WeightMat,'estrate',20);
+            'cellout',true,'save_dt',10,'J_mat',SimValues_train{jj}.WeightMat,'estrate',20,...
+            'plotEIweight',true);
         %toc
         %disp('Input sim done')
         NiceSave('SimFig',savepath,['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))])
