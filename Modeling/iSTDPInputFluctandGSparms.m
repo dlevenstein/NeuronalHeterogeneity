@@ -1,4 +1,4 @@
-function iSTDPandGSparms(savepath)
+function iSTDPInputFluctandGSparms(savepath)
 
 %%
 %savepath = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/Modeling/Simulation_Data/iSTDPInputFluctandGSparms/';
