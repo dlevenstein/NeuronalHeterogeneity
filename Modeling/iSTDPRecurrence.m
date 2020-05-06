@@ -37,7 +37,7 @@ parms.Kii = parms.Kee.*gamma;
 
 parms.V_rest = 0;
 %parms.delay_s = 8.9.*rand(parms.EPopNum+parms.IPopNum,1)+1.1; %grid later
-parms.delay_s = 4.5.*rand(parms.EPopNum+parms.IPopNum,1)+0.5; %minimum 0.5 to prevent refractory loops
+parms.delay_s = 4.*rand(parms.EPopNum+parms.IPopNum,1)+1; %minimum 0.5 to prevent refractory loops
 parms.g = 2; %Initial strength of Inhibitoon (relative to excitation)
 
 
@@ -55,7 +55,7 @@ parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF.^0.5); %1/RootK scaling
 %parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF); %1/K scaling
 
 
-parms.LearningRate = 1e-2;
+%parms.LearningRate = 1e-2;
 parms.TargetRate = [sort(exp(randn(parms.EPopNum,1)));nan(parms.IPopNum,1)]; %Target Rate for Excitatory cells (units of Hz)
 parms.tauSTDP = 20;    %Time Constant for the STDP curve (Units of ms)
 
@@ -75,31 +75,36 @@ Js = (parms.V_th-parms.V_rest)./(parms.Kee.^alphas)
 numInputs = 10;
 %v_th = th/(C_e.*J.*tau);
 v_th = 1000*(parms.V_th-parms.V_rest)/(parms.K_FF.*parms.J_FF.*parms.tau_m);
-inputrates = logspace(-0.5,1,numInputs).*v_th;
+v_rel = logspace(-0.5,1,numInputs);
+inputrates = v_rel.*v_th;
 
 
 %%
 parfor jj = 1:numJs
     
     TimeParams_Jloop = TimeParams;
-    TimeParams_Jloop.SimTime = 120000;
+    TimeParams_Jloop.SimTime = 200000;
     %TimeParams_Jloop.SimTime = 10000;
 
     parms_Jloop = parms;
     parms_Jloop.J = Js(jj);
-
+    parms_Jloop.LearningRate = parms_Jloop.J.*1e-2; %Learning rate is O(1/100) of synaptic weight
+%%
     %Train with fluctuating rate
-    meanrate = v_th.*4;
+    meanrate = v_th.*3;
     duration = TimeParams_Jloop.SimTime;
     OU_simdt = 0.1;
     OU_savedt = 1;
     numsignals = 1;
 
-    theta = 1./2500; %1s (1000ms) timescale
+    theta = 1./5000; %1s (1000ms) timescale
     sigma = 2.*v_th;
+    %sigma = 1;
 
     %disp('Making OU noise...')
     [ X,T ] = OUNoise(theta,sigma,duration,OU_simdt,OU_savedt,numsignals);
+    
+    %%
     parms_Jloop.ex_rate = @(t) interp1(T,X,t,'nearest')+meanrate;
     %disp('DONE!')
     %
@@ -113,11 +118,11 @@ parfor jj = 1:numJs
     %disp('J sim done')
     %% Different inputs
     TimeParams_Iloop = TimeParams;
-    TimeParams_Iloop.SimTime = 25000;
+    TimeParams_Iloop.SimTime = 30000;
     %TimeParams_Iloop.SimTime = 30;
     for rr = 1:numInputs
         
-        parms_Iloop = parms;
+        parms_Iloop = parms_Jloop;
         parms_Iloop.ex_rate = inputrates(rr);
         %tic 
         disp(['Starting Input Sim: j',num2str(jj),' r',num2str(rr)])
@@ -126,7 +131,7 @@ parfor jj = 1:numJs
             'plotEIweight',true);
         %toc
         %disp('Input sim done')
-        NiceSave('SimFig',savepath,['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))])
+        NiceSave('SimFig',savepath,['alpha',num2str(round(alphas(jj),1)),'vinput',num2str(round(v_rel(rr),1))])
         %disp('savedfig')
         %disp('tempassigned')
     end
@@ -284,6 +289,10 @@ crameri('berlin','pivot',1)
 title('GS CV')
 
 
+
+%%
+
+%PlotSimRaster(SimValues_train{1},[],'trainingfigure',true);
 %%
 % 
 % %%

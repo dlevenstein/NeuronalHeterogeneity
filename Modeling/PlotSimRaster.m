@@ -6,15 +6,17 @@ p = inputParser;
 addParameter(p,'cellsort',[])
 addParameter(p,'overlay',[])
 addParameter(p,'plotEIweight',false)
+addParameter(p,'trainingfigure',false)
 addParameter(p,'ratebin',5) %ms
 parse(p,varargin{:})
 cellsort = p.Results.cellsort;
 overlay = p.Results.overlay;
 ratebin = p.Results.ratebin;
 PLOTEI = p.Results.plotEIweight;
+TRAINFIG = p.Results.trainingfigure;
 
 %%
-if ~exist('timewin','var')
+if ~exist('timewin','var') || isempty(timewin)
     timewin = [0 SimValues.TimeParams.SimTime];
 end
 
@@ -106,6 +108,30 @@ subplot(4,1,3)
        catch
            display('something wrong with voltage data. Womp Womp')
        end
+    end
+    
+    
+    %% Training figure
+    if TRAINFIG
+        %KEI over time
+        %Rate minus TR over time
+        trainmat = ...
+            bz_SpktToSpkmat(spikes,'dt',500,'binsize',1000,'units','rate','win',timewin);
+        %%
+        %Rate vs TR
+        %KEI vs TR at end
+        KE = sum(SimValues.WeightMat(SimValues.EcellIDX,SimValues.EcellIDX),2);
+        KI = sum(SimValues.WeightMat(SimValues.EcellIDX,SimValues.IcellIDX),2);
+        KEI = KE./KI;
+        %Variance over time, mean I over time
+        
+        figure
+        subplot(2,2,1)
+        plot(log10(SimValues.PopParams.TargetRate(SimValues.EcellIDX)),KEI,'.')
+        
+        subplot(2,1,2)
+        plot(bsxfun(@minus,trainmat.data(:,SimValues.EcellIDX)*1000,SimValues.PopParams.TargetRate(SimValues.EcellIDX)')')
+
     end
 end
 
