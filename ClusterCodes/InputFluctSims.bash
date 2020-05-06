@@ -1,8 +1,8 @@
 #!/bin/bash
-#SBATCH -p fn_short
+#SBATCH -p fn_medium
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=26
-#SBATCH --time=12:00:00
+#SBATCH --time=24:00:00
 #SBATCH --mem-per-cpu=12G
 
 savepath=/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/Modeling/Simulation_Data/iSTDPInputFluctandGSparms
