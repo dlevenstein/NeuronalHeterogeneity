@@ -71,7 +71,7 @@ end
 ISIs = diff(spikes);
 spiketimes = spikes(2:end-1);
 ISInp1 = ISIs(2:end);
-ISIs = ISIs(1:end-2);
+ISIs = ISIs(1:end-1);
 
 ISIs_rel = [];
 ISInp1_rel = [];
