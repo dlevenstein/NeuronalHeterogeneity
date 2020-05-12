@@ -30,6 +30,9 @@ addParameter(p,'binsize',0.001);
 addParameter(p,'duration',0.4);
 addParameter(p,'sortcells',[]);
 addParameter(p,'classnames',[]);
+addParameter(p,'figfolder',false)
+addParameter(p,'figname',[])
+
 
 parse(p,varargin{:})
 ints = p.Results.ints;
@@ -39,6 +42,8 @@ binsize = p.Results.binsize;
 duration = p.Results.duration;
 sortcells = p.Results.sortcells;
 classnames = p.Results.classnames;
+figfolder = p.Results.figfolder;
+figname = p.Results.figname;
 
 %%
 spikes.instate = cellfun(@(X) InIntervals(X,ints),spikes.times,'UniformOutput',false);
@@ -91,6 +96,8 @@ for tt = 1:numclasses
     popCCG.pop.(classnames{tt}) = popccg(:,:,tt)./sum(inclasscells{tt});
 end
 %%
+if SHOWFIG || figfolder
+
 if isempty(sortcells)
    sortcells = [1:length(spikes.times)]; 
 end
@@ -116,6 +123,15 @@ for tt = 1:numclasses
         title(classnames{tt})
         xlabel('t lag')
 end
+
+if figfolder
+    if ~isempty(figname)
+        baseName = figname;
+    end
+    NiceSave(['PopCCG'],figfolder,baseName);
+end
+end
+
 
 end
 

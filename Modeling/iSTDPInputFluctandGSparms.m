@@ -96,7 +96,7 @@ save_dt = 1;
 numsignals = 1;
 
 sigmas = [logspace(-1,0.5,5)].*v_th;
-thetas = 1./logspace(1,3,5);
+thetas = 1./logspace(1,3.5,6);
 [Si,Th] = meshgrid(sigmas,thetas);
 numsims = length(sigmas).*length(thetas);
 %%
@@ -121,52 +121,84 @@ savefilename = fullfile(savepath,'simresults.mat');
 save(savefilename,'-v7.3')
 disp('mat file saved')
 
+%%
+figfolder = fullfile(savepath,'AnalysisFigs');
+%%
+for ss = 1:numsims
+PlotSimRaster(SimValues_fluct{ss},TimeParams.SimTime-[2000 0]);
+subplot(4,1,4)
+hold off
+    plot(SimValues_fluct{ss}.t,ex_rate_fun{ss}(SimValues_fluct{ss}.t),'linewidth',2);%,'color',sigmacolors(ss,:))
+    xlim(TimeParams.SimTime-[2000 0])
+    
+    NiceSave('SimFig',figfolder,['S',num2str(round(Si(ss),1)),'T',num2str(round(1./Th(ss),1))])
+    close all
+    
+
+end
 
 %%
-% sigmacolors = crameri('imola',length(sigmas)+1);
-% sigmacolors(end,:) = [];
-% %%
-% 
-% for ss = 1:length(sigmas)
-% PlotSimRaster(SimValues_fluct{ss},TimeParams.SimTime-[2000 0])
-% subplot(4,1,4)
-% hold off
-%     plot(SimValues_fluct{ss}.t,ex_rate_fun{ss}(SimValues_fluct{ss}.t),'linewidth',2,'color',sigmacolors(ss,:))
-%     xlim(TimeParams.SimTime-[2000 0])
-% end
-% 
-%     %%
-%     for ss = 1:length(sigmas) 
-% %clear spikes
-% spikes(ss).times = cellfun(@(X) X./1000,SimValues_fluct{ss}.spikesbycell,'UniformOutput',false);
-% spikes(ss).UID = 1:length(SimValues_fluct{ss}.spikesbycell);
-% CellClass = cell(1,length(spikes(ss).times));
-% CellClass(SimValues_fluct{ss}.EcellIDX) = {'E'};
-% CellClass(SimValues_fluct{ss}.IcellIDX) = {'I'};
-% %timewindows.initialization = [0 20];
-% %timewindows.equib = [0 TimeParams.SimTime];
-% ISIstats(ss) = bz_ISIStats(spikes(ss),'showfig',true,'cellclass',CellClass);
-%     end
-% 
-%     %% CCG
-% for ss = 1:length(sigmas)
-%     [popCCG(ss)] = PopCCG(spikes(ss),'showfig',true,'cellclass',CellClass);
-% end
-% %%
-% AScost = 0.0001; %0.13 for data
-% for ss = 1:length(sigmas)
-%     logISIhist = ISIstats(ss).ISIhist.ALL.log;
-%     usecells = randsample(SimValues_fluct{ss}.EcellIDX([100:end]),250);
-%     logISIhist = logISIhist(usecells,:)';
-%     logtimebins = ISIstats(ss).ISIhist.logbins;
-%     logISIhist = logISIhist./mode(diff(logtimebins));
-% 
-% GammaFit(ss) = bz_FitISISharedGammaModes(logISIhist,logtimebins,...
-%     'numAS',1,...
-%     'figfolder',savepath,'basePath',savepath,'figname',['sigma',num2str(sigmas(ss))],...
-%     'AScost_lambda',AScost,'AScost_p',1/2,'ASguess',true,'MScost',3);
-% 
-% end
+for ss = 1:numsims
+    bz_Counter(ss,numsims,'Simulation')
+    %clear spikes
+    spikes(ss).times = cellfun(@(X) X./1000,SimValues_fluct{ss}.spikesbycell,'UniformOutput',false);
+    spikes(ss).UID = 1:length(SimValues_fluct{ss}.spikesbycell);
+    CellClass = cell(1,length(spikes(ss).times));
+    CellClass(SimValues_fluct{ss}.EcellIDX) = {'E'};
+    CellClass(SimValues_fluct{ss}.IcellIDX) = {'I'};
+    %timewindows.initialization = [0 20];
+    %timewindows.equib = [0 TimeParams.SimTime];
+    ISIstats(ss) = bz_ISIStats(spikes(ss),'showfig',true,...
+        'figfolder',figfolder,'figname',['S',num2str(round(Si(ss),1)),'T',num2str(round(1./Th(ss),1))],...
+        'cellclass',CellClass);
+end
+
+%%
+for ss = 1:numsims
+    bz_Counter(ss,numsims,'Simulation')
+    [popCCG(ss)] = PopCCG(spikes(ss),'showfig',true,'cellclass',CellClass,...
+        'figfolder',figfolder,'figname',['S',num2str(round(Si(ss),1)),'T',num2str(round(1./Th(ss),1))]);
+end
+
+%%
+
+AScost = 0.0001; %0.13 for data
+for ss = 1:numsims
+    bz_Counter(ss,numsims,'Simulation')
+    logISIhist = ISIstats(ss).ISIhist.ALL.log;
+    usecells = randsample(SimValues_fluct{ss}.EcellIDX([200:end]),200);
+    logISIhist = logISIhist(usecells,:)';
+    logtimebins = ISIstats(ss).ISIhist.logbins;
+    logISIhist = logISIhist./mode(diff(logtimebins));
+
+GammaFit(ss) = bz_FitISISharedGammaModes(logISIhist,logtimebins,...
+    'numAS',1,...
+    'figfolder',figfolder,'basePath',figfolder,'figname',['S',num2str(round(Si(ss),1)),'T',num2str(round(1./Th(ss),1))],...
+    'AScost_lambda',AScost,'AScost_p',1/2,'ASguess',true,'MScost',3);
+end
+
+
+%%
+
+for ss = 1:numsims
+    gammaCV(ss) = mean(GammaFit(ss).sharedfit.GSCVs);
+end
+gammaCV = reshape(gammaCV,length(sigmas),length(thetas));
+
+%%
+figure
+imagesc(log10(sigmas),log10(1./thetas),gammaCV)
+crameri('berlin','pivot',1)
+LogScale('xy',10)
+colorbar
+axis xy
+xlabel('Sigma (Hz)');ylabel('Timescale (ms)')
+    NiceSave('GS_CV',figfolder,[])
+
+%%
+sigmacolors = crameri('imola',length(sigmas)+1);
+sigmacolors(end,:) = [];
+
 % 
 % 
 % %%
