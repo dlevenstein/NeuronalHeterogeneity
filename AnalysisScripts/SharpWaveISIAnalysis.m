@@ -1,4 +1,4 @@
-function [PeriSWISIDist_next,PeriSWISIDist ] = SlowWaveISIAnalysis(basePath,figfolder)
+function [PeriSWISIDist_next,PeriSWISIDist ] = SharpWaveISIAnalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -9,19 +9,19 @@ function [PeriSWISIDist_next,PeriSWISIDist ] = SlowWaveISIAnalysis(basePath,figf
 %
 %% Load Header
 %Initiate Paths
-% reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 % basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
-% %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
+%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 % %basePath = pwd;
 % %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
-% figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
-%sessionInfo = bz_getSessionInfo(basePath);
+sessionInfo = bz_getSessionInfo(basePath);
 spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
-%SleepState = bz_LoadStates(basePath,'SleepState');
+SleepState = bz_LoadStates(basePath,'SleepState');
 %ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 %states = fieldnames(SleepState.ints);
 %states{4} = 'ALL';
@@ -36,17 +36,25 @@ end
 cellcolor = {'k','r'};
 
 %%
-SlowWaves = bz_LoadEvents(basePath,'SlowWaves');
-eventimes = SlowWaves.timestamps;
+SharpWaves = bz_LoadEvents(basePath,'SWR');
+%FindbestRippleChannel
+%bz_GetBestRippleChan
+
+%%
+
+%ripples = bz_FindRipples(basePath,rpchan)
+
+%%
+eventimes = SharpWaves.peaktimes;
 
 
 %%
-[PeriSWISIDist_next] = bz_PeriEventISIDist(spikes.times,eventimes,...
-    'numXbins',80,'minX',40,'whichISIs','next',...
-    'cellclass','load','basePath',basePath);
+% [PeriSWISIDist_next] = bz_PeriEventISIDist(spikes.times,eventimes,...
+%     'numXbins',80,'minX',40,'whichISIs','next',...
+%     'cellclass','load','basePath',basePath);
 
 [PeriSWISIDist] = bz_PeriEventISIDist(spikes.times,eventimes,...
-    'numXbins',80,'minX',40,'whichISIs','both',...
+    'numXbins',160,'minX',40,'whichISIs','both',...
     'cellclass','load','basePath',basePath);
 %%
 figure
