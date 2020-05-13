@@ -8,4 +8,4 @@ echo $1
 module load matlab/R2018a
 
 
-matlab -nodisplay -nodesktop -singleCompThread -r "cd('/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/ClusterCodes');addPaths;bz_RunAnalysis('ThetaISIAalysis','$1','basePath',true);exit;"
+matlab -nodisplay -nodesktop -singleCompThread -r "cd('/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/ClusterCodes');addPaths;bz_RunAnalysis('ThetaISIAnalysis','$1','basePath',true);exit;"

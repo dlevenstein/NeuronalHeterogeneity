@@ -1,4 +1,4 @@
-function [TH_ISIstats,ISIbythetaphase,ISIbytheta] = ThetaISIAalysis(basePath,figfolder)
+function [TH_ISIstats,ISIbythetaphase,ISIbytheta] = ThetaISIAnalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -244,3 +244,5 @@ subplot(6,3,10)
     xlim(ISIbytheta.Xbins(1,[1 end],1))
 
 NiceSave('TH_ISIstats',figfolder,baseName)
+
+end
