@@ -220,7 +220,7 @@ subplot(4,3,tt*3-2)
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
     axis xy
-    %LogScale('y',10)
+    LogScale('y',10,'exp',true)
     %ylabel({(celltypes{tt}),'ISI (s)'});xlabel('Theta Ratio')
     %title((celltypes{tt}))
    % colorbar
@@ -237,7 +237,7 @@ end
     
 subplot(6,3,10)
     hold on
-    for ss = [1 ]
+    for ss = [1]
     plot(BShist.bins,BShist.(states{ss}).thratio,'color',statecolors{ss})
     end
     xlabel('Theta Ratio')
