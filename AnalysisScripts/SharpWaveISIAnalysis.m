@@ -85,7 +85,7 @@ for tt = 1:length(celltypes)
     for ss = 1:length(swrlabels)
         subplot(4,4,10+tt+(ss-1)*4)
             imagesc(SW_ISIstats.ISIhist.logbins,SW_ISIstats.ISIhist.logbins,...
-            SW_ISIstats.meandists.SWR.(celltypes{tt}).Return)
+            SW_ISIstats.meandists.(swrlabels{ss}).(celltypes{tt}).Return)
             LogScale('xy',10,'exp',true)
             axis xy
     end
