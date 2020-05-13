@@ -164,7 +164,8 @@ subplot(4,3,tt*3-2)
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
     %axis xy
     %xlim([-pi 3*pi])
-    %LogScale('y',10)
+    LogScale('y',10,'exp',true)
+    ylabel('ISI (s)');xlabel('Theta Phase')
     %ylabel({(celltypes{tt}),'ISI (s)'});xlabel('Theta Ratio')
     %title((celltypes{tt}))
    % colorbar
