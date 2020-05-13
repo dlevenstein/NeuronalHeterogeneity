@@ -111,7 +111,9 @@ TH_ISIstats = rmfield(TH_ISIstats,'allspikes');
 thetalfp = bz_Filter(lfp,'passband',[6 10]);
 thetalfp.amp = NormToInt((thetalfp.amp),'mean',SleepState.ints.WAKEstate);
 
-
+ISIStats.allspikes.thetapower =cellfun(@(X) ...
+    interp1(thetalfp.timestamps,thetalfp.phase,X,'nearest'),...
+    ISIStats.allspikes.times,'UniformOutput',false);
 
 %% COnditional Hists
 %[-0.6 1.5] (median normalize)
