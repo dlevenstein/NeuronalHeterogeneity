@@ -1,4 +1,4 @@
-function [] = SpikeStatsbyBrainState(basePath,figfolder)
+function [TH_ISIstats,ISIbythetaphase,ISIbytheta] = ThetaISIAalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -9,12 +9,12 @@ function [] = SpikeStatsbyBrainState(basePath,figfolder)
 %
 %% Load Header
 %Initiate Paths
-reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 % basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
-basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
+%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 % %basePath = pwd;
 % %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -85,32 +85,6 @@ for ss = 1:length(states)
 
 end
 
-
-%% COnditional Hists
-%[-0.6 1.5] (median normalize)
-
-%[-1.5 1.75]
-
-
-[ ISIbytheta ] = cellfun(@(X,Y,Z,W) ConditionalHist( [Z(W);Z(W)],log10([X(W);Y(W)]),...
-    'Xbounds',[0 1],'numXbins',30,'Ybounds',[-3 2],'numYbins',125,'minX',100),...
-    ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
-    ISIStats.allspikes.thetarat,ISIStats.allspikes.instate.WAKEstate,...
-    'UniformOutput',false);
-ISIbytheta = cat(1,ISIbytheta{:});
-ISIbytheta = CollapseStruct( ISIbytheta,3);
-
-
-
-for tt = 1:length(celltypes)
-    ISIbytheta.pop.(celltypes{tt}) = nanmean(ISIbytheta.pYX(:,:,CellClass.(celltypes{tt})),3);
-
-    ISIbytheta.celltypeidx.(celltypes{tt}) = CellClass.(celltypes{tt});
-end
-    if length(celltypes)==1
-        ISIbytheta.celltypeidx.pI = false(size(CellClass.pE));
-    end
-    
 %%
 ThetaIDX.threshs.hitheta = 0.65;
 ThetaIDX.threshs.lotheta = 0.35;
@@ -127,52 +101,120 @@ ThetaINT = bz_IDXtoINT(ThetaIDX);
 TH_ISIstats = bz_ISIStats(spikes,'ints',ThetaINT,'showfig',true,'cellclass',CellClass.label);
 TH_ISIstats = rmfield(TH_ISIstats,'allspikes');
 
+%% Get the Theta LFP
+
+ lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID;
+ downsamplefactor = 5;
+ lfp = bz_GetLFP(lfpchan,...
+     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 %%
+thetalfp = bz_Filter(lfp,'passband',[6 10]);
+thetalfp.amp = NormToInt((thetalfp.amp),'mean',SleepState.ints.WAKEstate);
+
+
+
+%% COnditional Hists
+%[-0.6 1.5] (median normalize)
+
+%[-1.5 1.75]
+
+[ ISIbythetaphase ] = cellfun(@(X,Y,Z,W,T) ConditionalHist( [Z(W&T>ThetaIDX.threshs.hitheta);Z(W&T>ThetaIDX.threshs.hitheta)],...
+    log10([X(W&T>ThetaIDX.threshs.hitheta);Y(W&T>ThetaIDX.threshs.hitheta)]),...
+    'Xbounds',[-pi pi],'numXbins',50,'Ybounds',[-3 2],'numYbins',125,'minX',100),...
+    ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
+    ISIStats.allspikes.thetaphase,ISIStats.allspikes.instate.WAKEstate,...
+    ISIStats.allspikes.thetarat,...
+    'UniformOutput',false);
+ISIbythetaphase = cat(1,ISIbythetaphase{:});
+ISIbythetaphase = CollapseStruct( ISIbythetaphase,3);
+
+
+[ ISIbytheta ] = cellfun(@(X,Y,Z,W) ConditionalHist( [Z(W);Z(W)],log10([X(W);Y(W)]),...
+    'Xbounds',[0 1],'numXbins',30,'Ybounds',[-3 2],'numYbins',125,'minX',100),...
+    ISIStats.allspikes.ISIs,ISIStats.allspikes.ISInp1,...
+    ISIStats.allspikes.thetarat,ISIStats.allspikes.instate.WAKEstate,...
+    'UniformOutput',false);
+ISIbytheta = cat(1,ISIbytheta{:});
+ISIbytheta = CollapseStruct( ISIbytheta,3);
+
+
+
+for tt = 1:length(celltypes)
+    ISIbytheta.pop.(celltypes{tt}) = nanmean(ISIbytheta.pYX(:,:,CellClass.(celltypes{tt})),3);
+    ISIbythetaphase.pop.(celltypes{tt}) = nanmean(ISIbythetaphase.pYX(:,:,CellClass.(celltypes{tt})),3);
+
+    ISIbythetaphase.celltypeidx.(celltypes{tt}) = CellClass.(celltypes{tt});
+    ISIbytheta.celltypeidx.(celltypes{tt}) = CellClass.(celltypes{tt});
+end
+    if length(celltypes)==1
+        ISIbytheta.celltypeidx.pI = false(size(CellClass.pE));
+    end
+    
+
 %%
-swrlabels = {'SWR','iSWR'};
+phasex = linspace(-pi,3*pi,100);
+figure
+for tt = 1:length(celltypes)
+subplot(4,3,tt*3-2)
+    imagesc(ISIbythetaphase.Xbins(1,:,1),ISIbythetaphase.Ybins(1,:,1), ISIbythetaphase.pop.(celltypes{tt})')
+    hold on
+    imagesc(ISIbythetaphase.Xbins(1,:,1)+2*pi,ISIbythetaphase.Ybins(1,:,1), ISIbythetaphase.pop.(celltypes{tt})')
+    %axis xy
+    plot(phasex,-cos(phasex),'k')
+    %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
+    %axis xy
+    %xlim([-pi 3*pi])
+    %LogScale('y',10)
+    %ylabel({(celltypes{tt}),'ISI (s)'});xlabel('Theta Ratio')
+    %title((celltypes{tt}))
+   % colorbar
+%     if tt ==1 
+%         caxis([0 0.02])
+%     elseif tt==2
+%          caxis([0 0.03])
+%     end
+    xlim([-pi 3*pi])
+end 
+NiceSave('TH_Phase',figfolder,baseName)
+
+%%
+THlabels = {'hiThetastate','loThetastate'};
 %%
 figure
-subplot(2,2,1)
+subplot(3,3,7)
     hold on
     for tt = 1:length(celltypes)
-        plot(log10(TH_ISIstats.summstats.hiTheta.meanrate(CellClass.(celltypes{tt}))),...
-            log10(TH_ISIstats.summstats.loTheta.meanrate(CellClass.(celltypes{tt}))),...
+        plot(log10(TH_ISIstats.summstats.hiThetastate.meanrate(CellClass.(celltypes{tt}))),...
+            log10(TH_ISIstats.summstats.loThetastate.meanrate(CellClass.(celltypes{tt}))),...
             '.','color',cellcolor{tt})
     end
     hold on
     UnityLine
-    xlabel('SWR Rate');ylabel('iSWR Rate')
+    xlabel('hiTheta Rate');ylabel('loTheta Rate')
     
 
 for tt = 1:length(celltypes) 
     
     subplot(4,4,tt+6)
-        plot(TH_ISIstats.ISIhist.logbins,TH_ISIstats.meandists.hiTheta.(celltypes{tt}).ISIdist,'k')
+        plot(TH_ISIstats.ISIhist.logbins,TH_ISIstats.meandists.hiThetastate.(celltypes{tt}).ISIdist,'k')
         hold on
-        plot(TH_ISIstats.ISIhist.logbins,TH_ISIstats.meandists.loTheta.(celltypes{tt}).ISIdist,'r')
+        plot(TH_ISIstats.ISIhist.logbins,TH_ISIstats.meandists.loThetastate.(celltypes{tt}).ISIdist,'r')
         LogScale('x',10,'exp',true)
         title(celltypes{tt})
         box off 
         
-    for ss = 1:length(swrlabels)
+    for ss = 1:length(THlabels)
         subplot(4,4,10+tt+(ss-1)*4)
             imagesc(TH_ISIstats.ISIhist.logbins,TH_ISIstats.ISIhist.logbins,...
-            TH_ISIstats.meandists.SWR.(celltypes{tt}).Return)
+            TH_ISIstats.meandists.(THlabels{ss}).(celltypes{tt}).Return)
             LogScale('xy',10,'exp',true)
             axis xy
     end
 end
 
-NiceSave('TH_ISIstats',figfolder,baseName)
-
-%%
-figure
-   
-
-
 
 for tt = 1:length(celltypes)
-subplot(4,3,tt*3-1)
+subplot(4,3,tt*3-2)
     imagesc(ISIbytheta.Xbins(1,:,1),ISIbytheta.Ybins(1,:,1), ISIbytheta.pop.(celltypes{tt})')
     %hold on
     %plot(CONDXY.Xbins(1,:,1),meanthetabyPOP.(celltypes{tt}),'w')
@@ -192,7 +234,7 @@ end
 
     
     
-subplot(6,3,11)
+subplot(6,3,10)
     hold on
     for ss = [1 ]
     plot(BShist.bins,BShist.(states{ss}).thratio,'color',statecolors{ss})
@@ -200,14 +242,4 @@ subplot(6,3,11)
     xlabel('Theta Ratio')
     xlim(ISIbytheta.Xbins(1,[1 end],1))
 
-
-    
-    
-
-    
-
-    
-NiceSave('ISIbyTheta',figfolder,baseName)
-
-
-
+NiceSave('TH_ISIstats',figfolder,baseName)
