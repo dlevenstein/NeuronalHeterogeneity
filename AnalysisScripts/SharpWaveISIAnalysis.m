@@ -1,4 +1,4 @@
-function [PeriSWISIDist_next,PeriSWISIDist ] = SharpWaveISIAnalysis(basePath,figfolder)
+function [PeriSWISIDist_next,PeriSWISIDist,SW_ISIstats ] = SharpWaveISIAnalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -9,12 +9,12 @@ function [PeriSWISIDist_next,PeriSWISIDist ] = SharpWaveISIAnalysis(basePath,fig
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 % basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
-%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 % %basePath = pwd;
 % %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -47,15 +47,62 @@ SharpWaves = bz_LoadEvents(basePath,'SWR');
 %%
 eventimes = SharpWaves.peaktimes;
 
+%% ISI dist/return map: in and out of SWR
+SWRints.SWR = SharpWaves.times;
+SWRints.iSWR = [SharpWaves.times(1:end-1,2) SharpWaves.times(2:end,1)];
+SWRints.iSWR = RestrictInts(SWRints.iSWR,SleepState.ints.NREMstate);
+SWRints.SWR = RestrictInts(SWRints.SWR,SleepState.ints.NREMstate);
+SW_ISIstats = bz_ISIStats(spikes,'ints',SWRints,'showfig',true,'cellclass',CellClass.label);
+SW_ISIstats = rmfield(SW_ISIstats,'allspikes');
+
+
+%%
+swrlabels = {'SWR','iSWR'};
+%%
+figure
+subplot(2,2,1)
+    hold on
+    for tt = 1:length(celltypes)
+        plot(log10(SW_ISIstats.summstats.SWR.meanrate(CellClass.(celltypes{tt}))),...
+            log10(SW_ISIstats.summstats.iSWR.meanrate(CellClass.(celltypes{tt}))),...
+            '.','color',cellcolor{tt})
+    end
+    hold on
+    UnityLine
+    xlabel('SWR Rate');ylabel('iSWR Rate')
+    
+
+for tt = 1:length(celltypes) 
+    
+    subplot(4,4,tt+6)
+        plot(SW_ISIstats.ISIhist.logbins,SW_ISIstats.meandists.SWR.(celltypes{tt}).ISIdist,'k')
+        hold on
+        plot(SW_ISIstats.ISIhist.logbins,SW_ISIstats.meandists.iSWR.(celltypes{tt}).ISIdist,'r')
+        LogScale('x',10,'exp',true)
+        title(celltypes{tt})
+        box off 
+        
+    for ss = 1:length(swrlabels)
+        subplot(4,4,10+tt+(ss-1)*4)
+            imagesc(SW_ISIstats.ISIhist.logbins,SW_ISIstats.ISIhist.logbins,...
+            SW_ISIstats.meandists.SWR.(celltypes{tt}).Return)
+            LogScale('xy',10,'exp',true)
+            axis xy
+    end
+end
+
+NiceSave('SW_ISIStats',figfolder,baseName)
+
 
 %%
 [PeriSWISIDist_next] = bz_PeriEventISIDist(spikes.times,eventimes,...
-    'numXbins',160,'minX',40,'whichISIs','next',...
+    'numXbins',160,'minX',40,'whichISIs','next','winsize',[-0.5 0.5],...
     'cellclass','load','basePath',basePath);
 
 [PeriSWISIDist] = bz_PeriEventISIDist(spikes.times,eventimes,...
-    'numXbins',160,'minX',40,'whichISIs','both',...
+    'numXbins',160,'minX',40,'whichISIs','both','winsize',[-0.5 0.5],...
     'cellclass','load','basePath',basePath);
+
 %%
 figure
 for tt = 1:length(celltypes)
@@ -84,6 +131,6 @@ subplot(2,2,tt+2)
     xlabel('t (s) - relative to SW');ylabel('ISI (s)')
     title(celltypes{tt})
 end
-NiceSave('PeriSWISI_next',figfolder,baseName)
+NiceSave('PeriSWISI',figfolder,baseName)
 
 

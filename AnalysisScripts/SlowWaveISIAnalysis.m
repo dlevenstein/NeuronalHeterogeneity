@@ -76,6 +76,6 @@ subplot(2,2,tt+2)
     xlabel('t (s) - relative to SW');ylabel('ISI (s)')
     title(celltypes{tt})
 end
-NiceSave('PeriSWISI_next',figfolder,baseName)
+NiceSave('PeriSWISI',figfolder,baseName)
 
 
