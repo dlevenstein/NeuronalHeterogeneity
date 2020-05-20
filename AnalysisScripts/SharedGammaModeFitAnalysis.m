@@ -10,11 +10,11 @@ function [GammaFit] = SharedGammaModeFitAnalysis(basePath,figfolder)
 %% Load Header
 %Initiate Paths
 %reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-%reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %basePath = pwd;
-%basePath = '/Users/dlevenstein/Dropbox/research/Datasets/Cicero_09102014';
+basePath = '/Users/dl2820/Dropbox/research/Datasets/Cicero_09102014';
 %basePath = '/Users/dlevenstein/Dropbox/research/Datasets/20140526_277um';
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 SAVECELLINFO = true;
 
@@ -59,7 +59,7 @@ for ss = 1:3
     logISIhist = logISIhist./mode(diff(logtimebins));
     GammaFit.(statenames{ss}) = bz_FitISISharedGammaModes(logISIhist,logtimebins,...
         'numAS',numAS.(statenames{ss}),...
-        'figfolder',figfolder,'basePath',basePath,...
+        'figfolder','detectionfigures','basePath',basePath,...
         'AScost_lambda',0.13,'AScost_p',1/2,'ASguess',true,'MScost',3,'figname',(statenames{ss}));
     
     
