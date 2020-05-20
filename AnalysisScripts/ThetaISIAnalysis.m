@@ -128,7 +128,7 @@ ISIStats.allspikes.thetaphase =cellfun(@(X) ...
     ISIStats.allspikes.thetarat,...
     'UniformOutput',false);
 ISIbythetaphase = cat(1,ISIbythetaphase{:});
-ISIbythetaphase = CollapseStruct( ISIbythetaphase,3);
+ISIbythetaphase = bz_CollapseStruct( ISIbythetaphase,3);
 
 
 [ ISIbytheta ] = cellfun(@(X,Y,Z,W) ConditionalHist( [Z(W);Z(W)],log10([X(W);Y(W)]),...
@@ -137,7 +137,7 @@ ISIbythetaphase = CollapseStruct( ISIbythetaphase,3);
     ISIStats.allspikes.thetarat,ISIStats.allspikes.instate.WAKEstate,...
     'UniformOutput',false);
 ISIbytheta = cat(1,ISIbytheta{:});
-ISIbytheta = CollapseStruct( ISIbytheta,3);
+ISIbytheta = bz_CollapseStruct( ISIbytheta,3);
 
 
 
