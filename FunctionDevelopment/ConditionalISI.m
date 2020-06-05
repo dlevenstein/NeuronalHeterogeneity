@@ -1,8 +1,9 @@
-function [ConditionalISI] = bz_ConditionalISI(spikes,conditionalvariable,varargin)
-%UNTITLED2 Summary of this function goes here
-%   Detailed explanation goes here
-%
-%
+function [ConditionalISI] = ConditionalISI(spikes,conditionalvariable,varargin)
+%[ConditionalISI] = ConditionalISI(spikes,conditionalvariable,<options>)
+%    
+%   INPUTS
+%       spikes  cell array (from spikes.times)
+%       conditionalvariable struct with .data and .timestamps
 %
 %Future: multiple conditional variables... (fit together)
 %%
@@ -171,25 +172,53 @@ if DO_GammaFit
     ConditionalISI.GammaModes = convertGSASparms(fitparms,numXbins,numAS);
 
     %% Mode Correlations
-    [ConditionalISI.GammaModes.GSCorr,ConditionalISI.GammaModes.GScorr_p] = corr(ConditionalISI.GammaModes.GSweights',ConditionalISI.Dist.Xbins','type','Pearson');
-    [ConditionalISI.GammaModes.ASCorr,ConditionalISI.GammaModes.AScorr_p] = corr(ConditionalISI.GammaModes.ASweights,ConditionalISI.Dist.Xbins','type','Pearson');
+    [ConditionalISI.GammaModes.GSCorr,ConditionalISI.GammaModes.GScorr_p] = corr(ConditionalISI.Dist.Xbins',ConditionalISI.GammaModes.GSweights','type','Pearson');
+    [ConditionalISI.GammaModes.ASCorr,ConditionalISI.GammaModes.AScorr_p] = corr(ConditionalISI.Dist.Xbins',ConditionalISI.GammaModes.ASweights,'type','Pearson');
     ConditionalISI.GammaModes.GSCorr = ConditionalISI.GammaModes.GSCorr';
     ConditionalISI.GammaModes.GScorr_p = ConditionalISI.GammaModes.GScorr_p';
     ConditionalISI.GammaModes.ASCorr = ConditionalISI.GammaModes.ASCorr';
     ConditionalISI.GammaModes.AScorr_p = ConditionalISI.GammaModes.AScorr_p';
 
+    %%
+    ConditionalISI.GammaModes.GS_R = [ones(size(ConditionalISI.Dist.Xbins')) ConditionalISI.Dist.Xbins']\ConditionalISI.GammaModes.GSweights';
+    ConditionalISI.GammaModes.GS_R = ConditionalISI.GammaModes.GS_R(2);
+    ConditionalISI.GammaModes.AS_R = [ones(size(ConditionalISI.Dist.Xbins')) ConditionalISI.Dist.Xbins']\ConditionalISI.GammaModes.ASweights;
+    ConditionalISI.GammaModes.AS_R = ConditionalISI.GammaModes.AS_R(2,:)';
 end
 %%
+
 if SHOWFIG
-testmodel = GSASmodel(ConditionalISI.GammaModes,taubins,numXbins,numAS);
+    
+    
 figure
-subplot(2,2,1)
-imagesc(ConditionalISI.Dist.Xbins,ConditionalISI.Dist.Ybins,testmodel)
-hold on
-plot(ConditionalISI.Dist.Xbins,-ConditionalISI.GammaModes.GSlogrates,'ro')
-plot(ConditionalISI.Dist.Xbins([1 end]),-GFParms.GSlogrates.*[1 1],'r--')
-%colorbar
-caxis([0 0.4])
+if DO_GammaFit
+        testmodel = GSASmodel(ConditionalISI.GammaModes,taubins,numXbins,numAS);
+        subplot(2,2,1)
+        imagesc(ConditionalISI.Dist.Xbins,ConditionalISI.Dist.Ybins,testmodel)
+        hold on
+        plot(ConditionalISI.Dist.Xbins,-ConditionalISI.GammaModes.GSlogrates,'ro')
+        plot(ConditionalISI.Dist.Xbins([1 end]),-GFParms.GSlogrates.*[1 1],'r--')
+        %colorbar
+        caxis([0 0.4])
+        
+        subplot(2,2,3)
+        %plot(sharedfit.ASweights
+        plot(ConditionalISI.GammaModes.ASlogrates(ConditionalISI.GammaModes.AScorr_p<0.05),ConditionalISI.GammaModes.AS_R(ConditionalISI.GammaModes.AScorr_p<0.05),'o')
+        hold on
+        plot(ConditionalISI.GammaModes.ASlogrates(ConditionalISI.GammaModes.AScorr_p>0.05),ConditionalISI.GammaModes.AS_R(ConditionalISI.GammaModes.AScorr_p>0.05),'.')
+        %hold on
+        plot(GFParms.GSlogrates,ConditionalISI.GammaModes.GS_R,'o')
+        plot(xlim(gca),[0 0],'k--')
+        LogScale('x',10)
+        xlabel('Rate (Hz)')
+        ylabel('Weight Correlation')
+        box off
+
+        subplot(2,2,4)
+        plot(ConditionalISI.Dist.Xbins,(ConditionalISI.GammaModes.GSweights),'o','linewidth',2)
+        xlabel('Power');ylabel('P_G_S')
+        ylim([0 1])
+end
 
 
 subplot(2,2,2)
@@ -206,18 +235,8 @@ LogScale('y',10,'nohalf',true)
 ylabel('Rate (Hz)')
 %colorbar
 
-subplot(2,2,3)
-%plot(sharedfit.ASweights
-plot(ConditionalISI.GammaModes.ASlogrates(ConditionalISI.GammaModes.AScorr_p<0.05),ConditionalISI.GammaModes.ASCorr(ConditionalISI.GammaModes.AScorr_p<0.05),'o')
-hold on
-plot(ConditionalISI.GammaModes.ASlogrates(ConditionalISI.GammaModes.AScorr_p>0.05),ConditionalISI.GammaModes.ASCorr(ConditionalISI.GammaModes.AScorr_p>0.05),'.')
-%hold on
-plot(GFParms.GSlogrates,ConditionalISI.GammaModes.GSCorr,'o')
-plot(xlim(gca),[0 0],'k--')
-LogScale('x',10)
-xlabel('Rate (Hz)')
-ylabel('Weight Correlation')
-box off
+
+
 
 if figfolder
     NiceSave(['ConditionalISI',figname],figfolder,baseName);
