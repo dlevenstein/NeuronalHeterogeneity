@@ -41,9 +41,9 @@ cellcolor = {'k','r'};
     lfpchannel = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID; 
 
 %% Load the LFP
-% downsamplefactor = 2;
-% lfp = bz_GetLFP(lfpchannel,...
-%     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
+downsamplefactor = 2;
+lfp = bz_GetLFP(lfpchannel,...
+    'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 
 %%
 
@@ -70,7 +70,7 @@ dt = 0.01;
 winsize = 10;
 frange = [1 312];
 nfreqs = 150;
-[specslope] = bz_PowerSpectrumSlope([],winsize,dt,'spectype','wavelet',...
+[specslope] = bz_PowerSpectrumSlope(lfp,winsize,dt,'spectype','wavelet',...
     'nfreqs',nfreqs,'showfig',true,'showprogress',true,'frange',frange,...
     'saveMat',basePath,'saveName',['Chan',num2str(lfpchannel)],...
     'saveFolder','WavPSS');
