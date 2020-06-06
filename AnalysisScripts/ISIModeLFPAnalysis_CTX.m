@@ -172,16 +172,16 @@ NiceSave('PopISIMod',figfolder,baseName)
 
 
 %%
-excell = 3;
-excellUID = spikes.UID(excell);
-%Find the UID of the cell in the Gamma fit so match...
-%Put the gamma fit parms to conditional dist in as initial parms
-GFIDX = find(GammaFit.WAKEstate.cellstats.UID==excellUID);
-cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
-[ThetaConditionalISI(excell)] = ConditionalISI(spikes.times{excell},ThetaPower,...
-    'ints',SleepState.ints.WAKEstate,'GammaFitParms',cellGamma,...
-    'basePath',basePath,'figname',['ThetaUID',num2str(excellUID)],...
-    'figfolder',figfolder,'GammaFit',true);
+% excell = 3;
+% excellUID = spikes.UID(excell);
+% %Find the UID of the cell in the Gamma fit so match...
+% %Put the gamma fit parms to conditional dist in as initial parms
+% GFIDX = find(GammaFit.WAKEstate.cellstats.UID==excellUID);
+% cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
+% [ThetaConditionalISI(excell)] = ConditionalISI(spikes.times{excell},ThetaPower,...
+%     'ints',SleepState.ints.WAKEstate,'GammaFitParms',cellGamma,...
+%     'basePath',basePath,'figname',['ThetaUID',num2str(excellUID)],...
+%     'figfolder',figfolder,'GammaFit',true);
 
 
 %% Ex cell: all frequencies
