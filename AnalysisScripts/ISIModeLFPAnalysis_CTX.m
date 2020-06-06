@@ -1,4 +1,4 @@
-function [PopConditional,AllThetaISIModes,AllFConditionalISIDist] = ISIModeLFPAnalysis_CTX(basePath,figfolder)
+function [PopConditional,AllFConditionalISIDist] = ISIModeLFPAnalysis_CTX(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
