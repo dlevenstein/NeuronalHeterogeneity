@@ -89,9 +89,6 @@ if DO_GammaFit
 
     %Initial Conditions
     %init_struct.GSlogrates = -log10(meanISI)-0.5;
-    GFParms.GSlogrates
-    numXbins
-    ones(1,numXbins)
     init_struct.GSlogrates = GFParms.GSlogrates.*ones(1,numXbins);
     init_struct.GSCVs = GFParms.GSCVs.*ones(1,numXbins);
     init_struct.GSweights = GFParms.GSweights.*ones(1,numXbins);
@@ -165,7 +162,7 @@ if DO_GammaFit
     AScost_lambda = 0;
     AScost_p = 1/2;
     MScost = 3;
-    sub1msbins = ConditionalISI.Dist.Xbins<=-2.7;
+    sub1msbins = ConditionalISI.Dist.Ybins<=-2.7;
 
     costfun = @(GSASparm_vect) sum(sum((logISIhist-GSASmodel(GSASparm_vect,taubins,numXbins,numAS)).^2)) ...
         + AScost_lambda.*sum((abs(Aeq_ASonly*GSASparm_vect)).^(AScost_p))...; %L1/2 norm on AS weights to promote sparseness
@@ -177,16 +174,13 @@ if DO_GammaFit
     %% Mode Correlations
     [ConditionalISI.GammaModes.GSCorr,ConditionalISI.GammaModes.GScorr_p] = corr(ConditionalISI.Dist.Xbins',ConditionalISI.GammaModes.GSweights','type','Pearson');
     [ConditionalISI.GammaModes.ASCorr,ConditionalISI.GammaModes.AScorr_p] = corr(ConditionalISI.Dist.Xbins',ConditionalISI.GammaModes.ASweights,'type','Pearson');
-    ConditionalISI.GammaModes.GSCorr = ConditionalISI.GammaModes.GSCorr';
-    ConditionalISI.GammaModes.GScorr_p = ConditionalISI.GammaModes.GScorr_p';
-    ConditionalISI.GammaModes.ASCorr = ConditionalISI.GammaModes.ASCorr';
-    ConditionalISI.GammaModes.AScorr_p = ConditionalISI.GammaModes.AScorr_p';
+
 
     %%
     ConditionalISI.GammaModes.GS_R = [ones(size(ConditionalISI.Dist.Xbins')) ConditionalISI.Dist.Xbins']\ConditionalISI.GammaModes.GSweights';
     ConditionalISI.GammaModes.GS_R = ConditionalISI.GammaModes.GS_R(2);
     ConditionalISI.GammaModes.AS_R = [ones(size(ConditionalISI.Dist.Xbins')) ConditionalISI.Dist.Xbins']\ConditionalISI.GammaModes.ASweights;
-    ConditionalISI.GammaModes.AS_R = ConditionalISI.GammaModes.AS_R(2,:)';
+    ConditionalISI.GammaModes.AS_R = ConditionalISI.GammaModes.AS_R(2,:);
 end
 %%
 

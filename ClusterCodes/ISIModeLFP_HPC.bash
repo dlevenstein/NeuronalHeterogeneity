@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH -p fn_medium
 #SBATCH --nodes=1
-#SBATCH --tasks-per-node=11
+#SBATCH --tasks-per-node=16
 #SBATCH --time=48:00:00
 #SBATCH --mem-per-cpu=15G
 echo $1

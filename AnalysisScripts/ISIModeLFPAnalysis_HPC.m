@@ -1,4 +1,4 @@
-function [AllFConditionalISIDist] = ISIModeLFPAnalysis_HPC(basePath,figfolder)
+function [ModalLFPModulation] = ISIModeLFPAnalysis_HPC(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -84,68 +84,93 @@ specslope = rmfield(specslope,'phase');
 %%
 %clear fPower
 clear FConditionalISIDist
+
+numAS = GammaFit.WAKEstate.parms.numAS;
+
+
+
+MutInf = nan(length(specslope.freqs),spikes.numcells);
+GSModulation = nan(length(specslope.freqs),spikes.numcells);
+ASModulation = nan(length(specslope.freqs),spikes.numcells,numAS);
+ASlogRates = nan(length(specslope.freqs),spikes.numcells,numAS);
+
 fPower.timestamps = specslope.timestamps;
 %fPower(length(specslope.freqs)+1).data = [];
+%FConditionalISIDist = struct
 for ff = 1:length(specslope.freqs)
     bz_Counter(ff,length(specslope.freqs),'Freq')
     fPower.data = specslope.resid(:,ff);
 
     parfor cc = 1:spikes.numcells
         %cc = excell;
-    excellUID = spikes.UID(cc);
-    %Find the UID of the cell in the Gamma fit so match...
-    %Put the gamma fit parms to conditional dist in as initial parms
-    GFIDX = find(GammaFit.WAKEstate.cellstats.UID==excellUID);
-    cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
-    if ~isempty(cellGamma)
-        [FConditionalISIDist(ff,cc)] = ConditionalISI(spikes.times{cc},fPower,...
-            'ints',SleepState.ints.WAKEstate,'GammaFitParms',cellGamma,...
-            'showfig',false,'GammaFit',true);
+        cellUID(cc) = spikes.UID(cc);
+        %Find the UID of the cell in the Gamma fit so match...
+        %Put the gamma fit parms to conditional dist in as initial parms
+        GFIDX = find(GammaFit.WAKEstate.cellstats.UID==cellUID(cc));
+        cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
+        if length(GFIDX)~=1
+
+        else
+            [FConditionalISIDist] = ConditionalISI(spikes.times{cc},fPower,...
+                'ints',SleepState.ints.WAKEstate,'GammaFitParms',cellGamma,...
+                'showfig',false,'GammaFit',true);
+
+            MutInf(ff,cc) = FConditionalISIDist.MutInf;
+            %GammaModes(ff,cc) = FConditionalISIDist.GammaModes;
+
+            GSModulation(ff,cc) = FConditionalISIDist.GammaModes.GS_R;
+            ASModulation(ff,cc,:) = FConditionalISIDist.GammaModes.AS_R;
+            ASlogRates(ff,cc,:) = FConditionalISIDist.GammaModes.ASlogrates;
+            ASweight(1,cc,:) = cellGamma.ASweights;
+
+        end
     end
-    end
-%catch
-%    continue
-%end
 end
 %%
+ModalLFPModulation.MutInf = MutInf;
+ModalLFPModulation.GSModulation = GSModulation;
+ModalLFPModulation.ASModulation = ASModulation;
+ModalLFPModulation.ASlogRates = ASlogRates;
+ModalLFPModulation.ASweight = ASweight;
+ModalLFPModulation.UID = cellUID;
+ModalLFPModulation.freq = specslope.freqs;
 %save('FConditionalISIDist.mat','FConditionalISIDist')
 %%
-for cc = 1:spikes.numcells
-AllFConditionalISIDist(cc) = bz_CollapseStruct(FConditionalISIDist(:,cc));
-AllFConditionalISIModes(cc) = bz_CollapseStruct(AllFConditionalISIDist(cc).GammaModes,2);
-AllFConditionalISIModes_rates(cc) = bz_CollapseStruct(AllFConditionalISIDist(cc).GammaModes,1);
-AllFConditionalISIModes_ASweights(cc) = bz_CollapseStruct(AllFConditionalISIDist(cc).GammaModes,3);
+% for cc = 1:spikes.numcells
+%     %AllFConditionalISIDist(cc) = bz_CollapseStruct(FConditionalISIDist(:,cc));
+%     AllFConditionalISIModes(cc) = bz_CollapseStruct(GammaModes(:,cc),2);
+%     AllFConditionalISIModes_rates(cc) = bz_CollapseStruct(GammaModes(:,cc),1);
+%     AllFConditionalISIModes_ASweights(cc) = bz_CollapseStruct(GammaModes(:,cc),3);
+% 
+%     %AllFConditionalMINF(cc) = bz_CollapseStruct(AllFConditionalISIDist(cc).MutInf,2);
+%     if length(AllFConditionalISIModes(cc).GS_R)~=150
+%         AllFConditionalISIModes(cc).GS_R = [];
+%         AllFConditionalISIDist(cc).MutInf = [];
+%     end
+% end
+% 
+% AllFConditionalISIModes_mean = bz_CollapseStruct(AllFConditionalISIModes,1,'mean');
+% %%
+% AllFConditionalMInf = mean(MutInf,2);
 
-%AllFConditionalMINF(cc) = bz_CollapseStruct(AllFConditionalISIDist(cc).MutInf,2);
-    if length(AllFConditionalISIModes(cc).GS_R)~=150
-        AllFConditionalISIModes(cc).GS_R = [];
-        AllFConditionalISIDist(cc).MutInf = [];
-    end
-end
-
-AllFConditionalISIModes_mean = bz_CollapseStruct(AllFConditionalISIModes,1,'mean');
 %%
-AllFConditionalMInf = mean(cat(1,AllFConditionalISIDist(:).MutInf));
-
-%%
-%AllFConditionalISIDist = bz_CollapseStruct(AllFConditionalISIDist,2);
 %%
 figure
 subplot(2,2,1)
 hold on
 for cc = 1:spikes.numcells
 for rr = 1:5
-    modeoccupancy = squeeze(mean(AllFConditionalISIModes_ASweights(cc).ASweights(:,rr,:),1));
-    if mean(modeoccupancy<0.02)
+    modeoccupancy = ModalLFPModulation.ASweight(1,cc,rr);
+    if (modeoccupancy<0.02)
         continue
     end
-    showwhichmodes = (AllFConditionalISIModes(cc).AScorr_p(rr,:)<1); %& ...
+    %showwhichmodes = (AllFConditionalISIModes(cc).AScorr_p(rr,:)<1); %& ...
         %showwhichmodes = (modeoccupancy>0.05);
 
         
-    scatter(log10(specslope.freqs(showwhichmodes)),...
-        AllFConditionalISIModes_rates(cc).ASlogrates(showwhichmodes,rr),...
-        modeoccupancy(showwhichmodes)*30,AllFConditionalISIModes(cc).AS_R(rr,showwhichmodes),'.')
+    scatter(log10(ModalLFPModulation.freq),...
+        ModalLFPModulation.ASlogRates(:,cc,rr),...
+        modeoccupancy*30,ModalLFPModulation.ASModulation(:,cc,rr),'.')
 end
 end
 UnityLine
@@ -158,7 +183,7 @@ xlabel('LFP frequency (Hz)');ylabel('ISI Mode Rate (Hz)')
 subplot(4,2,7)
 hold on
 for ss = 1
-plot(log10(specslope.freqs),AllFConditionalMInf,'color',statecolors{ss},'linewidth',1)
+plot(log10(ModalLFPModulation.freq),nanmean(ModalLFPModulation.MutInf,2),'color',statecolors{ss},'linewidth',1)
 end
 LogScale('x',10)
 xlabel('f (Hz)')
@@ -170,13 +195,14 @@ axis tight
 subplot(4,2,8)
 hold on
 
-plot(log10(specslope.freqs),-AllFConditionalISIModes_mean.GS_R,'color',statecolors{ss},'linewidth',2)
+plot(log10(specslope.freqs),-nanmean(ModalLFPModulation.GSModulation,2),'color',statecolors{ss},'linewidth',2)
 plot(xlim(gca),[0 0],'k--')
 LogScale('x',10)
 xlabel('f (Hz)')
 ylabel('AR-Power Corr')
 colorbar
 axis tight
+
 
 NiceSave('ModeLFPFreqMod',figfolder,baseName)
 
