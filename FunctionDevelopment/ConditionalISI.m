@@ -89,6 +89,9 @@ if DO_GammaFit
 
     %Initial Conditions
     %init_struct.GSlogrates = -log10(meanISI)-0.5;
+    GFParms.GSlogrates
+    numXbins
+    ones(1,numXbins)
     init_struct.GSlogrates = GFParms.GSlogrates.*ones(1,numXbins);
     init_struct.GSCVs = GFParms.GSCVs.*ones(1,numXbins);
     init_struct.GSweights = GFParms.GSweights.*ones(1,numXbins);

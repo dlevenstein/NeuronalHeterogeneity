@@ -9,12 +9,12 @@ function [PopConditional,AllFConditionalISIDist] = ISIModeLFPAnalysis_CTX(basePa
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
-% basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 % %basePath = pwd;
 % %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -206,15 +206,15 @@ for ff = 1:length(specslope.freqs)
     if isempty(GFIDX)
         continue
     end
-    cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
-    try
+    cellGamma = GammaFit.WAKEstate.singlecell(GFIDX)
+    %try
 
         [FConditionalISIDist(ff,cc)] = ConditionalISI(spikes.times{cc},fPower,...
             'ints',SleepState.ints.WAKEstate,'GammaFitParms',cellGamma,...
             'showfig',false,'GammaFit',true);
-    catch
-        continue
-    end
+   % catch
+    %    continue
+   % end
     end
 %catch
 %    continue
