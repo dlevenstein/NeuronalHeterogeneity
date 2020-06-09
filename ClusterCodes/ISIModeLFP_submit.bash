@@ -1,4 +1,15 @@
 #!/bin/bash
+
+sbatch ./ISIModeLFP_HPC.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_11012013
+sbatch ./ISIModeLFP_HPC.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_10252013
+sbatch ./ISIModeLFP_HPC.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Buddy/Buddy_06272013
+sbatch ./ISIModeLFP_HPC.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09102014
+sbatch ./ISIModeLFP_HPC.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09012014
+sbatch ./ISIModeLFP_HPC.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09172014
+sbatch ./ISIModeLFP_HPC.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08282013
+sbatch ./ISIModeLFP_HPC.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08022013
+
+
 sbatch ./ISIModeLFP_CTX.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV01/YMV01_170818
 sbatch ./ISIModeLFP_CTX.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV02/YMV02_170815
 #sbatch ./ISIModeLFP_CTX.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV03/YMV03_170818
@@ -45,14 +56,7 @@ sbatch ./ISIModeLFP_CTX.bash  /gpfs/data/buzsakilab/DL/Database/BWData/Splinter/
 sbatch ./ISIModeLFP_CTX.bash  /gpfs/data/buzsakilab/DL/Database/BWData/Splinter/Splinter_020915
 sbatch ./ISIModeLFP_CTX.bash  /gpfs/data/buzsakilab/DL/Database/BWData/Templeton/Templeton_032415
 
-sbatch ./ISIModeLFP_HPC.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_11012013
-sbatch ./ISIModeLFP_HPC.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_10252013
-sbatch ./ISIModeLFP_HPC.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Buddy/Buddy_06272013
-sbatch ./ISIModeLFP_HPC.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09102014
-sbatch ./ISIModeLFP_HPC.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09012014
-sbatch ./ISIModeLFP_HPC.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09172014
-sbatch ./ISIModeLFP_HPC.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08282013
-sbatch ./ISIModeLFP_HPC.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08022013
+
 #
 #
 #

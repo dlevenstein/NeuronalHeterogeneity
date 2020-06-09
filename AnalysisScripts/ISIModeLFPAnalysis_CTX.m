@@ -9,12 +9,12 @@ function [PopConditional,AllFConditionalISIDist] = ISIModeLFPAnalysis_CTX(basePa
 %
 %% Load Header
 %Initiate Paths
-reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
-basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
+%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+%basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 % %basePath = pwd;
 % %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -75,113 +75,16 @@ nfreqs = 150;
     'saveMat',basePath,'saveName',['Chan',num2str(lfpchannel)],...
     'saveFolder','WavPSS');
     
-
-%%
-for tt = 1:length(celltypes)
-    popspikes.(celltypes{tt}) = cat(1,spikes.times{CellClass.(celltypes{tt})});
-end
-
-%% Population ISI modulation
-clear fPower
-
-
-fPower.timestamps = specslope.timestamps;
-%fPower(length(specslope.freqs)+1).data = [];
-clear PopConditionalISIDist PopConditionalISIDist_phase PopConditionalISIDist_power
-for ff = 1:length(specslope.freqs)
-	bz_Counter(ff,length(specslope.freqs),'Freq')
-    fPower.data = specslope.resid(:,ff);
-    for tt = 1:length(celltypes)
-        for ss = 1:3
-        [PopConditionalISIDist.(states{ss}).(celltypes{tt})(ff)] = ConditionalISI(popspikes.(celltypes{tt}),fPower,...
-            'ints',SleepState.ints.(states{ss}),...
-            'showfig',false,'ISIDist',true);
-        end
-    end
-    
-end
-
-
-
-%%
-PopConditional = bz_CollapseStruct(PopConditionalISIDist,3,'justcat',true);
-
-
-%%
+clear lfp
 
 
 
 
-figure
-for tt = 1:length(celltypes)
-subplot(3,3,1+(tt-1)*3)
-hold on
-for ss = 1:2
-plot(log10(specslope.freqs),squeeze(PopConditional.(states{ss}).(celltypes{tt}).MutInf),'color',statecolors{ss},'linewidth',1)
-end
-LogScale('x',10)
-xlabel('f (Hz)')
-ylabel({(celltypes{tt}),'MI[ISI;Power]'})
-title('ISI-Power Modulation')
-
-end
-
-
-
-
-
-tt = 1;
-ss = 1;
-exf = 7;
-exf_IDX = find(abs(specslope.freqs-exf) == min(abs(specslope.freqs-exf)));
-
-phasex = linspace(-pi,3*pi,100);
-
-subplot(3,2,5)
-imagesc(PopConditional.(states{ss}).(celltypes{1}).Dist.Xbins(1,:,1),...
-    PopConditional.(states{ss}).(celltypes{1}).Dist.Ybins(1,:,1),...
-    PopConditional.(states{ss}).(celltypes{1}).Dist.pYX(:,:,exf_IDX)')
-LogScale('y',10,'exp',true)
-xlabel(['Power (',num2str(exf),'Hz)'])
-ylabel('ISI (s)')
-colorbar
-
-exf = 25;
-exf_IDX = find(abs(specslope.freqs-exf) == min(abs(specslope.freqs-exf)));
-subplot(3,2,6)
-imagesc(PopConditional.(states{ss}).(celltypes{1}).Dist.Xbins(1,:,1),...
-    PopConditional.(states{ss}).(celltypes{1}).Dist.Ybins(1,:,1),...
-    PopConditional.(states{ss}).(celltypes{1}).Dist.pYX(:,:,exf_IDX)')
-LogScale('y',10,'exp',true)
-xlabel(['Power (',num2str(exf),'Hz)'])
-ylabel('ISI (s)')
-colorbar
-
-
-
-NiceSave('PopISIMod',figfolder,baseName)
-
-
-
-%% Zoom on Theta (load?)
-    %Load Gamma Modes
+%% %Load Gamma Modes
     GammaFit = bz_LoadCellinfo(basePath,'GammaFit');
     %Normalize the brain state metrics
-    ThetaPower.timestamps = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.t_clus;
-    ThetaPower.data = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.thratio;
-
-
-%%
-% excell = 3;
-% excellUID = spikes.UID(excell);
-% %Find the UID of the cell in the Gamma fit so match...
-% %Put the gamma fit parms to conditional dist in as initial parms
-% GFIDX = find(GammaFit.WAKEstate.cellstats.UID==excellUID);
-% cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
-% [ThetaConditionalISI(excell)] = ConditionalISI(spikes.times{excell},ThetaPower,...
-%     'ints',SleepState.ints.WAKEstate,'GammaFitParms',cellGamma,...
-%     'basePath',basePath,'figname',['ThetaUID',num2str(excellUID)],...
-%     'figfolder',figfolder,'GammaFit',true);
+%     ThetaPower.timestamps = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.t_clus;
+%     ThetaPower.data = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.thratio;
 
 
 %% Ex cell: all frequencies
@@ -203,15 +106,12 @@ for ff = 1:length(specslope.freqs)
     %Find the UID of the cell in the Gamma fit so match...
     %Put the gamma fit parms to conditional dist in as initial parms
     GFIDX = find(GammaFit.WAKEstate.cellstats.UID==excellUID);
-    if isempty(GFIDX)
-        continue
-    end
-    cellGamma = GammaFit.WAKEstate.singlecell(GFIDX)
-    %try
-
+    cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
+    if ~isempty(cellGamma)
         [FConditionalISIDist(ff,cc)] = ConditionalISI(spikes.times{cc},fPower,...
             'ints',SleepState.ints.WAKEstate,'GammaFitParms',cellGamma,...
             'showfig',false,'GammaFit',true);
+    end
    % catch
     %    continue
    % end

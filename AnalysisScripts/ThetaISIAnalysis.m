@@ -247,4 +247,62 @@ subplot(6,3,10)
 
 NiceSave('TH_ISIstats',figfolder,baseName)
 
+%%
+ GammaFit = bz_LoadCellinfo(basePath,'GammaFit');
+    %Normalize the brain state metrics
+    ThetaPower.timestamps = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.t_clus;
+    ThetaPower.data = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.thratio;
+%% Theta ISI modulation - all cells
+
+parfor cc = 1:spikes.numcells
+    cc
+excellUID = spikes.UID(cc);
+%Find the UID of the cell in the Gamma fit so match...
+%Put the gamma fit parms to conditional dist in as initial parms
+GFIDX = find(GammaFit.WAKEstate.cellstats.UID==excellUID);
+if isempty(GFIDX)
+    continue
+end
+cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
+try
+[ThetaConditionalISI(cc)] = ConditionalISI(spikes.times{cc},ThetaPower,...
+    'ints',SleepState.ints.WAKEstate,'GammaFitParms',cellGamma,...
+    'showfig',false,'GammaFit',true);
+catch
+    continue
+end
+end
+
+%%
+AllThetaISIModes = bz_CollapseStruct(ThetaConditionalISI);
+AllThetaISIModes = bz_CollapseStruct(AllThetaISIModes.GammaModes,2);
+%% Figure: Theta ISI modulation all cells
+figure
+subplot(2,2,1)
+    hist(AllThetaISIModes.GSCorr)
+subplot(2,2,2)
+    plot(AllThetaISIModes.ASlogrates(AllThetaISIModes.AScorr_p<0.05),...
+        AllThetaISIModes.AS_R(AllThetaISIModes.AScorr_p<0.05),'k.')
+    hold on
+    plot(AllThetaISIModes.ASlogrates(AllThetaISIModes.AScorr_p>=0.05),...
+        AllThetaISIModes.AS_R(AllThetaISIModes.AScorr_p>=0.05),'.','color',[0.5 0.5 0.5])
+
+    
+    plot(AllThetaISIModes.GSlogrates(AllThetaISIModes.GScorr_p<0.05),...
+        AllThetaISIModes.GS_R(AllThetaISIModes.GScorr_p<0.05),'.')
+    axis tight
+    box off
+        plot(xlim(gca),[0 0],'k--')
+        LogScale('x',10)
+        xlabel('Mode Rate (Hz)')
+        ylabel('Weight-Power Corr')
+    
+    
+subplot(2,2,3)
+    plot(AllThetaISIModes.GS_R,...
+        log10(AllThetaISIModes.GScorr_p),'o')
+    
+    
+ NiceSave('ThetaMod',figfolder,baseName)
+
 end

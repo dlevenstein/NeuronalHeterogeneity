@@ -1,4 +1,4 @@
-function [PopConditional,AllThetaISIModes,AllFConditionalISIDist] = ISIModeLFPAnalysis_HPC(basePath,figfolder)
+function [AllFConditionalISIDist] = ISIModeLFPAnalysis_HPC(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -40,31 +40,14 @@ cellcolor = {'k','r'};
     %%
     lfpchannel = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID; 
 
+    %In the future, here, tagChannel for each recording!
 %% Load the LFP
 % downsamplefactor = 2;
 % lfp = bz_GetLFP(lfpchannel,...
 %     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 
 %%
-
-% ss = 1;
-% state = states{ss};
-% %Take only subset of time (random intervals) so wavelets doesn't break
-% %computer (total 625s)
-% usetime = 7200;%2500
-% winsize = 25;
-% if sum(diff(SleepState.ints.(state),1,2))>usetime
-%     nwin = round(usetime./winsize);
-%     %winsize = 30; %s
-%     try
-%         windows = bz_RandomWindowInIntervals( SleepState.ints.(state),winsize,nwin );
-%     catch
-%         windows = SleepState.ints.(state);
-%     end
-% else
-%     windows = SleepState.ints.(state);
-% end
-        
+  
 %% Calculate Residuals
 dt = 0.01;
 winsize = 10;
@@ -76,113 +59,23 @@ nfreqs = 150;
     'saveFolder','WavPSS');
     
 
-%%
-for tt = 1:length(celltypes)
-    popspikes.(celltypes{tt}) = cat(1,spikes.times{CellClass.(celltypes{tt})});
-end
-
-%% Population ISI modulation
-clear fPower
-
-
-fPower.timestamps = specslope.timestamps;
-%fPower(length(specslope.freqs)+1).data = [];
-clear PopConditionalISIDist PopConditionalISIDist_phase PopConditionalISIDist_power
-for ff = 1:length(specslope.freqs)
-	bz_Counter(ff,length(specslope.freqs),'Freq')
-    fPower.data = specslope.resid(:,ff);
-    for tt = 1:length(celltypes)
-        for ss = 1:3
-        [PopConditionalISIDist.(states{ss}).(celltypes{tt})(ff)] = ConditionalISI(popspikes.(celltypes{tt}),fPower,...
-            'ints',SleepState.ints.(states{ss}),...
-            'showfig',false,'ISIDist',true);
-        end
-    end
-    
-end
-
-
-
-%%
-PopConditional = bz_CollapseStruct(PopConditionalISIDist,3,'justcat',true);
-
-
-%%
-
-
-
-
-figure
-for tt = 1:length(celltypes)
-subplot(3,3,1+(tt-1)*3)
-hold on
-for ss = 1:2
-plot(log10(specslope.freqs),squeeze(PopConditional.(states{ss}).(celltypes{tt}).MutInf),'color',statecolors{ss},'linewidth',1)
-end
-LogScale('x',10)
-xlabel('f (Hz)')
-ylabel({(celltypes{tt}),'MI[ISI;Power]'})
-title('ISI-Power Modulation')
-
-end
-
-
-
-
-
-tt = 1;
-ss = 1;
-exf = 7;
-exf_IDX = find(abs(specslope.freqs-exf) == min(abs(specslope.freqs-exf)));
-
-phasex = linspace(-pi,3*pi,100);
-
-subplot(3,2,5)
-imagesc(PopConditional.(states{ss}).(celltypes{1}).Dist.Xbins(1,:,1),...
-    PopConditional.(states{ss}).(celltypes{1}).Dist.Ybins(1,:,1),...
-    PopConditional.(states{ss}).(celltypes{1}).Dist.pYX(:,:,exf_IDX)')
-LogScale('y',10,'exp',true)
-xlabel(['Power (',num2str(exf),'Hz)'])
-ylabel('ISI (s)')
-colorbar
-
-exf = 25;
-exf_IDX = find(abs(specslope.freqs-exf) == min(abs(specslope.freqs-exf)));
-subplot(3,2,6)
-imagesc(PopConditional.(states{ss}).(celltypes{1}).Dist.Xbins(1,:,1),...
-    PopConditional.(states{ss}).(celltypes{1}).Dist.Ybins(1,:,1),...
-    PopConditional.(states{ss}).(celltypes{1}).Dist.pYX(:,:,exf_IDX)')
-LogScale('y',10,'exp',true)
-xlabel(['Power (',num2str(exf),'Hz)'])
-ylabel('ISI (s)')
-colorbar
-
-
-
-NiceSave('PopISIMod',figfolder,baseName)
-
-
-
 %% Zoom on Theta (load?)
     %Load Gamma Modes
     GammaFit = bz_LoadCellinfo(basePath,'GammaFit');
-    %Normalize the brain state metrics
-    ThetaPower.timestamps = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.t_clus;
-    ThetaPower.data = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.thratio;
+
 
 
 %%
-excell = 3;
-excellUID = spikes.UID(excell);
-%Find the UID of the cell in the Gamma fit so match...
-%Put the gamma fit parms to conditional dist in as initial parms
-GFIDX = find(GammaFit.WAKEstate.cellstats.UID==excellUID);
-cellGamma = GammaFit.WAKEstate.singlecell(GFIDX)
-[ThetaConditionalISI(excell)] = ConditionalISI(spikes.times{excell},ThetaPower,...
-    'ints',SleepState.ints.WAKEstate,'GammaFitParms',cellGamma,...
-    'basePath',basePath,'figname',['ThetaUID',num2str(excellUID)],...
-    'figfolder',figfolder,'GammaFit',true);
 
+pc = parcluster('local');
+
+    % sto
+% % store temporary files in the 'scratch' drive on the cluster, labeled by job ID
+pc.JobStorageLocation = strcat(getenv('SCRATCH'), '/', getenv('SLURM_JOB_ID'));
+% % enable MATLAB to utilize the multiple cores allocated in the job script
+% % SLURM_NTASKS_PER_NODE is a variable set in the job script by the flag --tasks-per-node
+% % we use SLURM_NTASKS_PER_NODE - 1, because one of these tasks is the original MATLAB script itself
+parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1);
 
 %% Ex cell: all frequencies
 specslope = rmfield(specslope,'specgram');
@@ -203,17 +96,11 @@ for ff = 1:length(specslope.freqs)
     %Find the UID of the cell in the Gamma fit so match...
     %Put the gamma fit parms to conditional dist in as initial parms
     GFIDX = find(GammaFit.WAKEstate.cellstats.UID==excellUID);
-    if isempty(GFIDX)
-        continue
-    end
     cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
-    try
-
+    if ~isempty(cellGamma)
         [FConditionalISIDist(ff,cc)] = ConditionalISI(spikes.times{cc},fPower,...
             'ints',SleepState.ints.WAKEstate,'GammaFitParms',cellGamma,...
             'showfig',false,'GammaFit',true);
-    catch
-        continue
     end
     end
 %catch
@@ -320,58 +207,6 @@ NiceSave('ModeLFPFreqMod',figfolder,baseName)
 
 
 
-%% Theta ISI modulation - all cells
-
-parfor cc = 1:spikes.numcells
-    cc
-excellUID = spikes.UID(cc);
-%Find the UID of the cell in the Gamma fit so match...
-%Put the gamma fit parms to conditional dist in as initial parms
-GFIDX = find(GammaFit.WAKEstate.cellstats.UID==excellUID);
-if isempty(GFIDX)
-    continue
-end
-cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
-try
-[ThetaConditionalISI(cc)] = ConditionalISI(spikes.times{cc},ThetaPower,...
-    'ints',SleepState.ints.WAKEstate,'GammaFitParms',cellGamma,...
-    'showfig',false,'GammaFit',true);
-catch
-    continue
-end
-end
-
-%%
-AllThetaISIModes = bz_CollapseStruct(ThetaConditionalISI);
-AllThetaISIModes = bz_CollapseStruct(AllThetaISIModes.GammaModes,2);
-%% Figure: Theta ISI modulation all cells
-figure
-subplot(2,2,1)
-    hist(AllThetaISIModes.GSCorr)
-subplot(2,2,2)
-    plot(AllThetaISIModes.ASlogrates(AllThetaISIModes.AScorr_p<0.05),...
-        AllThetaISIModes.AS_R(AllThetaISIModes.AScorr_p<0.05),'k.')
-    hold on
-    plot(AllThetaISIModes.ASlogrates(AllThetaISIModes.AScorr_p>=0.05),...
-        AllThetaISIModes.AS_R(AllThetaISIModes.AScorr_p>=0.05),'.','color',[0.5 0.5 0.5])
-
-    
-    plot(AllThetaISIModes.GSlogrates(AllThetaISIModes.GScorr_p<0.05),...
-        AllThetaISIModes.GS_R(AllThetaISIModes.GScorr_p<0.05),'.')
-    axis tight
-    box off
-        plot(xlim(gca),[0 0],'k--')
-        LogScale('x',10)
-        xlabel('Mode Rate (Hz)')
-        ylabel('Weight-Power Corr')
-    
-    
-subplot(2,2,3)
-    plot(AllThetaISIModes.GS_R,...
-        log10(AllThetaISIModes.GScorr_p),'o')
-    
-    
- NiceSave('ThetaMod',figfolder,baseName)
 
     
 
