@@ -18,7 +18,7 @@ THlabels = {'hiThetastate','loThetastate'};
 
 for tt = 1:length(celltypes)
     ISIbytheta.pop.(celltypes{tt}) = nanmean(ISIbytheta.Dist.pYX(:,:,TH_ISIstats.cellinfo.celltype.(celltypes{tt})),3);
-    ISIbythetaphase.pop.(celltypes{tt}) = nanmean(ISIbythetaphase.Dist.pYX(:,:,TH_ISIstats.cellinfo.celltype.(celltypes{tt})),3);
+    ISIbythetaphase.pop.(celltypes{tt}) = nanmean(ISIbythetaphase.shiftDist.pYX(:,:,TH_ISIstats.cellinfo.celltype.(celltypes{tt})),3);
 
     ISIbythetaphase.celltypeidx.(celltypes{tt}) = TH_ISIstats.cellinfo.celltype.(celltypes{tt});
     ISIbytheta.celltypeidx.(celltypes{tt}) = TH_ISIstats.cellinfo.celltype.(celltypes{tt});
@@ -35,6 +35,11 @@ end
 
 %%
 phasex = linspace(-pi,3*pi,100);
+
+histcolors.loThetastate = flipud(gray);
+histcolors.hiThetastate = makeColorMap([1 1 1],[0.8 0 0]);
+
+
 
 figure
 
@@ -63,6 +68,7 @@ subplot(4,3,tt*3-2+6)
 %     end
     xlim([-pi 3*pi])
     plot(xlim(gca),log10(1/8).*[1 1],'w--')
+    %colormap(gca,histcolors.loThetastate)
 end 
 
 for tt = 1:length(celltypes)
@@ -82,25 +88,28 @@ subplot(4,3,tt*3-2)
 %     elseif tt==2
 %          caxis([0 0.03])
 %     end
-    xlim(ISIbytheta.Dist.Xbins(1,[1 end],1))
+    xlim([0 1])
+    %colormap(gca,histcolors.loThetastate)
 end 
 
 for tt = 1:length(celltypes) 
     
     subplot(4,4,tt+6)
-        plot(TH_ISIstats.ISIhist.logbins(1,:),TH_ISIstats.meandists.hiThetastate.(celltypes{tt}).ISIdist,'k')
+        plot(TH_ISIstats.ISIhist.logbins(1,:),TH_ISIstats.meandists.hiThetastate.(celltypes{tt}).ISIdist,'r')
         hold on
-        plot(TH_ISIstats.ISIhist.logbins(1,:),TH_ISIstats.meandists.loThetastate.(celltypes{tt}).ISIdist,'r')
+        plot(TH_ISIstats.ISIhist.logbins(1,:),TH_ISIstats.meandists.loThetastate.(celltypes{tt}).ISIdist,'k')
         LogScale('x',10,'exp',true)
         title(celltypes{tt})
         box off 
         
     for ss = 1:length(THlabels)
         subplot(4,4,10+tt+(ss-1)*4)
+        
             imagesc(TH_ISIstats.ISIhist.logbins(1,:),TH_ISIstats.ISIhist.logbins(1,:),...
             TH_ISIstats.meandists.(THlabels{ss}).(celltypes{tt}).Return)
             LogScale('xy',10,'exp',true)
             axis xy
+            colormap(gca,histcolors.(THlabels{ss}))
     end
 end
 
@@ -121,14 +130,14 @@ for rr = 1:5
 end    
 
     
-  %  plot(ThetaISImodes.GSrate,...
-  %      ThetaISImodes.GSModulation,'.')
+%    plot(ThetaISImodes.GSrate,...
+%        ThetaISImodes.GSModulation,'.','color',GScolor)
    plot(mean(ThetaISImodes.GSlogRates,2),...
        ThetaISImodes.GSModulation,'.','color',GScolor)
 
     axis tight
     box off
-        plot(xlim(gca),[0 0],'k--')
+        plot(xlim(gca),[0 0],'--','color',[0.5 0.5 0.5])
         LogScale('x',10)
         xlabel('Mode Rate (Hz)')
         ylabel('Weight-Power Corr')
@@ -137,5 +146,5 @@ end
 %subplot(2,2,3)
   %  plot([1:10],log10(ThetaISImodes.GSlogRates),'.')
     
-    %%
+  
  NiceSave('ThetaMod',figfolder,[])
