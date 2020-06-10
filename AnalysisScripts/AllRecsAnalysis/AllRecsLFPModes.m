@@ -1,15 +1,13 @@
 reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/'; %Laptop
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ThetaISIAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModeLFPAnalysis_HPC'];
 
 
-[ThetaALL,baseNames] = GetMatResults(figfolder,'ThetaISIAnalysis');
-ThetaALL = bz_CollapseStruct(ThetaALL);
+[LFPModeALL,baseNames] = GetMatResults(figfolder,'ISIModeLFPAnalysis_HPC');
+LFPModeALL = bz_CollapseStruct(LFPModeALL);
+
 
 %%
-ISIbythetaphase = bz_CollapseStruct(ThetaALL.ISIbythetaphase,'match','justcat',true);
-ISIbytheta = bz_CollapseStruct(ThetaALL.ISIbytheta,'match','justcat',true);
-TH_ISIstats = bz_CollapseStruct(ThetaALL.TH_ISIstats,'match','justcat',true);
-ThetaISImodes = bz_CollapseStruct(ThetaALL.ThetaISImodes,'match','justcat',true);
+ModalLFPModulation = bz_CollapseStruct(LFPModeALL.ModalLFPModulation,'match','justcat',true);
 
 
 %%
@@ -29,6 +27,101 @@ for tt = 1:length(celltypes)
 
     end
 end
+
+
+
+
+
+%%
+ASfreq = repmat(ModalLFPModulation.freq(1,:)',[1,499,5]);
+allASweight = repmat(ModalLFPModulation.ASweight,[150,1,1]);
+%%
+weightthresh = 0.01;
+[ meanZ,N,Xbins,Ybins ] = ConditionalHist3( log10(ASfreq(allASweight>weightthresh)),...
+    ModalLFPModulation.ASlogRates(allASweight>weightthresh),...
+    ModalLFPModulation.ASModulation(allASweight>weightthresh),...
+    'minXY',1,'numXbins',150,'numYbins',150);
+
+%%
+figure
+imagesc(Xbins,Ybins,meanZ')
+alpha((N'./max(N(:))).*2)
+hold on
+UnityLine
+
+LogScale('xy',10)
+xlabel('LFP Frequency (Hz)');ylabel('ISI Mode Rate (Hz)')
+
+ColorbarWithAxis([-0.0 0.1],'Mode-Power Correlation','inclusive',{'<','>'})
+crameri('vik','pivot',0)
+axis xy
+%%
+numcells = length(ModalLFPModulation.UID);
+figure
+subplot(2,2,1)
+% hold on
+% for cc = 1:numcells
+% for rr = 1:5
+%     modeoccupancy = ModalLFPModulation.ASweight(1,cc,rr);
+%     if (modeoccupancy<0.05)
+%         continue
+%     end
+%     %showwhichmodes = (AllFConditionalISIModes(cc).AScorr_p(rr,:)<1); %& ...
+%         %showwhichmodes = (modeoccupancy>0.05);
+% 
+%         
+%     scatter(log10(ModalLFPModulation.freq(1,:)),...
+%         ModalLFPModulation.ASlogRates(:,cc,rr),...
+%         5*modeoccupancy,ModalLFPModulation.ASModulation(:,cc,rr),'filled')
+% end
+% end
+% 
+% axis tight
+% UnityLine
+% LogScale('xy',10)
+% ColorbarWithAxis([-0.05 0.15],'Mode-Power Correlation','inclusive',{'<','>'})
+% crameri('vik','pivot',0)
+% xlabel('LFP frequency (Hz)');ylabel('ISI Mode Rate (Hz)')
+imagesc(Xbins,Ybins,meanZ')
+alpha((N'./max(N(:))).*2)
+hold on
+UnityLine
+
+xlabel('LFP Frequency (Hz)');ylabel('ISI Mode Rate (Hz)')
+
+ColorbarWithAxis([-0.0 0.1],'Mode-Power Correlation','inclusive',{'<','>'})
+crameri('vik','pivot',0)
+axis xy
+xlim([0 2.5]);ylim([0 2.5])
+LogScale('xy',10,'nohalf',true)
+
+subplot(4,2,7)
+hold on
+plot(log10(ModalLFPModulation.freq(1,:)),nanmean(ModalLFPModulation.MutInf,2),'color','k','linewidth',1)
+% errorshade(log10(ModalLFPModulation.freq(1,:)),nanmean(ModalLFPModulation.MutInf,2),...
+%     nanstd(ModalLFPModulation.MutInf,[],2),nanstd(ModalLFPModulation.MutInf,[],2),'k','scalar')
+LogScale('x',10)
+xlabel('LFP Frequency (Hz)')
+ylabel('MI[ISI;Power]')
+colorbar
+axis tight
+
+
+subplot(4,2,8)
+hold on
+
+plot(log10(ModalLFPModulation.freq),-nanmean(ModalLFPModulation.GSModulation,2),'color','k','linewidth',2)
+plot(xlim(gca),[0 0],'k--')
+LogScale('x',10)
+xlabel('LFP Frequency (Hz)')
+ylabel('AR-Power Corr')
+colorbar
+axis tight
+
+
+NiceSave('ModeLFPFreqMod',figfolder,[])
+
+
 
 
 

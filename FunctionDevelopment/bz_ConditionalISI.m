@@ -236,11 +236,7 @@ bounds = ylim(gca);
 hold on
 LogScale('y',10)
 ylabel('ISI (s)')
-yyaxis right
-plot(ConditionalISI.Dist.Xbins,log10(ConditionalISI.Dist.SpikeRate),'r','linewidth',2)
-ylim(-fliplr(bounds))
-LogScale('y',10,'nohalf',true)
-ylabel('Rate (Hz)')
+bz_AddRightRateAxis
 %colorbar
 
 

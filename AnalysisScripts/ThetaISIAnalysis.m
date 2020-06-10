@@ -53,7 +53,7 @@ for ss = 1:length(states)
    ThetaPower.instatetime.(states{ss}) = InIntervals(ThetaPower.timestamps,SleepState.ints.(states{ss}));
 end
 %% Divide into high and low theta time
-ThetaPower.hilo_percentile = prctile(ThetaPower.data(ThetaPower.instatetime.WAKEstate),[25 75]);
+ThetaPower.hilo_percentile = prctile(ThetaPower.data(ThetaPower.instatetime.WAKEstate),[35 65]);
 ThetaIDX.threshs.hitheta = ThetaPower.hilo_percentile(2);
 ThetaIDX.threshs.lotheta = ThetaPower.hilo_percentile(1);
 ThetaIDX.timestamps = ThetaPower.timestamps;

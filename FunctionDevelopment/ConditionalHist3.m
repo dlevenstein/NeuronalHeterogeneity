@@ -1,4 +1,4 @@
-function [ meanZ,N ] = ConditionalHist3( X,Y,Z,varargin )
+function [ meanZ,N,Xbins,Ybins ] = ConditionalHist3( X,Y,Z,varargin )
 %[ jointXYZ ] = ConditionalHist3( X,Y,Z ) for a set of observations [X,Y,Z] this 
 %function calculates the statistics of Z given X and Y.
 %%
