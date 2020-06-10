@@ -9,12 +9,12 @@ function [TH_ISIstats,ISIbythetaphase,ISIbytheta,ThetaISImodes] = ThetaISIAnalys
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 % basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
-%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 % %basePath = pwd;
 % %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -53,13 +53,13 @@ for ss = 1:length(states)
    ThetaPower.instatetime.(states{ss}) = InIntervals(ThetaPower.timestamps,SleepState.ints.(states{ss}));
 end
 %% Divide into high and low theta time
-
-ThetaIDX.threshs.hitheta = 0.65;
-ThetaIDX.threshs.lotheta = 0.35;
+ThetaPower.hilo_percentile = prctile(ThetaPower.data(ThetaPower.instatetime.WAKEstate),[25 75]);
+ThetaIDX.threshs.hitheta = ThetaPower.hilo_percentile(2);
+ThetaIDX.threshs.lotheta = ThetaPower.hilo_percentile(1);
 ThetaIDX.timestamps = ThetaPower.timestamps;
 ThetaIDX.states = zeros(size(ThetaIDX.timestamps));
-ThetaIDX.states(ThetaPower.data>ThetaIDX.threshs.hitheta & ThetaPower.instatetime.WAKEstate) = 1;
-ThetaIDX.states(ThetaPower.data<ThetaIDX.threshs.lotheta & ThetaPower.instatetime.WAKEstate) = 2;
+ThetaIDX.states(ThetaPower.data>=ThetaIDX.threshs.hitheta & ThetaPower.instatetime.WAKEstate) = 1;
+ThetaIDX.states(ThetaPower.data<=ThetaIDX.threshs.lotheta & ThetaPower.instatetime.WAKEstate) = 2;
 
 ThetaIDX.statenames = {'hiTheta','loTheta'};
 ThetaIDX.timestamps = ThetaPower.timestamps;
@@ -84,25 +84,34 @@ ThetaPhase.timestamps = thetalfp.timestamps;
 
 [ISIbytheta] = bz_ConditionalISI(spikes.times,ThetaPower,...
     'ints',SleepState.ints.WAKEstate,...
-    'showfig',false,'GammaFit',false);
-%%
+    'showfig',false,'GammaFit',false,'numXbins',15);
 
 [ISIbythetaphase] = bz_ConditionalISI(spikes.times,ThetaPhase,...
     'ints',ThetaINT.hiThetastate,...
     'showfig',false,'GammaFit',false,...
-    'normtype','none','Xwin',[-pi pi],'numXbins',25);
+    'normtype','none','Xwin',[-pi pi],'numXbins',20);
 
 %% Population averages
 for tt = 1:length(celltypes)
     ISIbytheta.pop.(celltypes{tt}) = nanmean(ISIbytheta.Dist.pYX(:,:,CellClass.(celltypes{tt})),3);
     ISIbythetaphase.pop.(celltypes{tt}) = nanmean(ISIbythetaphase.Dist.pYX(:,:,CellClass.(celltypes{tt})),3);
-
+    ISIbythetaphase.popRate.(celltypes{tt}) = nanmean(ISIbythetaphase.Dist.SpikeRate(:,:,CellClass.(celltypes{tt})),3);
+    [~,ISIbythetaphase.peakPhaseIdx.(celltypes{tt})] = max(ISIbythetaphase.popRate.(celltypes{tt}));
+    ISIbythetaphase.peakPhase.(celltypes{tt}) = ISIbythetaphase.Dist.Xbins(1,ISIbythetaphase.peakPhaseIdx.(celltypes{tt}),1);
+    
     ISIbythetaphase.celltypeidx.(celltypes{tt}) = CellClass.(celltypes{tt});
     ISIbytheta.celltypeidx.(celltypes{tt}) = CellClass.(celltypes{tt});
 end
 if length(celltypes)==1
     ISIbytheta.celltypeidx.pI = false(size(CellClass.pE));
 end
+
+%Shift to Peak first
+ISIbythetaphase.shiftDist.pYX = circshift(ISIbythetaphase.Dist.pYX,...
+    ISIbythetaphase.peakPhaseIdx.(celltypes{2}),1);
+ISIbythetaphase.shiftDist.SpikeRate = circshift(ISIbythetaphase.Dist.SpikeRate,...
+    ISIbythetaphase.peakPhaseIdx.(celltypes{2}),2);
+
 
 %%
 phasex = linspace(-pi,3*pi,100);
@@ -117,6 +126,7 @@ subplot(4,3,tt*3-2+6)
     hold on
     imagesc(ISIbythetaphase.Dist.Xbins(1,:,1)+2*pi,ISIbythetaphase.Dist.Ybins(1,:,1), ...
         ISIbythetaphase.pop.(celltypes{tt})')
+    
     %axis xy
     plot(phasex,-cos(phasex),'k')
     
@@ -135,6 +145,14 @@ subplot(4,3,tt*3-2+6)
 %     end
     xlim([-pi 3*pi])
     plot(xlim(gca),log10(1/8).*[1 1],'w--')
+    
+    bounds = ylim(gca);
+    yyaxis right
+    plot(ISIbythetaphase.Dist.Xbins(1,:,1),log10(ISIbythetaphase.popRate.(celltypes{tt})),'r-','linewidth',1)
+    plot(ISIbythetaphase.Dist.Xbins(1,:,1)+2*pi,log10(ISIbythetaphase.popRate.(celltypes{tt})),'r-','linewidth',1)
+    ylim(-fliplr(bounds))
+    LogScale('y',10,'nohalf',true)
+    ylabel('Rate (Hz)')
 end 
 
 % subplot(3,3,7)
@@ -215,7 +233,7 @@ ASModulation = nan(spikes.numcells,numAS);
 ASlogRates = nan(spikes.numcells,numAS);
 GSlogRates = nan(spikes.numcells,10);
 ASweight = nan(spikes.numcells,numAS);
-GSrate = nan(spikes.numcells);
+GSrate = nan(spikes.numcells,1);
 
 for cc = 1:spikes.numcells
     bz_Counter(cc,spikes.numcells,'Cell')
