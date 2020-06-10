@@ -111,9 +111,9 @@ for ff = 1:length(specslope.freqs)
         if length(GFIDX)~=1
 
         else
-            [FConditionalISIDist] = ConditionalISI(spikes.times{cc},fPower,...
+            [FConditionalISIDist] = bz_ConditionalISI(spikes.times{cc},fPower,...
                 'ints',SleepState.ints.WAKEstate,'GammaFitParms',cellGamma,...
-                'showfig',false,'GammaFit',true);
+                'showfig',false,'GammaFit',true,'minX',0);
 
             MutInf(ff,cc) = FConditionalISIDist.MutInf;
             %GammaModes(ff,cc) = FConditionalISIDist.GammaModes;

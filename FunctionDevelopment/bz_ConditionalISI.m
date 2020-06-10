@@ -1,8 +1,9 @@
-function [ConditionalISI,ConditionalISIModes] = bz_ConditionalISI(spikes,conditionalvariable,varargin)
-%UNTITLED2 Summary of this function goes here
-%   Detailed explanation goes here
-%
-%
+function [ConditionalISI] = bz_ConditionalISI(spikes,conditionalvariable,varargin)
+%[ConditionalISI] = ConditionalISI(spikes,conditionalvariable,<options>)
+%    
+%   INPUTS
+%       spikes  cell array (from spikes.times)
+%       conditionalvariable struct with .data and .timestamps
 %
 %Future: multiple conditional variables... (fit together)
 %%
@@ -43,6 +44,17 @@ DO_MutInf = p.Results.MutInf;
 baseName = bz_BasenameFromBasepath(basePath);
 
 %%
+if iscell(spikes)
+    [all_ConditionalISI] = cellfun(@(spk) bz_ConditionalISI(spk,conditionalvariable,varargin{:}),...
+        spikes,'UniformOutput',false);
+    
+    all_ConditionalISI = cat(1,all_ConditionalISI{:});
+    ConditionalISI = bz_CollapseStruct( all_ConditionalISI,3,'justcat',true);
+    
+    return
+end
+
+%%
 ISIs.n = diff(spikes);
 ISIs.times = spikes(2:end-1);
 ISIs.np1 = ISIs.n(2:end);
@@ -68,18 +80,18 @@ end
 ISIs.x = interp1(conditionalvariable.timestamps,conditionalvariable.data,ISIs.times,'nearest');
 %% Conditional Distribution/Rate, and MutInfo
 if DO_ISIDist
-    [ ConditionalISIDist ] = ConditionalHist( [ISIs.x;ISIs.x],log10([ISIs.n;ISIs.np1]),...
+    [ ConditionalISI.Dist ] = ConditionalHist( [ISIs.x;ISIs.x],log10([ISIs.n;ISIs.np1]),...
         'Xbounds',Xwin,'numXbins',numXbins,'Ybounds',logISIbounds,'numYbins',numISIbins,'minX',minX);
 
-    ConditionalISIDist.Xocc = hist(conditionalvariable.data,ConditionalISIDist.Xbins);
-    ConditionalISIDist.SpikeRate = ConditionalISIDist.Xhist./(ConditionalISIDist.Xocc.*conditionalvariable.dt.*2);
+    ConditionalISI.Dist.Xocc = hist(conditionalvariable.data,ConditionalISI.Dist.Xbins);
+    ConditionalISI.Dist.SpikeRate = ConditionalISI.Dist.Xhist./(ConditionalISI.Dist.Xocc.*conditionalvariable.dt.*2);
 
     %Convert to prob density
-    ConditionalISIDist.pYX = ConditionalISIDist.pYX./mode(diff(ConditionalISIDist.Xbins));
+    ConditionalISI.Dist.pYX = ConditionalISI.Dist.pYX./mode(diff(ConditionalISI.Dist.Xbins));
 end
 
 if DO_MutInf
-    ConditionalISIDist.MutInf = mutualinfo(log10([ISIs.n;ISIs.np1]),[ISIs.x;ISIs.x]);
+    ConditionalISI.MutInf = mutualinfo(log10([ISIs.n;ISIs.np1]),[ISIs.x;ISIs.x]);
 end
 
 if DO_GammaFit
@@ -106,8 +118,8 @@ if DO_GammaFit
 
     %%
 
-    taubins = ConditionalISIDist.Ybins./log10(exp(1));
-    logISIhist = ConditionalISIDist.pYX'.* mode(diff(ConditionalISIDist.Xbins))./mode(diff(taubins)); %convert to dtau
+    taubins = ConditionalISI.Dist.Ybins./log10(exp(1));
+    logISIhist = ConditionalISI.Dist.pYX'.* mode(diff(ConditionalISI.Dist.Xbins))./mode(diff(taubins)); %convert to dtau
     numXbins = numXbins;
     numAS = length(GFParms.ASweights);
 
@@ -161,63 +173,78 @@ if DO_GammaFit
     AScost_lambda = 0;
     AScost_p = 1/2;
     MScost = 3;
-    sub1msbins = ConditionalISIDist.Xbins<=-2.7;
+    sub1msbins = ConditionalISI.Dist.Ybins<=-2.7;
 
     costfun = @(GSASparm_vect) sum(sum((logISIhist-GSASmodel(GSASparm_vect,taubins,numXbins,numAS)).^2)) ...
         + AScost_lambda.*sum((abs(Aeq_ASonly*GSASparm_vect)).^(AScost_p))...; %L1/2 norm on AS weights to promote sparseness
         + MScost.*sum(sum((logISIhist(sub1msbins,:)-GSASmodel(GSASparm_vect,taubins(sub1msbins),numXbins,numAS)).^2)); 
 
     fitparms = fmincon(costfun,init,[],[],Aeq,Beq,lb,ub,[],options);
-    ConditionalISIModes = convertGSASparms(fitparms,numXbins,numAS);
+    ConditionalISI.GammaModes = convertGSASparms(fitparms,numXbins,numAS);
 
     %% Mode Correlations
-    [ConditionalISIModes.GSCorr,ConditionalISIModes.GScorr_p] = corr(ConditionalISIModes.GSweights',ConditionalISIDist.Xbins','type','Pearson');
-    [ConditionalISIModes.ASCorr,ConditionalISIModes.AScorr_p] = corr(ConditionalISIModes.ASweights,ConditionalISIDist.Xbins','type','Pearson');
-    ConditionalISIModes.GSCorr = ConditionalISIModes.GSCorr';
-    ConditionalISIModes.GScorr_p = ConditionalISIModes.GScorr_p';
-    ConditionalISIModes.ASCorr = ConditionalISIModes.ASCorr';
-    ConditionalISIModes.AScorr_p = ConditionalISIModes.AScorr_p';
+    [ConditionalISI.GammaModes.GSCorr,ConditionalISI.GammaModes.GScorr_p] = corr(ConditionalISI.Dist.Xbins',ConditionalISI.GammaModes.GSweights','type','Pearson');
+    [ConditionalISI.GammaModes.ASCorr,ConditionalISI.GammaModes.AScorr_p] = corr(ConditionalISI.Dist.Xbins',ConditionalISI.GammaModes.ASweights,'type','Pearson');
 
+
+    %%
+    ConditionalISI.GammaModes.GS_R = [ones(size(ConditionalISI.Dist.Xbins')) ConditionalISI.Dist.Xbins']\ConditionalISI.GammaModes.GSweights';
+    ConditionalISI.GammaModes.GS_R = ConditionalISI.GammaModes.GS_R(2);
+    ConditionalISI.GammaModes.AS_R = [ones(size(ConditionalISI.Dist.Xbins')) ConditionalISI.Dist.Xbins']\ConditionalISI.GammaModes.ASweights;
+    ConditionalISI.GammaModes.AS_R = ConditionalISI.GammaModes.AS_R(2,:);
 end
 %%
+
 if SHOWFIG
-testmodel = GSASmodel(ConditionalISIModes,taubins,numXbins,numAS);
+    
+    
 figure
-subplot(2,2,1)
-imagesc(ConditionalISIDist.Xbins,ConditionalISIDist.Ybins,testmodel)
-hold on
-plot(ConditionalISIDist.Xbins,-ConditionalISIModes.GSlogrates,'ro')
-plot(ConditionalISIDist.Xbins([1 end]),-GFParms.GSlogrates.*[1 1],'r--')
-%colorbar
-caxis([0 0.4])
+if DO_GammaFit
+        testmodel = GSASmodel(ConditionalISI.GammaModes,taubins,numXbins,numAS);
+        subplot(2,2,1)
+        imagesc(ConditionalISI.Dist.Xbins,ConditionalISI.Dist.Ybins,testmodel)
+        hold on
+        plot(ConditionalISI.Dist.Xbins,-ConditionalISI.GammaModes.GSlogrates,'ro')
+        plot(ConditionalISI.Dist.Xbins([1 end]),-GFParms.GSlogrates.*[1 1],'r--')
+        %colorbar
+        caxis([0 0.4])
+        
+        subplot(2,2,3)
+        %plot(sharedfit.ASweights
+        plot(ConditionalISI.GammaModes.ASlogrates(ConditionalISI.GammaModes.AScorr_p<0.05),ConditionalISI.GammaModes.AS_R(ConditionalISI.GammaModes.AScorr_p<0.05),'o')
+        hold on
+        plot(ConditionalISI.GammaModes.ASlogrates(ConditionalISI.GammaModes.AScorr_p>0.05),ConditionalISI.GammaModes.AS_R(ConditionalISI.GammaModes.AScorr_p>0.05),'.')
+        %hold on
+        plot(GFParms.GSlogrates,ConditionalISI.GammaModes.GS_R,'o')
+        plot(xlim(gca),[0 0],'k--')
+        LogScale('x',10)
+        xlabel('Rate (Hz)')
+        ylabel('Weight Correlation')
+        box off
+
+        subplot(2,2,4)
+        plot(ConditionalISI.Dist.Xbins,(ConditionalISI.GammaModes.GSweights),'o','linewidth',2)
+        xlabel('Power');ylabel('P_G_S')
+        ylim([0 1])
+end
 
 
 subplot(2,2,2)
 yyaxis left
-imagesc(ConditionalISIDist.Xbins,ConditionalISIDist.Ybins,ConditionalISIDist.pYX')
+imagesc(ConditionalISI.Dist.Xbins,ConditionalISI.Dist.Ybins,ConditionalISI.Dist.pYX')
 bounds = ylim(gca);
 hold on
 LogScale('y',10)
 ylabel('ISI (s)')
 yyaxis right
-plot(ConditionalISIDist.Xbins,log10(ConditionalISIDist.SpikeRate),'r','linewidth',2)
+plot(ConditionalISI.Dist.Xbins,log10(ConditionalISI.Dist.SpikeRate),'r','linewidth',2)
 ylim(-fliplr(bounds))
 LogScale('y',10,'nohalf',true)
 ylabel('Rate (Hz)')
 %colorbar
 
-subplot(2,2,3)
-%plot(sharedfit.ASweights
-plot(ConditionalISIModes.ASlogrates(ConditionalISIModes.AScorr_p<0.05),ConditionalISIModes.ASCorr(ConditionalISIModes.AScorr_p<0.05),'o')
-hold on
-plot(ConditionalISIModes.ASlogrates(ConditionalISIModes.AScorr_p>0.05),ConditionalISIModes.ASCorr(ConditionalISIModes.AScorr_p>0.05),'.')
-%hold on
-plot(GFParms.GSlogrates,ConditionalISIModes.GSCorr,'o')
-plot(xlim(gca),[0 0],'k--')
-LogScale('x',10)
-xlabel('Rate (Hz)')
-ylabel('Weight Correlation')
-box off
+
+
 
 if figfolder
     NiceSave(['ConditionalISI',figname],figfolder,baseName);
