@@ -108,6 +108,8 @@ NiceSave('TH_ISIstats',figfolder,[])
 
 
 %%
+GScolor = [0.6 0.4 0];
+
 figure
 %subplot(2,2,1)
    % hist(ThetaISImodes.GSModulation)
@@ -115,12 +117,15 @@ subplot(2,2,2)
 hold on
 for rr = 1:5
     scatter(ThetaISImodes.ASlogRates(:,rr),...
-        ThetaISImodes.ASModulation(:,rr),10*ThetaISImodes.ASweight(:,rr)+0.00001,'k','filled')
+        ThetaISImodes.ASModulation(:,rr),20*ThetaISImodes.ASweight(:,rr)+0.00001,'k','filled')
 end    
 
     
   %  plot(ThetaISImodes.GSrate,...
   %      ThetaISImodes.GSModulation,'.')
+   plot(mean(ThetaISImodes.GSlogRates,2),...
+       ThetaISImodes.GSModulation,'.','color',GScolor)
+
     axis tight
     box off
         plot(xlim(gca),[0 0],'k--')
