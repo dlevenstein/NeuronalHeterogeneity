@@ -218,7 +218,7 @@ ASweight = nan(spikes.numcells,numAS);
 GSrate = nan(spikes.numcells);
 
 for cc = 1:spikes.numcells
-    cc
+    bz_Counter(cc,spikes.numcells,'Cell')
     excellUID = spikes.UID(cc);
     %Find the UID of the cell in the Gamma fit so match...
     %Put the gamma fit parms to conditional dist in as initial parms
