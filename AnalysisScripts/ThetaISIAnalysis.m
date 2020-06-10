@@ -215,7 +215,7 @@ ASModulation = nan(spikes.numcells,numAS);
 ASlogRates = nan(spikes.numcells,numAS);
 GSlogRates = nan(spikes.numcells,10);
 ASweight = nan(spikes.numcells,numAS);
-GSrate = nan(spikes.numcells);
+GSrate = nan(spikes.numcells,1);
 
 for cc = 1:spikes.numcells
     bz_Counter(cc,spikes.numcells,'Cell')
