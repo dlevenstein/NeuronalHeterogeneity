@@ -38,8 +38,8 @@ cellcolor = {'k','r'};
 
 
 %%
-%Regions = unique(sessionInfo.region(~cellfun(@isempty,sessionInfo.region)));
-Regions = unique(spikes.region(~cellfun(@isempty,spikes.region)));
+Regions = unique(sessionInfo.region(~cellfun(@isempty,sessionInfo.region)));
+%Regions = unique(spikes.region(~cellfun(@isempty,spikes.region)));
 
 
 %% Load the LFP
@@ -49,6 +49,11 @@ for rr = 1:length(Regions)
     inregionchan = sessionInfo.channels(inregionchanIDX);
     if isempty(inregionchan)
         display('No LFP Channels')
+        continue
+    end
+    inregioncellIDX = ismember(spikes.region,Regions{rr}) | ismember(spikes.maxWaveformCh,inregionchan);
+    if sum(inregioncellIDX)==0
+        display('No Cells')
         continue
     end
     downsamplefactor = 2;
@@ -87,7 +92,6 @@ nfreqs = 150;
     
 
 %%
-inregioncellIDX = ismember(spikes.region,Regions{rr});
 MIMap.(Regions{rr}).UIDs = spikes.UID(inregioncellIDX);
 MIMap.(Regions{rr}).ChanID = inregionchan;
 MIMap.freqs = specslope.freqs;
