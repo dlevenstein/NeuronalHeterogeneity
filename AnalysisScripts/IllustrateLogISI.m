@@ -1,17 +1,22 @@
 projectfolder = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-projectfolder = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
+projectfolder = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 
 basePath = [projectfolder,'Datasets/onProbox/AG_HPC/Cicero_09012014'];
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 figfolder = [projectfolder,'AnalysisScripts/AnalysisFigs/Illustrations'];
 baseName = bz_BasenameFromBasepath(basePath);
 %%
 ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 
 %%
-
+sinx = linspace(0,20,100)
+figure
+plot(sinx,sin(sinx),'k','linewidth',2)
+box off
+NiceSave('Sin',figfolder,[]);
 
 %%
-cc =2;
+cc =5;
 
 shortthresh = 0.05;
 longthresh = 2;

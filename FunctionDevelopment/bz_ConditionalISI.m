@@ -200,6 +200,8 @@ if SHOWFIG
     
 figure
 if DO_GammaFit
+    GScolor = [0.6 0.4 0];
+
         testmodel = GSASmodel(ConditionalISI.GammaModes,taubins,numXbins,numAS);
         subplot(2,2,1)
         imagesc(ConditionalISI.Dist.Xbins,ConditionalISI.Dist.Ybins,testmodel)
@@ -211,11 +213,13 @@ if DO_GammaFit
         
         subplot(2,2,3)
         %plot(sharedfit.ASweights
-        plot(ConditionalISI.GammaModes.ASlogrates(ConditionalISI.GammaModes.AScorr_p<0.05),ConditionalISI.GammaModes.AS_R(ConditionalISI.GammaModes.AScorr_p<0.05),'o')
+        plot(ConditionalISI.GammaModes.ASlogrates(ConditionalISI.GammaModes.AScorr_p<=0.05),...
+            ConditionalISI.GammaModes.AS_R(ConditionalISI.GammaModes.AScorr_p<=0.05),'.k','markersize',10)
         hold on
-        plot(ConditionalISI.GammaModes.ASlogrates(ConditionalISI.GammaModes.AScorr_p>0.05),ConditionalISI.GammaModes.AS_R(ConditionalISI.GammaModes.AScorr_p>0.05),'.')
+        plot(ConditionalISI.GammaModes.ASlogrates(ConditionalISI.GammaModes.AScorr_p>0.05),...
+            ConditionalISI.GammaModes.AS_R(ConditionalISI.GammaModes.AScorr_p>0.05),'.k','markersize',10)
         %hold on
-        plot(GFParms.GSlogrates,ConditionalISI.GammaModes.GS_R,'o')
+        plot(GFParms.GSlogrates,ConditionalISI.GammaModes.GS_R,'.','markersize',20,'color',GScolor)
         plot(xlim(gca),[0 0],'k--')
         LogScale('x',10)
         xlabel('Rate (Hz)')
@@ -223,7 +227,7 @@ if DO_GammaFit
         box off
 
         subplot(2,2,4)
-        plot(ConditionalISI.Dist.Xbins,(ConditionalISI.GammaModes.GSweights),'o','linewidth',2)
+        plot(ConditionalISI.Dist.Xbins,(ConditionalISI.GammaModes.GSweights),'.','markersize',20,'color',GScolor)
         xlabel('Power');ylabel('P_G_S')
         ylim([0 1])
 end

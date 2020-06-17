@@ -9,12 +9,12 @@ function [TH_ISIstats,ISIbythetaphase,ISIbytheta,ThetaISImodes] = ThetaISIAnalys
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 % basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
-%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 % %basePath = pwd;
 % %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -225,6 +225,16 @@ NiceSave('TH_ISIstats',figfolder,baseName)
 %%
  GammaFit = bz_LoadCellinfo(basePath,'GammaFit');
 
+ %% Example cell
+ excell = 3;
+ excellUID = spikes.UID(excell);
+ GFIDX = find(GammaFit.WAKEstate.cellstats.UID==excellUID);
+cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
+ [ExThetaISIModes] = bz_ConditionalISI(spikes.times{excell},ThetaPower,...
+    'ints',SleepState.ints.WAKEstate,'GammaFitParms',cellGamma,...
+    'showfig',true,'GammaFit',true,'MutInf',false,'minX',0,...
+    'figfolder',figfolder,'figname',['Theta',num2str(excellUID)],...
+    'basePath',basePath,'numISIbins',100);
 %% Theta ISI modulation - all cells
 
 numAS = GammaFit.WAKEstate.parms.numAS;
