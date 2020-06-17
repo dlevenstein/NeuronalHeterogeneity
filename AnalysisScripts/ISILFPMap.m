@@ -44,11 +44,16 @@ Regions = unique(spikes.region(~cellfun(@isempty,spikes.region)));
 
 %% Load the LFP
 for rr = 1:length(Regions)
-inregionchanIDX = ismember(sessionInfo.region,Regions{rr});
-inregionchan = sessionInfo.channels(inregionchanIDX);
-downsamplefactor = 2;
-lfp = bz_GetLFP(inregionchan,... %note: may have to load separately here for RAM...
-    'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
+    display(['Region: ',Regions{rr}])
+    inregionchanIDX = ismember(sessionInfo.region,Regions{rr});
+    inregionchan = sessionInfo.channels(inregionchanIDX);
+    if isempty(inregionchan)
+        display('No LFP Channels')
+        continue
+    end
+    downsamplefactor = 2;
+    lfp = bz_GetLFP(inregionchan,... %note: may have to load separately here for RAM...
+        'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 
 %%
 
@@ -134,6 +139,9 @@ SGorder = SGorder(SGorder~=0);
 %save MI map - make sure it has channel numbers and UID of cells in each
 %region/population. and freqs. and spike group ID/sortings.
 %Save figures in detection figures
+MIMap.(Regions{rr}).SGorder;
+MIMap.(Regions{rr}).SGLength;
+MIMap.(Regions{rr}).SGnum;
 %%
 figure
     for ss = 1:3
@@ -167,9 +175,4 @@ NiceSave(['ISIMod_',Regions{rr}],figfolder,baseName)
 end
 
 
-%%
-%PopConditional = bz_CollapseStruct(PopConditionalISIDist,3,'justcat',true);
-
-
-%%
 end
