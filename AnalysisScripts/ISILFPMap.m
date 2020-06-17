@@ -38,7 +38,15 @@ cellcolor = {'k','r'};
 
 
 %%
-Regions = unique(sessionInfo.region(~cellfun(@isempty,sessionInfo.region)));
+try
+    Regions = unique(sessionInfo.region(~cellfun(@isempty,sessionInfo.region)));
+catch
+    display('No regions in sessionInfo, using all channels in spikegroups')
+    Regions{1} = 'NA';
+    inSGchans =[sessionInfo.spikeGroups.groups{:}];
+    inSGchans = ismember(sessionInfo.channels,inSGchans);
+    sessionInfo.region(inSGchans) = {'NA'};
+end
 %Regions = unique(spikes.region(~cellfun(@isempty,spikes.region)));
 
 
@@ -51,7 +59,12 @@ for rr = 1:length(Regions)
         display('No LFP Channels')
         continue
     end
-    inregioncellIDX = ismember(spikes.region,Regions{rr}) | ismember(spikes.maxWaveformCh,inregionchan);
+    try
+        inregioncellIDX = ismember(spikes.region,Regions{rr}) | ismember(spikes.maxWaveformCh,inregionchan);
+    catch
+        display('No Regions in spikes.cellinfo.mat')
+        inregioncellIDX = ismember(spikes.maxWaveformCh,inregionchan);
+    end
     if sum(inregioncellIDX)==0
         display('No Cells')
         continue
