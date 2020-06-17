@@ -156,9 +156,9 @@ SGorder = SGorder(SGorder~=0);
 %save MI map - make sure it has channel numbers and UID of cells in each
 %region/population. and freqs. and spike group ID/sortings.
 %Save figures in detection figures
-MIMap.(Regions{rr}).SGorder;
-MIMap.(Regions{rr}).SGLength;
-MIMap.(Regions{rr}).SGnum;
+MIMap.(Regions{rr}).SGorder = SGorder;
+MIMap.(Regions{rr}).SGLength = SGLength;
+MIMap.(Regions{rr}).SGnum = SGnum;
 %%
 figure
     for ss = 1:3
