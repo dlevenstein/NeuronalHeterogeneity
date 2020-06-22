@@ -1,4 +1,4 @@
-function [MIMap] = ISILFPMap(basePath,figfolder)
+function [ISILFPMap] = bz_ISILFPMap(basePath,varargin)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -7,6 +7,31 @@ function [MIMap] = ISILFPMap(basePath,figfolder)
 %-
 %-
 %
+%% Parse the inputs
+defaultstates.ALL = [-Inf Inf];
+
+p = inputParser;
+addParameter(p,'ints',defaultstates)
+addParameter(p,'savecellinfo',false,@islogical)
+addParameter(p,'cellclass','AllCells');
+addParameter(p,'regions','sessionInfo');
+addParameter(p,'groups','sessionInfo');
+addParameter(p,'figfolder',false)
+addParameter(p,'figname',[])
+addParameter(p,'showfig',false,@islogical);
+addParameter(p,'forceRedetect',false,@islogical);
+
+parse(p,varargin{:})
+ints = p.Results.ints;
+cellclass = p.Results.cellclass;
+SAVECHANINFO = p.Results.savecellinfo;
+regions = p.Results.regions;
+groups = p.Results.groups;
+figfolder = p.Results.figfolder;
+figname = p.Results.figname;
+SHOWFIG = p.Results.showfig;
+forceRedetect = p.Results.forceRedetect;
+
 %% Load Header
 %Initiate Paths
 %reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
@@ -16,18 +41,24 @@ function [MIMap] = ISILFPMap(basePath,figfolder)
 % %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
 %figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
+chaninfofilename = fullfile(basePath,[baseName,'.ISILFPMap.channelinfo.mat']);
+
+if exist(chaninfofilename,'file') && ~forceRedetect
+    ISILFPMap = load(chaninfofilename);
+    return
+end
 
 %Load Stuff
 sessionInfo = bz_getSessionInfo(basePath);
 spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
-CellClass = bz_LoadCellinfo(basePath,'CellClass');
-SleepState = bz_LoadStates(basePath,'SleepState');
-ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
-states = fieldnames(SleepState.ints);
-states{4} = 'ALL';
-SleepState.ints.ALL = [0 Inf];
-statecolors = {[0 0 0],[0 0 1],[1 0 0],[0.6 0.6 0.6]};
 
+switch cellclass
+    case 'load'
+        CellClass = bz_LoadCellinfo(basePath,'CellClass');
+    case 'AllCells'
+        CellClass.AllCells = true(size(spikes.times));
+        CellClass.celltypes = {'AllCells'};
+end
 try
 celltypes = CellClass.celltypes;
 catch
@@ -35,21 +66,42 @@ catch
 end
 cellcolor = {'k','r'};
 
+if strcmp(ints,'load');
+        SleepState = bz_LoadStates(basePath,'SleepState');
+        ints = SleepState.ints;
+end
+states = fieldnames(ints);
+%statecolors = {[0 0 0],[0 0 1],[1 0 0]};
+
 
 
 %%
-try
-    Regions = unique(sessionInfo.region(~cellfun(@isempty,sessionInfo.region)));
-catch
-    display('No regions in sessionInfo, using all channels in spikegroups')
-    Regions{1} = 'NA';
-    inSGchans =[sessionInfo.spikeGroups.groups{:}];
-    inSGchans = ismember(sessionInfo.channels,inSGchans);
-    sessionInfo.region(inSGchans) = {'NA'};
+
+
+
+%%
+if strcmp(groups,'sessionInfo')
+        groups = sessionInfo.spikeGroups.groups{:};
+end
+if strcmp(regions,'sessionInfo')
+        try
+            emptychans = cellfun(@isempty,sessionInfo.region);
+            Regions = unique(sessionInfo.region(~emptychans));
+            sessionInfo.region(emptychans) = {'empty'};
+        catch
+            display('No regions in sessionInfo, using all channels in spikegroups')
+            Regions{1} = 'NA';
+            inSGchans =[groups{:}];
+            inSGchans = ismember(sessionInfo.channels,inSGchans);
+            sessionInfo.region(inSGchans) = {'NA'};
+            
+            emptychans = cellfun(@isempty,sessionInfo.region);
+            sessionInfo.region(emptychans) = {'empty'};
+        end
 end
 %Regions = unique(spikes.region(~cellfun(@isempty,spikes.region)));
 
-
+ISILFPMap.Regions = Regions;
 %% Load the LFP
 for rr = 1:length(Regions)
     display(['Region: ',Regions{rr}])
@@ -73,26 +125,6 @@ for rr = 1:length(Regions)
     lfp = bz_GetLFP(inregionchan,... %note: may have to load separately here for RAM...
         'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 
-%%
-
-% ss = 1;
-% state = states{ss};
-% %Take only subset of time (random intervals) so wavelets doesn't break
-% %computer (total 625s)
-% usetime = 7200;%2500
-% winsize = 25;
-% if sum(diff(SleepState.ints.(state),1,2))>usetime
-%     nwin = round(usetime./winsize);
-%     %winsize = 30; %s
-%     try
-%         windows = bz_RandomWindowInIntervals( SleepState.ints.(state),winsize,nwin );
-%     catch
-%         windows = SleepState.ints.(state);
-%     end
-% else
-%     windows = SleepState.ints.(state);
-% end
-        
 %% Calculate Residuals
 dt = 1;
 winsize = 1;
@@ -105,9 +137,10 @@ nfreqs = 150;
     
 
 %%
-MIMap.(Regions{rr}).UIDs = spikes.UID(inregioncellIDX);
-MIMap.(Regions{rr}).ChanID = inregionchan;
-MIMap.freqs = specslope.freqs;
+ISILFPMap.(Regions{rr}).UIDs = spikes.UID(inregioncellIDX);
+ISILFPMap.(Regions{rr}).chanID = inregionchan;
+ISILFPMap.freqs = specslope.freqs;
+ISILFPMap.baseName = baseName;
 %%
 for tt = 1:length(celltypes)
     popspikes.(Regions{rr}).(celltypes{tt}) = cat(1,spikes.times{CellClass.(celltypes{tt})&inregioncellIDX});
@@ -116,37 +149,32 @@ end
 %%
 clear fPower
 
-%cc = 1; %channel
-
 fPower.timestamps = specslope.timestamps;
-%fPower(length(specslope.freqs)+1).data = [];
 clear PopConditionalISIDist PopConditionalISIDist_phase PopConditionalISIDist_power
 for ff = 1:length(specslope.freqs)
 	bz_Counter(ff,length(specslope.freqs),'Freq')
     for cc = 1:length(inregionchan)
         fPower.data = specslope.resid(:,ff,cc);
         for tt = 1:length(celltypes)
-            for ss = 1:3
+            for ss = 1:length(states)
             [PopConditionalISIDist] = bz_ConditionalISI(popspikes.(Regions{rr}).(celltypes{tt}),fPower,...
-                'ints',SleepState.ints.(states{ss}),...
+                'ints',ints.(states{ss}),...
                 'showfig',false,'ISIDist',false);
             %test(rr,ss,tt,ff,cc) = PopConditionalISIDist.MutInf;
-            MIMap.(Regions{rr}).(states{ss}).(celltypes{tt})(ff,cc) = PopConditionalISIDist.MutInf;
+            ISILFPMap.(Regions{rr}).(states{ss}).(celltypes{tt})(ff,cc) = PopConditionalISIDist.MutInf;
             end
         end
     end
     
 end
 
-%%
-
 
 %%
 %rr = 2;
 [~,SGsIDX] = cellfun(@(SGAll) (ismember(SGAll,inregionchan)),...
-                   sessionInfo.spikeGroups.groups,'UniformOutput',false); %Just cells in the right region
+                   groups,'UniformOutput',false); %Just cells in the right region
 SGsThisRegion = cellfun(@(SGAll) SGAll(ismember(SGAll,inregionchan)),...
-                   sessionInfo.spikeGroups.groups,'UniformOutput',false); %Just cells in the right region
+                   groups,'UniformOutput',false); %Just cells in the right region
 SGLength = cellfun(@(SG) length(SG),SGsThisRegion);
 SGnum = find(SGLength>0);
 SGorder = [SGsIDX{:}]; %The spikegroup order of all cells 
@@ -156,18 +184,23 @@ SGorder = SGorder(SGorder~=0);
 %save MI map - make sure it has channel numbers and UID of cells in each
 %region/population. and freqs. and spike group ID/sortings.
 %Save figures in detection figures
-MIMap.(Regions{rr}).SGorder = SGorder;
-MIMap.(Regions{rr}).SGLength = SGLength;
-MIMap.(Regions{rr}).SGnum = SGnum;
+ISILFPMap.(Regions{rr}).SGorder = SGorder;
+ISILFPMap.(Regions{rr}).SGLength = SGLength;
+ISILFPMap.(Regions{rr}).SGnum = SGnum;
 %%
+if SHOWFIG || figfolder
 figure
-    for ss = 1:3
+    for ss = 1:length(states)
         for tt = 1:length(celltypes)
+            if tt>2
+               display(celltypes{tt})
+               continue
+            end
             subplot(2,3,ss+(tt-1).*3)
-                imagesc(log2(MIMap.freqs),[1 length(MIMap.(Regions{rr}).ChanID)],...
-                    MIMap.(Regions{rr}).(states{ss}).(celltypes{tt})(:,SGorder)')
+                imagesc(log2(ISILFPMap.freqs),[1 length(ISILFPMap.(Regions{rr}).chanID)],...
+                    ISILFPMap.(Regions{rr}).(states{ss}).(celltypes{tt})(:,SGorder)')
                 hold on
-                plot(log2(MIMap.freqs([1 end])),cumsum(SGLength)'*[1 1]+0.5,'w')
+                plot(log2(ISILFPMap.freqs([1 end])),cumsum(SGLength)'*[1 1]+0.5,'w')
                 
                 set(gca,'YTickLabel',[]);
                 if ss == 1
@@ -187,9 +220,19 @@ figure
         end
     end
     
-    
-NiceSave(['ISIMod_',Regions{rr}],figfolder,baseName)
+if figfolder
+    if ~isempty(figname)
+        baseName = figname;
+    end
+    NiceSave(['ISIMod_',Regions{rr}],figfolder,baseName)
 end
+    
 
+end
+end
+%%
+if SAVECHANINFO
+    save(chaninfofilename,'ISILFPMap')
+end
 
 end
