@@ -42,11 +42,11 @@ cellcolor = {'k','r'};
 LFPMapFolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISILFPMap'];
 
 %Check for an LFP Map
-try
+%try
     [ISILFPMap] = GetMatResults(LFPMapFolder,'ISILFPMap','baseNames',baseName);
-catch
-    error('No Channel selected')
-end
+%catch
+%    error('No Channel selected')
+%end
 
 region = 'bla';
 %If One exists: bz_tagChannel
