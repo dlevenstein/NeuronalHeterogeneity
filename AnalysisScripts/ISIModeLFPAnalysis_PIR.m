@@ -1,4 +1,4 @@
-function [ModalLFPModulation] = ISIModeLFPAnalysis_fCTX(basePath,figfolder)
+function [ModalLFPModulation] = ISIModeLFPAnalysis_PIR(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -39,25 +39,25 @@ cellcolor = {'k','r'};
 
 %%
 
-% LFPMapFolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISILFPMap'];
-% 
-% %Check for an LFP Map
-% try
-%     [ISILFPMap] = GetMatResults(LFPMapFolder,'ISILFPMap','baseNames',baseName);
-% catch
-%     error('No Channel selected')
-% end
-% 
-% region = 'fCTX';
-% %If One exists: bz_tagChannel
-% lfpchannel = ISILFPMap.MIMap.selectedchans.(region).channel;
-% usecells = ISILFPMap.MIMap.(ISILFPMap.MIMap.selectedchans.(region).regname).UIDs;
-% %If it doesnt, skip all the mode stuff and just run bz_ISILFPMap
-% %Question: what to do about pir/bla
-% %Note: need to only use UIDs from the right region
+LFPMapFolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISILFPMap'];
+
+%Check for an LFP Map
+try
+    [ISILFPMap] = GetMatResults(LFPMapFolder,'ISILFPMap','baseNames',baseName);
+catch
+    error('No Channel selected')
+end
+
+region = 'pir';
+%If One exists: bz_tagChannel
+lfpchannel = ISILFPMap.MIMap.selectedchans.(region).channel;
+usecells = ISILFPMap.MIMap.(ISILFPMap.MIMap.selectedchans.(region).regname).UIDs;
+%If it doesnt, skip all the mode stuff and just run bz_ISILFPMap
+%Question: what to do about pir/bla
+%Note: need to only use UIDs from the right region
 
     %%
-    lfpchannel = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID; 
+    %lfpchannel = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID; 
     %Load from the analysisresults. and tag channel.
     %Then run [ISILFPMap] =
     %bz_ISILFPMap(basePath,varargin) to save again and save with channel
