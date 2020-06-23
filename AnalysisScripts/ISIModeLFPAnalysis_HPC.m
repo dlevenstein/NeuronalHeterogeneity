@@ -39,7 +39,10 @@ cellcolor = {'k','r'};
 
     %%
     lfpchannel = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID; 
-
+    %Load from the analysisresults. and tag channel.
+    %Then run [ISILFPMap] =
+    %bz_ISILFPMap(basePath,varargin) to save again and save with channel
+    %marking? (also 
     %In the future, here, tagChannel for each recording!
 %% Load the LFP
 % downsamplefactor = 2;
