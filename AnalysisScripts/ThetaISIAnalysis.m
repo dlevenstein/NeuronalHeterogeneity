@@ -9,6 +9,7 @@ function [TH_ISIstats,ISIbythetaphase,ISIbytheta,ThetaISImodes] = ThetaISIAnalys
 %
 %% Load Header
 %Initiate Paths
+reporoot = '/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/';
 %reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 % basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
