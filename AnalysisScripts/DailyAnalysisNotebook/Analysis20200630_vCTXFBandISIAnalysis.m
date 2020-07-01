@@ -1,4 +1,4 @@
-function [TH_ISIstats,ISIbythetaphase,ISIbytheta,ThetaISImodes] = ThetaISIAnalysis(basePath,figfolder)
+function [TH_ISIstats,ISIbythetaphase,ISIbytheta] = ThetaISIAnalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -9,13 +9,12 @@ function [TH_ISIstats,ISIbythetaphase,ISIbytheta,ThetaISImodes] = ThetaISIAnalys
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 % basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
-%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
-%basePath = '/Users/dl2820/Dropbox/Research/Datasets/YMV12_171211';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/YMV12_171211';
 % %basePath = pwd;
 % %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -38,13 +37,92 @@ cellcolor = {'k','r'};
 
 
 %% Load the LFP if needed
+LFPMapFolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISILFPMap'];
 
-% lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID;
-% downsamplefactor = 1;
-% lfp = bz_GetLFP(lfpchan,...
-%     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
-% %Noralize the LFP
-% lfp.data = NormToInt(single(lfp.data),'modZ', SleepState.ints.NREMstate,lfp.samplingRate);
+%Check for an LFP Map
+%try
+    %LFPMapFolder
+    [ISILFPMap] = GetMatResults(LFPMapFolder,'ISILFPMap','baseNames',baseName);
+region = 'vCTX';
+lfpchannel = ISILFPMap.MIMap.selectedchans.(region).channel;
+
+%%
+downsamplefactor = 1;
+lfp = bz_GetLFP(lfpchannel,...
+    'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
+%Noralize the LFP
+%lfp.data = NormToInt(single(lfp.data),'modZ', SleepState.ints.NREMstate,lfp.samplingRate);
+
+
+%%
+dt = 0.01;
+winsize = 10;
+frange = [1 312];
+nfreqs = 150;
+[specslope,spec] = bz_PowerSpectrumSlope(lfp,winsize,dt,'spectype','wavelet',...
+    'nfreqs',nfreqs,'showfig',true,'showprogress',true,'frange',frange);%,...
+    %'saveMat',basePath,'saveName',['Chan',num2str(lfpchannel)],...
+    %'saveFolder','WavPSS');
+
+
+%%
+
+for ss = 1:3
+    specslope.instate.(states{ss}) = InIntervals(specslope.timestamps,SleepState.ints.(states{ss}));
+    specstats.(states{ss}).meanresid = mean(specslope.resid(specslope.instate.(states{ss}),:),1);
+    specstats.(states{ss}).meanIRASA = mean(spec.IRASAsmooth(specslope.instate.(states{ss}),:),1);
+    specstats.(states{ss}).meanosci = mean(spec.osci(specslope.instate.(states{ss}),:),1);
+
+    specstats.(states{ss}).meanspec = mean(specslope.specgram(specslope.instate.(states{ss}),:),1);
+    
+    
+end
+%%
+figure
+subplot(2,2,1)
+hold on
+for ss = 1:2
+    plot(log2(specslope.freqs),log10(specstats.(states{ss}).meanspec),'color',statecolors{ss})
+    plot(log2(specslope.freqs),log10(specstats.(states{ss}).meanIRASA),'--','color',statecolors{ss})
+end
+LogScale('x',2)
+
+subplot(2,2,2)
+hold on
+for ss = 1:2
+    plot(log2(specslope.freqs),specstats.(states{ss}).meanosci,'--','color',statecolors{ss})
+    plot(log2(specslope.freqs),specstats.(states{ss}).meanresid,'color',statecolors{ss})
+    
+end
+LogScale('x',2)
+
+
+%%
+figure
+subplot(2,1,1)
+imagesc(specslope.timestamps,log2(specslope.freqs),specslope.resid')
+hold on
+%plot(ThetaPower.timestamps,bz_NormToRange(ThetaPower.data),'r')
+axis xy
+ylim([0 7])
+LogScale('y',2)
+colorbar
+caxis([0 1])
+
+
+subplot(2,1,2)
+imagesc(specslope.timestamps,log2(specslope.freqs),spec.osci')
+hold on
+%plot(ThetaPower.timestamps,bz_NormToRange(ThetaPower.data),'r')
+axis xy
+ylim([0 7])
+LogScale('y',2)
+colorbar
+caxis([0 1])
+
+
+
+
 
 %% Normalize the brain state metrics
 ThetaPower.timestamps = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.t_clus;
@@ -309,5 +387,4 @@ subplot(2,2,3)
     
     
  NiceSave('ThetaMod',figfolder,baseName)
-
 end

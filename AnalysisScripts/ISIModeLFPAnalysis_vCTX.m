@@ -13,9 +13,11 @@ reporoot = '/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/';
 %reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
+%basePath = '/Users/dl2820/Dropbox/Research/Datasets/YMV12_171211';
+
 % %basePath = pwd;
 % %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -43,7 +45,7 @@ LFPMapFolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISILFPMap'];
 
 %Check for an LFP Map
 %try
-    LFPMapFolder
+    %LFPMapFolder
     [ISILFPMap] = GetMatResults(LFPMapFolder,'ISILFPMap','baseNames',baseName);
 %catch
 %    error('No Channel selected')
@@ -65,7 +67,7 @@ usecells = ISILFPMap.MIMap.(ISILFPMap.MIMap.selectedchans.(region).regname).UIDs
     %marking? (also 
     %In the future, here, tagChannel for each recording!
 %% Load the LFP
-downsamplefactor = 2;
+downsamplefactor = 1;
 lfp = bz_GetLFP(lfpchannel,...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 
@@ -79,7 +81,7 @@ nfreqs = 150;
 [specslope] = bz_PowerSpectrumSlope(lfp,winsize,dt,'spectype','wavelet',...
     'nfreqs',nfreqs,'showfig',true,'showprogress',true,'frange',frange,...
     'saveMat',basePath,'saveName',['Chan',num2str(lfpchannel)],...
-    'saveFolder','WavPSS');
+    'saveFolder','WavPSS','Redetect',true);
     
 
 %% Zoom on Theta (load?)

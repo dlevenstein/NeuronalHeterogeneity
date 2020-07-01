@@ -64,7 +64,7 @@ usecells = ISILFPMap.MIMap.(ISILFPMap.MIMap.selectedchans.(region).regname).UIDs
     %marking? (also 
     %In the future, here, tagChannel for each recording!
 %% Load the LFP
-downsamplefactor = 2;
+downsamplefactor = 1;
 lfp = bz_GetLFP(lfpchannel,...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 
@@ -78,7 +78,7 @@ nfreqs = 150;
 [specslope] = bz_PowerSpectrumSlope(lfp,winsize,dt,'spectype','wavelet',...
     'nfreqs',nfreqs,'showfig',true,'showprogress',true,'frange',frange,...
     'saveMat',basePath,'saveName',['Chan',num2str(lfpchannel)],...
-    'saveFolder','WavPSS');
+    'saveFolder','WavPSS','Redetect',true);
     
 
 %% Zoom on Theta (load?)

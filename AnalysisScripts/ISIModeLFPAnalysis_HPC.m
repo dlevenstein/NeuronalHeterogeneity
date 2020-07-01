@@ -64,7 +64,7 @@ cellcolor = {'k','r'};
     %marking? (also 
     %In the future, here, tagChannel for each recording!
 %% Load the LFP
-downsamplefactor = 2;
+downsamplefactor = 1;
 lfp = bz_GetLFP(lfpchannel,...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 
