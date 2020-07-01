@@ -41,11 +41,20 @@ cellcolor = {'k','r'};
 LFPMapFolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISILFPMap'];
 
 %Check for an LFP Map
-%try
-    %LFPMapFolder
+try
+    LFPMapFolder
     [ISILFPMap] = GetMatResults(LFPMapFolder,'ISILFPMap','baseNames',baseName);
-region = 'vCTX';
-lfpchannel = ISILFPMap.MIMap.selectedchans.(region).channel;
+    try
+    region = 'vCTX';
+    lfpchannel = ISILFPMap.MIMap.selectedchans.(region).channel;
+    catch
+            region = 'CA1';
+            lfpchannel = ISILFPMap.MIMap.selectedchans.(region).channel;
+    end
+catch
+    display('No ISILFP CHannel')
+    lfpchannel = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID;
+end
 
 %%
 downsamplefactor = 1;
@@ -60,7 +69,7 @@ dt = 0.01;
 winsize = 10;
 frange = [1 312];
 nfreqs = 150;
-[specslope,spec] = bz_PowerSpectrumSlope(lfp,winsize,dt,'spectype','wavelet',...
+[specslope] = bz_PowerSpectrumSlope(lfp,winsize,dt,'spectype','wavelet',...
     'nfreqs',nfreqs,'showfig',true,'showprogress',true,'frange',frange);%,...
     %'saveMat',basePath,'saveName',['Chan',num2str(lfpchannel)],...
     %'saveFolder','WavPSS');
