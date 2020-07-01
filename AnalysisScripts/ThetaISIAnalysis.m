@@ -38,17 +38,82 @@ cellcolor = {'k','r'};
 
 
 %% Load the LFP if needed
+LFPMapFolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISILFPMap'];
 
-% lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID;
-% downsamplefactor = 1;
-% lfp = bz_GetLFP(lfpchan,...
-%     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
-% %Noralize the LFP
-% lfp.data = NormToInt(single(lfp.data),'modZ', SleepState.ints.NREMstate,lfp.samplingRate);
+%Check for an LFP Map
+%try
+    %LFPMapFolder
+    [ISILFPMap] = GetMatResults(LFPMapFolder,'ISILFPMap','baseNames',baseName);
+region = 'vCTX';
+lfpchannel = ISILFPMap.MIMap.selectedchans.(region).channel;
+
+%%
+downsamplefactor = 1;
+lfp = bz_GetLFP(lfpchannel,...
+    'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
+%Noralize the LFP
+%lfp.data = NormToInt(single(lfp.data),'modZ', SleepState.ints.NREMstate,lfp.samplingRate);
+
+
+%%
+dt = 0.01;
+winsize = 10;
+frange = [1 312];
+nfreqs = 150;
+[specslope,spec] = bz_PowerSpectrumSlope(lfp,winsize,dt,'spectype','wavelet',...
+    'nfreqs',nfreqs,'showfig',true,'showprogress',true,'frange',frange);%,...
+    %'saveMat',basePath,'saveName',['Chan',num2str(lfpchannel)],...
+    %'saveFolder','WavPSS');
+
+
+%%
+
+for ss = 1:3
+    specslope.instate.(states{ss}) = InIntervals(specslope.timestamps,SleepState.ints.(states{ss}));
+    specstats.(states{ss}).meanresid = mean(specslope.resid(specslope.instate.(states{ss}),:),1);
+    %specstats.(states{ss}).meanIRASA = mean(spec.IRASAsmooth(specslope.instate.(states{ss}),:),1);
+    %specstats.(states{ss}).meanosci = mean(spec.osci(specslope.instate.(states{ss}),:),1);
+
+    specstats.(states{ss}).meanspec = mean(specslope.specgram(specslope.instate.(states{ss}),:),1);
+    
+    
+end
+%%
+figure
+subplot(2,2,1)
+hold on
+for ss = 1:2
+    plot(log2(specslope.freqs),log10(specstats.(states{ss}).meanspec),'color',statecolors{ss})
+    %plot(log2(specslope.freqs),log10(specstats.(states{ss}).meanIRASA),'--','color',statecolors{ss})
+end
+LogScale('x',2)
+
+subplot(2,2,2)
+hold on
+for ss = 1:2
+    %plot(log2(specslope.freqs),specstats.(states{ss}).meanosci,'--','color',statecolors{ss})
+    plot(log2(specslope.freqs),specstats.(states{ss}).meanresid,'color',statecolors{ss})
+    
+end
+LogScale('x',2)
+
+
+ NiceSave('Spec',figfolder,baseName)
+
+%%
+f_theta = [5.5 12];
+thfreqs = (specslope.freqs>=f_theta(1) & specslope.freqs<=f_theta(2));
+thratio = max((specslope.resid(:,thfreqs)),[],2);
+
 
 %% Normalize the brain state metrics
-ThetaPower.timestamps = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.t_clus;
-ThetaPower.data = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.thratio;
+ThetaPower.timestamps = specslope.timestamps;
+ThetaPower.data = thratio;
+
+
+%% Normalize the brain state metrics
+%ThetaPower.timestamps = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.t_clus;
+%ThetaPower.data = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.thratio;
 
 for ss = 1:length(states)
    ThetaPower.instatetime.(states{ss}) = InIntervals(ThetaPower.timestamps,SleepState.ints.(states{ss}));
@@ -72,11 +137,11 @@ TH_ISIstats = rmfield(TH_ISIstats,'allspikes');
 TH_ISIstats.cellinfo.celltype = CellClass;
 %% Get the Theta LFP for phase
 
-lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID;
-downsamplefactor = 5;
-lfp = bz_GetLFP(lfpchan,...
-    'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
-thetalfp = bz_Filter(lfp,'passband',[6 10]);
+% lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID;
+% downsamplefactor = 5;
+% lfp = bz_GetLFP(lfpchan,...
+%     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
+thetalfp = bz_Filter(lfp,'passband',f_theta);
 
 ThetaPhase.data = thetalfp.phase;
 ThetaPhase.timestamps = thetalfp.timestamps;
@@ -285,17 +350,22 @@ ThetaISImodes.GSrate = GSrate;
 %AllThetaISIModes = bz_CollapseStruct(ThetaConditionalISI);
 %AllThetaISIModes = bz_CollapseStruct(AllThetaISIModes.GammaModes,2);
 %% Figure: Theta ISI modulation all cells
+GScolor = [0.6 0.4 0];
+
 figure
 subplot(2,2,1)
     hist(ThetaISImodes.GSModulation)
 subplot(2,2,2)
-    plot(ThetaISImodes.ASlogRates,...
-        ThetaISImodes.ASModulation,'k.')
-    hold on
+hold on
+    for rr = 1:5
+        scatter(ThetaISImodes.ASlogRates(:,rr),...
+            ThetaISImodes.ASModulation(:,rr),20*ThetaISImodes.ASweight(:,rr)+0.00001,'k','filled')
+    end
+   % hold on
 
     
-    plot(ThetaISImodes.GSrate,...
-        ThetaISImodes.GSModulation,'.')
+   plot(mean(ThetaISImodes.GSlogRates,2),...
+       ThetaISImodes.GSModulation,'.','color',GScolor)
     axis tight
     box off
         plot(xlim(gca),[0 0],'k--')
@@ -309,5 +379,6 @@ subplot(2,2,3)
     
     
  NiceSave('ThetaMod',figfolder,baseName)
+ 
 
 end

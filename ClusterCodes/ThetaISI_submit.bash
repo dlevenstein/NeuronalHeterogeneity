@@ -1,23 +1,23 @@
 #!/bin/bash
-# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV01/YMV01_170818
-# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV02/YMV02_170815
-# #sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV03/YMV03_170818
-# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV04/YMV04_170907
-# #sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV05/YMV05_170912
-# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV06/YMV06_170913
-# #sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV07/YMV07_170914
-# #sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV08/YMV08_170922
-# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV09/YMV09_171204
-# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV10/YMV10_171213
-# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV11/YMV11_171208
-# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV12/YMV12_171211
-# #sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV13/YMV13_180127
-# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV14/YMV14_180128
-# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV15/YMV15_180205
-# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV16/YMV16_180206
-# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV17/YMV17_180207
-# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV18/YMV18_180208
-# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV19/YMV19_180209
+sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV01/YMV01_170818
+sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV02/YMV02_170815
+#sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV03/YMV03_170818
+sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV04/YMV04_170907
+#sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV05/YMV05_170912
+sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV06/YMV06_170913
+#sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV07/YMV07_170914
+#sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV08/YMV08_170922
+sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV09/YMV09_171204
+sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV10/YMV10_171213
+sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV11/YMV11_171208
+sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV12/YMV12_171211
+#sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV13/YMV13_180127
+sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV14/YMV14_180128
+sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV15/YMV15_180205
+sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV16/YMV16_180206
+sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV17/YMV17_180207
+sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV18/YMV18_180208
+sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV19/YMV19_180209
 #
 # sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/BWData/Bogey/Bogey_012615
 # sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/BWData/BWRat17/BWRat17_121712
@@ -45,14 +45,14 @@
 # sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/BWData/Splinter/Splinter_020915
 # sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/BWData/Templeton/Templeton_032415
 
-sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_11012013
-sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_10252013
-sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Buddy/Buddy_06272013
-sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09102014
-sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09012014
-sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09172014
-sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08282013
-sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08022013
+# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_11012013
+# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_10252013
+# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Buddy/Buddy_06272013
+# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09102014
+# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09012014
+# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09172014
+# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08282013
+# sbatch ./ThetaISI.bash  /gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08022013
 #
 #
 #

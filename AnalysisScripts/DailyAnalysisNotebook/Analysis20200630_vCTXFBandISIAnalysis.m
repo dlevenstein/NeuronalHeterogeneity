@@ -70,8 +70,8 @@ nfreqs = 150;
 for ss = 1:3
     specslope.instate.(states{ss}) = InIntervals(specslope.timestamps,SleepState.ints.(states{ss}));
     specstats.(states{ss}).meanresid = mean(specslope.resid(specslope.instate.(states{ss}),:),1);
-    specstats.(states{ss}).meanIRASA = mean(spec.IRASAsmooth(specslope.instate.(states{ss}),:),1);
-    specstats.(states{ss}).meanosci = mean(spec.osci(specslope.instate.(states{ss}),:),1);
+    %specstats.(states{ss}).meanIRASA = mean(spec.IRASAsmooth(specslope.instate.(states{ss}),:),1);
+    %specstats.(states{ss}).meanosci = mean(spec.osci(specslope.instate.(states{ss}),:),1);
 
     specstats.(states{ss}).meanspec = mean(specslope.specgram(specslope.instate.(states{ss}),:),1);
     
@@ -83,14 +83,14 @@ subplot(2,2,1)
 hold on
 for ss = 1:2
     plot(log2(specslope.freqs),log10(specstats.(states{ss}).meanspec),'color',statecolors{ss})
-    plot(log2(specslope.freqs),log10(specstats.(states{ss}).meanIRASA),'--','color',statecolors{ss})
+    %plot(log2(specslope.freqs),log10(specstats.(states{ss}).meanIRASA),'--','color',statecolors{ss})
 end
 LogScale('x',2)
 
 subplot(2,2,2)
 hold on
 for ss = 1:2
-    plot(log2(specslope.freqs),specstats.(states{ss}).meanosci,'--','color',statecolors{ss})
+    %plot(log2(specslope.freqs),specstats.(states{ss}).meanosci,'--','color',statecolors{ss})
     plot(log2(specslope.freqs),specstats.(states{ss}).meanresid,'color',statecolors{ss})
     
 end
@@ -121,12 +121,15 @@ colorbar
 caxis([0 1])
 
 
-
+%%
+f_theta = [5.5 12];
+thfreqs = (specslope.freqs>=f_theta(1) & specslope.freqs<=f_theta(2));
+thratio = max((specslope.resid(:,thfreqs)),[],2);
 
 
 %% Normalize the brain state metrics
-ThetaPower.timestamps = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.t_clus;
-ThetaPower.data = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.thratio;
+ThetaPower.timestamps = specslope.timestamps;
+ThetaPower.data = thratio;
 
 for ss = 1:length(states)
    ThetaPower.instatetime.(states{ss}) = InIntervals(ThetaPower.timestamps,SleepState.ints.(states{ss}));
@@ -363,17 +366,22 @@ ThetaISImodes.GSrate = GSrate;
 %AllThetaISIModes = bz_CollapseStruct(ThetaConditionalISI);
 %AllThetaISIModes = bz_CollapseStruct(AllThetaISIModes.GammaModes,2);
 %% Figure: Theta ISI modulation all cells
+GScolor = [0.6 0.4 0];
+
 figure
 subplot(2,2,1)
     hist(ThetaISImodes.GSModulation)
 subplot(2,2,2)
-    plot(ThetaISImodes.ASlogRates,...
-        ThetaISImodes.ASModulation,'k.')
-    hold on
+hold on
+    for rr = 1:5
+        scatter(ThetaISImodes.ASlogRates(:,rr),...
+            ThetaISImodes.ASModulation(:,rr),20*ThetaISImodes.ASweight(:,rr)+0.00001,'k','filled')
+    end
+   % hold on
 
     
-    plot(ThetaISImodes.GSrate,...
-        ThetaISImodes.GSModulation,'.')
+   plot(mean(ThetaISImodes.GSlogRates,2),...
+       ThetaISImodes.GSModulation,'.','color',GScolor)
     axis tight
     box off
         plot(xlim(gca),[0 0],'k--')
@@ -387,4 +395,6 @@ subplot(2,2,3)
     
     
  NiceSave('ThetaMod',figfolder,baseName)
+ 
+
 end
