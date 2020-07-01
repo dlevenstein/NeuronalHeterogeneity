@@ -1,5 +1,6 @@
 #!/bin/bash
 
+sbatch ./ISIModeLFP_vCTX.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV12/YMV12_171211
 sbatch ./ISIModeLFP_vCTX.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV01/YMV01_170818
 sbatch ./ISIModeLFP_vCTX.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV02/YMV02_170815
 #sbatch ./ISIModeLFP_CTX.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV03/YMV03_170818
@@ -11,7 +12,6 @@ sbatch ./ISIModeLFP_vCTX.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV06/YM
 sbatch ./ISIModeLFP_vCTX.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV09/YMV09_171204
 sbatch ./ISIModeLFP_vCTX.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV10/YMV10_171213
 sbatch ./ISIModeLFP_vCTX.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV11/YMV11_171208
-sbatch ./ISIModeLFP_vCTX.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV12/YMV12_171211
 #sbatch ./ISIModeLFP_CTX.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV13/YMV13_180127
 sbatch ./ISIModeLFP_vCTX.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV14/YMV14_180128
 sbatch ./ISIModeLFP_vCTX.bash  /gpfs/data/buzsakilab/DL/Database/YSData/YMV15/YMV15_180205
