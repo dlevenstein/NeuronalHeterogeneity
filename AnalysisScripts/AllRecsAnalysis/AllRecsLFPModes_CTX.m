@@ -2,7 +2,7 @@ reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/'; %Laptop
 
 regions = {'THAL','vCTX','fCTX','BLA','PIR','CA1'};
 
-for rr = 1:3
+for rr = 2
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModeLFPAnalysis_',regions{rr}];
 [LFPModeALL.(regions{rr}),baseNames] = GetMatResults(figfolder,['ISIModeLFPAnalysis_',regions{rr}]);
 LFPModeALL.(regions{rr}) = bz_CollapseStruct(LFPModeALL.(regions{rr}));
@@ -18,7 +18,7 @@ end
 states = {'WAKEstate','NREMstate'};
 %ss = 1;
 
-for rr = 1:3
+for rr = 2
 ModalLFPModulation.(regions{rr}).numcells = length(ModalLFPModulation.(regions{rr}).UID);
 ModalLFPModulation.(regions{rr}).ASfreq = repmat(ModalLFPModulation.(regions{rr}).freq(1,:)',[1,ModalLFPModulation.(regions{rr}).numcells,5]);
 %%
@@ -37,7 +37,7 @@ end
 
 end
 %%
-for rr = 1:3
+for rr = 2
 figure
 for ss = 1:2
 subplot(2,2,ss)
