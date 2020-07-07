@@ -24,14 +24,14 @@ sessionInfo = bz_getSessionInfo(basePath);
 spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
 SleepState = bz_LoadStates(basePath,'SleepState');
-ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
+%ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 states = fieldnames(SleepState.ints);
 states{4} = 'ALL';
 SleepState.ints.ALL = [0 Inf];
 statecolors = {'k','b','r',[0.6 0.6 0.6]};
 
-[celltypes,~,typeidx] = unique(CellClass.label);
-cellcolor = {'k','r'};
+%[celltypes,~,typeidx] = unique(CellClass.label);
+%cellcolor = {'k','r'};
 
 
 %%
