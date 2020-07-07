@@ -58,14 +58,37 @@ headdir.timestamps = [1:length(headdir.data)]'./headdir.samplingRate;
 ISIbyHD.fieldpeak = ISIbyHD.Dist.Xbins(ISIbyHD.fieldpeak);
 
 %% Compare ISI MI vs Rate MI
-spkmat = bz_SpktToSpkmat(spikes.times,'binsize',1,'units','rate');
+MutInfo.ISI = squeeze(ISIbyHD.MutInf);
+
+binsizes = logspace(-2.5,1.5,25);
+for bb = 1:length(binsizes)
+    bz_Counter(bb,length(binsizes),'Bin')
+spkmat = bz_SpktToSpkmat(spikes.times,'dt',binsizes(bb),'binsize',binsizes(bb),'units','rate');
 spkmat.pos = interp1(headdir.timestamps,headdir.data,spkmat.timestamps);
 spkmat.InWake = InIntervals(spkmat.timestamps,SleepState.ints.WAKEstate);
 
-MutInfo.ISI = squeeze(ISIbyHD.MutInf);
+for cc = 1:spikes.numcells
+    MutInfo.Rate_BinCompare(cc,bb) = mutualinfo(spkmat.data(spkmat.InWake,cc),spkmat.pos(spkmat.InWake));
+end
+end
+
+%%
+usebin = 0.3;
+spkmat = bz_SpktToSpkmat(spikes.times,'dt',usebin,'binsize',usebin,'units','rate');
+spkmat.pos = interp1(headdir.timestamps,headdir.data,spkmat.timestamps);
+spkmat.InWake = InIntervals(spkmat.timestamps,SleepState.ints.WAKEstate);
+
 for cc = 1:spikes.numcells
     MutInfo.Rate(cc) = mutualinfo(spkmat.data(spkmat.InWake,cc),spkmat.pos(spkmat.InWake));
 end
+
+%%
+MIthresh = 0.05;
+MIforbest = ISIbyHD.MutInf;
+MIforbest(MutInfo.Rate<MIthresh) = nan;
+[~,bestcell] =max(MIforbest);
+[~,sortMI_ISI] = sort(MutInfo.ISI);
+[~,sortMutInfo.Rate] = sort(MutInfo.Rate);
 
 %%
 
@@ -81,7 +104,7 @@ end
 
 
 
-MIthresh = 0.015;
+
 ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(squeeze(ISIbyHD.MutInf)>MIthresh & MutInfo.Rate'>MIthresh),3,'mean',true);
 ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(squeeze(ISIbyHD.MutInf)>MIthresh),3,'mean',true);
 
@@ -89,22 +112,17 @@ ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(squeeze(ISIbyHD.MutInf)>MI
 ISIbyHD_align = bz_CollapseStruct( ISIbyHD_align,3,'justcat',true);
 
 
-%%
-MIforbest = ISIbyHD.MutInf;
-MIforbest(MutInfo.Rate<MIthresh) = nan;
-[~,bestcell] =max(MIforbest);
-[~,sortMI_ISI] = sort(ISIbyHD.MutInf);
-[~,sortMutInfo.Rate] = sort(MutInfo.Rate);
+
 %%
 figure
-subplot(2,2,1)
+subplot(3,3,1)
     imagesc(ISIbyHD_align_mean.Dist.Xbins,[1 spikes.numcells],squeeze(log10(ISIbyHD_align.Dist.SpikeRate(:,:,sortMI_ISI)))')
     ylabel('Sort by MIISI')
-subplot(2,2,2)
+subplot(3,3,4)
     imagesc(ISIbyHD_align_mean.Dist.Xbins,[1 spikes.numcells],squeeze(log10(ISIbyHD_align.Dist.SpikeRate(:,:,sortMutInfo.Rate)))')
     ylabel('Sort by MIRate')
     
-subplot(2,2,3)
+subplot(3,3,7)
     imagesc(ISIbyHD_align_mean.Dist.Xbins,ISIbyHD_align_mean.Dist.Ybins,ISIbyHD_align_mean.Dist.pYX')
     hold on
     imagesc(ISIbyHD_align_mean.Dist.Xbins+2.*pi,ISIbyHD_align_mean.Dist.Ybins,ISIbyHD_align_mean.Dist.pYX')
@@ -116,14 +134,23 @@ subplot(2,2,3)
     xlabel('Position relative to PF Peak (m)')
     xlim([-pi 3.*pi])
     
-subplot(2,2,4)
+subplot(3,3,9)
     plot(log10(MutInfo.Rate),squeeze(log10(ISIbyHD.MutInf)),'.')
     xlabel('MI - rate');ylabel('MI - ISI')
+    
+subplot(3,3,6)
+imagesc(log10(binsizes),[1 spikes.numcells],log10(MutInfo.Rate_BinCompare(sortMutInfo.Rate,:)))
+LogScale('x',10)
+
+subplot(3,3,3)
+imagesc(log10(binsizes),[1 spikes.numcells],log10(MutInfo.Rate_BinCompare(sortMI_ISI,:)))
+LogScale('x',10)
     
 NiceSave('HDCoding',figfolder,baseName)
 
 
 %%
-% [excell] = bz_ConditionalISI(spikes.times{bestcell},position,...
-%     'ints',position_norm.Epochs.MazeEpoch,...
-%     'showfig',true,'GammaFit',false,'numXbins',10,'numISIbins',100,'minX',0);
+% [excell] = bz_ConditionalISI(spikes.times{bestcell},headdir,...
+%     'ints',SleepState.ints.WAKEstate,...
+%     'showfig',true,'GammaFit',false,'numXbins',25,'numISIbins',100,'minX',0,...
+%     'normtype','none','Xwin',[0 2.*pi]);

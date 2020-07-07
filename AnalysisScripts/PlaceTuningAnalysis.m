@@ -52,14 +52,39 @@ position.data = interp1(position.timestamps(~(nantimes)),position.data,position.
 [~,ISIbyPOS.fieldpeak] = max(ISIbyPOS.Dist.SpikeRate,[],2);
 ISIbyPOS.fieldpeak = ISIbyPOS.Dist.Xbins(ISIbyPOS.fieldpeak);
 
+
 %% Compare ISI MI vs Rate MI
-spkmat = bz_SpktToSpkmat(spikes.times,'binsize',1,'win',position.Epochs.MazeEpoch,'units','rate');
+MutInfo.ISI = squeeze(ISIbyPOS.MutInf);
+
+binsizes = logspace(-2.5,1.5,25);
+for bb = 1:length(binsizes)
+    bz_Counter(bb,length(binsizes),'Bin')
+    spkmat = bz_SpktToSpkmat(spikes.times,'dt',binsizes(bb),'binsize',binsizes(bb),...
+        'win',position.Epochs.MazeEpoch,'units','rate');
+    spkmat.pos = interp1(position.timestamps,position.data,spkmat.timestamps);
+
+    for cc = 1:spikes.numcells
+        MutInfo.Rate_BinCompare(cc,bb) = mutualinfo(spkmat.data(:,cc),spkmat.pos);
+    end
+end
+
+
+%% Compare ISI MI vs Rate MI
+spkmat = bz_SpktToSpkmat(spikes.times,'dt',0.3,'binsize',0.3,'win',position.Epochs.MazeEpoch,'units','rate');
 spkmat.pos = interp1(position.timestamps,position.data,spkmat.timestamps);
 
-MutInfo.ISI = squeeze(ISIbyPOS.MutInf);
 for cc = 1:spikes.numcells
     MutInfo.Rate(cc) = mutualinfo(spkmat.data(:,cc),spkmat.pos);
 end
+
+%%
+MIthresh = 0.05;
+MIforbest = ISIbyPOS.MutInf;
+MIforbest(MutInfo.Rate<MIthresh) = nan;
+[~,bestcell] =max(MIforbest);
+[~,sortMI_ISI] = sort(MutInfo.ISI);
+[~,sortMutInfo.Rate] = sort(MutInfo.Rate);
+
 
 %%
 
@@ -74,7 +99,7 @@ end
 
 
 
-MIthresh = 0.013;
+%MIthresh = 0.013;
 ISIbyPOS_norm_mean = bz_CollapseStruct( ISIbyPOS_norm(squeeze(ISIbyPOS.MutInf)>MIthresh & MutInfo.Rate'>MIthresh),3,'mean',true);
 %ISIbyPOS_norm_mean = bz_CollapseStruct( ISIbyPOS_norm(squeeze(ISIbyPOS.MutInf)>MIthresh),3,'mean',true);
 
@@ -82,22 +107,17 @@ ISIbyPOS_norm_mean = bz_CollapseStruct( ISIbyPOS_norm(squeeze(ISIbyPOS.MutInf)>M
 ISIbyPOS_norm = bz_CollapseStruct( ISIbyPOS_norm,3,'justcat',true);
 
 
-%%
-MIforbest = ISIbyPOS.MutInf;
-MIforbest(MutInfo.Rate<MIthresh) = nan;
-[~,bestcell] =max(MIforbest);
-[~,sortMI_ISI] = sort(ISIbyPOS.MutInf);
-[~,sortMutInfo.Rate] = sort(MutInfo.Rate);
+
 %%
 figure
-subplot(2,2,1)
+subplot(3,3,1)
     imagesc(ISIbyPOS_norm_mean.Dist.Xbins,[1 spikes.numcells],squeeze(log10(ISIbyPOS_norm.Dist.SpikeRate(:,:,sortMI_ISI)))')
     ylabel('Sort by MIISI')
-subplot(2,2,2)
+subplot(3,3,4)
     imagesc(ISIbyPOS_norm_mean.Dist.Xbins,[1 spikes.numcells],squeeze(log10(ISIbyPOS_norm.Dist.SpikeRate(:,:,sortMutInfo.Rate)))')
     ylabel('Sort by MIRate')
     
-subplot(2,2,3)
+subplot(3,3,7)
     imagesc(ISIbyPOS_norm_mean.Dist.Xbins,ISIbyPOS_norm_mean.Dist.Ybins,ISIbyPOS_norm_mean.Dist.pYX')
     hold on
     plot(ISIbyPOS_norm_mean.Dist.Xbins,-log10(ISIbyPOS_norm_mean.Dist.SpikeRate),'r')
@@ -106,10 +126,19 @@ subplot(2,2,3)
     bz_AddRightRateAxis
     xlabel('Position relative to PF Peak (m)')
     
-subplot(2,2,4)
+
+subplot(3,3,9)
     plot(log10(MutInfo.Rate),squeeze(log10(ISIbyPOS.MutInf)),'.')
     xlabel('MI - rate');ylabel('MI - ISI')
     
+subplot(3,3,6)
+imagesc(log10(binsizes),[1 spikes.numcells],log10(MutInfo.Rate_BinCompare(sortMutInfo.Rate,:)))
+LogScale('x',10)
+
+subplot(3,3,3)
+imagesc(log10(binsizes),[1 spikes.numcells],log10(MutInfo.Rate_BinCompare(sortMI_ISI,:)))
+LogScale('x',10)
+
 NiceSave('PlaceCoding',figfolder,baseName)
 
 
