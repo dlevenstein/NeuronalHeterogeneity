@@ -106,10 +106,11 @@ end
 
 
 
-
+try
 ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(MutInfo.ISI>MIthresh & MutInfo.Rate>MIthresh),3,'mean',true);
-%ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(squeeze(ISIbyHD.MutInf)>MIthresh),3,'mean',true);
-
+catch
+ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(squeeze(ISIbyHD.MutInf)>MIthresh),3,'mean',true);
+end
 
 ISIbyHD_align = bz_CollapseStruct( ISIbyHD_align,3,'justcat',true);
 
