@@ -9,11 +9,11 @@ function [ISIbyHD_align,MutInfo ] = HeadDirectionTuningAnalysis(basePath,figfold
 %
 %% Load Header
 %Initiate Paths
-reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
-basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse12-120807';
+%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse12-120807';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
 %basePath = pwd;
 %figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
@@ -82,6 +82,7 @@ spkmat.InWake = InIntervals(spkmat.timestamps,SleepState.ints.WAKEstate);
 for cc = 1:spikes.numcells
     MutInfo.Rate(cc) = mutualinfo(spkmat.data(spkmat.InWake,cc),spkmat.pos(spkmat.InWake));
 end
+
 
 %%
 MIthresh = 0.05;
