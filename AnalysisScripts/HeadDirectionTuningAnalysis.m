@@ -105,8 +105,8 @@ end
 
 
 
-ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(squeeze(ISIbyHD.MutInf)>MIthresh & MutInfo.Rate'>MIthresh),3,'mean',true);
-ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(squeeze(ISIbyHD.MutInf)>MIthresh),3,'mean',true);
+ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(squeeze(MutInfo.ISI)>MIthresh & squeeze(MutInfo.Rate)>MIthresh),3,'mean',true);
+%ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(squeeze(ISIbyHD.MutInf)>MIthresh),3,'mean',true);
 
 
 ISIbyHD_align = bz_CollapseStruct( ISIbyHD_align,3,'justcat',true);
