@@ -10,19 +10,21 @@ ISIbyPOS_norm = bz_CollapseStruct(PlaceALL.ISIbyPOS_norm,'match','justcat',true)
 MutInfo = bz_CollapseStruct(PlaceALL.MutInfo,'match','justcat',true);
 
 %%
-MIthresh = 0.05;
+MIthresh = 0.03;
 MeanISIPlaceField = nanmean(ISIbyPOS_norm.Dist.pYX(:,:,MutInfo.ISI>MIthresh & MutInfo.Rate'>MIthresh),3);
 MeanRatePlaceField = nanmean(ISIbyPOS_norm.Dist.SpikeRate(:,:,MutInfo.ISI>MIthresh & MutInfo.Rate'>MIthresh),3);
 %%
 [~,sortMI_ISI] = sort(MutInfo.ISI);
 [~,sortMutInfo.Rate] = sort(MutInfo.Rate);
-%%
 
 %%
 
 figure
 subplot(2,2,4)
     plot(log10(MutInfo.Rate),log10(MutInfo.ISI),'.')
+    hold on
+    UnityLine
+    xlim([-4 0]);ylim([-4 0])
 
 
 subplot(2,2,3)
@@ -33,6 +35,7 @@ subplot(2,2,3)
     ylabel('ISI (s)')
     bz_AddRightRateAxis
     xlabel('Position relative to PF Peak (m)')
+    xlim([-0.9 0.9])
 
 subplot(2,2,1)
     imagesc(ISIbyPOS_norm.Dist.Xbins(1,:,1),[0 1],squeeze(log10(ISIbyPOS_norm.Dist.SpikeRate(:,:,sortMI_ISI)))')

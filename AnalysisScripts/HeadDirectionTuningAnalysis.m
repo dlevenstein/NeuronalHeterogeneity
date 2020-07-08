@@ -9,11 +9,11 @@ function [ISIbyHD_align,MutInfo ] = HeadDirectionTuningAnalysis(basePath,figfold
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
-%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse12-120807';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse12-120807';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
 %basePath = pwd;
 %figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
@@ -58,7 +58,7 @@ headdir.timestamps = [1:length(headdir.data)]'./headdir.samplingRate;
 ISIbyHD.fieldpeak = ISIbyHD.Dist.Xbins(ISIbyHD.fieldpeak);
 
 %% Compare ISI MI vs Rate MI
-MutInfo.ISI = squeeze(ISIbyHD.MutInf);
+
 
 binsizes = logspace(-2.5,1.5,25);
 for bb = 1:length(binsizes)
@@ -73,6 +73,7 @@ end
 end
 
 %%
+MutInfo.ISI = squeeze(ISIbyHD.MutInf)';
 usebin = 0.3;
 spkmat = bz_SpktToSpkmat(spikes.times,'dt',usebin,'binsize',usebin,'units','rate');
 spkmat.pos = interp1(headdir.timestamps,headdir.data,spkmat.timestamps);
@@ -105,7 +106,7 @@ end
 
 
 
-ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(squeeze(MutInfo.ISI)>MIthresh & squeeze(MutInfo.Rate)>MIthresh),3,'mean',true);
+ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(MutInfo.ISI>MIthresh & MutInfo.Rate>MIthresh),3,'mean',true);
 %ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(squeeze(ISIbyHD.MutInf)>MIthresh),3,'mean',true);
 
 
