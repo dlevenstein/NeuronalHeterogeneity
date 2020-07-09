@@ -139,7 +139,7 @@ switch region
     case 'THAL'
         binsize = 0.32; %s (1)
     case 'CA1'
-        binsize = 0.8; %s (1)
+        binsize = 0.6; %s (1)
 end
 dt = binsize./4;
 spkmat = bz_SpktToSpkmat(spikes.times,'dt',dt,'binsize',binsize,'units','counts');
@@ -182,7 +182,7 @@ switch region
         binsize = 0.32; %s (1)
         MIthresh = 0.1;
     case 'CA1'
-        binsize = 0.8; %s (1)
+        binsize = 0.6; %s (1)
         MIthresh = 0.03;
 end
 
