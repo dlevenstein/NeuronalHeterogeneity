@@ -84,7 +84,7 @@ end
 
 [~,ISIbyPOS.fieldpeak] = max(ISIbyPOS.Dist.SpikeRate,[],2);
 ISIbyPOS.fieldpeak = ISIbyPOS.Dist.Xbins(ISIbyPOS.fieldpeak);
-[~,sortfieldpeak] = sort(ISIbyPOS.fieldpeak)
+[~,sortfieldpeak] = sort(ISIbyPOS.fieldpeak);
 
 
 
