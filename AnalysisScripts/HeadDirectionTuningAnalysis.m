@@ -64,7 +64,7 @@ binsizes = logspace(-2.5,1.5,25);
 for bb = 1:length(binsizes)
     bz_Counter(bb,length(binsizes),'Bin')
 spkmat = bz_SpktToSpkmat(spikes.times,'dt',binsizes(bb),'binsize',binsizes(bb),'units','rate');
-spkmat.pos = interp1(headdir.timestamps,headdir.data,spkmat.timestamps);
+spkmat.pos = interp1(headdir.timestamps,headdir.data,spkmat.timestamps,'nearest');
 spkmat.InWake = InIntervals(spkmat.timestamps,SleepState.ints.WAKEstate);
 
 for cc = 1:spikes.numcells
@@ -76,7 +76,7 @@ end
 MutInfo.ISI = squeeze(ISIbyHD.MutInf)';
 usebin = 0.3;
 spkmat = bz_SpktToSpkmat(spikes.times,'dt',usebin,'binsize',usebin,'units','rate');
-spkmat.pos = interp1(headdir.timestamps,headdir.data,spkmat.timestamps);
+spkmat.pos = interp1(headdir.timestamps,headdir.data,spkmat.timestamps,'nearest');
 spkmat.InWake = InIntervals(spkmat.timestamps,SleepState.ints.WAKEstate);
 
 for cc = 1:spikes.numcells
@@ -114,6 +114,22 @@ end
 
 ISIbyHD_align = bz_CollapseStruct( ISIbyHD_align,3,'justcat',true);
 
+%% Get gamma mode
+GammaFit = bz_LoadCellinfo(basePath,'GammaFit');
+
+MutInfo.GSrate = nan(1,spikes.numcells);
+for cc = 1:spikes.numcells
+    cellUID(cc) = spikes.UID(cc);
+    GFIDX = find(GammaFit.WAKEstate.cellstats.UID==cellUID(cc));
+    if isempty(GFIDX)
+        continue
+    end
+    cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
+    MutInfo.GSrate(cc) = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
+end
+
+%%
+MutInfo.cellclass = CellClass;
 
 
 %%

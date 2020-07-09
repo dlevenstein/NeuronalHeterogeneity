@@ -16,7 +16,7 @@ function [ISIbyPOS_norm,MutInfo ] = PlaceTuningAnalysis(basePath,figfolder)
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
 %basePath = pwd;
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -54,7 +54,7 @@ ISIbyPOS.fieldpeak = ISIbyPOS.Dist.Xbins(ISIbyPOS.fieldpeak);
 
 
 %% Compare ISI MI vs Rate MI
-MutInfo.ISI = squeeze(ISIbyPOS.MutInf);
+
 
 binsizes = logspace(-2.5,1.5,25);
 for bb = 1:length(binsizes)
@@ -70,6 +70,7 @@ end
 
 
 %% Compare ISI MI vs Rate MI
+MutInfo.ISI = squeeze(ISIbyPOS.MutInf);
 spkmat = bz_SpktToSpkmat(spikes.times,'dt',0.3,'binsize',0.3,'win',position.Epochs.MazeEpoch,'units','rate');
 spkmat.pos = interp1(position.timestamps,position.data,spkmat.timestamps);
 
@@ -106,8 +107,22 @@ ISIbyPOS_norm_mean = bz_CollapseStruct( ISIbyPOS_norm(squeeze(ISIbyPOS.MutInf)>M
 
 ISIbyPOS_norm = bz_CollapseStruct( ISIbyPOS_norm,3,'justcat',true);
 
+%% Get gamma mode
+GammaFit = bz_LoadCellinfo(basePath,'GammaFit');
 
+MutInfo.GSrate = nan(1,spikes.numcells);
+for cc = 1:spikes.numcells
+    cellUID(cc) = spikes.UID(cc);
+    GFIDX = find(GammaFit.WAKEstate.cellstats.UID==cellUID(cc));
+    if isempty(GFIDX)
+        continue
+    end
+    cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
+    MutInfo.GSrate(cc) = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
+end
 
+%%
+MutInfo.cellclass = CellClass;
 %%
 figure
 subplot(3,3,1)
@@ -128,7 +143,7 @@ subplot(3,3,7)
     
 
 subplot(3,3,9)
-    plot(log10(MutInfo.Rate),squeeze(log10(ISIbyPOS.MutInf)),'.')
+    scatter(log10(MutInfo.Rate),squeeze(log10(ISIbyPOS.MutInf)),5,(MutInfo.GSrate))
     xlabel('MI - rate');ylabel('MI - ISI')
     
 subplot(3,3,6)

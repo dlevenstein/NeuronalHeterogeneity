@@ -12,8 +12,8 @@ MutInfo = bz_CollapseStruct(HDALL.MutInfo,'match','justcat',true);
 %%
 MIthresh_rate = 0.05;
 MIthresh_ISI = 0.05;
-MeanISIPlaceField = nanmean(ISIbyHD_align.Dist.pYX(:,:,MutInfo.ISI>MIthresh_ISI & MutInfo.Rate'>MIthresh_rate),3);
-MeanRatePlaceField = nanmean(ISIbyHD_align.Dist.SpikeRate(:,:,MutInfo.ISI>MIthresh_ISI & MutInfo.Rate'>MIthresh_rate),3);
+MeanISIPlaceField = nanmean(ISIbyHD_align.Dist.pYX(:,:,MutInfo.ISI>MIthresh_ISI & MutInfo.Rate>MIthresh_rate),3);
+MeanRatePlaceField = nanmean(ISIbyHD_align.Dist.SpikeRate(:,:,MutInfo.ISI>MIthresh_ISI & MutInfo.Rate>MIthresh_rate),3);
 %%
 [~,sortMI_ISI] = sort(MutInfo.ISI);
 [~,sortMutInfo.Rate] = sort(MutInfo.Rate);
