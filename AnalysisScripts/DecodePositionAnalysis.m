@@ -31,8 +31,8 @@ states{4} = 'ALL';
 SleepState.ints.ALL = [0 Inf];
 statecolors = {'k','b','r',[0.6 0.6 0.6]};
 
-[celltypes,~,typeidx] = unique(CellClass.label);
-cellcolor = {'k','r'};
+%[celltypes,~,typeidx] = unique(CellClass.label);
+%cellcolor = {'k','r'};
 
 %%
 try %(CA1)
