@@ -101,13 +101,6 @@ end
 
 %%
 
-figure
-subplot(2,2,1)
-imagesc(squeeze(ISIbyPOS.Dist.SpikeRate))
-subplot(2,2,2)
-plot(log10(MutInfo.Rate),log10(MutInfo.ISI),'.')
-subplot(2,2,3)
-plot(squeeze(ISIbyPOS.fieldpeak),log10(MutInfo.Rate),'.')
 %% Testing values for MI threshold and bin size
 switch region
     case 'THAL'
@@ -174,6 +167,13 @@ ylabel('Mean Decoder Error')
 xlabel('MI Thresh')
 NiceSave('Decoding_Optimize',figfolder,baseName)
 
+subplot(2,2,3)
+imagesc(squeeze(ISIbyPOS.Dist.SpikeRate(:,:,sortfieldpeak)))
+% subplot(2,2,2)
+% plot(log10(MutInfo.Rate),log10(MutInfo.ISI),'.')
+subplot(2,2,4)
+plot(squeeze(ISIbyPOS.fieldpeak),log10(MutInfo.Rate),'.')
+NiceSave('Decoding_Optimize',figfolder,baseName)
 
 %% Decode position using best bin size and MI threshhold
 
@@ -215,7 +215,7 @@ sortfieldpeak_keep = sortfieldpeak(ismember(sortfieldpeak,keep));
 % [Pr_NREM, prMax] = placeBayes(spkmat.data(:,keep), rateMap(:,keep)', binsize);
 
 %%
-%viewwin = bz_RandomWindowInIntervals(codingEpochs,100,1);
+viewwin = bz_RandomWindowInIntervals(codingEpochs,100,1);
 figure
 subplot(3,1,1)
 imagesc(spkmat.timestamps,spikes.numcells,log10(spkmat.data(:,sortfieldpeak_keep))')
