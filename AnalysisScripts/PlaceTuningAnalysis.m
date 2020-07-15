@@ -16,7 +16,7 @@ function [ISIbyPOS_norm,MutInfo ] = PlaceTuningAnalysis(basePath,figfolder)
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
 %basePath = pwd;
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff

@@ -34,19 +34,19 @@ R = @(t) R_th(theta(abs(T-t)<tol));
 
 %%
 
-% figure
-% imagesc(T,neuronIDX,R(T)')
-% colorbar
-% hold on
-% plot(T,mod(theta,2*pi),'k.','markersize',1)
+figure
+imagesc(T,neuronIDX,R(T)')
+colorbar
+hold on
+plot(T,mod(theta,2*pi),'k.','markersize',1)
 
 %% Tuning Curve as a function of input sparseness*, weight, N
 
 %%
 
 %Poisson Rate (add to Brunel sim)
-g = 5;
-g = 4; %Initial strength of Inhibitoon (relative to excitation) and I->I strength
+%g = 5;
+%g = 4; %Initial strength of Inhibitoon (relative to excitation) and I->I strength
 v_norm = 2;
 
 
@@ -57,7 +57,9 @@ parms.u_0 = 20.*v_norm;
 parms.u_0 = 0;
 
 parms.V_rest = 0;
-parms.delay_s = 1.8.*rand(parms.EPopNum+parms.IPopNum,parms.EPopNum+parms.IPopNum)+1.2;
+%parms.delay_s = 1.8.*rand(parms.EPopNum+parms.IPopNum,parms.EPopNum+parms.IPopNum)+1.2;
+parms.delay_s = 1.8.*rand(parms.EPopNum+parms.IPopNum,1)+1.2;
+
 %parms.delay_s = 1.2;
 parms.g = g;
 
@@ -152,7 +154,68 @@ PlotSimRaster(SimValues,[0000 5000],...
     'cellsort',sortpeak,'overlay',[T overlay_HD])
 NiceSave('iSTDPRaster_early',pwd,netname)
 
-%%  
+%% Calculate ISI tuning curve
+headdir.timestamps = T./1000;
+headdir.data = theta;
+spikes.times = cellfun(@(X) X./1000,SimValues.spikesbycell,'UniformOutput',false);
+%%
+[ISIbyHD] = bz_ConditionalISI(spikes.times,headdir,...
+    'showfig',false,'GammaFit',false,'numXbins',10,'numISIbins',100,...
+    'normtype','none','Xwin',[0 2.*pi]);
+
+
+
+%%
+figure
+plot(log10(parms.TargetRate),squeeze(ISIbyHD.MutInf),'.')
+
+%%
+[~,ISIbyHD.fieldpeak] = max(ISIbyHD.Dist.SpikeRate,[],2);
+ISIbyHD.fieldpeak = ISIbyHD.Dist.Xbins(ISIbyHD.fieldpeak);
+
+%%
+spikes.numcells = length(spikes.times);
+for cc = 1:spikes.numcells
+    position_norm = headdir;
+    position_norm.data = headdir.data-ISIbyHD.fieldpeak(:,:,cc);
+    position_norm.data = mod(position_norm.data+pi,2.*pi)-pi;
+[ISIbyHD_align(cc)] = bz_ConditionalISI(spikes.times{cc},position_norm,...
+    'showfig',false,'GammaFit',false,'numXbins',15,'numISIbins',100,...
+    'normtype','none','Xwin',[-pi pi],'minX',10);
+end
+
+
+
+ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(SimValues.EcellIDX),3,'mean',true);
+
+
+ISIbyHD_align = bz_CollapseStruct( ISIbyHD_align,3,'justcat',true);
+
+%%
+figure
+subplot(2,2,1)
+    imagesc(ISIbyHD_align_mean.Dist.Xbins,ISIbyHD_align_mean.Dist.Ybins,ISIbyHD_align_mean.Dist.pYX')
+    hold on
+    imagesc(ISIbyHD_align_mean.Dist.Xbins+2.*pi,ISIbyHD_align_mean.Dist.Ybins,ISIbyHD_align_mean.Dist.pYX')
+    plot(ISIbyHD_align_mean.Dist.Xbins,-log10(ISIbyHD_align_mean.Dist.SpikeRate),'r')
+    plot(ISIbyHD_align_mean.Dist.Xbins+2.*pi,-log10(ISIbyHD_align_mean.Dist.SpikeRate),'r')
+    LogScale('y',10,'nohalf',true)
+    ylabel('ISI (s)')
+    bz_AddRightRateAxis
+    xlabel('Position relative to PF Peak (m)')
+    xlim([-pi 3.*pi])
+subplot(2,2,2)
+    imagesc(ISIbyHD_align_mean.Dist.Xbins,ISIbyHD_align_mean.Dist.Ybins,ISIbyHD_align.Dist.pYX(:,:,800)')
+    hold on
+    imagesc(ISIbyHD_align_mean.Dist.Xbins+2.*pi,ISIbyHD_align_mean.Dist.Ybins,ISIbyHD_align.Dist.pYX(:,:,800)')
+    plot(ISIbyHD_align_mean.Dist.Xbins,-log10(ISIbyHD_align.Dist.SpikeRate(:,:,800)),'r')
+    plot(ISIbyHD_align_mean.Dist.Xbins+2.*pi,-log10(ISIbyHD_align.Dist.SpikeRate(:,:,800)),'r')
+    LogScale('y',10,'nohalf',true)
+    ylabel('ISI (s)')
+    bz_AddRightRateAxis
+    xlabel('Position relative to PF Peak (m)')
+    xlim([-pi 3.*pi])
+
 %% Save/load
 filename = fullfile(savepath,['TrainedNet_',netname]);
 save(filename,'SimValues','parms','TimeParams','netname')

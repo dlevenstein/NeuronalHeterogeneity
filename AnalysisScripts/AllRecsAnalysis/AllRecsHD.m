@@ -32,13 +32,15 @@ subplot(2,2,3)
     imagesc(ISIbyHD_align.Dist.Xbins(1,:,1),ISIbyHD_align.Dist.Ybins(1,:,1),MeanISIPlaceField')
     hold on
     imagesc(ISIbyHD_align.Dist.Xbins(1,:,1)+2*pi,ISIbyHD_align.Dist.Ybins(1,:,1),MeanISIPlaceField')
+    imagesc(ISIbyHD_align.Dist.Xbins(1,:,1)-2*pi,ISIbyHD_align.Dist.Ybins(1,:,1),MeanISIPlaceField')
     plot(ISIbyHD_align.Dist.Xbins(1,:,1),-log10(MeanRatePlaceField),'r')
     plot(ISIbyHD_align.Dist.Xbins(1,:,1)+2*pi,-log10(MeanRatePlaceField),'r')
+    plot(ISIbyHD_align.Dist.Xbins(1,:,1)-2*pi,-log10(MeanRatePlaceField),'r')
     LogScale('y',10,'nohalf',true)
     ylabel('ISI (s)')
     bz_AddRightRateAxis
     xlabel('Position relative to HD Peak (m)')
-    xlim([-pi 3.*pi])
+    xlim([-1.5*pi 1.5.*pi])
     bz_piTickLabel('x')
     
 

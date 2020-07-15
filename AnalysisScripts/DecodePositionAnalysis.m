@@ -1,4 +1,4 @@
-function [ ] = DecodePositionAnalysis(basePath,figfolder)
+function [ISIbyDecPOS_norm,ISIbyDecPOS_normNREM,CellInfo ] = DecodePositionAnalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -9,15 +9,15 @@ function [ ] = DecodePositionAnalysis(basePath,figfolder)
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
-%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse12-120807';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse12-120807';
 %basePath = pwd;
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -73,7 +73,7 @@ switch region
     case 'THAL'
         xbins = 25;
     case 'CA1'
-        xbins = 50;
+        xbins = 20;
 end
 
 
@@ -98,8 +98,6 @@ for cc = 1:spikes.numcells
     MutInfo.Rate(cc) = mutualinfo(spkmat.data(spkmat.CodeEpochs,cc),spkmat.pos(spkmat.CodeEpochs));
 end
 
-
-%%
 
 %% Testing values for MI threshold and bin size
 switch region
@@ -130,7 +128,7 @@ end
 
 switch region
     case 'THAL'
-        binsize = 0.32; %s (1)
+        binsize = 0.4; %s (1)
     case 'CA1'
         binsize = 0.6; %s (1)
 end
@@ -179,16 +177,16 @@ NiceSave('Decoding_Optimize',figfolder,baseName)
 
 switch region
     case 'THAL'
-        binsize = 0.32; %s (1)
+        binsize = 0.5; %s (1)
         MIthresh = 0.1;
     case 'CA1'
-        binsize = 0.6; %s (1)
-        MIthresh = 0.03;
+        binsize = 1; %s (1)
+        MIthresh = 0.05;
 end
 
 dt = binsize./4;
 
-spkmat = bz_SpktToSpkmat(spikes.times,'dt',dt,'binsize',binsize,'units','counts');
+spkmat = bz_SpktToSpkmat(spikes.times,'dt',dt,'binsize',binsize,'units','rate'); %note: used to be counts... if error try that
 %spkmat.CodeEpochs = InIntervals(spkmat.timestamps,codingEpochs);
 %spkmat.data = spkmat.data(spkmat.CodeEpochs,:);
 %spkmat.timestamps = spkmat.timestamps(spkmat.CodeEpochs);
@@ -209,10 +207,13 @@ sortfieldpeak_keep = sortfieldpeak(ismember(sortfieldpeak,keep));
 
 
 %%
-% binsize_NREM = 0.1;
-% spkmat_NREM = bz_SpktToSpkmat(spikes.times,'dt',0.1,'binsize',binsize,'units','counts');
-% spkmat
-% [Pr_NREM, prMax] = placeBayes(spkmat.data(:,keep), rateMap(:,keep)', binsize);
+NREMfactor =10;
+%binsize_NREM = 0.1;
+spkmat_NREM = bz_SpktToSpkmat(spikes.times,'dt',binsize./NREMfactor./2,'binsize',binsize./NREMfactor,'units','rate');
+[Pr_NREM, prMax] = placeBayes(spkmat_NREM.data(:,keep), rateMap(:,keep)', binsize./NREMfactor);
+position_NREM.data = ISIbyPOS.Dist.Xbins(1,prMax,1)';
+position_NREM.timestamps = spkmat_NREM.timestamps;
+%First: try SWR intervals
 
 %%
 viewwin = bz_RandomWindowInIntervals(codingEpochs,100,1);
@@ -226,13 +227,103 @@ subplot(3,1,2)
 imagesc(spkmat.timestamps,ISIbyPOS.Dist.Xbins(1,:,1),Pr')
 hold on
 plot(position.timestamps,position.data,'r')
-plot(position.timestamps,position.decoded,'o')
+plot(position.timestamps,position.decoded,'.')
 ylabel('Pos');xlabel('t')
 xlim(viewwin)
 
 subplot(3,1,3)
 plot(position.timestamps,position.decoderror)
 xlim(viewwin)
+xlabel('Error')
 
 NiceSave('Decoding',figfolder,baseName)
 
+%% Conditional ISI wrt coding variable
+
+switch region
+    case 'CA1'
+        SWRs = bz_LoadEvents(basePath,'SWR');
+        NREMdecodeints = SWRs.times;
+        xwin = [-1 1];
+    case 'THAL'
+        NREMdecodeints = SleepState.ints.NREMstate;
+        xwin = [-pi pi];
+end
+
+
+decodedposition.data = position.decoded;
+decodedposition.timestamps = position.timestamps;
+[ISIbyDecPOS] = bz_ConditionalISI(spikes.times,decodedposition,...
+    'ints',codingEpochs,...
+    'showfig',false,'GammaFit',false,'numXbins',xbins,'numISIbins',100,...
+    'normtype','none','Xwin',[min(position.data) max(position.data)],'minX',10);
+
+
+
+for cc = 1:spikes.numcells
+    position_norm = decodedposition;
+    position_norm.data = decodedposition.data-ISIbyPOS.fieldpeak(:,:,cc);
+    switch region
+        case 'THAL'
+            position_norm.data = mod(position_norm.data+pi,2.*pi)-pi;
+    end
+    
+[ISIbyDecPOS_norm(cc)] = bz_ConditionalISI(spikes.times{cc},position_norm,...
+    'ints',codingEpochs,...
+    'showfig',false,'GammaFit',false,'numXbins',15,'numISIbins',100,...
+    'normtype','none','Xwin',xwin,'minX',10);
+
+    position_norm = position_NREM;
+    position_norm.data = position_NREM.data-ISIbyPOS.fieldpeak(:,:,cc);
+    switch region
+        case 'THAL'
+            position_norm.data = mod(position_norm.data+pi,2.*pi)-pi;
+    end
+[ISIbyDecPOS_normNREM(cc)] = bz_ConditionalISI(spikes.times{cc},position_norm,...
+    'ints',NREMdecodeints,...
+    'showfig',false,'GammaFit',false,'numXbins',15,'numISIbins',100,...
+    'normtype','none','Xwin',xwin,'minX',10);
+end
+ISIbyDecPOS_norm_mean = bz_CollapseStruct( ISIbyDecPOS_norm(keep),3,'mean',true);
+ISIbyDecPOS_norm_meanNREM = bz_CollapseStruct( ISIbyDecPOS_normNREM(keep),3,'mean',true);
+
+CellInfo.CellClass = CellClass;
+CellInfo.keep = false(size(CellClass.pE));
+CellInfo.keep(keep) = true;
+CellInfo.MutInfo = MutInfo;
+%%
+excell = randsample(keep,1);
+figure
+subplot(2,2,1)
+    imagesc(ISIbyDecPOS.Dist.pYX(:,:,excell)')
+subplot(2,2,2)
+    imagesc(ISIbyPOS.Dist.pYX(:,:,excell)')
+    
+subplot(2,2,3)
+    imagesc(ISIbyDecPOS_norm_mean.Dist.Xbins,ISIbyDecPOS_norm_mean.Dist.Ybins,ISIbyDecPOS_norm_mean.Dist.pYX')
+    hold on
+    plot(ISIbyDecPOS_norm_mean.Dist.Xbins,-log10(ISIbyDecPOS_norm_mean.Dist.SpikeRate),'r')
+    LogScale('y',10,'nohalf',true)
+    ylabel('ISI (s)')
+    bz_AddRightRateAxis
+    xlabel('Position relative to PF Peak (m)')
+    title('Decoded Position: RUN')
+    
+subplot(2,2,4)
+    imagesc(ISIbyDecPOS_norm_meanNREM.Dist.Xbins,ISIbyDecPOS_norm_meanNREM.Dist.Ybins,ISIbyDecPOS_norm_meanNREM.Dist.pYX')
+    hold on
+    plot(ISIbyDecPOS_norm_meanNREM.Dist.Xbins,-log10(ISIbyDecPOS_norm_meanNREM.Dist.SpikeRate),'r')
+    LogScale('y',10,'nohalf',true)
+    ylabel('ISI (s)')
+    bz_AddRightRateAxis
+    switch region
+        case 'CA1'
+            xlabel('Position relative to PF Peak (m)')
+        case 'THAL'
+            xlabel('Position relative to HD Peak (m)')
+    end
+
+    
+    title('Decoded Position: NREM SWRs')
+    
+NiceSave('ISIByDecodedPos',figfolder,baseName)

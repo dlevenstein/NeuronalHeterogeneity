@@ -7,6 +7,7 @@ addParameter(p,'cellsort',[])
 addParameter(p,'overlay',[])
 addParameter(p,'plotEIweight',false)
 addParameter(p,'trainingfigure',false)
+addParameter(p,'title',[])
 addParameter(p,'ratebin',5) %ms
 parse(p,varargin{:})
 cellsort = p.Results.cellsort;
@@ -14,6 +15,7 @@ overlay = p.Results.overlay;
 ratebin = p.Results.ratebin;
 PLOTEI = p.Results.plotEIweight;
 TRAINFIG = p.Results.trainingfigure;
+plottitle = p.Results.title;
 
 %%
 if ~exist('timewin','var') || isempty(timewin)
@@ -65,7 +67,8 @@ subplot(2,1,1)
     end
     box off
     plot([0 0],[0 PopNum],'r')
-    ylabel('Neuron ID');title('Raster Plot');
+    ylabel('Neuron ID');
+    title(plottitle);
     xlim(timewin);ylim([0 PopNum+1]);
     %ylim([0 100])
     bz_ScaleBar('ms')
