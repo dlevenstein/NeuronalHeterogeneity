@@ -85,7 +85,7 @@ end
 
 
 %%
-MIthresh = 0.05;
+MIthresh = 0.03;
 MIforbest = ISIbyHD.MutInf;
 MIforbest(MutInfo.Rate<MIthresh) = nan;
 [~,bestcell] =max(MIforbest);
@@ -132,11 +132,11 @@ end
 try
 ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(MutInfo.ISI>MIthresh & MutInfo.Rate>MIthresh),3,'mean',true);
 ISIbyHD_alignGam_mean = bz_CollapseStruct( ISIbyHD_alignGam(MutInfo.ISI>MIthresh & MutInfo.Rate>MIthresh),3,'mean',true);
-
+numcells = sum(MutInfo.ISI>MIthresh & MutInfo.Rate>MIthresh);
 catch
 ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(squeeze(ISIbyHD.MutInf)>MIthresh),3,'mean',true);
 ISIbyHD_alignGam_mean = bz_CollapseStruct( ISIbyHD_alignGam(squeeze(ISIbyHD.MutInf)>MIthresh),3,'mean',true);
-
+numcells = sum(squeeze(ISIbyHD.MutInf)>MIthresh);
 end
 
 ISIbyHD_align = bz_CollapseStruct( ISIbyHD_align,3,'justcat',true);
@@ -150,13 +150,25 @@ MutInfo.cellclass = CellClass;
 %%
 figure
 subplot(3,3,1)
+
     imagesc(ISIbyHD_align_mean.Dist.Xbins,[1 spikes.numcells],squeeze(log10(ISIbyHD_align.Dist.SpikeRate(:,:,sortMI_ISI)))')
     ylabel('Sort by MIISI')
+    hold on
+    plot(ISIbyHD_align_mean.Dist.Xbins([1 end]),spikes.numcells-numcells-0.5.*[1 1],'r')
 subplot(3,3,4)
     imagesc(ISIbyHD_align_mean.Dist.Xbins,[1 spikes.numcells],squeeze(log10(ISIbyHD_align.Dist.SpikeRate(:,:,sortMutInfo.Rate)))')
     ylabel('Sort by MIRate')
-    
+    hold on
+    plot(ISIbyHD_align_mean.Dist.Xbins([1 end]),spikes.numcells-numcells-0.5.*[1 1],'r')
 subplot(3,3,7)
+    imagesc(ISIbyHD_alignGam.Dist.Xbins(1,:,1),[1 spikes.numcells],...
+        squeeze((ISIbyHD_alignGam.GammaModes.GSweights(:,:,sortMutInfo.Rate)))')
+    ylabel('Sort by MIRate')
+    hold on
+    plot(ISIbyHD_align_mean.Dist.Xbins([1 end]),spikes.numcells-numcells-0.5.*[1 1],'r')
+    
+    
+subplot(3,3,2)
     imagesc(ISIbyHD_align_mean.Dist.Xbins,ISIbyHD_align_mean.Dist.Ybins,ISIbyHD_align_mean.Dist.pYX')
     hold on
     imagesc(ISIbyHD_align_mean.Dist.Xbins+2.*pi,ISIbyHD_align_mean.Dist.Ybins,ISIbyHD_align_mean.Dist.pYX')
@@ -184,11 +196,11 @@ NiceSave('HDCoding',figfolder,baseName)
 
 %%
 figure
-subplot(3,3,3)
+subplot(2,2,2)
 plot(MutInfo.GSrate,MutInfo.Rate,'.')
 xlabel('GS Rate');ylabel('MI')
 
-subplot(3,3,6)
+subplot(2,2,4)
 plot(MutInfo.GSweight,MutInfo.Rate,'.')
 xlabel('GS Weight');ylabel('MI')
 
@@ -211,7 +223,7 @@ LogScale('y',10)
 
 % subplot(2,2,2)
 % plot(ISIbyHD_alignGam_mean.GammaModes.ASweights)
-subplot(2,2,4)
+subplot(2,2,3)
 plot(ISIbyHD_alignGam_mean.GammaModes.GSweights)
 NiceSave('HDGSAS',figfolder,baseName)
 %%
