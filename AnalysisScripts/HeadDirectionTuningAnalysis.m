@@ -1,4 +1,4 @@
-function [ISIbyHD_align,MutInfo ] = HeadDirectionTuningAnalysis(basePath,figfolder)
+function [ISIbyHD_align,MutInfo,ISIbyHD_alignGam_mean ] = HeadDirectionTuningAnalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -9,14 +9,14 @@ function [ISIbyHD_align,MutInfo ] = HeadDirectionTuningAnalysis(basePath,figfold
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
-%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse12-120807';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse12-120807';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
 %basePath = pwd;
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -50,8 +50,8 @@ headdir.timestamps = [1:length(headdir.data)]'./headdir.samplingRate;
 %headdir.data = interp1(headdir.timestamps(~(nantimes)),headdir.data,headdir.timestamps);
 [ISIbyHD] = bz_ConditionalISI(spikes.times,headdir,...
     'ints',SleepState.ints.WAKEstate,...
-    'showfig',false,'GammaFit',false,'numXbins',25,'numISIbins',100,...
-    'normtype','none','Xwin',[0 2.*pi]);
+    'showfig',false,'GammaFit',false,'numXbins',100,'numISIbins',100,...
+    'normtype','none','Xwin',[0 2.*pi],'Xbinoverlap',3);
 
 %%
 [~,ISIbyHD.fieldpeak] = max(ISIbyHD.Dist.SpikeRate,[],2);
@@ -92,33 +92,27 @@ MIforbest(MutInfo.Rate<MIthresh) = nan;
 [~,sortMI_ISI] = sort(MutInfo.ISI);
 [~,sortMutInfo.Rate] = sort(MutInfo.Rate);
 
-%%
 
+%% Get gamma mode
+GammaFit = bz_LoadCellinfo(basePath,'GammaFit');
+
+
+
+%%
+MutInfo.GSrate = nan(1,spikes.numcells);
+clear ISIbyHD_align
 for cc = 1:spikes.numcells
+    bz_Counter(cc,spikes.numcells,'Cell')    
+   
     position_norm = headdir;
     position_norm.data = headdir.data-ISIbyHD.fieldpeak(:,:,cc);
     position_norm.data = mod(position_norm.data+pi,2.*pi)-pi;
 [ISIbyHD_align(cc)] = bz_ConditionalISI(spikes.times{cc},position_norm,...
     'ints',SleepState.ints.WAKEstate,...
-    'showfig',false,'GammaFit',false,'numXbins',30,'numISIbins',100,...
-    'normtype','none','Xwin',[-pi pi],'minX',10);
-end
+    'showfig',false,'GammaFit',false,...
+    'numXbins',50,'numISIbins',100,...
+    'normtype','none','Xwin',[-pi pi],'minX',10,'Xbinoverlap',2);
 
-
-
-try
-ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(MutInfo.ISI>MIthresh & MutInfo.Rate>MIthresh),3,'mean',true);
-catch
-ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(squeeze(ISIbyHD.MutInf)>MIthresh),3,'mean',true);
-end
-
-ISIbyHD_align = bz_CollapseStruct( ISIbyHD_align,3,'justcat',true);
-
-%% Get gamma mode
-GammaFit = bz_LoadCellinfo(basePath,'GammaFit');
-
-MutInfo.GSrate = nan(1,spikes.numcells);
-for cc = 1:spikes.numcells
     cellUID(cc) = spikes.UID(cc);
     GFIDX = find(GammaFit.WAKEstate.cellstats.UID==cellUID(cc));
     if isempty(GFIDX)
@@ -126,7 +120,28 @@ for cc = 1:spikes.numcells
     end
     cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
     MutInfo.GSrate(cc) = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
+    MutInfo.GSweight(cc) = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
+    [ISIbyHD_alignGam(cc)] = bz_ConditionalISI(spikes.times{cc},position_norm,...
+        'ints',SleepState.ints.WAKEstate,...
+        'showfig',false,'GammaFit',true,'GammaFitParms',cellGamma,...
+        'numXbins',25,'numISIbins',100,...
+        'normtype','none','Xwin',[-pi pi],'minX',10,'Xbinoverlap',2);
 end
+
+%%
+try
+ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(MutInfo.ISI>MIthresh & MutInfo.Rate>MIthresh),3,'mean',true);
+ISIbyHD_alignGam_mean = bz_CollapseStruct( ISIbyHD_alignGam(MutInfo.ISI>MIthresh & MutInfo.Rate>MIthresh),3,'mean',true);
+
+catch
+ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(squeeze(ISIbyHD.MutInf)>MIthresh),3,'mean',true);
+ISIbyHD_alignGam_mean = bz_CollapseStruct( ISIbyHD_alignGam(squeeze(ISIbyHD.MutInf)>MIthresh),3,'mean',true);
+
+end
+
+ISIbyHD_align = bz_CollapseStruct( ISIbyHD_align,3,'justcat',true);
+ISIbyHD_alignGam = bz_CollapseStruct( ISIbyHD_alignGam,3,'justcat',true);
+
 
 %%
 MutInfo.cellclass = CellClass;
@@ -167,7 +182,38 @@ LogScale('x',10)
     
 NiceSave('HDCoding',figfolder,baseName)
 
+%%
+figure
+subplot(3,3,3)
+plot(MutInfo.GSrate,MutInfo.Rate,'.')
+xlabel('GS Rate');ylabel('MI')
 
+subplot(3,3,6)
+plot(MutInfo.GSweight,MutInfo.Rate,'.')
+xlabel('GS Weight');ylabel('MI')
+
+subplot(2,2,1)
+hold on
+for cc = 1:spikes.numcells
+    if MutInfo.ISI(cc)<MIthresh & MutInfo.Rate(cc)<MIthresh
+        continue
+    end
+    for mm = 1:5
+    scatter(ISIbyHD_alignGam.Dist.Xbins(1,:,1),...
+        ones(size(ISIbyHD_alignGam.Dist.Xbins(1,:,1))).*ISIbyHD_alignGam.GammaModes.ASlogrates(1,mm,cc),...
+        5,ISIbyHD_alignGam.GammaModes.ASweights(:,mm,cc))
+    end
+end
+LogScale('y',10)
+%imagesc(ISIbyHD_alignGam(excell).Dist.pYX')      
+
+%plot(ISIbyHD_alignGam(excell).GammaModes.GSweights)
+
+% subplot(2,2,2)
+% plot(ISIbyHD_alignGam_mean.GammaModes.ASweights)
+subplot(2,2,4)
+plot(ISIbyHD_alignGam_mean.GammaModes.GSweights)
+NiceSave('HDGSAS',figfolder,baseName)
 %%
 % [excell] = bz_ConditionalISI(spikes.times{bestcell},headdir,...
 %     'ints',SleepState.ints.WAKEstate,...

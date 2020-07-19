@@ -206,7 +206,8 @@ meanDecodError.offish = nanmean(position.decoderror);
 sortfieldpeak_keep = sortfieldpeak(ismember(sortfieldpeak,keep));
 
 
-%%
+%% 
+%Note: should decode from all OTHER cells for each cell
 NREMfactor =10;
 %binsize_NREM = 0.1;
 spkmat_NREM = bz_SpktToSpkmat(spikes.times,'dt',binsize./NREMfactor./2,'binsize',binsize./NREMfactor,'units','rate');
@@ -227,7 +228,7 @@ subplot(3,1,2)
 imagesc(spkmat.timestamps,ISIbyPOS.Dist.Xbins(1,:,1),Pr')
 hold on
 plot(position.timestamps,position.data,'r')
-plot(position.timestamps,position.decoded,'.')
+plot(position.timestamps,position.decoded,'r.')
 ylabel('Pos');xlabel('t')
 xlim(viewwin)
 
@@ -243,10 +244,12 @@ NiceSave('Decoding',figfolder,baseName)
 switch region
     case 'CA1'
         SWRs = bz_LoadEvents(basePath,'SWR');
-        NREMdecodeints = SWRs.times;
+        NREMdecodeints = SWRs.times + [-0.05 0.05]; %Extended 100ms window around ripples
+        %Get Pop Bursts
         xwin = [-1 1];
     case 'THAL'
         NREMdecodeints = SleepState.ints.NREMstate;
+        %Get Pop Bursts
         xwin = [-pi pi];
 end
 
