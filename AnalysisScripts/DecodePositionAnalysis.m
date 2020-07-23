@@ -9,15 +9,15 @@ function [ISIbyDecPOS_norm,ISIbyDecPOS_normNREM,CellInfo ] = DecodePositionAnaly
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
-%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse12-120807';
 %basePath = pwd;
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -80,7 +80,8 @@ end
 [ISIbyPOS] = bz_ConditionalISI(spikes.times,position,...
     'ints',codingEpochs,...
     'showfig',false,'GammaFit',false,'numXbins',xbins,'numISIbins',100,...
-    'normtype','none','Xwin',[min(position.data) max(position.data)]);
+    'normtype','none','Xwin',[min(position.data) max(position.data)],...
+    'Xbinoverlap',1);
 
 [~,ISIbyPOS.fieldpeak] = max(ISIbyPOS.Dist.SpikeRate,[],2);
 ISIbyPOS.fieldpeak = ISIbyPOS.Dist.Xbins(ISIbyPOS.fieldpeak);
