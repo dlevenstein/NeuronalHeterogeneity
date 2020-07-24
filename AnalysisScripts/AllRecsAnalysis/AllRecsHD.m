@@ -25,6 +25,8 @@ for kk = 1:3
     MeanPlaceField.(MIkinds{kk}).pGS = nanmean(ISIbyHD_alignGam.GammaModes.GSweights(:,:,tunedcells.(MIkinds{kk})),3);
 
     [~,sortMutInfo.(MIkinds{kk})] = sort(MutInfo.(MIkinds{kk}));
+    [~,sortAR.(MIkinds{kk})] = sort(MutInfo.GSweight);
+    sortAR.(MIkinds{kk}) = sortAR.(MIkinds{kk})(ismember(sortAR.(MIkinds{kk}),find(tunedcells.(MIkinds{kk}))));
 end
 
 %% Figure Information Metrics
@@ -40,13 +42,13 @@ subplot(3,2,5)
     ylabel('Sort by MI ISI')
 
 subplot(3,2,2)
-scatter(log10(MutInfo.SkaggsInf),log10(MutInfo.Rate),2,log10(MutInfo.ISI))
+scatter(log10(MutInfo.SkaggsInf),log10(MutInfo.Rate),3,MutInfo.GSweight,'filled')
 xlabel('I Skaggs');ylabel('MI Rate')
 subplot(3,2,4)
-scatter(log10(MutInfo.SkaggsInf),log10(MutInfo.ISI),2,log10(MutInfo.Rate))
+scatter(log10(MutInfo.SkaggsInf),log10(MutInfo.ISI),3,MutInfo.GSweight,'filled')
 xlabel('I Skaggs');ylabel('MI ISI')
 subplot(3,2,6)
-scatter(log10(MutInfo.ISI),log10(MutInfo.Rate),2,log10(MutInfo.SkaggsInf))
+scatter(log10(MutInfo.ISI),log10(MutInfo.Rate),3,MutInfo.GSweight,'filled')
 xlabel('MI ISI');ylabel('MI Rate') 
 %% Figure: Information Metrics and GS/AS
 figure
