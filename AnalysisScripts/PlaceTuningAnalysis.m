@@ -41,12 +41,20 @@ nantimes = isnan(position.position.lin);
 position.data = position.position.lin(~(nantimes));
 %Possible here: remove drops for more than a... second?
 minjump = 2;
+numXbins = 80;
 [ position.data ] = NanPadJumps( position.timestamps(~(nantimes)),position.data,minjump );
 position.data = interp1(position.timestamps(~(nantimes)),position.data,position.timestamps);
 [ISIbyPOS] = bz_ConditionalISI(spikes.times,position,...
     'ints',position.Epochs.MazeEpoch,...
-    'showfig',false,'GammaFit',false,'numXbins',25,'numISIbins',100,...
-    'normtype','none','Xwin',[0 3]);
+    'showfig',false,'GammaFit',false,'numXbins',numXbins,'numISIbins',100,...
+    'normtype','none','Xwin',[0 3],'Xbinoverlap',3);
+
+%%
+meanrate = nansum(ISIbyPOS.Dist.SpikeRate.*ISIbyPOS.Dist.pX,2);
+meanrate_full = repmat(meanrate,1,numXbins,1);
+MutInfo.SkaggsInf = squeeze(nansum(ISIbyPOS.Dist.SpikeRate.*log2(ISIbyPOS.Dist.SpikeRate./meanrate_full).*ISIbyPOS.Dist.pX,2));
+MutInfo.SkaggsInf_sec = MutInfo.SkaggsInf .*squeeze(meanrate);
+
 
 %%
 [~,ISIbyPOS.fieldpeak] = max(ISIbyPOS.Dist.SpikeRate,[],2);
@@ -69,15 +77,27 @@ for bb = 1:length(binsizes)
 end
 
 
+
+
 %% Compare ISI MI vs Rate MI
+
 MutInfo.ISI = squeeze(ISIbyPOS.MutInf);
 spkmat = bz_SpktToSpkmat(spikes.times,'dt',0.3,'binsize',0.3,'win',position.Epochs.MazeEpoch,'units','rate');
 spkmat.pos = interp1(position.timestamps,position.data,spkmat.timestamps);
 
 for cc = 1:spikes.numcells
     MutInfo.Rate(cc) = mutualinfo(spkmat.data(:,cc),spkmat.pos);
+    
+
 end
 
+%%
+% figure
+% subplot(2,2,1)
+% plot(MutInfo.GSrate,log10(MutInfo.ISI),'.')
+% 
+% subplot(2,2,2)
+% plot(MutInfo.GSweight,log10(MutInfo.ISI),'.')
 %%
 MIthresh = 0.05;
 MIforbest = ISIbyPOS.MutInf;
@@ -94,8 +114,8 @@ for cc = 1:spikes.numcells
     position_norm.data = position.data-ISIbyPOS.fieldpeak(:,:,cc);
 [ISIbyPOS_norm(cc)] = bz_ConditionalISI(spikes.times{cc},position_norm,...
     'ints',position_norm.Epochs.MazeEpoch,...
-    'showfig',false,'GammaFit',false,'numXbins',30,'numISIbins',100,...
-    'normtype','none','Xwin',[-1 1],'minX',10);
+    'showfig',false,'GammaFit',false,'numXbins',80,'numISIbins',100,...
+    'normtype','none','Xwin',[-1 1],'minX',10,'Xbinoverlap',3);
 end
 
 
@@ -111,6 +131,7 @@ ISIbyPOS_norm = bz_CollapseStruct( ISIbyPOS_norm,3,'justcat',true);
 GammaFit = bz_LoadCellinfo(basePath,'GammaFit');
 
 MutInfo.GSrate = nan(1,spikes.numcells);
+MutInfo.GSweight = nan(1,spikes.numcells);
 for cc = 1:spikes.numcells
     cellUID(cc) = spikes.UID(cc);
     GFIDX = find(GammaFit.WAKEstate.cellstats.UID==cellUID(cc));
@@ -119,6 +140,7 @@ for cc = 1:spikes.numcells
     end
     cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
     MutInfo.GSrate(cc) = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
+    MutInfo.GSrate(cc) = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
 end
 
 %%
