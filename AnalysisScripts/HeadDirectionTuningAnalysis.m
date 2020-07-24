@@ -87,7 +87,7 @@ end
 
 %%
 MutInfo.ISI = squeeze(ISIbyHD.MutInf)';
-usebin = 0.3;
+usebin = 0.1;
 spkmat = bz_SpktToSpkmat(spikes.times,'dt',usebin,'binsize',usebin,'units','rate');
 spkmat.pos = interp1(headdir.timestamps,headdir.data,spkmat.timestamps,'nearest');
 spkmat.InWake = InIntervals(spkmat.timestamps,SleepState.ints.WAKEstate);
