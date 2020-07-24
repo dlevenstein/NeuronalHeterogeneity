@@ -172,7 +172,7 @@ MutInfo.cellclass = CellClass;
 figure
 subplot(3,3,1)
 
-    imagesc(ISIbyHD_align_mean.Dist.Xbins,[1 spikes.numcells],squeeze(log10(ISIbyHD_align.Dist.SpikeRate(:,:,sortMI_ISI)))')
+    imagesc(ISIbyHD_align_mean.Dist.Xbins,[1 spikes.numcells],squeeze(log10(ISIbyHD_align.Dist.SpikeRate(:,:,sortMutInfo.ISI)))')
     ylabel('Sort by MIISI')
     hold on
     plot(ISIbyHD_align_mean.Dist.Xbins([1 end]),spikes.numcells-numcells-0.5.*[1 1],'r')
@@ -210,11 +210,11 @@ subplot(3,3,9)
     xlabel('MI - rate');ylabel('MI - ISI')
     
 subplot(3,3,6)
-imagesc(log10(binsizes),[1 spikes.numcells],log10(MutInfo.Rate_BinCompare(sortMutInfo.Rate,:)))
+imagesc(log10(binsizes),[1 spikes.numcells],log10(MutInfo.Rate_BinCompare(sortMutInfo.Skaggs,:)))
 LogScale('x',10)
 
 subplot(3,3,3)
-imagesc(log10(binsizes),[1 spikes.numcells],log10(MutInfo.Rate_BinCompare(sortMI_ISI,:)))
+imagesc(log10(binsizes),[1 spikes.numcells],log10(MutInfo.Rate_BinCompare(sortMutInfo.ISI,:)))
 LogScale('x',10)
     
 NiceSave('HDCoding',figfolder,baseName)
@@ -222,11 +222,12 @@ NiceSave('HDCoding',figfolder,baseName)
 %%
 figure
 subplot(2,2,2)
-plot(MutInfo.GSrate,MutInfo.Rate,'.')
+plot((MutInfo.GSrate),(MutInfo.Rate),'.')
 xlabel('GS Rate');ylabel('MI')
+LogScale('x',10)
 
 subplot(2,2,4)
-plot(MutInfo.GSweight,MutInfo.Rate,'.')
+plot(MutInfo.GSweight,(MutInfo.Rate),'.')
 xlabel('GS Weight');ylabel('MI')
 
 subplot(2,2,1)
