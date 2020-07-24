@@ -58,8 +58,8 @@ numXbins = 100;
 
 meanrate = nansum(ISIbyHD.Dist.SpikeRate.*ISIbyHD.Dist.pX,2);
 meanrate_full = repmat(meanrate,1,numXbins,1);
-MutInfo.SkaggsInf = squeeze(nansum(ISIbyHD.Dist.SpikeRate.*log2(ISIbyHD.Dist.SpikeRate./meanrate_full).*ISIbyHD.Dist.pX,2));
-MutInfo.SkaggsInf_sec = MutInfo.SkaggsInf .*squeeze(meanrate);
+MutInfo.Skaggs = squeeze(nansum(ISIbyHD.Dist.SpikeRate.*log2(ISIbyHD.Dist.SpikeRate./meanrate_full).*ISIbyHD.Dist.pX,2));
+MutInfo.Skaggs_sec = MutInfo.Skaggs .*squeeze(meanrate);
 
 
 %%
@@ -82,14 +82,14 @@ for cc = 1:spikes.numcells
     MutInfo.Rate_BinCompare(cc,bb) = mutualinfo(spkmat.data(spkmat.InWake,cc),spkmat.pos(spkmat.InWake));
     
 end
-MutInfo.Rate_SkaggsCompare(bb) = corr(MutInfo.SkaggsInf,MutInfo.Rate_BinCompare(:,bb));
+MutInfo.Rate_SkaggsCompare(bb) = corr(MutInfo.Skaggs,MutInfo.Rate_BinCompare(:,bb));
 end
 
 
 
 %%
 MutInfo.ISI = squeeze(ISIbyHD.MutInf)';
-usebin = 0.1;
+usebin = 0.03;
 spkmat = bz_SpktToSpkmat(spikes.times,'dt',usebin,'binsize',usebin,'units','rate');
 spkmat.pos = interp1(headdir.timestamps,headdir.data,spkmat.timestamps,'nearest');
 spkmat.InWake = InIntervals(spkmat.timestamps,SleepState.ints.WAKEstate);
@@ -148,11 +148,11 @@ MIthresh = 0.3;
 %%
 %MutInfo.cellclass = CellClass;
 %%
-ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(MutInfo.SkaggsInf>MIthresh),3,'mean',true);
-numcells = sum(MutInfo.SkaggsInf>MIthresh);
+ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(MutInfo.Skaggs>MIthresh),3,'mean',true);
+numcells = sum(MutInfo.Skaggs>MIthresh);
 
 try
-ISIbyHD_alignGam_mean = bz_CollapseStruct( ISIbyHD_alignGam(MutInfo.SkaggsInf>MIthresh),3,'mean',true);
+ISIbyHD_alignGam_mean = bz_CollapseStruct( ISIbyHD_alignGam(MutInfo.Skaggs>MIthresh),3,'mean',true);
 catch
     display('Error Mean')
 end
@@ -172,7 +172,7 @@ end
 
 %%
 %  figure
-% plot(MutInfo.peakwidth,MutInfo.SkaggsInf,'.')
+% plot(MutInfo.peakwidth,MutInfo.Skaggs,'.')
 %%
 
 % MIforbest = ISIbyHD.MutInf;
@@ -180,7 +180,7 @@ end
 % [~,bestcell] =max(MIforbest);
 [~,sortMutInfo.ISI] = sort(MutInfo.ISI);
 [~,sortMutInfo.Rate] = sort(MutInfo.Rate);
-[~,sortMutInfo.Skaggs] = sort(MutInfo.SkaggsInf);
+[~,sortMutInfo.Skaggs] = sort(MutInfo.Skaggs);
 [~,sortMutInfo.peakwidth] = sort(MutInfo.peakwidth);
 
 %% Rate bin
@@ -258,12 +258,12 @@ NiceSave('HDCoding',figfolder,baseName)
 %%
 figure
 subplot(2,2,2)
-plot((MutInfo.GSrate),(MutInfo.SkaggsInf),'.')
+plot((MutInfo.GSrate),(MutInfo.Skaggs),'.')
 xlabel('GS Rate');ylabel('MI')
 LogScale('x',10)
 
 subplot(2,2,4)
-plot(MutInfo.GSweight,(MutInfo.SkaggsInf),'.')
+plot(MutInfo.GSweight,(MutInfo.Skaggs),'.')
 xlabel('GS Weight');ylabel('MI')
 
 subplot(2,2,1)
