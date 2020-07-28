@@ -11,12 +11,12 @@ ISIbyHD_alignGam = bz_CollapseStruct(HDALL.ISIbyHD_alignGam,3,'justcat',true);
 MutInfo = bz_CollapseStruct(HDALL.MutInfo,'match','justcat',true);
 
 %%
-MutInfo.Skaggs = MutInfo.SkaggsInf;
+%MutInfo.Skaggs = MutInfo.SkaggsInf;
 MIkinds = {'Skaggs','Rate','ISI'};
 
-MIthresh.Rate = 0.03;
+MIthresh.Rate = 0.02;
 MIthresh.ISI = 0.02;
-MIthresh.Skaggs = 2;
+MIthresh.Skaggs = 1;
 
 for kk = 1:3
     tunedcells.(MIkinds{kk}) = MutInfo.(MIkinds{kk})>MIthresh.(MIkinds{kk});
@@ -29,104 +29,186 @@ for kk = 1:3
     sortAR.(MIkinds{kk}) = sortAR.(MIkinds{kk})(ismember(sortAR.(MIkinds{kk}),find(tunedcells.(MIkinds{kk}))));
 end
 
+numcells = length(MutInfo.GSrate);
+
 %% Figure Information Metrics
 figure
-subplot(3,2,1)
-    imagesc(ISIbyHD_align.Dist.Xbins(1,:,1),[0 1],squeeze(log10(ISIbyHD_align.Dist.SpikeRate(:,:,sortMutInfo.Skaggs)))')
-    ylabel('Sort by I Skaggs')
-subplot(3,2,3)
-    imagesc(ISIbyHD_align.Dist.Xbins(1,:,1),[0 1],squeeze(log10(ISIbyHD_align.Dist.SpikeRate(:,:,sortMutInfo.Rate)))')
-    ylabel('Sort by MI Rate')
-subplot(3,2,5)
-    imagesc(ISIbyHD_align.Dist.Xbins(1,:,1),[0 1],squeeze(log10(ISIbyHD_align.Dist.SpikeRate(:,:,sortMutInfo.ISI)))')
-    ylabel('Sort by MI ISI')
+for kk = 1:3
+subplot(3,2,1+(kk-1)*2)
+    imagesc(ISIbyHD_align.Dist.Xbins(1,:,1),[0 numcells],squeeze(log10(ISIbyHD_align.Dist.SpikeRate(:,:,sortMutInfo.(MIkinds{kk}))))')
+    hold on
+    plot(xlim(gca),numcells-sum(tunedcells.(MIkinds{kk})).*[1 1],'r--','linewidth',1)
+    ylabel(['Sort by I ',(MIkinds{kk})])
+    bz_piTickLabel('x')
+end
 
 subplot(3,2,2)
-scatter(log10(MutInfo.SkaggsInf),log10(MutInfo.Rate),3,MutInfo.GSweight,'filled')
+scatter(log10(MutInfo.Skaggs),log10(MutInfo.Rate),3,MutInfo.GSweight,'filled')
+axis tight
+hold on
+plot(log10(MIthresh.Skaggs).*[1 1],ylim(gca),'r--')
+plot(xlim(gca),log10(MIthresh.Rate).*[1 1],'r--')
 xlabel('I Skaggs');ylabel('MI Rate')
+LogScale('xy',10)
+colorbar
+
 subplot(3,2,4)
-scatter(log10(MutInfo.SkaggsInf),log10(MutInfo.ISI),3,MutInfo.GSweight,'filled')
+scatter(log10(MutInfo.Skaggs),log10(MutInfo.ISI),3,MutInfo.GSweight,'filled')
+axis tight
+hold on
+plot(log10(MIthresh.Skaggs).*[1 1],ylim(gca),'r--')
+plot(xlim(gca),log10(MIthresh.ISI).*[1 1],'r--')
 xlabel('I Skaggs');ylabel('MI ISI')
+LogScale('xy',10)
+colorbar
+
 subplot(3,2,6)
-scatter(log10(MutInfo.ISI),log10(MutInfo.Rate),3,MutInfo.GSweight,'filled')
-xlabel('MI ISI');ylabel('MI Rate') 
+scatter(log10(MutInfo.Rate),log10(MutInfo.ISI),3,MutInfo.GSweight,'filled')
+axis tight
+hold on
+plot(xlim(gca),log10(MIthresh.ISI).*[1 1],'r--')
+plot(log10(MIthresh.Rate).*[1 1],ylim(gca),'r--')
+ylabel('MI ISI');xlabel('MI Rate') 
+LogScale('xy',10)
+colorbar
+
+NiceSave('InfoNetrics',figfolder,[])
 %% Figure: Information Metrics and GS/AS
 figure
-subplot(3,2,1)
-scatter(log10(MutInfo.SkaggsInf),MutInfo.GSrate,3,MutInfo.GSweight,'filled')
+for kk = 1:3
+subplot(3,2,1+(kk-1)*2)
+scatter(log10(MutInfo.(MIkinds{kk})),MutInfo.GSrate,5,MutInfo.GSweight,'filled')
+axis tight
 hold on
-plot(log10(MIthresh.Skaggs).*[1 1],ylim(gca),'k--')
+plot(log10(MIthresh.(MIkinds{kk})).*[1 1],ylim(gca),'r--')
 box off
-xlabel('I Skaggs');ylabel('GS Rate (HZ)')
+xlabel(['I ',(MIkinds{kk})]);ylabel('GS Rate (HZ)')
+LogScale('xy',10)
 colorbar
 
-subplot(3,2,2)
-plot(log10(MutInfo.SkaggsInf),MutInfo.GSweight,'.')
+subplot(3,2,2+(kk-1)*2)
+scatter(log10(MutInfo.(MIkinds{kk})),MutInfo.GSweight,5,MutInfo.GSrate,'filled')
 hold on
-plot(log10(MIthresh.Skaggs).*[1 1],ylim(gca),'k--')
+plot(log10(MIthresh.(MIkinds{kk})).*[1 1],ylim(gca),'r--')
 box off
-xlabel('I Skaggs');ylabel('GS Weight')
-
-
-subplot(3,2,3)
-scatter(log10(MutInfo.Rate),MutInfo.GSrate,3,MutInfo.GSweight,'filled')
-hold on
-plot(log10(MIthresh.rate).*[1 1],ylim(gca),'k--')
-box off
-xlabel('MI Rate') ;ylabel('GS Rate (HZ)')
+axis tight
+if kk==3
+    plot(xlim(gca).*[0 1]+log10(MIthresh.(MIkinds{kk})).*[1 0],0.5.*[1 1],'k--')
+end
+caxis([-0.5 1.25])
 colorbar
+LogScale('x',10)
+LogScale('c',10)
+xlabel(['I ',(MIkinds{kk})]);ylabel('GS Weight')
+end
 
-subplot(3,2,4)
-plot(log10(MutInfo.Rate),MutInfo.GSweight,'.')
-hold on
-plot(log10(MIthresh.rate).*[1 1],ylim(gca),'k--')
-box off
-xlabel('MI Rate') ;ylabel('GS Weight')
-
-subplot(3,2,5)
-scatter(log10(MutInfo.ISI),MutInfo.GSrate,3,MutInfo.GSweight,'filled')
-hold on
-plot(log10(MIthresh.ISI).*[1 1],ylim(gca),'k--')
-box off
-xlabel('MI ISI');ylabel('GS Rate (HZ)')
-colorbar
-
-subplot(3,2,6)
-plot(log10(MutInfo.ISI),MutInfo.GSweight,'.')
-hold on
-plot(log10(MIthresh.ISI).*[1 1],ylim(gca),'k--')
-box off
-xlabel('MI ISI');ylabel('GS Weight')
 NiceSave('HDGSAS',figfolder,[])
 
 %%
 
 figure
-
-subplot(2,2,1)
-    imagesc(ISIbyHD_align.Dist.Xbins(1,:,1),ISIbyHD_align.Dist.Ybins(1,:,1),MeanPlaceField.ISI.pISI')
+for kk = 1:3
+subplot(3,3,kk+3)
+    imagesc(ISIbyHD_align.Dist.Xbins(1,:,1),ISIbyHD_align.Dist.Ybins(1,:,1),MeanPlaceField.(MIkinds{kk}).pISI')
     hold on
-    imagesc(ISIbyHD_align.Dist.Xbins(1,:,1)+2*pi,ISIbyHD_align.Dist.Ybins(1,:,1),MeanPlaceField.ISI.pISI')
-    imagesc(ISIbyHD_align.Dist.Xbins(1,:,1)-2*pi,ISIbyHD_align.Dist.Ybins(1,:,1),MeanPlaceField.ISI.pISI')
-    plot(ISIbyHD_align.Dist.Xbins(1,:,1),-log10(MeanPlaceField.ISI.Rate),'r')
-    plot(ISIbyHD_align.Dist.Xbins(1,:,1)+2*pi,-log10(MeanPlaceField.ISI.Rate),'r')
-    plot(ISIbyHD_align.Dist.Xbins(1,:,1)-2*pi,-log10(MeanPlaceField.ISI.Rate),'r')
-    LogScale('y',10,'nohalf',true)
+    imagesc(ISIbyHD_align.Dist.Xbins(1,:,1)+2*pi,ISIbyHD_align.Dist.Ybins(1,:,1),MeanPlaceField.(MIkinds{kk}).pISI')
+    imagesc(ISIbyHD_align.Dist.Xbins(1,:,1)-2*pi,ISIbyHD_align.Dist.Ybins(1,:,1),MeanPlaceField.(MIkinds{kk}).pISI')
+    plot(ISIbyHD_align.Dist.Xbins(1,:,1),-log10(MeanPlaceField.(MIkinds{kk}).Rate),'r')
+    plot(ISIbyHD_align.Dist.Xbins(1,:,1)+2*pi,-log10(MeanPlaceField.(MIkinds{kk}).Rate),'r')
+    plot(ISIbyHD_align.Dist.Xbins(1,:,1)-2*pi,-log10(MeanPlaceField.(MIkinds{kk}).Rate),'r')
+    LogScale('y',10,'nohalf',true,'exp',true)
     ylabel('ISI (s)')
     bz_AddRightRateAxis
     xlabel('Position relative to HD Peak (m)')
     xlim([-1.5*pi 1.5.*pi])
     bz_piTickLabel('x')
     
-subplot(2,2,3)
-    plot(ISIbyHD_alignGam.Dist.Xbins(1,:,1),MeanPlaceField.ISI.pGS,'k')
+    
+subplot(3,3,6+(kk))
+    plot(ISIbyHD_alignGam.Dist.Xbins(1,:,1),MeanPlaceField.(MIkinds{kk}).pGS,'k')
     hold on
-    plot(ISIbyHD_alignGam.Dist.Xbins(1,:,1)+2*pi,MeanPlaceField.ISI.pGS,'k')
-    plot(ISIbyHD_alignGam.Dist.Xbins(1,:,1)-2*pi,MeanPlaceField.ISI.pGS,'k')
+    plot(ISIbyHD_alignGam.Dist.Xbins(1,:,1)+2*pi,MeanPlaceField.(MIkinds{kk}).pGS,'k')
+    plot(ISIbyHD_alignGam.Dist.Xbins(1,:,1)-2*pi,MeanPlaceField.(MIkinds{kk}).pGS,'k')
     box off
     xlim([-1.5*pi 1.5.*pi])
+    ylim([0.1 0.5])
     bz_piTickLabel('x')
+    ylabel('pGS')
     
+
+subplot(3,3,kk)
+    imagesc(ISIbyHD_align.Dist.Xbins(1,:,1),[0 length(sortAR.(MIkinds{kk}))],...
+        squeeze(log10(ISIbyHD_align.Dist.SpikeRate(:,:,sortAR.(MIkinds{kk}))))')
+    hold on
+    %ylabel(['Sort by I ',(MIkinds{kk})])
+    bz_piTickLabel('x')
+    title([(MIkinds{kk}),'-tuned cells (',num2str(length(sortAR.(MIkinds{kk}))),')'])
+    ylabel('Sorted by AR')
+
     
+end  
     
-    NiceSave('HDCoding',figfolder,[])
+NiceSave('HDCoding',figfolder,[])
+
+
+%% Groups
+
+hilowAR = 0.55;
+groups = {'NonHiGS','TunedHiAR','NonLoGS','TunedLoAR'};
+tunedcells.NonHiGS = MutInfo.GSweight>0.95 & MutInfo.GSrate>-0.5;
+tunedcells.NonLoGS = MutInfo.GSweight>0.95 & MutInfo.GSrate<-0.5;
+tunedcells.TunedHiAR = tunedcells.ISI & MutInfo.GSweight<hilowAR;
+tunedcells.TunedLoAR = tunedcells.ISI & MutInfo.GSweight>hilowAR;
+%tunedcells.TunedLoAR = ~tunedcells.ISI & MutInfo.GSweight<0.2;
+
+
+for kk = 1:4
+    %tunedcells.(groups{kk}) = MutInfo.(groups{kk})>MIthresh.(groups{kk});
+    MeanPlaceField.(groups{kk}).pISI = nanmean(ISIbyHD_align.Dist.pYX(:,:,tunedcells.(groups{kk})),3);
+    MeanPlaceField.(groups{kk}).Rate = nanmean(ISIbyHD_align.Dist.SpikeRate(:,:,tunedcells.(groups{kk})),3);
+    MeanPlaceField.(groups{kk}).pGS = nanmean(ISIbyHD_alignGam.GammaModes.GSweights(:,:,tunedcells.(groups{kk})),3);
+
+    %[~,sortMutInfo.(groups{kk})] = sort(MutInfo.(groups{kk}));
+    %[~,sortAR.(groups{kk})] = sort(MutInfo.GSweight);
+    %sortAR.(groups{kk}) = sortAR.(groups{kk})(ismember(sortAR.(groups{kk}),find(tunedcells.(groups{kk}))));
+end
+%Non-activating (pGS>0.95)
+%Divide into high and low GS rate
+
+%ISI-tuned
+%Divide into high AR, low AR, non-activating?
+%%
+figure
+ScatterWithLinFit(MutInfo.GSweight(tunedcells.ISI),MutInfo.peakwidth(tunedcells.ISI))
+box off
+xlabel('GS Weight');ylabel('Peak Width')
+%%
+figure
+for kk = 1:4
+    subplot(3,2,kk)
+        imagesc(ISIbyHD_align.Dist.Xbins(1,:,1),ISIbyHD_align.Dist.Ybins(1,:,1),MeanPlaceField.(groups{kk}).pISI')
+        hold on
+        imagesc(ISIbyHD_align.Dist.Xbins(1,:,1)+2*pi,ISIbyHD_align.Dist.Ybins(1,:,1),MeanPlaceField.(groups{kk}).pISI')
+        imagesc(ISIbyHD_align.Dist.Xbins(1,:,1)-2*pi,ISIbyHD_align.Dist.Ybins(1,:,1),MeanPlaceField.(groups{kk}).pISI')
+        plot(ISIbyHD_align.Dist.Xbins(1,:,1),-log10(MeanPlaceField.(groups{kk}).Rate),'r')
+        plot(ISIbyHD_align.Dist.Xbins(1,:,1)+2*pi,-log10(MeanPlaceField.(groups{kk}).Rate),'r')
+        plot(ISIbyHD_align.Dist.Xbins(1,:,1)-2*pi,-log10(MeanPlaceField.(groups{kk}).Rate),'r')
+        LogScale('y',10,'nohalf',true)
+        ylabel('ISI (s)')
+        bz_AddRightRateAxis
+        xlabel('Position relative to HD Peak (m)')
+        xlim([-1.5*pi 1.5.*pi])
+        bz_piTickLabel('x')
+
+
+    subplot(3,2,mod(kk+1,2)+5)
+        plot(ISIbyHD_alignGam.Dist.Xbins(1,:,1),MeanPlaceField.(groups{kk}).pGS,'k')
+        hold on
+        plot(ISIbyHD_alignGam.Dist.Xbins(1,:,1)+2*pi,MeanPlaceField.(groups{kk}).pGS,'k')
+        plot(ISIbyHD_alignGam.Dist.Xbins(1,:,1)-2*pi,MeanPlaceField.(groups{kk}).pGS,'k')
+        box off
+        xlim([-1.5*pi 1.5.*pi])
+        bz_piTickLabel('x')
+    
+end  
+NiceSave('ARGroups',figfolder,[])

@@ -52,8 +52,8 @@ position.data = interp1(position.timestamps(~(nantimes)),position.data,position.
 %%
 meanrate = nansum(ISIbyPOS.Dist.SpikeRate.*ISIbyPOS.Dist.pX,2);
 meanrate_full = repmat(meanrate,1,numXbins,1);
-MutInfo.SkaggsInf = squeeze(nansum(ISIbyPOS.Dist.SpikeRate.*log2(ISIbyPOS.Dist.SpikeRate./meanrate_full).*ISIbyPOS.Dist.pX,2));
-MutInfo.SkaggsInf_sec = MutInfo.SkaggsInf .*squeeze(meanrate);
+MutInfo.Skaggs = squeeze(nansum(ISIbyPOS.Dist.SpikeRate.*log2(ISIbyPOS.Dist.SpikeRate./meanrate_full).*ISIbyPOS.Dist.pX,2));
+MutInfo.Skaggs_sec = MutInfo.Skaggs .*squeeze(meanrate);
 
 
 %%
@@ -74,6 +74,7 @@ for bb = 1:length(binsizes)
     for cc = 1:spikes.numcells
         MutInfo.Rate_BinCompare(cc,bb) = mutualinfo(spkmat.data(:,cc),spkmat.pos);
     end
+    MutInfo.Rate_SkaggsCompare(bb) = corr(MutInfo.Skaggs,MutInfo.Rate_BinCompare(:,bb));
 end
 
 
@@ -138,9 +139,9 @@ for cc = 1:spikes.numcells
     if isempty(GFIDX)
         continue
     end
-    cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
+    %cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
     MutInfo.GSrate(cc) = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
-    MutInfo.GSrate(cc) = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
+    MutInfo.GSweight(cc) = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
 end
 
 %%
