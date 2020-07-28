@@ -297,21 +297,21 @@ hold on
 for ss = 2:3
     plot(cellISIStats.meanISIhist.logbins,cellISIStats.meanISIhist.(cellISIStats.statenames{ss}).log)
 end
-legend(cellISIStats.statenames{2:3})
+legend(cellISIStats.statenames{2:3},'location','southoutside')
 
 subplot(3,3,8)
 hold on
 for ss = 4:5
     plot(cellISIStats.meanISIhist.logbins,cellISIStats.meanISIhist.(cellISIStats.statenames{ss}).log)
 end
-legend(cellISIStats.statenames{4:5})
+legend(cellISIStats.statenames{4:5},'location','southoutside')
 
 subplot(3,3,9)
 hold on
 for ss = 6:7
     plot(cellISIStats.meanISIhist.logbins,cellISIStats.meanISIhist.(cellISIStats.statenames{ss}).log)
 end
-legend(cellISIStats.statenames{6:7})
+legend(cellISIStats.statenames{6:7},'location','southoutside')
 
 for ss = 2:3
 subplot(3,3,(ss-2)*3+1)
