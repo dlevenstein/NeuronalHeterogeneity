@@ -89,7 +89,7 @@ spkmat = bz_SpktToSpkmat(spikes.times,'dt',0.3,'binsize',0.3,'win',position.Epoc
 spkmat.pos = interp1(position.timestamps,position.data,spkmat.timestamps);
 
 for cc = 1:spikes.numcells
-    MutInfo.Rate(cc) = mutualinfo(spkmat.data(:,cc),spkmat.pos);
+    MutInfo.Rate(cc,1) = mutualinfo(spkmat.data(:,cc),spkmat.pos);
     
 
 end

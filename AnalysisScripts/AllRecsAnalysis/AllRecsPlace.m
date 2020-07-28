@@ -17,8 +17,16 @@ MIthresh.Rate = 0.02;
 MIthresh.ISI = 0.02;
 MIthresh.Skaggs = 0.5;
 
+MIthresh.numspks = 500;
+
+MutInfo.goodcells = MutInfo.numspks>MIthresh.numspks & MutInfo.cellclass.pE';
+
 for kk = 1:3
-    tunedcells.(MIkinds{kk}) = MutInfo.(MIkinds{kk})>MIthresh.(MIkinds{kk});
+    if kk ==2
+        tunedcells.(MIkinds{kk}) = MutInfo.goodcells' & MutInfo.(MIkinds{kk})>MIthresh.(MIkinds{kk});
+    else
+        tunedcells.(MIkinds{kk}) = MutInfo.goodcells & MutInfo.(MIkinds{kk})>MIthresh.(MIkinds{kk});
+    end
     MeanPlaceField.(MIkinds{kk}).pISI = nanmean(ISIbyPOS_norm.Dist.pYX(:,:,tunedcells.(MIkinds{kk})),3);
     MeanPlaceField.(MIkinds{kk}).Rate = nanmean(ISIbyPOS_norm.Dist.SpikeRate(:,:,tunedcells.(MIkinds{kk})),3);
 
@@ -29,6 +37,19 @@ end
 
 numcells = length(MutInfo.GSrate);
 
+
+%%
+figure
+subplot(2,2,1)
+plot(log10(MutInfo.numspks(MutInfo.goodcells)),log10(MutInfo.ISI(MutInfo.goodcells)),'.')
+xlabel('numspks');ylabel('MI ISI')
+
+subplot(2,2,2)
+plot(log10(MutInfo.numspks(MutInfo.goodcells)),log10(MutInfo.Skaggs(MutInfo.goodcells)),'.')
+xlabel('# Spks on Track');ylabel('Skaggs Info')
+
+subplot(2,2,3)
+scatter(log10(MutInfo.Skaggs(MutInfo.goodcells)),log10(MutInfo.ISI(MutInfo.goodcells)),5,log10(MutInfo.numspks(MutInfo.goodcells)))
 %%
 %MIthresh = 0.03;
 %MeanISIPlaceField = nanmean(ISIbyPOS_norm.Dist.pYX(:,:,MutInfo.ISI>MIthresh & MutInfo.Rate'>MIthresh),3);
@@ -49,7 +70,7 @@ subplot(3,2,1+(kk-1)*2)
 end
 
 subplot(3,2,2)
-scatter(log10(MutInfo.Skaggs),log10(MutInfo.Rate),3,MutInfo.GSweight,'filled')
+scatter(log10(MutInfo.Skaggs(MutInfo.goodcells)),log10(MutInfo.Rate(MutInfo.goodcells)),3,MutInfo.GSweight(MutInfo.goodcells),'filled')
 axis tight
 hold on
 plot(log10(MIthresh.Skaggs).*[1 1],ylim(gca),'r--')
@@ -59,7 +80,7 @@ LogScale('xy',10)
 colorbar
 
 subplot(3,2,4)
-scatter(log10(MutInfo.Skaggs),log10(MutInfo.ISI),3,MutInfo.GSweight,'filled')
+scatter(log10(MutInfo.Skaggs(MutInfo.goodcells)),log10(MutInfo.ISI(MutInfo.goodcells)),3,MutInfo.GSweight(MutInfo.goodcells),'filled')
 axis tight
 hold on
 plot(log10(MIthresh.Skaggs).*[1 1],ylim(gca),'r--')
@@ -69,7 +90,7 @@ LogScale('xy',10)
 colorbar
 
 subplot(3,2,6)
-scatter(log10(MutInfo.Rate),log10(MutInfo.ISI),3,MutInfo.GSweight,'filled')
+scatter(log10(MutInfo.Rate(MutInfo.goodcells)),log10(MutInfo.ISI(MutInfo.goodcells)),3,MutInfo.GSweight(MutInfo.goodcells),'filled')
 axis tight
 hold on
 plot(xlim(gca),log10(MIthresh.ISI).*[1 1],'r--')
@@ -86,7 +107,7 @@ NiceSave('InfoNetrics',figfolder,[])
 figure
 for kk = 1:3
 subplot(3,2,1+(kk-1)*2)
-scatter(log10(MutInfo.(MIkinds{kk})),MutInfo.GSrate,5,MutInfo.GSweight,'filled')
+scatter(log10(MutInfo.(MIkinds{kk})(MutInfo.goodcells)),MutInfo.GSrate(MutInfo.goodcells),5,MutInfo.GSweight(MutInfo.goodcells),'filled')
 axis tight
 hold on
 plot(log10(MIthresh.(MIkinds{kk})).*[1 1],ylim(gca),'r--')
@@ -96,7 +117,7 @@ LogScale('xy',10)
 colorbar
 
 subplot(3,2,2+(kk-1)*2)
-scatter(log10(MutInfo.(MIkinds{kk})),MutInfo.GSweight,5,MutInfo.GSrate,'filled')
+scatter(log10(MutInfo.(MIkinds{kk})(MutInfo.goodcells)),MutInfo.GSweight(MutInfo.goodcells),5,MutInfo.GSrate(MutInfo.goodcells),'filled')
 hold on
 plot(log10(MIthresh.(MIkinds{kk})).*[1 1],ylim(gca),'r--')
 box off
@@ -139,7 +160,63 @@ end
     NiceSave('PlaceCoding',figfolder,[])
     
     
-    %%
+%% Groups
+
+hilowAR = 0.55;
+groups = {'NonHiGS','TunedHiAR','NonLoGS','TunedLoAR'};
+tunedcells.NonHiGS = MutInfo.GSweight>0.95 & MutInfo.GSrate>-0.5;
+tunedcells.NonLoGS = MutInfo.GSweight>0.95 & MutInfo.GSrate<-0.5;
+tunedcells.TunedHiAR = tunedcells.ISI & MutInfo.GSweight<hilowAR;
+tunedcells.TunedLoAR = tunedcells.ISI & MutInfo.GSweight>hilowAR;
+%tunedcells.TunedLoAR = ~tunedcells.ISI & MutInfo.GSweight<0.2;
+
+
+for kk = 1:4
+    %tunedcells.(groups{kk}) = MutInfo.(groups{kk})>MIthresh.(groups{kk});
+    MeanPlaceField.(groups{kk}).pISI = nanmean(ISIbyPOS_norm.Dist.pYX(:,:,tunedcells.(groups{kk})),3);
+    MeanPlaceField.(groups{kk}).Rate = nanmean(ISIbyPOS_norm.Dist.SpikeRate(:,:,tunedcells.(groups{kk})),3);
+
+    %[~,sortMutInfo.(groups{kk})] = sort(MutInfo.(groups{kk}));
+    %[~,sortAR.(groups{kk})] = sort(MutInfo.GSweight);
+    %sortAR.(groups{kk}) = sortAR.(groups{kk})(ismember(sortAR.(groups{kk}),find(tunedcells.(groups{kk}))));
+end
+%Non-activating (pGS>0.95)
+%Divide into high and low GS rate
+
+%ISI-tuned
+%Divide into high AR, low AR, non-activating?
+%%
 figure
-plot(log10(binsizes),MutInfo.Rate_SkaggsCompare')
-LogScale('x',10)
+ScatterWithLinFit(MutInfo.GSweight(tunedcells.ISI),MutInfo.peakwidth(tunedcells.ISI))
+box off
+xlabel('GS Weight');ylabel('Peak Width')
+%%
+figure
+for kk = 1:4
+    subplot(3,2,kk)
+        imagesc(ISIbyPOS_norm.Dist.Xbins(1,:,1),ISIbyPOS_norm.Dist.Ybins(1,:,1),MeanPlaceField.(groups{kk}).pISI')
+        hold on
+        imagesc(ISIbyPOS_norm.Dist.Xbins(1,:,1)+2*pi,ISIbyPOS_norm.Dist.Ybins(1,:,1),MeanPlaceField.(groups{kk}).pISI')
+        imagesc(ISIbyPOS_norm.Dist.Xbins(1,:,1)-2*pi,ISIbyPOS_norm.Dist.Ybins(1,:,1),MeanPlaceField.(groups{kk}).pISI')
+        plot(ISIbyPOS_norm.Dist.Xbins(1,:,1),-log10(MeanPlaceField.(groups{kk}).Rate),'r')
+        plot(ISIbyPOS_norm.Dist.Xbins(1,:,1)+2*pi,-log10(MeanPlaceField.(groups{kk}).Rate),'r')
+        plot(ISIbyPOS_norm.Dist.Xbins(1,:,1)-2*pi,-log10(MeanPlaceField.(groups{kk}).Rate),'r')
+        LogScale('y',10,'nohalf',true)
+        ylabel('ISI (s)')
+        bz_AddRightRateAxis
+        xlabel('Position relative to HD Peak (m)')
+        xlim([-1.5*pi 1.5.*pi])
+        bz_piTickLabel('x')
+
+
+    subplot(3,2,mod(kk+1,2)+5)
+        plot(ISIbyPOS_normGam.Dist.Xbins(1,:,1),MeanPlaceField.(groups{kk}).pGS,'k')
+        hold on
+        plot(ISIbyPOS_normGam.Dist.Xbins(1,:,1)+2*pi,MeanPlaceField.(groups{kk}).pGS,'k')
+        plot(ISIbyPOS_normGam.Dist.Xbins(1,:,1)-2*pi,MeanPlaceField.(groups{kk}).pGS,'k')
+        box off
+        xlim([-1.5*pi 1.5.*pi])
+        bz_piTickLabel('x')
+    
+end  
+NiceSave('ARGroups',figfolder,[])
