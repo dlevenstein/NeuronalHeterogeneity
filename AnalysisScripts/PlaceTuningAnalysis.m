@@ -1,4 +1,4 @@
-function [ISIbyPOS_norm,MutInfo ] = PlaceTuningAnalysis(basePath,figfolder)
+function [ISIbyPOS_norm,MutInfo,cellISIStats ] = PlaceTuningAnalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -40,14 +40,32 @@ position = bz_LoadBehavior( basePath,'position' );
 nantimes = isnan(position.position.lin);
 position.data = position.position.lin(~(nantimes));
 %Possible here: remove drops for more than a... second?
-minjump = 2;
-numXbins = 80;
+minjump = 1;
+numXbins = 100;
 [ position.data ] = NanPadJumps( position.timestamps(~(nantimes)),position.data,minjump );
 position.data = interp1(position.timestamps(~(nantimes)),position.data,position.timestamps);
 [ISIbyPOS] = bz_ConditionalISI(spikes.times,position,...
     'ints',position.Epochs.MazeEpoch,...
     'showfig',false,'GammaFit',false,'numXbins',numXbins,'numISIbins',100,...
-    'normtype','none','Xwin',[0 3],'Xbinoverlap',3);
+    'normtype','none','Xwin',[0 3],'Xbinoverlap',6,'minX',15);
+
+
+%%
+% excell = 44;
+% figure
+% subplot(2,2,1)
+% plot(firingMaps.xbins{excell}{1},firingMaps.rateMaps{excell}{1})
+% hold on
+% plot(ISIbyPOS.Dist.Xbins(1,:,excell),ISIbyPOS.Dist.SpikeRate(1,:,excell),'k')
+% 
+% subplot(2,2,3)
+%     imagesc(ISIbyPOS.Dist.Xbins(1,:,excell),ISIbyPOS.Dist.Ybins(1,:,excell),ISIbyPOS.Dist.pYX(:,:,excell)')
+%     hold on
+%     plot(ISIbyPOS.Dist.Xbins(1,:,excell),-log10(ISIbyPOS.Dist.SpikeRate(1,:,excell)),'r')
+%     LogScale('y',10,'nohalf',true)
+%     ylabel('ISI (s)')
+%     bz_AddRightRateAxis
+%     xlabel('Position relative to PF Peak (m)')
 %%
 MutInfo.numspks = squeeze(sum(ISIbyPOS.Dist.Xhist));
 %%
@@ -130,7 +148,7 @@ for cc = 1:spikes.numcells
 [ISIbyPOS_norm(cc)] = bz_ConditionalISI(spikes.times{cc},position_norm,...
     'ints',position_norm.Epochs.MazeEpoch,...
     'showfig',false,'GammaFit',false,'numXbins',120,'numISIbins',100,...
-    'normtype','none','Xwin',[-1.5 1.5],'minX',10,'Xbinoverlap',3);
+    'normtype','none','Xwin',[-1.5 1.5],'minX',10,'Xbinoverlap',5);
 end
 
 
@@ -157,6 +175,7 @@ for cc = 1:spikes.numcells
     MutInfo.GSrate(cc) = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
     MutInfo.GSweight(cc) = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
 end
+
 
 %%
 MutInfo.cellclass = CellClass;
@@ -194,6 +213,127 @@ LogScale('x',10)
 NiceSave('PlaceCoding',figfolder,baseName)
 
 
+%% Buzcode Placefield functions
+positions = [position.timestamps position.data];
+firingMaps = bz_firingMapAvg(positions,spikes);
+[placeFieldStats] = bz_findPlaceFields1D('firingMaps',firingMaps,'basepath',basePath)
+
+%% 
+%spikestemp
+clear tempstruct
+for cc = 1:spikes.numcells
+    bz_Counter(cc,spikes.numcells,'Cell')
+    if isnan(placeFieldStats.mapStats{cc}{1}.fieldX)
+        tempstruct(cc).UID = spikes.UID(cc);
+        %tempstruct(cc).GSrate = nan;
+        %tempstruct(cc).GSweight = nan;
+        continue
+    end
+    
+    cellUID(cc) = spikes.UID(cc);
+    GFIDX = find(GammaFit.WAKEstate.cellstats.UID==cellUID(cc));
+    if isempty(GFIDX)
+        tempstruct(cc).UID = spikes.UID(cc);
+        %tempstruct(cc).GSrate = nan;
+        %tempstruct(cc).GSweight = nan;
+        continue
+    end
+    
+    fieldrange = firingMaps.xbins{cc}{1}(placeFieldStats.mapStats{cc}{1}.fieldX);
+    infieldtimes = position.data>fieldrange(1) & position.data<fieldrange(2);
+    IDX.timestamps = position.timestamps;
+    IDX.states = infieldtimes+2;
+    IDX.states(nantimes) = 1;
+    IDX.statenames = {'NanTimes','OutField','InField'};
+    INT = bz_IDXtoINT(IDX);
+    INT.preWAKE = SleepState.ints.WAKEstate(SleepState.ints.WAKEstate(:,2)<position.Epochs.PREEpoch(2),:);
+    INT.postWAKE = SleepState.ints.WAKEstate(SleepState.ints.WAKEstate(:,1)>position.Epochs.POSTEpoch(1),:);
+    INT.preNREM = SleepState.ints.NREMstate(SleepState.ints.NREMstate(:,2)<position.Epochs.PREEpoch(2),:);
+    INT.postNREM = SleepState.ints.NREMstate(SleepState.ints.NREMstate(:,1)>position.Epochs.POSTEpoch(1),:);
+    %PRE NREM POST NREM
+    %PRE WAKE POST WAKE
+    %RUN FIELD
+    %RUN OUT FIELD
+    %TRACK NORUN
+    spikestemp.times = spikes.times(cc);
+    spikestemp.UID = spikes.UID(cc);
+    tempstruct(cc) = bz_ISIStats(spikestemp,'ints',INT,'showfig',false);
+    tempstruct(cc).UID = spikes.UID(cc);
+    %tempstruct(cc).GSrate = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
+    %tempstruct(cc).GSweight  = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
+end
+
+for cc = 1:spikes.numcells
+    
+        cellUID(cc) = spikes.UID(cc);
+    GFIDX = find(GammaFit.WAKEstate.cellstats.UID==cellUID(cc));
+    if isempty(GFIDX)
+        %tempstruct(cc).UID = spikes.UID(cc);
+        tempstruct(cc).GSrate = nan;
+        tempstruct(cc).GSweight = nan;
+        continue
+    end
+    tempstruct(cc).GSrate = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
+    tempstruct(cc).GSweight  = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
+end
+
+[~,sortGSrate] = sort([tempstruct(:).GSrate]);
+tempstruct = bz_CollapseStruct(tempstruct(sortGSrate),3,'justcat');
+%%
+cellISIStats.meanISIhist = bz_CollapseStruct(tempstruct.ISIhist,3,'mean',true);
+cellISIStats.meanJointhist = bz_CollapseStruct(tempstruct.Jointhist,3,'mean',true);
+cellISIStats.allISIhist = bz_CollapseStruct(tempstruct.ISIhist,3,'justcat',true);
+cellISIStats.allJointhist = bz_CollapseStruct(tempstruct.Jointhist,3,'justcat',true);
+
+cellISIStats.GSrate = bz_CollapseStruct(tempstruct.Jointhist,3,'justcat',true)
+cellISIStats.statenames = fieldnames(INT);
+
+%%
+
+
+figure
+subplot(3,3,7)
+hold on
+for ss = 2:3
+    plot(cellISIStats.meanISIhist.logbins,cellISIStats.meanISIhist.(cellISIStats.statenames{ss}).log)
+end
+legend(cellISIStats.statenames{2:3})
+
+subplot(3,3,8)
+hold on
+for ss = 4:5
+    plot(cellISIStats.meanISIhist.logbins,cellISIStats.meanISIhist.(cellISIStats.statenames{ss}).log)
+end
+legend(cellISIStats.statenames{4:5})
+
+subplot(3,3,9)
+hold on
+for ss = 6:7
+    plot(cellISIStats.meanISIhist.logbins,cellISIStats.meanISIhist.(cellISIStats.statenames{ss}).log)
+end
+legend(cellISIStats.statenames{6:7})
+
+for ss = 2:3
+subplot(3,3,(ss-2)*3+1)
+hold on
+    imagesc(cellISIStats.meanISIhist.logbins,[0 1],squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log)')
+end
+%legend(cellISIStats.statenames{1:3})
+
+for ss = 4:5
+subplot(3,3,(ss-4)*3+2)
+hold on
+    imagesc(cellISIStats.meanISIhist.logbins,[0 1],squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log)')
+end
+
+for ss = 6:7
+subplot(3,3,(ss-6)*3+3)
+hold on
+    imagesc(cellISIStats.meanISIhist.logbins,[0 1],squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log)')
+end
+%For each cell, find the intervals in the field, calculate in-field runing,
+%out-field runining, non-running, ISI distributions
+NiceSave('InOutField',figfolder,baseName)
 %%
 % [excell] = bz_ConditionalISI(spikes.times{bestcell},position,...
 %     'ints',position_norm.Epochs.MazeEpoch,...

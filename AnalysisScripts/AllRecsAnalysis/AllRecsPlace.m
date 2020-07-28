@@ -15,6 +15,7 @@ MIkinds = {'Skaggs','Rate','ISI'};
 
 MIthresh.Rate = 0.02;
 MIthresh.ISI = 0.02;
+MIthresh.ISI = 0.05;
 MIthresh.Skaggs = 0.5;
 
 MIthresh.numspks = 500;
@@ -31,6 +32,8 @@ for kk = 1:3
     MeanPlaceField.(MIkinds{kk}).Rate = nanmean(ISIbyPOS_norm.Dist.SpikeRate(:,:,tunedcells.(MIkinds{kk})),3);
 
     [~,sortMutInfo.(MIkinds{kk})] = sort(MutInfo.(MIkinds{kk}));
+    sortMutInfo.(MIkinds{kk}) = sortMutInfo.(MIkinds{kk})(ismember(sortMutInfo.(MIkinds{kk}),find(MutInfo.goodcells)));
+
     [~,sortAR.(MIkinds{kk})] = sort(MutInfo.GSweight);
     sortAR.(MIkinds{kk}) = sortAR.(MIkinds{kk})(ismember(sortAR.(MIkinds{kk}),find(tunedcells.(MIkinds{kk}))));
 end
@@ -147,12 +150,13 @@ subplot(3,3,kk+3)
     ylabel('ISI (s)')
     bz_AddRightRateAxis
     xlabel('Position relative to PF Peak (m)')
-    xlim([-0.9 0.9])
+    xlim([-1.25 1.25])
 
 subplot(3,3,kk)
     imagesc(ISIbyPOS_norm.Dist.Xbins(1,:,1),[0 1],squeeze(log10(ISIbyPOS_norm.Dist.SpikeRate(:,:,sortAR.(MIkinds{kk}))))')
     title([(MIkinds{kk}),'-tuned cells (',num2str(length(sortAR.(MIkinds{kk}))),')'])
     ylabel('Sorted by AR')
+    xlim([-1.25 1.25])
 
     
 end
@@ -164,10 +168,10 @@ end
 
 hilowAR = 0.55;
 groups = {'NonHiGS','TunedHiAR','NonLoGS','TunedLoAR'};
-tunedcells.NonHiGS = MutInfo.GSweight>0.95 & MutInfo.GSrate>-0.5;
+tunedcells.ISINotRate = tunedcells.ISI' & ~tunedcells.Skaggs';
 tunedcells.NonLoGS = MutInfo.GSweight>0.95 & MutInfo.GSrate<-0.5;
-tunedcells.TunedHiAR = tunedcells.ISI & MutInfo.GSweight<hilowAR;
-tunedcells.TunedLoAR = tunedcells.ISI & MutInfo.GSweight>hilowAR;
+tunedcells.TunedHiAR = tunedcells.ISI' & MutInfo.GSweight<hilowAR;
+tunedcells.TunedLoAR = tunedcells.ISI' & MutInfo.GSweight>hilowAR;
 %tunedcells.TunedLoAR = ~tunedcells.ISI & MutInfo.GSweight<0.2;
 
 
@@ -186,10 +190,10 @@ end
 %ISI-tuned
 %Divide into high AR, low AR, non-activating?
 %%
-figure
-ScatterWithLinFit(MutInfo.GSweight(tunedcells.ISI),MutInfo.peakwidth(tunedcells.ISI))
-box off
-xlabel('GS Weight');ylabel('Peak Width')
+% figure
+% ScatterWithLinFit(MutInfo.GSweight(tunedcells.ISI),MutInfo.peakwidth(tunedcells.ISI))
+% box off
+% xlabel('GS Weight');ylabel('Peak Width')
 %%
 figure
 for kk = 1:4
@@ -205,18 +209,11 @@ for kk = 1:4
         ylabel('ISI (s)')
         bz_AddRightRateAxis
         xlabel('Position relative to HD Peak (m)')
-        xlim([-1.5*pi 1.5.*pi])
-        bz_piTickLabel('x')
+        xlim([-1 1])
+        %bz_piTickLabel('x')
 
 
-    subplot(3,2,mod(kk+1,2)+5)
-        plot(ISIbyPOS_normGam.Dist.Xbins(1,:,1),MeanPlaceField.(groups{kk}).pGS,'k')
-        hold on
-        plot(ISIbyPOS_normGam.Dist.Xbins(1,:,1)+2*pi,MeanPlaceField.(groups{kk}).pGS,'k')
-        plot(ISIbyPOS_normGam.Dist.Xbins(1,:,1)-2*pi,MeanPlaceField.(groups{kk}).pGS,'k')
-        box off
-        xlim([-1.5*pi 1.5.*pi])
-        bz_piTickLabel('x')
+
     
 end  
 NiceSave('ARGroups',figfolder,[])
