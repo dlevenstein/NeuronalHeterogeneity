@@ -48,13 +48,15 @@ position.data = interp1(position.timestamps(~(nantimes)),position.data,position.
     'ints',position.Epochs.MazeEpoch,...
     'showfig',false,'GammaFit',false,'numXbins',numXbins,'numISIbins',100,...
     'normtype','none','Xwin',[0 3],'Xbinoverlap',3);
-
+%%
+MutInfo.numspks = squeeze(sum(ISIbyPOS.Dist.Xhist));
 %%
 meanrate = nansum(ISIbyPOS.Dist.SpikeRate.*ISIbyPOS.Dist.pX,2);
 meanrate_full = repmat(meanrate,1,numXbins,1);
 MutInfo.Skaggs = squeeze(nansum(ISIbyPOS.Dist.SpikeRate.*log2(ISIbyPOS.Dist.SpikeRate./meanrate_full).*ISIbyPOS.Dist.pX,2));
 MutInfo.Skaggs_sec = MutInfo.Skaggs .*squeeze(meanrate);
 
+MutInfo.meanrate = squeeze(meanrate);
 
 %%
 [~,ISIbyPOS.fieldpeak] = max(ISIbyPOS.Dist.SpikeRate,[],2);
@@ -76,7 +78,7 @@ for bb = 1:length(binsizes)
     end
     MutInfo.Rate_SkaggsCompare(bb) = corr(MutInfo.Skaggs,MutInfo.Rate_BinCompare(:,bb));
 end
-
+MutInfo.binsizes = binsizes;
 
 
 
@@ -93,6 +95,18 @@ for cc = 1:spikes.numcells
 end
 
 %%
+figure
+subplot(2,2,1)
+plot(log10(MutInfo.numspks),log10(MutInfo.ISI),'.')
+xlabel('numspks');ylabel('MI ISI')
+
+subplot(2,2,2)
+plot(log10(MutInfo.numspks),log10(MutInfo.Skaggs),'.')
+xlabel('# Spks on Track');ylabel('Skaggs Info')
+
+subplot(2,2,3)
+scatter(log10(MutInfo.Skaggs),log10(MutInfo.ISI),5,log10(MutInfo.numspks))
+%%
 % figure
 % subplot(2,2,1)
 % plot(MutInfo.GSrate,log10(MutInfo.ISI),'.')
@@ -100,7 +114,7 @@ end
 % subplot(2,2,2)
 % plot(MutInfo.GSweight,log10(MutInfo.ISI),'.')
 %%
-MIthresh = 0.05;
+MIthresh = 0.03;
 MIforbest = ISIbyPOS.MutInf;
 MIforbest(MutInfo.Rate<MIthresh) = nan;
 [~,bestcell] =max(MIforbest);
@@ -115,8 +129,8 @@ for cc = 1:spikes.numcells
     position_norm.data = position.data-ISIbyPOS.fieldpeak(:,:,cc);
 [ISIbyPOS_norm(cc)] = bz_ConditionalISI(spikes.times{cc},position_norm,...
     'ints',position_norm.Epochs.MazeEpoch,...
-    'showfig',false,'GammaFit',false,'numXbins',80,'numISIbins',100,...
-    'normtype','none','Xwin',[-1 1],'minX',10,'Xbinoverlap',3);
+    'showfig',false,'GammaFit',false,'numXbins',120,'numISIbins',100,...
+    'normtype','none','Xwin',[-1.5 1.5],'minX',10,'Xbinoverlap',3);
 end
 
 

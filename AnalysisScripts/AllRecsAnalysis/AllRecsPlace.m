@@ -15,7 +15,7 @@ MIkinds = {'Skaggs','Rate','ISI'};
 
 MIthresh.Rate = 0.02;
 MIthresh.ISI = 0.02;
-MIthresh.Skaggs = 1;
+MIthresh.Skaggs = 0.5;
 
 for kk = 1:3
     tunedcells.(MIkinds{kk}) = MutInfo.(MIkinds{kk})>MIthresh.(MIkinds{kk});
@@ -80,31 +80,66 @@ colorbar
 
 NiceSave('InfoNetrics',figfolder,[])
 
+
+
+%% Figure: Information Metrics and GS/AS
+figure
+for kk = 1:3
+subplot(3,2,1+(kk-1)*2)
+scatter(log10(MutInfo.(MIkinds{kk})),MutInfo.GSrate,5,MutInfo.GSweight,'filled')
+axis tight
+hold on
+plot(log10(MIthresh.(MIkinds{kk})).*[1 1],ylim(gca),'r--')
+box off
+xlabel(['I ',(MIkinds{kk})]);ylabel('GS Rate (HZ)')
+LogScale('xy',10)
+colorbar
+
+subplot(3,2,2+(kk-1)*2)
+scatter(log10(MutInfo.(MIkinds{kk})),MutInfo.GSweight,5,MutInfo.GSrate,'filled')
+hold on
+plot(log10(MIthresh.(MIkinds{kk})).*[1 1],ylim(gca),'r--')
+box off
+axis tight
+if kk==3
+    plot(xlim(gca).*[0 1]+log10(MIthresh.(MIkinds{kk})).*[1 0],0.5.*[1 1],'k--')
+end
+caxis([-1 0.5])
+colorbar
+LogScale('x',10)
+LogScale('c',10)
+xlabel(['I ',(MIkinds{kk})]);ylabel('GS Weight')
+end
+
+NiceSave('PlaceGSAS',figfolder,[])
+
+
 %%
 
 figure
-subplot(2,2,4)
-    plot(log10(MutInfo.Rate),log10(MutInfo.ISI),'.')
+for kk = 1:3
+subplot(3,3,kk+3)
+    imagesc(ISIbyPOS_norm.Dist.Xbins(1,:,1),ISIbyPOS_norm.Dist.Ybins(1,:,1),MeanPlaceField.(MIkinds{kk}).pISI')
     hold on
-    UnityLine
-    xlim([-4 0]);ylim([-4 0])
-
-
-subplot(2,2,3)
-    imagesc(ISIbyPOS_norm.Dist.Xbins(1,:,1),ISIbyPOS_norm.Dist.Ybins(1,:,1),MeanISIPlaceField')
-    hold on
-    plot(ISIbyPOS_norm.Dist.Xbins(1,:,1),-log10(MeanRatePlaceField),'r')
+    plot(ISIbyPOS_norm.Dist.Xbins(1,:,1),-log10(MeanPlaceField.(MIkinds{kk}).Rate),'r')
     LogScale('y',10,'nohalf',true)
     ylabel('ISI (s)')
     bz_AddRightRateAxis
     xlabel('Position relative to PF Peak (m)')
     xlim([-0.9 0.9])
 
-subplot(2,2,1)
-    imagesc(ISIbyPOS_norm.Dist.Xbins(1,:,1),[0 1],squeeze(log10(ISIbyPOS_norm.Dist.SpikeRate(:,:,sortMI_ISI)))')
-    ylabel('Sort by MIISI')
-subplot(2,2,2)
-    imagesc(ISIbyPOS_norm.Dist.Xbins(1,:,1),[0 1],squeeze(log10(ISIbyPOS_norm.Dist.SpikeRate(:,:,sortMutInfo.Rate)))')
-    ylabel('Sort by MIRate')
+subplot(3,3,kk)
+    imagesc(ISIbyPOS_norm.Dist.Xbins(1,:,1),[0 1],squeeze(log10(ISIbyPOS_norm.Dist.SpikeRate(:,:,sortAR.(MIkinds{kk}))))')
+    title([(MIkinds{kk}),'-tuned cells (',num2str(length(sortAR.(MIkinds{kk}))),')'])
+    ylabel('Sorted by AR')
+
+    
+end
     
     NiceSave('PlaceCoding',figfolder,[])
+    
+    
+    %%
+figure
+plot(log10(binsizes),MutInfo.Rate_SkaggsCompare')
+LogScale('x',10)
