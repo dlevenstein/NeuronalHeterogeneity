@@ -90,7 +90,7 @@ end
 %For each cell, find the intervals in the field, calculate in-field runing,
 %out-field runining, non-running, ISI distributions
 NiceSave('InOutField',figfolder,[])
-%%
+
 %% In/Out Field: REturn Maps
 
 
@@ -264,7 +264,7 @@ end
 %% Groups
 
 hilowAR = 0.55;
-groups = {'NonHiGS','TunedHiAR','NonLoGS','TunedLoAR'};
+groups = {'ISINotRate','TunedHiAR','NonLoGS','TunedLoAR'};
 tunedcells.ISINotRate = tunedcells.ISI' & ~tunedcells.Skaggs';
 tunedcells.NonLoGS = MutInfo.GSweight>0.95 & MutInfo.GSrate<-0.5;
 tunedcells.TunedHiAR = tunedcells.ISI' & MutInfo.GSweight<hilowAR;

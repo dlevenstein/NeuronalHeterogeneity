@@ -284,20 +284,29 @@ for cc = 1:spikes.numcells
         end
         continue
     end
+    
+    cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
+    %stateIDX(cc).data = stateIDX(cc).states;
+    try
+    [StateConditionalISI(cc)] = bz_ConditionalISI(spikes.times(cc),passINT(cc),...
+        'ints','input','normtype','none',...
+        'GammaFitParms',cellGamma,'GammaFit',true,...
+        'showfig',false);
+    catch
+        %For undefined cells...
+        tempstruct(cc).GSrate_all = nan;
+        if cc==spikes.numcells
+            StateConditionalISI(cc).states = [];
+        end
+        continue
+    end
+    
     tempstruct(cc).GSrate = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
     tempstruct(cc).GSweight  = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
     %StateConditionalISI(cc).GSrate = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
     %StateConditionalISI(cc).GSweight  = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
     tempstruct(cc).MIskaggs = MutInfo.Skaggs(cc);
     tempstruct(cc).MIISI = MutInfo.ISI(cc);
-    
-    cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
-    %stateIDX(cc).data = stateIDX(cc).states;
-    [StateConditionalISI(cc)] = bz_ConditionalISI(spikes.times(cc),passINT(cc),...
-        'ints','input','normtype','none',...
-        'GammaFitParms',cellGamma,'GammaFit',true,...
-        'showfig',false);
-    
 
     %keyboard
 end
