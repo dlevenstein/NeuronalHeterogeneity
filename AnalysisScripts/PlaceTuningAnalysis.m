@@ -213,7 +213,7 @@ LogScale('x',10)
 NiceSave('PlaceCoding',figfolder,baseName)
 
 
-%% Buzcode Placefield functions
+%% Buzcode Placefield functions: Cells only with extracted fields
 positions = [position.timestamps position.data];
 firingMaps = bz_firingMapAvg(positions,spikes);
 [placeFieldStats] = bz_findPlaceFields1D('firingMaps',firingMaps,'basepath',basePath)
@@ -221,11 +221,13 @@ firingMaps = bz_firingMapAvg(positions,spikes);
 %% 
 %spikestemp
 clear tempstruct
+clear IDX stateIDX INT
 for cc = 1:spikes.numcells
     bz_Counter(cc,spikes.numcells,'Cell')
     if isnan(placeFieldStats.mapStats{cc}{1}.fieldX)
         if cc==spikes.numcells
-            tempstruct(cc).UID = spikes.UID(cc);
+            tempstruct(cc).UID = [];
+            passINT(cc).NanTimesstate = [];
         end
         %tempstruct(cc).GSrate = nan;
         %tempstruct(cc).GSweight = nan;
@@ -233,16 +235,24 @@ for cc = 1:spikes.numcells
     end
     
     fieldrange = firingMaps.xbins{cc}{1}(placeFieldStats.mapStats{cc}{1}.fieldX);
-    infieldtimes = position.data>fieldrange(1) & position.data<fieldrange(2);
+    if length(placeFieldStats.mapStats{cc}{1}.x)==1
+        infieldtimes = position.data>=fieldrange(1,1) & position.data<=fieldrange(1,2);
+    elseif length(placeFieldStats.mapStats{cc}{1}.x)==2
+        infieldtimes = (position.data>=fieldrange(1,1) & position.data<=fieldrange(1,2)) |...
+            (position.data>=fieldrange(2,1) & position.data<=fieldrange(2,2));
+    end
+
+
     IDX.timestamps = position.timestamps;
     IDX.states = infieldtimes+2;
     IDX.states(nantimes) = 1;
     IDX.statenames = {'NanTimes','OutField','InField'};
     INT = bz_IDXtoINT(IDX);
-    INT.preWAKE = SleepState.ints.WAKEstate(SleepState.ints.WAKEstate(:,2)<position.Epochs.PREEpoch(2),:);
-    INT.postWAKE = SleepState.ints.WAKEstate(SleepState.ints.WAKEstate(:,1)>position.Epochs.POSTEpoch(1),:);
+    INT.preWAKEstate = SleepState.ints.WAKEstate(SleepState.ints.WAKEstate(:,2)<position.Epochs.PREEpoch(2),:);
+    INT.postWAKEstate = SleepState.ints.WAKEstate(SleepState.ints.WAKEstate(:,1)>position.Epochs.POSTEpoch(1),:);
     INT.preNREM = SleepState.ints.NREMstate(SleepState.ints.NREMstate(:,2)<position.Epochs.PREEpoch(2),:);
     INT.postNREM = SleepState.ints.NREMstate(SleepState.ints.NREMstate(:,1)>position.Epochs.POSTEpoch(1),:);
+    passINT(cc) = INT;
     %PRE NREM POST NREM
     %PRE WAKE POST WAKE
     %RUN FIELD
@@ -254,33 +264,90 @@ for cc = 1:spikes.numcells
     tempstruct(cc).UID = spikes.UID(cc);
     %tempstruct(cc).GSrate = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
     %tempstruct(cc).GSweight  = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
+    
+    %stateIDX(cc) = bz_INTtoIDX(INT,'sf',10);
+    %stateIDX(cc).data = stateIDX(cc).states;
 end
 
+clear StateConditionalISI
 for cc = 1:spikes.numcells
+    bz_Counter(cc,spikes.numcells,'Cell')
     
         cellUID(cc) = spikes.UID(cc);
     GFIDX = find(GammaFit.WAKEstate.cellstats.UID==cellUID(cc));
-    if isempty(GFIDX)
+    if isempty(GFIDX) || isempty(passINT(cc).NanTimesstate)
         %tempstruct(cc).UID = spikes.UID(cc);
-        tempstruct(cc).GSrate = nan;
-        tempstruct(cc).GSweight = nan;
+        tempstruct(cc).GSrate_all = nan;
+        %tempstruct(cc).GSweight = nan;
+        StateConditionalISI(cc).states = [];
         continue
     end
     tempstruct(cc).GSrate = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
     tempstruct(cc).GSweight  = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
+    %StateConditionalISI(cc).GSrate = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
+    %StateConditionalISI(cc).GSweight  = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
+    tempstruct(cc).MIskaggs = MutInfo.Skaggs(cc);
+    tempstruct(cc).MIISI = MutInfo.ISI(cc);
+    
+    cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
+    %stateIDX(cc).data = stateIDX(cc).states;
+    [StateConditionalISI(cc)] = bz_ConditionalISI(spikes.times(cc),passINT(cc),...
+        'ints','input','normtype','none',...
+        'GammaFitParms',cellGamma,'GammaFit',true,...
+        'showfig',false);
+    
+
+    %keyboard
 end
 
-[~,sortGSrate] = sort([tempstruct(:).GSrate]);
+[~,sortGSrate] = sort([tempstruct(:).GSrate_all]);
 tempstruct = bz_CollapseStruct(tempstruct(sortGSrate),3,'justcat');
+StateConditionalISI = bz_CollapseStruct(StateConditionalISI(sortGSrate),3,'justcat');
 %%
 cellISIStats.meanISIhist = bz_CollapseStruct(tempstruct.ISIhist,3,'mean',true);
 cellISIStats.meanJointhist = bz_CollapseStruct(tempstruct.Jointhist,3,'mean',true);
 cellISIStats.allISIhist = bz_CollapseStruct(tempstruct.ISIhist,3,'justcat',true);
 cellISIStats.allJointhist = bz_CollapseStruct(tempstruct.Jointhist,3,'justcat',true);
 
-cellISIStats.GSrate = bz_CollapseStruct(tempstruct.Jointhist,3,'justcat',true)
+cellISIStats.GSrate = bz_CollapseStruct(tempstruct.GSrate,3,'justcat',true);
+cellISIStats.GSweight = bz_CollapseStruct(tempstruct.GSweight,3,'justcat',true);
+cellISIStats.MIskaggs = bz_CollapseStruct(tempstruct.MIskaggs,3,'justcat',true);
+cellISIStats.MIISI = bz_CollapseStruct(tempstruct.MIISI,3,'justcat',true);
 cellISIStats.statenames = fieldnames(INT);
 
+cellISIStats.GammaModes = bz_CollapseStruct(StateConditionalISI.GammaModes,3,'justcat',true);
+cellISIStats.GammaModes.states =  StateConditionalISI.states(1,:,1);
+%%
+figure
+subplot(2,2,1)
+plot(squeeze(1-cellISIStats.GammaModes.GSweights(1,2,:)),squeeze(1-cellISIStats.GammaModes.GSweights(1,3,:)),'.')
+hold on
+UnityLine
+ylabel('In-Field AR');xlabel('Out-Field AR')
+
+subplot(2,2,2)
+plot(squeeze(cellISIStats.GammaModes.GSlogrates(1,2,:)),squeeze(cellISIStats.GammaModes.GSlogrates(1,3,:)),'.')
+hold on
+axis tight
+UnityLine
+ylabel('In-Field GS Rate');xlabel('Out-Field GS Rate')
+LogScale('xy',10)
+
+diffASweight = (cellISIStats.GammaModes.ASweights(3,:,:)-cellISIStats.GammaModes.ASweights(2,:,:));
+subplot(2,2,3)
+hold on
+for aa = 1:5
+scatter(-cellISIStats.GammaModes.ASlogrates(1,aa,:),log10(cellISIStats.GammaModes.ASCVs(1,aa,:)),10*cellISIStats.GammaModes.ASweights(3,aa,:)+eps,...
+    squeeze(diffASweight(1,aa,:)))
+end
+colorbar
+crameri('berlin','pivot',0)
+caxis([-0.1 0.1])
+
+diffAR = (1-cellISIStats.GammaModes.GSweights(1,3,:))-(1-cellISIStats.GammaModes.GSweights(1,2,:));
+
+% subplot(2,2,4)
+% plot(squeeze(cellISIStats.MIskaggs),squeeze(diffAR),'.')
 %%
 
 
