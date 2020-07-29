@@ -223,16 +223,7 @@ firingMaps = bz_firingMapAvg(positions,spikes);
 clear tempstruct
 for cc = 1:spikes.numcells
     bz_Counter(cc,spikes.numcells,'Cell')
-    if isnan(placeFieldStats.mapStats{cc}{1}.fieldX)
-        tempstruct(cc).UID = spikes.UID(cc);
-        %tempstruct(cc).GSrate = nan;
-        %tempstruct(cc).GSweight = nan;
-        continue
-    end
-    
-    cellUID(cc) = spikes.UID(cc);
-    GFIDX = find(GammaFit.WAKEstate.cellstats.UID==cellUID(cc));
-    if isempty(GFIDX)
+    if isnan(placeFieldStats.mapStats{cc}{1}.fieldX) & cc==spikes.numcells
         tempstruct(cc).UID = spikes.UID(cc);
         %tempstruct(cc).GSrate = nan;
         %tempstruct(cc).GSweight = nan;
