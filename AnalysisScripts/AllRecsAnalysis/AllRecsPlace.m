@@ -8,7 +8,7 @@ PlaceALL = bz_CollapseStruct(PlaceALL);
 %%
 ISIbyPOS_norm = bz_CollapseStruct(PlaceALL.ISIbyPOS_norm,'match','justcat',true);
 MutInfo = bz_CollapseStruct(PlaceALL.MutInfo,'match','justcat',true);
-
+cellISIStats = bz_CollapseStruct(PlaceALL.cellISIStats,3,'justcat',true);
 %%
 %MutInfo.Skaggs = MutInfo.SkaggsInf;
 MIkinds = {'Skaggs','Rate','ISI'};
@@ -23,11 +23,9 @@ MIthresh.numspks = 500;
 MutInfo.goodcells = MutInfo.numspks>MIthresh.numspks & MutInfo.cellclass.pE';
 
 for kk = 1:3
-    if kk ==2
-        tunedcells.(MIkinds{kk}) = MutInfo.goodcells' & MutInfo.(MIkinds{kk})>MIthresh.(MIkinds{kk});
-    else
+
         tunedcells.(MIkinds{kk}) = MutInfo.goodcells & MutInfo.(MIkinds{kk})>MIthresh.(MIkinds{kk});
-    end
+
     MeanPlaceField.(MIkinds{kk}).pISI = nanmean(ISIbyPOS_norm.Dist.pYX(:,:,tunedcells.(MIkinds{kk})),3);
     MeanPlaceField.(MIkinds{kk}).Rate = nanmean(ISIbyPOS_norm.Dist.SpikeRate(:,:,tunedcells.(MIkinds{kk})),3);
 
@@ -40,6 +38,105 @@ end
 
 numcells = length(MutInfo.GSrate);
 
+
+%%
+meanISIhist = bz_CollapseStruct(cellISIStats.allISIhist,3,'mean',true);
+%% In/Out Field
+histcolors = flipud(gray);
+NREMhistcolors = makeColorMap([1 1 1],[0 0 0.8]);
+
+figure
+colormap(gcf,histcolors)
+subplot(3,3,7)
+hold on
+for ss = 2:3
+    plot(meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).log)
+end
+legend(cellISIStats.statenames{2:3},'location','southoutside')
+
+subplot(3,3,8)
+hold on
+for ss = 4:5
+    plot(meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).log)
+end
+legend(cellISIStats.statenames{4:5},'location','southoutside')
+
+subplot(3,3,9)
+hold on
+for ss = 6:7
+    plot(meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).log)
+end
+legend(cellISIStats.statenames{6:7},'location','southoutside')
+
+for ss = 2:3
+subplot(3,3,(ss-2)*3+1)
+hold on
+    imagesc(meanISIhist.logbins,[0 1],squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log)')
+end
+%legend(cellISIStats.statenames{1:3})
+
+for ss = 4:5
+subplot(3,3,(ss-4)*3+2)
+hold on
+    imagesc(meanISIhist.logbins,[0 1],squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log)')
+end
+
+for ss = 6:7
+subplot(3,3,(ss-6)*3+3)
+hold on
+    imagesc(meanISIhist.logbins,[0 1],squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log)')
+    colormap(gca,NREMhistcolors)
+end
+%For each cell, find the intervals in the field, calculate in-field runing,
+%out-field runining, non-running, ISI distributions
+NiceSave('InOutField',figfolder,[])
+%%
+%% In/Out Field: REturn Maps
+
+
+figure
+colormap(gcf,histcolors)
+subplot(3,3,7)
+hold on
+for ss = 2:3
+    plot(meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).log)
+end
+legend(cellISIStats.statenames{2:3},'location','southoutside')
+
+subplot(3,3,8)
+hold on
+for ss = 4:5
+    plot(meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).log)
+end
+legend(cellISIStats.statenames{4:5},'location','southoutside')
+
+subplot(3,3,9)
+hold on
+for ss = 6:7
+    plot(meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).log)
+end
+legend(cellISIStats.statenames{6:7},'location','southoutside')
+
+for ss = 2:3
+subplot(3,3,(ss-2)*3+1)
+    imagesc(meanISIhist.logbins,meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).return)
+    axis xy
+end
+%legend(cellISIStats.statenames{1:3})
+
+for ss = 4:5
+subplot(3,3,(ss-4)*3+2)
+    imagesc(meanISIhist.logbins,meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).return)
+    axis xy
+end
+
+for ss = 6:7
+subplot(3,3,(ss-6)*3+3)
+    imagesc(meanISIhist.logbins,meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).return)
+    axis xy
+    colormap(gca,NREMhistcolors)
+end
+NiceSave('InOutField_Return',figfolder,[])
 
 %%
 figure

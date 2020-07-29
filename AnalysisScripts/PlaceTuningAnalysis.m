@@ -216,7 +216,7 @@ NiceSave('PlaceCoding',figfolder,baseName)
 %% Buzcode Placefield functions: Cells only with extracted fields
 positions = [position.timestamps position.data];
 firingMaps = bz_firingMapAvg(positions,spikes);
-[placeFieldStats] = bz_findPlaceFields1D('firingMaps',firingMaps,'basepath',basePath)
+[placeFieldStats] = bz_findPlaceFields1D('firingMaps',firingMaps,'basepath',basePath);
 
 %% 
 %spikestemp
@@ -279,7 +279,9 @@ for cc = 1:spikes.numcells
         %tempstruct(cc).UID = spikes.UID(cc);
         tempstruct(cc).GSrate_all = nan;
         %tempstruct(cc).GSweight = nan;
-        StateConditionalISI(cc).states = [];
+        if cc==spikes.numcells
+            StateConditionalISI(cc).states = [];
+        end
         continue
     end
     tempstruct(cc).GSrate = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
@@ -304,8 +306,7 @@ end
 tempstruct = bz_CollapseStruct(tempstruct(sortGSrate),3,'justcat');
 StateConditionalISI = bz_CollapseStruct(StateConditionalISI(sortGSrate),3,'justcat');
 %%
-cellISIStats.meanISIhist = bz_CollapseStruct(tempstruct.ISIhist,3,'mean',true);
-cellISIStats.meanJointhist = bz_CollapseStruct(tempstruct.Jointhist,3,'mean',true);
+meanISIhist = bz_CollapseStruct(tempstruct.ISIhist,3,'mean',true);
 cellISIStats.allISIhist = bz_CollapseStruct(tempstruct.ISIhist,3,'justcat',true);
 cellISIStats.allJointhist = bz_CollapseStruct(tempstruct.Jointhist,3,'justcat',true);
 
@@ -348,6 +349,7 @@ diffAR = (1-cellISIStats.GammaModes.GSweights(1,3,:))-(1-cellISIStats.GammaModes
 
 % subplot(2,2,4)
 % plot(squeeze(cellISIStats.MIskaggs),squeeze(diffAR),'.')
+NiceSave('GSASField',figfolder,baseName)
 %%
 
 
@@ -355,41 +357,41 @@ figure
 subplot(3,3,7)
 hold on
 for ss = 2:3
-    plot(cellISIStats.meanISIhist.logbins,cellISIStats.meanISIhist.(cellISIStats.statenames{ss}).log)
+    plot(meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).log)
 end
 legend(cellISIStats.statenames{2:3},'location','southoutside')
 
 subplot(3,3,8)
 hold on
 for ss = 4:5
-    plot(cellISIStats.meanISIhist.logbins,cellISIStats.meanISIhist.(cellISIStats.statenames{ss}).log)
+    plot(meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).log)
 end
 legend(cellISIStats.statenames{4:5},'location','southoutside')
 
 subplot(3,3,9)
 hold on
 for ss = 6:7
-    plot(cellISIStats.meanISIhist.logbins,cellISIStats.meanISIhist.(cellISIStats.statenames{ss}).log)
+    plot(meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).log)
 end
 legend(cellISIStats.statenames{6:7},'location','southoutside')
 
 for ss = 2:3
 subplot(3,3,(ss-2)*3+1)
 hold on
-    imagesc(cellISIStats.meanISIhist.logbins,[0 1],squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log)')
+    imagesc(meanISIhist.logbins,[0 1],squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log)')
 end
 %legend(cellISIStats.statenames{1:3})
 
 for ss = 4:5
 subplot(3,3,(ss-4)*3+2)
 hold on
-    imagesc(cellISIStats.meanISIhist.logbins,[0 1],squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log)')
+    imagesc(meanISIhist.logbins,[0 1],squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log)')
 end
 
 for ss = 6:7
 subplot(3,3,(ss-6)*3+3)
 hold on
-    imagesc(cellISIStats.meanISIhist.logbins,[0 1],squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log)')
+    imagesc(meanISIhist.logbins,[0 1],squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log)')
 end
 %For each cell, find the intervals in the field, calculate in-field runing,
 %out-field runining, non-running, ISI distributions
