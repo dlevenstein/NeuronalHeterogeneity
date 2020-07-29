@@ -216,7 +216,8 @@ NiceSave('PlaceCoding',figfolder,baseName)
 %% Buzcode Placefield functions: Cells only with extracted fields
 positions = [position.timestamps position.data];
 firingMaps = bz_firingMapAvg(positions,spikes);
-[placeFieldStats] = bz_findPlaceFields1D('firingMaps',firingMaps,'basepath',basePath);
+[placeFieldStats] = bz_findPlaceFields1D('firingMaps',firingMaps,'basepath',basePath,...
+    'threshold',0.1,'minPeak2nd',0.5);
 
 %% 
 %spikestemp

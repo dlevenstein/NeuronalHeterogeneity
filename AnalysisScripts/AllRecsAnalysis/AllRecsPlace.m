@@ -52,6 +52,7 @@ hold on
 for ss = 2:3
     plot(meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).log)
 end
+axis tight
 legend(cellISIStats.statenames{2:3},'location','southoutside')
 
 subplot(3,3,8)
@@ -59,6 +60,7 @@ hold on
 for ss = 4:5
     plot(meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).log)
 end
+axis tight
 legend(cellISIStats.statenames{4:5},'location','southoutside')
 
 subplot(3,3,9)
@@ -66,12 +68,14 @@ hold on
 for ss = 6:7
     plot(meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).log)
 end
+axis tight
 legend(cellISIStats.statenames{6:7},'location','southoutside')
 
 for ss = 2:3
 subplot(3,3,(ss-2)*3+1)
 hold on
     imagesc(meanISIhist.logbins,[0 1],squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log)')
+    axis tight
 end
 %legend(cellISIStats.statenames{1:3})
 
@@ -79,14 +83,18 @@ for ss = 4:5
 subplot(3,3,(ss-4)*3+2)
 hold on
     imagesc(meanISIhist.logbins,[0 1],squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log)')
+    axis tight
 end
+
 
 for ss = 6:7
 subplot(3,3,(ss-6)*3+3)
 hold on
     imagesc(meanISIhist.logbins,[0 1],squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log)')
     colormap(gca,NREMhistcolors)
+    axis tight
 end
+
 %For each cell, find the intervals in the field, calculate in-field runing,
 %out-field runining, non-running, ISI distributions
 NiceSave('InOutField',figfolder,[])
@@ -101,20 +109,28 @@ hold on
 for ss = 2:3
     plot(meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).log)
 end
+    axis tight
+    box off
 legend(cellISIStats.statenames{2:3},'location','southoutside')
 
 subplot(3,3,8)
 hold on
 for ss = 4:5
     plot(meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).log)
+
 end
+    axis tight
+    box off
 legend(cellISIStats.statenames{4:5},'location','southoutside')
 
 subplot(3,3,9)
 hold on
 for ss = 6:7
     plot(meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).log)
+
 end
+    axis tight
+    box off
 legend(cellISIStats.statenames{6:7},'location','southoutside')
 
 for ss = 2:3
@@ -128,6 +144,7 @@ for ss = 4:5
 subplot(3,3,(ss-4)*3+2)
     imagesc(meanISIhist.logbins,meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).return)
     axis xy
+    axis tight
 end
 
 for ss = 6:7
@@ -135,6 +152,7 @@ subplot(3,3,(ss-6)*3+3)
     imagesc(meanISIhist.logbins,meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).return)
     axis xy
     colormap(gca,NREMhistcolors)
+    axis tight
 end
 NiceSave('InOutField_Return',figfolder,[])
 
