@@ -223,7 +223,7 @@ firingMaps = bz_firingMapAvg(positions,spikes);
 clear tempstruct
 for cc = 1:spikes.numcells
     bz_Counter(cc,spikes.numcells,'Cell')
-    if isnan(placeFieldStats.mapStats{cc}{1}.fieldX
+    if isnan(placeFieldStats.mapStats{cc}{1}.fieldX)
         if cc==spikes.numcells
             tempstruct(cc).UID = spikes.UID(cc);
         end
