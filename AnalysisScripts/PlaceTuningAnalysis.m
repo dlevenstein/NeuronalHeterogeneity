@@ -193,7 +193,7 @@ clear IDX stateIDX INT
 for cc = 1:spikes.numcells
     bz_Counter(cc,spikes.numcells,'Cell')
     if isnan(placeFieldStats.mapStats{cc}{1}.fieldX)
-        MutInfo.hasfield(cc) = false;
+        MutInfo.hasfield(cc,1) = false;
         if cc==spikes.numcells
             tempstruct(cc).UID = [];
             passINT(cc).NanTimesstate = [];
