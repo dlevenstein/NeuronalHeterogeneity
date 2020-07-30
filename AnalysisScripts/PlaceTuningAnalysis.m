@@ -202,7 +202,7 @@ for cc = 1:spikes.numcells
         %tempstruct(cc).GSweight = nan;
         continue
     end
-    MutInfo.hasfield(cc) = true;
+    MutInfo.hasfield(cc,1) = true;
     
     fieldrange = firingMaps.xbins{cc}{1}(placeFieldStats.mapStats{cc}{1}.fieldX);
     infieldtimes = InIntervals(position.data,fieldrange);
