@@ -41,6 +41,9 @@ numcells = length(MutInfo.GSrate);
 
 %%
 meanISIhist = bz_CollapseStruct(cellISIStats.allISIhist,3,'mean',true);
+
+
+
 %% In/Out Field
 histcolors = flipud(gray);
 NREMhistcolors = makeColorMap([1 1 1],[0 0 0.8]);
@@ -137,6 +140,8 @@ for ss = 2:3
 subplot(3,3,(ss-2)*3+1)
     imagesc(meanISIhist.logbins,meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).return)
     axis xy
+    axis tight
+    LogScale('xy',10,'exp',true)
 end
 %legend(cellISIStats.statenames{1:3})
 
@@ -145,6 +150,7 @@ subplot(3,3,(ss-4)*3+2)
     imagesc(meanISIhist.logbins,meanISIhist.logbins,meanISIhist.(cellISIStats.statenames{ss}).return)
     axis xy
     axis tight
+    LogScale('xy',10,'exp',true)
 end
 
 for ss = 6:7
@@ -153,9 +159,49 @@ subplot(3,3,(ss-6)*3+3)
     axis xy
     colormap(gca,NREMhistcolors)
     axis tight
+    LogScale('xy',10,'exp',true)
 end
+
 NiceSave('InOutField_Return',figfolder,[])
 
+
+%%
+figure
+subplot(3,3,1)
+plot(squeeze(1-cellISIStats.GammaModes.GSweights(1,2,:)),squeeze(1-cellISIStats.GammaModes.GSweights(1,3,:)),'k.','markersize',8)
+hold on
+UnityLine
+ylabel('In-Field AR');xlabel('Out-Field AR')
+
+subplot(3,3,2)
+plot(squeeze(cellISIStats.GammaModes.GSlogrates(1,2,:)),squeeze(cellISIStats.GammaModes.GSlogrates(1,3,:)),'k.','markersize',8)
+hold on
+axis tight
+UnityLine
+box off
+ylabel('In-Field GS Rate');xlabel('Out-Field GS Rate')
+LogScale('xy',10,'exp',true,'nohalf',true)
+
+diffASweight = (cellISIStats.GammaModes.ASweights(3,:,:)-cellISIStats.GammaModes.ASweights(2,:,:));
+subplot(3,3,3)
+hold on
+for aa = 1:5
+scatter(-cellISIStats.GammaModes.ASlogrates(1,aa,:),log10(cellISIStats.GammaModes.ASCVs(1,aa,:)),30*cellISIStats.GammaModes.ASweights(3,aa,:)+eps,...
+    squeeze(diffASweight(1,aa,:)),'filled')
+end
+axis tight
+plot(xlim(gca),[0 0],'k--')
+crameri('berlin','pivot',0)
+ColorbarWithAxis([-0.25 0.25],'Delta AR','inclusive',{'<','>'})
+LogScale('x',10,'exp',true,'nohalf',true)
+LogScale('y',10,'exp',false,'nohalf',true)
+xlabel('AS Mean ISI (s)');ylabel('AS Mode CV')
+
+diffAR = (1-cellISIStats.GammaModes.GSweights(1,3,:))-(1-cellISIStats.GammaModes.GSweights(1,2,:));
+
+% subplot(2,2,4)
+% plot(squeeze(cellISIStats.MIskaggs),squeeze(diffAR),'.')
+NiceSave('GSASField',figfolder,[])
 %%
 figure
 subplot(2,2,1)
@@ -265,13 +311,13 @@ subplot(3,3,kk+3)
     ylabel('ISI (s)')
     bz_AddRightRateAxis
     xlabel('Position relative to PF Peak (m)')
-    xlim([-1.25 1.25])
+    xlim([-1.3 1.3])
 
 subplot(3,3,kk)
     imagesc(ISIbyPOS_norm.Dist.Xbins(1,:,1),[0 1],squeeze(log10(ISIbyPOS_norm.Dist.SpikeRate(:,:,sortAR.(MIkinds{kk}))))')
     title([(MIkinds{kk}),'-tuned cells (',num2str(length(sortAR.(MIkinds{kk}))),')'])
     ylabel('Sorted by AR')
-    xlim([-1.25 1.25])
+    xlim([-1.3 1.3])
 
     
 end
@@ -281,10 +327,10 @@ end
     
 %% Groups
 
-hilowAR = 0.55;
-groups = {'ISINotRate','TunedHiAR','NonLoGS','TunedLoAR'};
+hilowAR = 0.5;
+groups = {'ISINotRate','RateNotISI','NonLoGS','TunedLoAR'};
 tunedcells.ISINotRate = tunedcells.ISI' & ~tunedcells.Skaggs';
-tunedcells.NonLoGS = MutInfo.GSweight>0.95 & MutInfo.GSrate<-0.5;
+tunedcells.RateNotISI = ~tunedcells.ISI' & tunedcells.Skaggs';
 tunedcells.TunedHiAR = tunedcells.ISI' & MutInfo.GSweight<hilowAR;
 tunedcells.TunedLoAR = tunedcells.ISI' & MutInfo.GSweight>hilowAR;
 %tunedcells.TunedLoAR = ~tunedcells.ISI & MutInfo.GSweight<0.2;
@@ -324,7 +370,7 @@ for kk = 1:4
         ylabel('ISI (s)')
         bz_AddRightRateAxis
         xlabel('Position relative to HD Peak (m)')
-        xlim([-1 1])
+        xlim([-1.25 1.25])
         %bz_piTickLabel('x')
 
 

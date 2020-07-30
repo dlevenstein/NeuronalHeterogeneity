@@ -153,7 +153,7 @@ NiceSave('HDCoding',figfolder,[])
 
 %% Groups
 
-hilowAR = 0.55;
+hilowAR = 0.5;
 groups = {'NonHiGS','TunedHiAR','NonLoGS','TunedLoAR'};
 tunedcells.NonHiGS = MutInfo.GSweight>0.95 & MutInfo.GSrate>-0.5;
 tunedcells.NonLoGS = MutInfo.GSweight>0.95 & MutInfo.GSrate<-0.5;

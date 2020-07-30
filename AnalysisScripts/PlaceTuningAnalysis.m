@@ -236,13 +236,7 @@ for cc = 1:spikes.numcells
     end
     
     fieldrange = firingMaps.xbins{cc}{1}(placeFieldStats.mapStats{cc}{1}.fieldX);
-    if length(placeFieldStats.mapStats{cc}{1}.x)==1
-        infieldtimes = position.data>=fieldrange(1,1) & position.data<=fieldrange(1,2);
-    elseif length(placeFieldStats.mapStats{cc}{1}.x)==2
-        infieldtimes = (position.data>=fieldrange(1,1) & position.data<=fieldrange(1,2)) |...
-            (position.data>=fieldrange(2,1) & position.data<=fieldrange(2,2));
-    end
-
+    infieldtimes = InIntervals(position.data,fieldrange);
 
     IDX.timestamps = position.timestamps;
     IDX.states = infieldtimes+2;
@@ -263,23 +257,17 @@ for cc = 1:spikes.numcells
     spikestemp.UID = spikes.UID(cc);
     tempstruct(cc) = bz_ISIStats(spikestemp,'ints',INT,'showfig',false);
     tempstruct(cc).UID = spikes.UID(cc);
-    %tempstruct(cc).GSrate = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
-    %tempstruct(cc).GSweight  = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
-    
-    %stateIDX(cc) = bz_INTtoIDX(INT,'sf',10);
-    %stateIDX(cc).data = stateIDX(cc).states;
+
 end
 
 clear StateConditionalISI
 for cc = 1:spikes.numcells
     bz_Counter(cc,spikes.numcells,'Cell')
     
-        cellUID(cc) = spikes.UID(cc);
+	cellUID(cc) = spikes.UID(cc);
     GFIDX = find(GammaFit.WAKEstate.cellstats.UID==cellUID(cc));
     if isempty(GFIDX) || isempty(passINT(cc).NanTimesstate)
-        %tempstruct(cc).UID = spikes.UID(cc);
         tempstruct(cc).GSrate_all = nan;
-        %tempstruct(cc).GSweight = nan;
         if cc==spikes.numcells
             StateConditionalISI(cc).states = [];
         end
@@ -302,10 +290,12 @@ for cc = 1:spikes.numcells
         continue
     end
     
+    %Number of spikes....
+    outfieldspikes(cc) = StateConditionalISI(cc).Dist.Xhist(2);
+    
+    tempstruct(cc).GSrate_all = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
     tempstruct(cc).GSrate = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
     tempstruct(cc).GSweight  = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
-    %StateConditionalISI(cc).GSrate = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
-    %StateConditionalISI(cc).GSweight  = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
     tempstruct(cc).MIskaggs = MutInfo.Skaggs(cc);
     tempstruct(cc).MIISI = MutInfo.ISI(cc);
 
@@ -313,8 +303,19 @@ for cc = 1:spikes.numcells
 end
 
 [~,sortGSrate] = sort([tempstruct(:).GSrate_all]);
+%%
+numspikethresh = 200;
+excludeNumSpikes = find(outfieldspikes<numspikethresh);
+sortGSrate(ismember(sortGSrate,excludeNumSpikes))=[];
+%%
 tempstruct = bz_CollapseStruct(tempstruct(sortGSrate),3,'justcat');
 StateConditionalISI = bz_CollapseStruct(StateConditionalISI(sortGSrate),3,'justcat');
+%%
+cellISIStats.Dist  = bz_CollapseStruct(StateConditionalISI.Dist,3,'justcat',true);
+%%
+% numspikethresh = 100;
+% infieldspikes = squeeze(cellISIStats.Dist.Xhist(1,3,:));
+% outfieldspikes = squeeze(cellISIStats.Dist.Xhist(1,2,:));
 %%
 meanISIhist = bz_CollapseStruct(tempstruct.ISIhist,3,'mean',true);
 cellISIStats.allISIhist = bz_CollapseStruct(tempstruct.ISIhist,3,'justcat',true);
@@ -328,6 +329,8 @@ cellISIStats.statenames = fieldnames(INT);
 
 cellISIStats.GammaModes = bz_CollapseStruct(StateConditionalISI.GammaModes,3,'justcat',true);
 cellISIStats.GammaModes.states =  StateConditionalISI.states(1,:,1);
+
+[~,sortGS] = sort(cellISIStats.GSrate);
 %%
 figure
 subplot(2,2,1)
