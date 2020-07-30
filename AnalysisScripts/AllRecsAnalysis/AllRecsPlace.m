@@ -191,8 +191,8 @@ scatter(-cellISIStats.GammaModes.ASlogrates(1,aa,:),log10(cellISIStats.GammaMode
 end
 axis tight
 plot(xlim(gca),[0 0],'k--')
+ColorbarWithAxis([-0.2 0.2],'Delta AR','inclusive',{'<','>'})
 crameri('berlin','pivot',0)
-ColorbarWithAxis([-0.25 0.25],'Delta AR','inclusive',{'<','>'})
 LogScale('x',10,'exp',true,'nohalf',true)
 LogScale('y',10,'exp',false,'nohalf',true)
 xlabel('AS Mean ISI (s)');ylabel('AS Mode CV')
@@ -307,7 +307,7 @@ subplot(3,3,kk+3)
     imagesc(ISIbyPOS_norm.Dist.Xbins(1,:,1),ISIbyPOS_norm.Dist.Ybins(1,:,1),MeanPlaceField.(MIkinds{kk}).pISI')
     hold on
     plot(ISIbyPOS_norm.Dist.Xbins(1,:,1),-log10(MeanPlaceField.(MIkinds{kk}).Rate),'r')
-    LogScale('y',10,'nohalf',true)
+    LogScale('y',10,'nohalf',true,'exp',true)
     ylabel('ISI (s)')
     bz_AddRightRateAxis
     xlabel('Position relative to PF Peak (m)')
@@ -328,7 +328,7 @@ end
 %% Groups
 
 hilowAR = 0.5;
-groups = {'ISINotRate','RateNotISI','NonLoGS','TunedLoAR'};
+groups = {'ISINotRate','RateNotISI','TunedHiAR','TunedLoAR'};
 tunedcells.ISINotRate = tunedcells.ISI' & ~tunedcells.Skaggs';
 tunedcells.RateNotISI = ~tunedcells.ISI' & tunedcells.Skaggs';
 tunedcells.TunedHiAR = tunedcells.ISI' & MutInfo.GSweight<hilowAR;

@@ -9,14 +9,14 @@ function [ISIbyPOS_norm,MutInfo,cellISIStats ] = PlaceTuningAnalysis(basePath,fi
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
-%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
 %basePath = pwd;
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -179,39 +179,6 @@ end
 
 %%
 MutInfo.cellclass = CellClass;
-%%
-figure
-subplot(3,3,1)
-    imagesc(ISIbyPOS_norm_mean.Dist.Xbins,[1 spikes.numcells],squeeze(log10(ISIbyPOS_norm.Dist.SpikeRate(:,:,sortMI_ISI)))')
-    ylabel('Sort by MIISI')
-subplot(3,3,4)
-    imagesc(ISIbyPOS_norm_mean.Dist.Xbins,[1 spikes.numcells],squeeze(log10(ISIbyPOS_norm.Dist.SpikeRate(:,:,sortMutInfo.Rate)))')
-    ylabel('Sort by MIRate')
-    
-subplot(3,3,7)
-    imagesc(ISIbyPOS_norm_mean.Dist.Xbins,ISIbyPOS_norm_mean.Dist.Ybins,ISIbyPOS_norm_mean.Dist.pYX')
-    hold on
-    plot(ISIbyPOS_norm_mean.Dist.Xbins,-log10(ISIbyPOS_norm_mean.Dist.SpikeRate),'r')
-    LogScale('y',10,'nohalf',true)
-    ylabel('ISI (s)')
-    bz_AddRightRateAxis
-    xlabel('Position relative to PF Peak (m)')
-    
-
-subplot(3,3,9)
-    scatter(log10(MutInfo.Rate),squeeze(log10(ISIbyPOS.MutInf)),5,(MutInfo.GSrate))
-    xlabel('MI - rate');ylabel('MI - ISI')
-    
-subplot(3,3,6)
-imagesc(log10(binsizes),[1 spikes.numcells],log10(MutInfo.Rate_BinCompare(sortMutInfo.Rate,:)))
-LogScale('x',10)
-
-subplot(3,3,3)
-imagesc(log10(binsizes),[1 spikes.numcells],log10(MutInfo.Rate_BinCompare(sortMI_ISI,:)))
-LogScale('x',10)
-
-NiceSave('PlaceCoding',figfolder,baseName)
-
 
 %% Buzcode Placefield functions: Cells only with extracted fields
 positions = [position.timestamps position.data];
@@ -226,6 +193,7 @@ clear IDX stateIDX INT
 for cc = 1:spikes.numcells
     bz_Counter(cc,spikes.numcells,'Cell')
     if isnan(placeFieldStats.mapStats{cc}{1}.fieldX)
+        MutInfo.hasfield(cc) = false;
         if cc==spikes.numcells
             tempstruct(cc).UID = [];
             passINT(cc).NanTimesstate = [];
@@ -234,6 +202,7 @@ for cc = 1:spikes.numcells
         %tempstruct(cc).GSweight = nan;
         continue
     end
+    MutInfo.hasfield(cc) = true;
     
     fieldrange = firingMaps.xbins{cc}{1}(placeFieldStats.mapStats{cc}{1}.fieldX);
     infieldtimes = InIntervals(position.data,fieldrange);
@@ -409,6 +378,43 @@ end
 %For each cell, find the intervals in the field, calculate in-field runing,
 %out-field runining, non-running, ISI distributions
 NiceSave('InOutField',figfolder,baseName)
+
+
+%% Place coding figure
+figure
+subplot(3,3,1)
+    imagesc(ISIbyPOS_norm_mean.Dist.Xbins,[1 spikes.numcells],squeeze(log10(ISIbyPOS_norm.Dist.SpikeRate(:,:,sortMI_ISI)))')
+    ylabel('Sort by MIISI')
+subplot(3,3,4)
+    imagesc(ISIbyPOS_norm_mean.Dist.Xbins,[1 spikes.numcells],squeeze(log10(ISIbyPOS_norm.Dist.SpikeRate(:,:,sortMutInfo.Rate)))')
+    ylabel('Sort by MIRate')
+    
+subplot(3,3,7)
+    imagesc(ISIbyPOS_norm_mean.Dist.Xbins,ISIbyPOS_norm_mean.Dist.Ybins,ISIbyPOS_norm_mean.Dist.pYX')
+    hold on
+    plot(ISIbyPOS_norm_mean.Dist.Xbins,-log10(ISIbyPOS_norm_mean.Dist.SpikeRate),'r')
+    LogScale('y',10,'nohalf',true)
+    ylabel('ISI (s)')
+    bz_AddRightRateAxis
+    xlabel('Position relative to PF Peak (m)')
+    
+
+subplot(3,3,9)
+    scatter(log10(MutInfo.Rate),squeeze(log10(ISIbyPOS.MutInf)),8,(MutInfo.GSrate),'filled')
+    hold on
+    plot(log10(MutInfo.Rate(MutInfo.hasfield)),squeeze(log10(ISIbyPOS.MutInf(MutInfo.hasfield))),...
+        'ko','markersize',4)
+    xlabel('MI - rate');ylabel('MI - ISI')
+    
+subplot(3,3,6)
+imagesc(log10(binsizes),[1 spikes.numcells],log10(MutInfo.Rate_BinCompare(sortMutInfo.Rate,:)))
+LogScale('x',10)
+
+subplot(3,3,3)
+imagesc(log10(binsizes),[1 spikes.numcells],log10(MutInfo.Rate_BinCompare(sortMI_ISI,:)))
+LogScale('x',10)
+
+NiceSave('PlaceCoding',figfolder,baseName)
 %%
 % [excell] = bz_ConditionalISI(spikes.times{bestcell},position,...
 %     'ints',position_norm.Epochs.MazeEpoch,...
