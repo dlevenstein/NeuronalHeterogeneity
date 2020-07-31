@@ -39,6 +39,20 @@ end
 
 numcells = length(MutInfo.GSrate);
 
+%%
+cellISIStats.ARmod = squeeze((1-cellISIStats.GammaModes.GSweights(1,3,:))-(1-cellISIStats.GammaModes.GSweights(1,2,:)));
+
+%%
+figure
+subplot(3,3,1)
+plot(cellISIStats.ARmod,log10(squeeze(cellISIStats.MIskaggs)),'.')
+xlabel('AR Modulation');ylabel('MI Skaggs')
+subplot(3,3,2)
+plot(cellISIStats.ARmod,log10(squeeze(cellISIStats.MIISI)),'.')
+xlabel('AR Modulation');ylabel('MI ISI')
+subplot(3,3,3)
+plot(cellISIStats.ARmod,(squeeze(cellISIStats.GSrate)),'.')
+xlabel('AR Modulation');ylabel('GS Rate')
 
 %%
 meanISIhist = bz_CollapseStruct(cellISIStats.allISIhist,3,'mean',true);
@@ -302,34 +316,67 @@ NiceSave('InfoNetrics',figfolder,[])
 %% Figure: Information Metrics and GS/AS
 figure
 for kk = 1:3
-subplot(3,2,1+(kk-1)*2)
-scatter(log10(MutInfo.(MIkinds{kk})(MutInfo.goodcells)),MutInfo.GSrate(MutInfo.goodcells),5,MutInfo.GSweight(MutInfo.goodcells),'filled')
+subplot(3,3,1+(kk-1)*3)
+%scatter(log10(MutInfo.(MIkinds{kk})(MutInfo.goodcells)),MutInfo.GSrate(MutInfo.goodcells),5,1-MutInfo.GSweight(MutInfo.goodcells),'filled')
+ScatterWithLinFit(log10(MutInfo.(MIkinds{kk})(MutInfo.goodcells)),MutInfo.GSrate(MutInfo.goodcells))
 axis tight
 hold on
-plot(log10(MutInfo.(MIkinds{kk})(MutInfo.hasfield)),MutInfo.GSrate(MutInfo.hasfield),'ko','markersize',4)
+%plot(log10(MutInfo.(MIkinds{kk})(MutInfo.hasfield)),MutInfo.GSrate(MutInfo.hasfield),'ko','markersize',4)
 hold on
 plot(log10(MIthresh.(MIkinds{kk})).*[1 1],ylim(gca),'r--')
 box off
 xlabel(['I ',(MIkinds{kk})]);ylabel('GS Rate (HZ)')
-LogScale('xy',10)
-colorbar
+LogScale('xy',10,'exp',true,'nohalf',true)
+%colorbar
 
-subplot(3,2,2+(kk-1)*2)
-scatter(log10(MutInfo.(MIkinds{kk})(MutInfo.goodcells)),MutInfo.GSweight(MutInfo.goodcells),5,MutInfo.GSrate(MutInfo.goodcells),'filled')
+subplot(3,3,2+(kk-1)*3)
+ScatterWithLinFit(log10(MutInfo.(MIkinds{kk})(MutInfo.goodcells)),1-MutInfo.GSweight(MutInfo.goodcells))
+%plot(log10(MutInfo.(MIkinds{kk})(MutInfo.goodcells)),1-MutInfo.GSweight(MutInfo.goodcells),'k.')
 hold on
-plot(log10(MutInfo.(MIkinds{kk})(MutInfo.hasfield)),MutInfo.GSweight(MutInfo.hasfield),'ko','markersize',4)
-plot(log10(MIthresh.(MIkinds{kk})).*[1 1],ylim(gca),'r--')
-box off
+%plot(log10(MutInfo.(MIkinds{kk})(MutInfo.hasfield)),MutInfo.GSweight(MutInfo.hasfield),'ko','markersize',4)
 axis tight
+ylim([0 1])
+plot(log10(MIthresh.(MIkinds{kk})).*[1 1],ylim(gca),'r--')
+box on
+
 if kk==3
-    plot(xlim(gca).*[0 1]+log10(MIthresh.(MIkinds{kk})).*[1 0],0.5.*[1 1],'k--')
+   % plot(xlim(gca).*[0 1]+log10(MIthresh.(MIkinds{kk})).*[1 0],0.5.*[1 1],'k--')
 end
 caxis([-1 0.5])
-colorbar
-LogScale('x',10)
-LogScale('c',10)
-xlabel(['I ',(MIkinds{kk})]);ylabel('GS Weight')
+%colorbar
+
+LogScale('x',10,'exp',true,'nohalf',true)
+%LogScale('c',10)
+xlabel(['I ',(MIkinds{kk})]);ylabel('Activation Ratio')
+
+
+
 end
+
+kk=1;
+subplot(3,3,3+(kk-1)*3)
+%scatter(log10(MutInfo.(MIkinds{kk})),MutInfo.GSrate,5,1-MutInfo.GSweight,'filled')
+plot(log10(squeeze(cellISIStats.MIskaggs)),cellISIStats.ARmod,'k.')
+axis tight
+hold on
+plot(xlim(gca),[0 0],'k--')
+plot(log10(MIthresh.(MIkinds{kk})).*[1 1],ylim(gca),'r--')
+box off
+xlabel(['I ',(MIkinds{kk})]);ylabel('AR Modulation')
+%LogScale('xy',10)
+
+kk=3;
+subplot(3,3,3+(kk-1)*3)
+%scatter(log10(MutInfo.(MIkinds{kk})),MutInfo.GSrate,5,1-MutInfo.GSweight,'filled')
+plot(log10(squeeze(cellISIStats.MIISI)),cellISIStats.ARmod,'k.')
+axis tight
+hold on
+plot(xlim(gca),[0 0],'k--')
+plot(log10(MIthresh.(MIkinds{kk})).*[1 1],ylim(gca),'r--')
+box off
+xlabel(['I ',(MIkinds{kk})]);ylabel('AR Modulation')
+%LogScale('xy',10)
+
 
 NiceSave('PlaceGSAS',figfolder,[])
 
