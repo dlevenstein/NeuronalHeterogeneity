@@ -23,6 +23,7 @@ for kk = 1:3
     MeanPlaceField.(MIkinds{kk}).pISI = nanmean(ISIbyHD_align.Dist.pYX(:,:,tunedcells.(MIkinds{kk})),3);
     MeanPlaceField.(MIkinds{kk}).Rate = nanmean(ISIbyHD_align.Dist.SpikeRate(:,:,tunedcells.(MIkinds{kk})),3);
     MeanPlaceField.(MIkinds{kk}).pGS = nanmean(ISIbyHD_alignGam.GammaModes.GSweights(:,:,tunedcells.(MIkinds{kk})),3);
+    MeanPlaceField.(MIkinds{kk}).GSrate = nanmean(ISIbyHD_alignGam.GammaModes.GSlogrates(:,:,tunedcells.(MIkinds{kk})),3);
 
     [~,sortMutInfo.(MIkinds{kk})] = sort(MutInfo.(MIkinds{kk}));
     [~,sortAR.(MIkinds{kk})] = sort(MutInfo.GSweight);
@@ -30,6 +31,8 @@ for kk = 1:3
 end
 
 numcells = length(MutInfo.GSrate);
+
+%%
 
 %% Figure Information Metrics
 figure
@@ -134,7 +137,7 @@ subplot(3,3,6+(kk))
     ylim([0.1 0.5])
     bz_piTickLabel('x')
     ylabel('pGS')
-    
+
 
 subplot(3,3,kk)
     imagesc(ISIbyHD_align.Dist.Xbins(1,:,1),[0 length(sortAR.(MIkinds{kk}))],...
@@ -150,6 +153,30 @@ end
     
 NiceSave('HDCoding',figfolder,[])
 
+%% Polar plots
+figure
+for kk = 1:3
+
+subplot(3,3,3+(kk))
+    polarplot(ISIbyHD_alignGam.Dist.Xbins(1,:,1),1-MeanPlaceField.(MIkinds{kk}).pGS,...
+        'k','linewidth',2)
+ax = gca;
+ax.ThetaAxisUnits = 'radians';
+%ax.ThetaDir = 'clockwise';
+ax.ThetaZeroLocation = 'top';
+rlim([0 1])
+
+
+subplot(3,3,6+(kk))
+    polarplot(ISIbyHD_alignGam.Dist.Xbins(1,:,1),MeanPlaceField.(MIkinds{kk}).GSrate,...
+        'k','linewidth',2)
+ax = gca;
+ax.ThetaAxisUnits = 'radians';
+%ax.ThetaDir = 'clockwise';
+ax.ThetaZeroLocation = 'top';
+rlim([-0.3 1])
+
+end
 
 %% Groups
 

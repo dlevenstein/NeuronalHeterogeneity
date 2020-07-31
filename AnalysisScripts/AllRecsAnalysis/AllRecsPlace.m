@@ -200,6 +200,25 @@ xlabel('AS Mean ISI (s)');ylabel('AS Mode CV')
 
 diffAR = (1-cellISIStats.GammaModes.GSweights(1,3,:))-(1-cellISIStats.GammaModes.GSweights(1,2,:));
 
+
+subplot(3,3,7)
+plot(squeeze(1-cellISIStats.GammaModes.GSweights(1,4,:)),squeeze(1-cellISIStats.GSweight),'k.','markersize',8)
+hold on
+UnityLine
+ylabel('HomeCage AR');xlabel('Total Time AR')
+
+subplot(3,3,8)
+plot(squeeze(1-cellISIStats.GammaModes.GSweights(1,4,:)),squeeze(1-cellISIStats.GammaModes.GSweights(1,5,:)),'k.','markersize',8)
+hold on
+UnityLine
+ylabel('PreWAKE AR');xlabel('PostWAKE AR')
+
+subplot(3,3,9)
+plot(squeeze(1-cellISIStats.GammaModes.GSlogrates(1,4,:)),squeeze(1-cellISIStats.GammaModes.GSlogrates(1,5,:)),'k.','markersize',8)
+hold on
+UnityLine
+ylabel('PreWAKE GSRate');xlabel('PostWAKE GSRate')
+
 % subplot(2,2,4)
 % plot(squeeze(cellISIStats.MIskaggs),squeeze(diffAR),'.')
 NiceSave('GSASField',figfolder,[])
@@ -287,6 +306,8 @@ subplot(3,2,1+(kk-1)*2)
 scatter(log10(MutInfo.(MIkinds{kk})(MutInfo.goodcells)),MutInfo.GSrate(MutInfo.goodcells),5,MutInfo.GSweight(MutInfo.goodcells),'filled')
 axis tight
 hold on
+plot(log10(MutInfo.(MIkinds{kk})(MutInfo.hasfield)),MutInfo.GSrate(MutInfo.hasfield),'ko','markersize',4)
+hold on
 plot(log10(MIthresh.(MIkinds{kk})).*[1 1],ylim(gca),'r--')
 box off
 xlabel(['I ',(MIkinds{kk})]);ylabel('GS Rate (HZ)')
@@ -296,6 +317,7 @@ colorbar
 subplot(3,2,2+(kk-1)*2)
 scatter(log10(MutInfo.(MIkinds{kk})(MutInfo.goodcells)),MutInfo.GSweight(MutInfo.goodcells),5,MutInfo.GSrate(MutInfo.goodcells),'filled')
 hold on
+plot(log10(MutInfo.(MIkinds{kk})(MutInfo.hasfield)),MutInfo.GSweight(MutInfo.hasfield),'ko','markersize',4)
 plot(log10(MIthresh.(MIkinds{kk})).*[1 1],ylim(gca),'r--')
 box off
 axis tight
@@ -344,13 +366,13 @@ hilowAR = 0.5;
 groups = {'ISINotRate','RateNotISI','TunedHiAR','TunedLoAR','ISInoPF'};
 tunedcells.ISINotRate = tunedcells.ISI' & ~tunedcells.Skaggs';
 tunedcells.RateNotISI = ~tunedcells.ISI' & tunedcells.Skaggs';
-tunedcells.TunedHiAR = tunedcells.Rate' & MutInfo.GSweight<hilowAR;
-tunedcells.TunedLoAR = tunedcells.Rate' & MutInfo.GSweight>hilowAR;
-tunedcells.ISINoPF = tunedcells.ISI' & ~tunedcells.Skaggs';
+tunedcells.TunedHiAR = tunedcells.hasfield' & MutInfo.GSweight<hilowAR;
+tunedcells.TunedLoAR = tunedcells.hasfield' & MutInfo.GSweight>hilowAR;
+tunedcells.ISInoPF = tunedcells.ISI' & ~tunedcells.hasfield';
 %tunedcells.TunedLoAR = ~tunedcells.ISI & MutInfo.GSweight<0.2;
 
 
-for kk = 1:4
+for kk = 1:5
     %tunedcells.(groups{kk}) = MutInfo.(groups{kk})>MIthresh.(groups{kk});
     MeanPlaceField.(groups{kk}).pISI = nanmean(ISIbyPOS_norm.Dist.pYX(:,:,tunedcells.(groups{kk})),3);
     MeanPlaceField.(groups{kk}).Rate = nanmean(ISIbyPOS_norm.Dist.SpikeRate(:,:,tunedcells.(groups{kk})),3);
@@ -371,7 +393,7 @@ end
 % xlabel('GS Weight');ylabel('Peak Width')
 %%
 figure
-for kk = 1:4
+for kk = 1:5
     subplot(3,2,kk)
         imagesc(ISIbyPOS_norm.Dist.Xbins(1,:,1),ISIbyPOS_norm.Dist.Ybins(1,:,1),MeanPlaceField.(groups{kk}).pISI')
         hold on
