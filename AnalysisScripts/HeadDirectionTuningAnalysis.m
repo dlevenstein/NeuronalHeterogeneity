@@ -1,5 +1,5 @@
-function [ISIbyHD_align,MutInfo,ISIbyHD_alignGam,cellISIStats ] = HeadDirectionTuningAnalysis(basePath,figfolder)
-% Date XX/XX/20XX
+function [ISIbyHD_align,MutInfo,cellISIStats ] = HeadDirectionTuningAnalysis(basePath,figfolder)
+% Date XX/XX/20XX %ISIbyHD_alignGam
 %
 %Question: 
 %
@@ -128,11 +128,11 @@ for cc = 1:spikes.numcells
     cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
     MutInfo.GSrate(cc) = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
     MutInfo.GSweight(cc) = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
-    [ISIbyHD_alignGam(cc)] = bz_ConditionalISI(spikes.times{cc},position_norm,...
-        'ints',SleepState.ints.WAKEstate,...
-        'showfig',false,'GammaFit',true,'GammaFitParms',cellGamma,...
-        'numXbins',25,'numISIbins',100,...
-        'normtype','none','Xwin',[-pi pi],'minX',10,'Xbinoverlap',2);
+%     [ISIbyHD_alignGam(cc)] = bz_ConditionalISI(spikes.times{cc},position_norm,...
+%         'ints',SleepState.ints.WAKEstate,...
+%         'showfig',false,'GammaFit',true,'GammaFitParms',cellGamma,...
+%         'numXbins',2,'numISIbins',100,...
+%         'normtype','none','Xwin',[-pi pi],'minX',10,'Xbinoverlap',2);
     
     
     %Mean ISI Dist and Return Map
@@ -277,20 +277,20 @@ NiceSave('GSASField',figfolder,baseName)
 ISIbyHD_align_mean = bz_CollapseStruct( ISIbyHD_align(MutInfo.Skaggs>MIthresh),3,'mean',true);
 numcells = sum(MutInfo.Skaggs>MIthresh);
 
-try
-ISIbyHD_alignGam_mean = bz_CollapseStruct( ISIbyHD_alignGam(MutInfo.Skaggs>MIthresh),3,'mean',true);
-catch
-    display('Error Mean')
-end
+% try
+% ISIbyHD_alignGam_mean = bz_CollapseStruct( ISIbyHD_alignGam(MutInfo.Skaggs>MIthresh),3,'mean',true);
+% catch
+%     display('Error Mean')
+% end
 %%
 ISIbyHD_align = bz_CollapseStruct( ISIbyHD_align,3,'justcat',true);
-ISIbyHD_alignGam = bz_CollapseStruct( ISIbyHD_alignGam,3,'justcat',true);
+%ISIbyHD_alignGam = bz_CollapseStruct( ISIbyHD_alignGam,3,'justcat',true);
 
 
 %%
-lowWeight = squeeze(sum(ISIbyHD_alignGam.GammaModes.GSweights<0.05,2)<5);
-safeGSrates = MutInfo.Skaggs>MIthresh & lowWeight;
-meanGSrate = nanmean(ISIbyHD_alignGam.GammaModes.GSlogrates(:,:,safeGSrates),3)
+% lowWeight = squeeze(sum(ISIbyHD_alignGam.GammaModes.GSweights<0.05,2)<5);
+% safeGSrates = MutInfo.Skaggs>MIthresh & lowWeight;
+% meanGSrate = nanmean(ISIbyHD_alignGam.GammaModes.GSlogrates(:,:,safeGSrates),3)
 
 
 %%
@@ -303,27 +303,27 @@ for cc = 1:spikes.numcells
 end
 
 %%
-figure
-subplot(3,3,3)
-    polarplot(ISIbyHD_alignGam.Dist.Xbins(1,:,1),1-ISIbyHD_alignGam.GammaModes.GSweights,...
-        'k','linewidth',2)
-ax = gca;
-ax.ThetaAxisUnits = 'radians';
-%ax.ThetaDir = 'clockwise';
-ax.ThetaZeroLocation = 'top';
-rlim([0 1])
-
-
-subplot(3,3,6)
-    polarplot(ISIbyHD_alignGam.Dist.Xbins(1,:,1),ISIbyHD_alignGam_mean.GammaModes.GSlogrates,...
-        'k','linewidth',2)
-ax = gca;
-ax.ThetaAxisUnits = 'radians';
-%ax.ThetaDir = 'clockwise';
-ax.ThetaZeroLocation = 'top';
-rlim([-0.3 1])
-
-NiceSave('PolarGSAR',figfolder,baseName)
+% figure
+% subplot(3,3,3)
+%     polarplot(ISIbyHD_alignGam.Dist.Xbins(1,:,1),1-ISIbyHD_alignGam.GammaModes.GSweights,...
+%         'k','linewidth',2)
+% ax = gca;
+% ax.ThetaAxisUnits = 'radians';
+% %ax.ThetaDir = 'clockwise';
+% ax.ThetaZeroLocation = 'top';
+% rlim([0 1])
+% 
+% 
+% subplot(3,3,6)
+%     polarplot(ISIbyHD_alignGam.Dist.Xbins(1,:,1),ISIbyHD_alignGam_mean.GammaModes.GSlogrates,...
+%         'k','linewidth',2)
+% ax = gca;
+% ax.ThetaAxisUnits = 'radians';
+% %ax.ThetaDir = 'clockwise';
+% ax.ThetaZeroLocation = 'top';
+% rlim([-0.3 1])
+% 
+% NiceSave('PolarGSAR',figfolder,baseName)
 %%
 
 % MIforbest = ISIbyHD.MutInf;
@@ -392,16 +392,16 @@ subplot(3,3,1)
     xlabel('Position relative to PF Peak (m)')
     xlim([-pi 3.*pi])
  
-try
-subplot(3,3,4)
-plot(ISIbyHD_alignGam_mean.Dist.Xbins,ISIbyHD_alignGam_mean.GammaModes.GSweights,'k')
-hold on
-plot(ISIbyHD_alignGam_mean.Dist.Xbins+2*pi,ISIbyHD_alignGam_mean.GammaModes.GSweights,'k')
-box off 
-axis tight
-catch
-    display('Error Mean')
-end
+% try
+% subplot(3,3,4)
+% plot(ISIbyHD_alignGam_mean.Dist.Xbins,ISIbyHD_alignGam_mean.GammaModes.GSweights,'k')
+% hold on
+% plot(ISIbyHD_alignGam_mean.Dist.Xbins+2*pi,ISIbyHD_alignGam_mean.GammaModes.GSweights,'k')
+% box off 
+% axis tight
+% catch
+%     display('Error Mean')
+% end
 
     
 NiceSave('HDCoding',figfolder,baseName)
@@ -417,31 +417,31 @@ subplot(2,2,4)
 plot(MutInfo.GSweight,(MutInfo.Skaggs),'.')
 xlabel('GS Weight');ylabel('MI')
 
-subplot(2,2,1)
-hold on
-for cc = 1:spikes.numcells
-    if MutInfo.ISI(cc)<MIthresh & MutInfo.Rate(cc)<MIthresh
-        continue
-    end
-    for mm = 1:5
-    scatter(ISIbyHD_alignGam.Dist.Xbins(1,:,1),...
-        ones(size(ISIbyHD_alignGam.Dist.Xbins(1,:,1))).*ISIbyHD_alignGam.GammaModes.ASlogrates(1,mm,cc),...
-        5,ISIbyHD_alignGam.GammaModes.ASweights(:,mm,cc))
-    end
-end
-LogScale('y',10)
+% subplot(2,2,1)
+% hold on
+% for cc = 1:spikes.numcells
+%     if MutInfo.ISI(cc)<MIthresh & MutInfo.Rate(cc)<MIthresh
+%         continue
+%     end
+%     for mm = 1:5
+%     scatter(ISIbyHD_alignGam.Dist.Xbins(1,:,1),...
+%         ones(size(ISIbyHD_alignGam.Dist.Xbins(1,:,1))).*ISIbyHD_alignGam.GammaModes.ASlogrates(1,mm,cc),...
+%         5,ISIbyHD_alignGam.GammaModes.ASweights(:,mm,cc))
+%     end
+% end
+% LogScale('y',10)
 %imagesc(ISIbyHD_alignGam(excell).Dist.pYX')      
 
 %plot(ISIbyHD_alignGam(excell).GammaModes.GSweights)
 
 % subplot(2,2,2)
 % plot(ISIbyHD_alignGam_mean.GammaModes.ASweights)
-try
-subplot(2,2,3)
-plot(ISIbyHD_alignGam_mean.GammaModes.GSweights)
-catch
-    display('Error Mean')
-end
+% try
+% subplot(2,2,3)
+% plot(ISIbyHD_alignGam_mean.GammaModes.GSweights)
+% catch
+%     display('Error Mean')
+% end
 NiceSave('HDGSAS',figfolder,baseName)
 %%
 % [excell] = bz_ConditionalISI(spikes.times{bestcell},headdir,...
