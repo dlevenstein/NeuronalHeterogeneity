@@ -372,12 +372,12 @@ subplot(3,3,3)
     ylabel('Sort by MIRate')
     hold on
     plot(ISIbyHD_align_mean.Dist.Xbins([1 end]),spikes.numcells-numcells-0.5.*[1 1],'r')
-subplot(3,3,6)
-    imagesc(ISIbyHD_alignGam.Dist.Xbins(1,:,1),[1 spikes.numcells],...
-        squeeze((ISIbyHD_alignGam.GammaModes.GSweights(:,:,sortMutInfo.Skaggs)))')
-    ylabel('Sort by MIRate')
-    hold on
-    plot(ISIbyHD_align_mean.Dist.Xbins([1 end]),spikes.numcells-numcells-0.5.*[1 1],'r')
+% subplot(3,3,6)
+%     imagesc(ISIbyHD_alignGam.Dist.Xbins(1,:,1),[1 spikes.numcells],...
+%         squeeze((ISIbyHD_alignGam.GammaModes.GSweights(:,:,sortMutInfo.Skaggs)))')
+%     ylabel('Sort by MIRate')
+%     hold on
+%     plot(ISIbyHD_align_mean.Dist.Xbins([1 end]),spikes.numcells-numcells-0.5.*[1 1],'r')
     
     
 subplot(3,3,1)
