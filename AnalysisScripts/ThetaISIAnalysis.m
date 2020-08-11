@@ -337,7 +337,9 @@ for cc = 1:spikes.numcells
             'showfig',false,'GammaFit',true,'MutInf',false,'minX',0);
         
             GSModulation(cc) = ThetaConditionalISI.GammaModes.GS_R;
-            ASModulation(cc,:) = ThetaConditionalISI.GammaModes.AS_R;
+            %GSModulation_p(cc) = ThetaConditionalISI.GammaModes.GScorr_p;
+            ASModulation(cc,:) = ThetaConditionalISI.GammaModes.AScorr_p;
+            ASModulation_p(cc,:) = ThetaConditionalISI.GammaModes.AS_R;
             ASlogRates(cc,:) = ThetaConditionalISI.GammaModes.ASlogrates;
             GSlogRates(cc,:) = ThetaConditionalISI.GammaModes.GSlogrates;
             ASweight(cc,:) = cellGamma.ASweights;

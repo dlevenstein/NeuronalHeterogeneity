@@ -1,4 +1,4 @@
-function [PeriSWISIDist_next,PeriSWISIDist,SW_ISIstats ] = SharpWaveISIAnalysis(basePath,figfolder)
+function [PeriSWISIDist_next,PeriSWISIDist,SW_ISIstats,SWRConditionalISI_gamma ] = SharpWaveISIAnalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -9,12 +9,12 @@ function [PeriSWISIDist_next,PeriSWISIDist,SW_ISIstats ] = SharpWaveISIAnalysis(
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 % basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
-%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 % %basePath = pwd;
 % %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -48,17 +48,18 @@ SharpWaves = bz_LoadEvents(basePath,'SWR');
 eventimes = SharpWaves.peaktimes;
 
 %% ISI dist/return map: in and out of SWR
-SWRints.SWR = SharpWaves.times;
+SWRints.SWR = SharpWaves.times + [-0.025 0.025];
 SWRints.iSWR = [SharpWaves.times(1:end-1,2) SharpWaves.times(2:end,1)];
 SWRints.iSWR = RestrictInts(SWRints.iSWR,SleepState.ints.NREMstate);
 SWRints.SWR = RestrictInts(SWRints.SWR,SleepState.ints.NREMstate);
 SW_ISIstats = bz_ISIStats(spikes,'ints',SWRints,'showfig',true,'cellclass',CellClass.label);
 SW_ISIstats = rmfield(SW_ISIstats,'allspikes');
 
-
+SW_ISIstats.cellinfo.celltype = CellClass;
 %%
 swrlabels = {'SWR','iSWR'};
 %%
+
 figure
 subplot(2,2,1)
     hold on
@@ -133,4 +134,96 @@ subplot(2,2,tt+2)
 end
 NiceSave('PeriSWISI',figfolder,baseName)
 
+
+%% SWR/iSWR Gamma Fits
+
+GammaFit = bz_LoadCellinfo(basePath,'GammaFit');
+%%
+SWRints.SWRstate = SWRints.SWR;
+SWRints.iSWRstate = SWRints.iSWR;
+clear SWRConditionalISI
+for cc = 1:spikes.numcells
+    bz_Counter(cc,spikes.numcells,'Cell')
+    
+	cellUID(cc) = spikes.UID(cc);
+    GFIDX = find(GammaFit.NREMstate.cellstats.UID==cellUID(cc));
+    if isempty(GFIDX)
+        continue
+    end
+    
+    cellGamma = GammaFit.NREMstate.singlecell(GFIDX);
+    %stateIDX(cc).data = stateIDX(cc).states;
+    %try
+    [SWRConditionalISI(cc)] = bz_ConditionalISI(spikes.times(cc),SWRints,...
+        'ints','input','normtype','none',...
+        'GammaFitParms',cellGamma,'GammaFit',true,...
+        'showfig',false);
+    %catch
+
+     %   continue
+    %end
+    
+    %Number of spikes....
+    %outfieldspikes(cc) = StateConditionalISI(cc).Dist.Xhist(2);
+    
+    SWRConditionalISI(cc).GammaModes.GSrate_all = GammaFit.NREMstate.sharedfit.GSlogrates(GFIDX);
+    SWRConditionalISI(cc).GammaModes.GSweight_all  = GammaFit.NREMstate.sharedfit.GSweights(GFIDX);
+    %SWRConditionalISI(cc).GammaModes.ASweight_all  = GammaFit.NREMstate.sharedfit.GSweights(GFIDX);
+
+
+    %keyboard
+end
+
+%%
+SWRConditionalISI_gamma = bz_CollapseStruct(SWRConditionalISI,3,'justcat');
+SWRConditionalISI_gamma.GammaModes = bz_CollapseStruct(SWRConditionalISI_gamma.GammaModes,3,'justcat',true);
+
+%%
+figure
+subplot(3,3,1)
+plot(squeeze(1-SWRConditionalISI_gamma.GammaModes.GSweights(1,2,:)),squeeze(1-SWRConditionalISI_gamma.GammaModes.GSweights(1,1,:)),'k.')
+hold on
+xlim([0 1]);ylim([0 1])
+UnityLine
+xlabel('Activation Ratio: iSWR');ylabel('Activation Ratio: SWR')
+
+subplot(3,3,2)
+plot(squeeze(SWRConditionalISI_gamma.GammaModes.GSlogrates(1,2,:)),squeeze(SWRConditionalISI_gamma.GammaModes.GSlogrates(1,1,:)),'k.')
+hold on
+axis tight
+UnityLine
+ylabel('GS Rate: SWR');xlabel('GS Rate: iSWR')
+LogScale('xy',10)
+box off
+
+diffASweight = (SWRConditionalISI_gamma.GammaModes.ASweights(1,:,:)-SWRConditionalISI_gamma.GammaModes.ASweights(2,:,:));
+diffGS = (SWRConditionalISI_gamma.GammaModes.GSweights(1,1,:))-(SWRConditionalISI_gamma.GammaModes.GSweights(1,2,:));
+subplot(3,3,3)
+hold on
+for aa = 1:5
+scatter(-SWRConditionalISI_gamma.GammaModes.ASlogrates(1,aa,:),...
+    log10(SWRConditionalISI_gamma.GammaModes.ASCVs(1,aa,:)),...
+    60*mean(SWRConditionalISI_gamma.GammaModes.ASweights(:,aa,:),1)+eps,...
+    squeeze(diffASweight(1,aa,:)),'filled')
+end
+scatter(-SWRConditionalISI_gamma.GammaModes.GSlogrates(1,1,:),...
+    log10(SWRConditionalISI_gamma.GammaModes.GSCVs(1,1,:)),...
+    10,...
+    squeeze(diffGS))
+axis tight
+hold on
+plot([-2.5 1],[0 0],'k--')
+colorbar
+LogScale('x',10,'exp',true,'nohalf',true)
+LogScale('y',10,'exp',false,'nohalf',true)
+caxis([-0.1 0.1])
+crameri('vik','pivot',0)
+xlabel('Mean'); ylabel('CV')
+
+
+%diffAR = (1-cellISIStats.GammaModes.GSweights(1,3,:))-(1-cellISIStats.GammaModes.GSweights(1,2,:));
+
+% subplot(2,2,4)
+% plot(squeeze(cellISIStats.MIskaggs),squeeze(diffAR),'.')
+NiceSave('GSAS_SWR',figfolder,baseName)
 
