@@ -1,4 +1,4 @@
-function [PeriSWISIDist_next,PeriSWISIDist ] = SlowWaveISIAnalysis(basePath,figfolder)
+function [PeriSWISIDist_next,PeriSWISIDist,PeriDUISIDist,PeriUDISIDist ] = SlowWaveISIAnalysis(basePath,figfolder)
 % Date XX/XX/20XX
 %
 %Question: 
@@ -9,8 +9,8 @@ function [PeriSWISIDist_next,PeriSWISIDist ] = SlowWaveISIAnalysis(basePath,figf
 %
 %% Load Header
 %Initiate Paths
-% reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
-% basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
+%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+%basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
 % %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 % %basePath = pwd;
 % %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
@@ -48,6 +48,45 @@ eventimes = SlowWaves.timestamps;
 [PeriSWISIDist] = bz_PeriEventISIDist(spikes.times,eventimes,...
     'numXbins',80,'minX',40,'whichISIs','both',...
     'cellclass','load','basePath',basePath);
+%%
+[PeriDUISIDist] = bz_PeriEventISIDist(spikes.times,SlowWaves.ints.UP(:,1),...
+    'numXbins',40,'minX',40,'whichISIs','next',...
+    'cellclass','load','basePath',basePath,'winsize',[-0.1 1]);
+
+[PeriUDISIDist] = bz_PeriEventISIDist(spikes.times,SlowWaves.ints.UP(:,2),...
+    'numXbins',40,'minX',40,'whichISIs','prev',...
+    'cellclass','load','basePath',basePath,'winsize',[-1 0.1]);
+
+%%
+figure
+for tt = 1:length(celltypes)
+subplot(2,2,tt)
+    imagesc(PeriDUISIDist.pop.(celltypes{tt}).Xbins,...
+        PeriDUISIDist.pop.(celltypes{tt}).Ybins,PeriDUISIDist.pop.(celltypes{tt}).pYX')
+    hold on
+    plot(PeriDUISIDist.pop.(celltypes{tt}).Xbins,...
+        log10(1./PeriDUISIDist.pop.(celltypes{tt}).rate),cellcolor{tt},'linewidth',1)
+    axis tight
+    plot([0 0],ylim(gca),'w--')
+    LogScale('y',10,'nohalf',true)
+    xlabel('t (s) - relative to SW');ylabel('ISI (s)')
+    title(celltypes{tt})
+    
+    
+subplot(2,2,tt+2)
+    imagesc(PeriUDISIDist.pop.(celltypes{tt}).Xbins,...
+        PeriUDISIDist.pop.(celltypes{tt}).Ybins,PeriUDISIDist.pop.(celltypes{tt}).pYX')
+    hold on
+    plot(PeriUDISIDist.pop.(celltypes{tt}).Xbins,...
+        log10(1./PeriUDISIDist.pop.(celltypes{tt}).rate),cellcolor{tt},'linewidth',1)
+    axis tight
+    plot([0 0],ylim(gca),'w--')
+    LogScale('y',10,'nohalf',true)
+    xlabel('t (s) - relative to SW');ylabel('ISI (s)')
+    title(celltypes{tt})
+end
+NiceSave('PeriDUISI',figfolder,baseName)
+
 %%
 figure
 for tt = 1:length(celltypes)
