@@ -11,18 +11,18 @@ function [PSSConditionalISIDist,MutInf,HiLowISIStats,...
 %% Load Header
 %Initiate Paths
 %reporoot = '/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/';
-reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
-basePath = '/Users/dl2820/Dropbox/Research/Datasets/Rat08-20130713';
+%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Rat08-20130713';
 % %basePath = pwd;
 % %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
 sessionInfo = bz_getSessionInfo(basePath);
-spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
+
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
 SleepState = bz_LoadStates(basePath,'SleepState');
 ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
@@ -61,30 +61,26 @@ cellcolor = {'k','r'};
     %%
     LFPMapFolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISILFPMap'];
     %Check for an LFP Map
-    try
+    %try
         [ISILFPMap] = GetMatResults(LFPMapFolder,'ISILFPMap','baseNames',baseName);
-        try
-            region = 'fCTX';
+
+            region = 'pir';
             lfpchannel = ISILFPMap.MIMap.selectedchans.(region).channel;
-        catch
-            try
-                region = 'vCTX';
-                lfpchannel = ISILFPMap.MIMap.selectedchans.(region).channel;
-            catch
-                region = 'THAL';
-                lfpchannel = ISILFPMap.MIMap.selectedchans.(region).channel;
-            end
-        end
+
         %usecells = ISILFPMap.MIMap.(ISILFPMap.MIMap.selectedchans.(region).regname).UIDs;
-    catch
-        display('No Channel selected, using theta channel (CA1?)')
-        lfpchannel = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID; 
-    end
-
-
+%     catch
+%         display('No Channel selected, using theta channel (CA1?)')
+%         lfpchannel = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID; 
+%     end
+usecells = ISILFPMap.MIMap.(ISILFPMap.MIMap.selectedchans.(region).regname).UIDs;
+spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true,'UID',usecells);
 %If One exists: bz_tagChannel
-
-    
+%%
+CellClass.keep = ismember(CellClass.UID,usecells);
+CellClass.pE = CellClass.pE(CellClass.keep);
+CellClass.pI = CellClass.pI(CellClass.keep);
+CellClass.UID = CellClass.UID(CellClass.keep);
+CellClass.label = CellClass.label(CellClass.keep);
     %Load from the analysisresults. and tag channel.
     %Then run [ISILFPMap] =
     %bz_ISILFPMap(basePath,varargin) to save again and save with channel
