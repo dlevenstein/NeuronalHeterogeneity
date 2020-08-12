@@ -11,13 +11,13 @@ function [PSSConditionalISIDist,MutInf,HiLowISIStats,...
 %% Load Header
 %Initiate Paths
 %reporoot = '/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/';
-reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
-basePath = '/Users/dl2820/Dropbox/Research/Datasets/Rat08-20130713';
+%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Rat08-20130713';
 % %basePath = pwd;
 % %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Achilles_11012013');
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -99,6 +99,7 @@ cellcolor = {'k','r'};
   
 %% Calculate Residuals
 PSSmethod = 'FFT';
+smoothwin = 1;
 switch PSSmethod
     case 'Wavelet'
         %Wavelet, load
@@ -121,6 +122,7 @@ switch PSSmethod
         nfreqs = 150;
         [specslope] = bz_PowerSpectrumSlope(lfp,winsize,dt,'spectype','fft',...
             'nfreqs',nfreqs,'showfig',true,'showprogress',true,'frange',frange);
+        specslope.data = smooth(specslope.data,round(specslope.samplingRate.*smoothwin));
     
 end
 % PSS Options: FFT (1 or 2s window). Wavelet. Wavelet -> smooth (1-2s)
@@ -383,7 +385,7 @@ end
 %% Hi/Low PSS ints
 PSSthresh = [0.8 0.2];
 smoothwin = 1; %s
-smoothdata = smooth(specslope.data,round(specslope.samplingRate.*smoothwin));
+smoothdata = specslope.data;%smooth(specslope.data,round(specslope.samplingRate.*smoothwin));
 PSShist.bins = linspace(-1.5,-0.25,50);
 totaltime = 0;
 for ss = 1:3

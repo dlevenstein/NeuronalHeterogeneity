@@ -95,6 +95,7 @@ CellClass.label = CellClass.label(CellClass.keep);
   
 %% Calculate Residuals
 PSSmethod = 'FFT';
+smoothwin = 1; %s
 switch PSSmethod
     case 'Wavelet'
         %Wavelet, load
@@ -117,7 +118,8 @@ switch PSSmethod
         nfreqs = 150;
         [specslope] = bz_PowerSpectrumSlope(lfp,winsize,dt,'spectype','fft',...
             'nfreqs',nfreqs,'showfig',true,'showprogress',true,'frange',frange);
-    
+        specslope.data = smooth(specslope.data,round(specslope.samplingRate.*smoothwin));
+
 end
 % PSS Options: FFT (1 or 2s window). Wavelet. Wavelet -> smooth (1-2s)
 %smooth osci/power too?
@@ -379,7 +381,7 @@ end
 %% Hi/Low PSS ints
 PSSthresh = [0.8 0.2];
 smoothwin = 1; %s
-smoothdata = smooth(specslope.data,round(specslope.samplingRate.*smoothwin));
+smoothdata = specslope.data;%smooth(specslope.data,round(specslope.samplingRate.*smoothwin));
 PSShist.bins = linspace(-1.5,-0.25,50);
 totaltime = 0;
 for ss = 1:3
