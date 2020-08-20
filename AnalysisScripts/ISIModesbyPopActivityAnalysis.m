@@ -2,14 +2,15 @@ function [PopCorr,MUAConditionalISIDist,MUAConditionalISIDist_all] = ...
     ISIModesbyPopActivityAnalysis(basePath,figfolder)
 
 %% DEV
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %reporoot = '/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/AGData/Cicero/Cicero_09012014';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse24-131213';
 %basePath = pwd;
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModesbyPopActivityAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModesbyPopActivityAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
@@ -147,9 +148,15 @@ end
 NiceSave('MUACorrandGSRate',figfolder,baseName)
 
 %% Conditional ISI distrobution 
+
+%Should implement number cells threshold...
+
 for cc = 1:spikes.numcells
     bz_Counter(cc,spikes.numcells,'Cell');    
     for tt = 1:length(celltypes)
+        if Ncells.(celltypes{tt})==0
+            continue
+        end
         MUA.timestamps = spikemat.timestamps;
         MUA.data = spikemat.bycellpoprate.(celltypes{tt}){cc};
         for ss = 1:3
