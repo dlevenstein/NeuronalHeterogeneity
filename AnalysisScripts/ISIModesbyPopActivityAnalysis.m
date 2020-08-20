@@ -54,6 +54,10 @@ for tt = 1:length(celltypes)
     spikemat.totpoprate.(celltypes{tt}) = sum(spikemat.data(:,CellClass.(celltypes{tt})),2);
     spikemat.poprate.(celltypes{tt}) = spikemat.totpoprate.(celltypes{tt})./Ncells.(celltypes{tt});
     spikemat.cellsync.(celltypes{tt}) = mean(spikemat.data(:,CellClass.(celltypes{tt}))>0.5,2);
+    
+    if Ncells.(celltypes{tt})==1
+        celltypes(tt) = [];
+    end
 end
 Ncells.ALL = Ncells.pE + Ncells.pI;
 spikemat.totpoprate.ALL = sum(spikemat.data(:,(CellClass.pI|CellClass.pE)),2);
@@ -118,7 +122,7 @@ end
 PopCorr.CellClass = CellClass;
 %%
 figure
-for tt = 1:2
+for tt = 1:length(celltypes)
     for ss = 1:3
         subplot(4,4,(tt-1)*4+ss)
         plot(PopCorr.(statenames{ss}).GSrate,PopCorr.(statenames{ss}).(celltypes{tt}),'.')
@@ -190,8 +194,8 @@ end
 
 figure
 for ss = 1:3
-for tt = 1:2 %Pop
-    for tt2 = 1:2 %Ref
+for tt = 1:length(celltypes) %Pop
+    for tt2 = 1:length(celltypes) %Ref
 
     subplot(4,3,(tt2-1)*6+(tt-1)*3+ss)
         imagesc(MeanCondISI.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.Xbins,...
