@@ -1,13 +1,19 @@
 reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISILFPSpectrumAnalysis']; 
+%figfolder_BLA = [reporoot,'AnalysisScripts/AnalysisFigs/ISILFPSpectrumAnalysis_BLA']; 
+%figfolder_PIR = [reporoot,'AnalysisScripts/AnalysisFigs/ISILFPSpectrumAnalysis_PIR']; 
 
 [baseNames] = getDatasetBasenames();
-regions = {'THAL','vCTX','fCTX','CA1'};
+regions = {'THAL','vCTX','fCTX','BLA','PIR','CA1'};
 for rr = 1:length(regions)
     %Get baseNames
-    ISILFPSpectrumAnalysis_ALL = GetMatResults(figfolder,'ISILFPSpectrumAnalysis',...
-        'baseNames',baseNames.(regions{rr}));
+    if rr == 4 || rr == 5
+        ISILFPSpectrumAnalysis_ALL = GetMatResults([figfolder,'_',regions{rr}],['ISILFPSpectrumAnalysis','_',regions{rr}]);
+    else
+        ISILFPSpectrumAnalysis_ALL = GetMatResults(figfolder,'ISILFPSpectrumAnalysis',...
+            'baseNames',baseNames.(regions{rr}));
+    end
     ISILFPSpectrumAnalysis_ALL = bz_CollapseStruct(ISILFPSpectrumAnalysis_ALL);
     
     MutInf.(regions{rr}) = bz_CollapseStruct(ISILFPSpectrumAnalysis_ALL.MutInf,'match','justcat',true);
@@ -19,6 +25,8 @@ for rr = 1:length(regions)
     HiLowISIStats.(regions{rr}) = bz_CollapseStruct(ISILFPSpectrumAnalysis_ALL.HiLowISIStats,'match','justcat',true);
     GammaParms.(regions{rr}) = bz_CollapseStruct(ISILFPSpectrumAnalysis_ALL.GammaParms,'match','justcat',true);
     PSScorr.(regions{rr}) = bz_CollapseStruct(ISILFPSpectrumAnalysis_ALL.PSScorr,'match','justcat',true);
+    PSShist.(regions{rr}).mean = bz_CollapseStruct(ISILFPSpectrumAnalysis_ALL.PSShist,3,'mean',true);
+    PSShist.(regions{rr}).std = bz_CollapseStruct(ISILFPSpectrumAnalysis_ALL.PSShist,3,'std',true);
 end
 
 %%
@@ -257,17 +265,17 @@ for aa = 1:5
     %keepmodes = true(size(keepmodes))
 scatter(-PSSConditionalGamma.(regions{rr}).modes.(states{ss}).ASlogrates(1,aa,keepmodes),...
     log10(PSSConditionalGamma.(regions{rr}).modes.(states{ss}).ASCVs(1,aa,keepmodes)),...
-    10*mean(PSSConditionalGamma.(regions{rr}).modes.(states{ss}).ASweights(:,aa,keepmodes),1)+eps,...
+    8*mean(PSSConditionalGamma.(regions{rr}).modes.(states{ss}).ASweights(:,aa,keepmodes),1)+eps,...
     squeeze(PSSConditionalGamma.(regions{rr}).modes.(states{ss}).AS_R(1,aa,keepmodes)),'filled')
 end
 scatter(-PSSConditionalGamma.(regions{rr}).modes.(states{ss}).GSlogrates(1,1,keepcells),...
     log10(PSSConditionalGamma.(regions{rr}).modes.(states{ss}).GSCVs(1,1,keepcells)),...
-    5,...
-    squeeze(PSSConditionalGamma.(regions{rr}).modes.(states{ss}).GS_R(1,1,keepcells)))
+    2,...
+    squeeze(PSSConditionalGamma.(regions{rr}).modes.(states{ss}).GS_R(1,1,keepcells)),'linewidth',0.1)
 %colorbar
 
 axis tight
-caxis([-0.15 0.15])
+caxis([-0.2 0.2])
 crameri('vik','pivot',0)
 %xlabel('Mean');
 
@@ -289,8 +297,8 @@ end
 
 
 end
-NiceSave('GSASModPSS',figfolder,'AllRegions')
 end
+NiceSave('GSASModPSS',figfolder,'AllRegions')
 
 
 %% In/Out Field: REturn Maps
@@ -349,7 +357,7 @@ for hl = 1:2
     plot(meanISIhist.logbins,meanISIhist.(regions{rr}).(states{ss}).(hilow{hl}).logdist,...
         'linewidth',1,'color',statecolormap{ss}(end./(1+(hl~=ss)),:))
 end
-    if hl ==1
+    if ss == 1
         title(regions{rr})
     end
     set(gca,'yticklabel',[])
@@ -370,6 +378,9 @@ subplot(6,6,(hl-1)*6+(ss-1)*18+6+rr)
     LogScale('xy',10,'exp',true,'nohalf',true)
     colormap(gca,statecolormap{ss})
 
+    if hl == 1
+        set(gca,'XTickLabels',[])
+    end
 end
 %legend(cellISIStats.statenames{1:3})
 end
@@ -463,3 +474,21 @@ box off
 ylabel('PSS-FR Mod (pI)')
 end
 NiceSave('PSSRateCorr',figfolder,'AllRegions')
+
+
+%%
+figure
+for rr = 1:6
+    subplot(4,6,rr)
+hold on
+for ss = 1:3
+plot(PSShist.(regions{rr}).mean.bins,PSShist.(regions{rr}).mean.(states{ss}),'color',statecolors{ss},'linewidth',2)
+errorshade(PSShist.(regions{rr}).mean.bins,PSShist.(regions{rr}).mean.(states{ss}),...
+    PSShist.(regions{rr}).std.(states{ss}),PSShist.(regions{rr}).std.(states{ss}),statecolors{ss},'scalar')
+end
+axis tight
+lim = ylim(gca);ylim([0 lim(2)])
+title(regions{rr})
+xlabel('PSS')
+end
+NiceSave('PSShist',figfolder,[])
