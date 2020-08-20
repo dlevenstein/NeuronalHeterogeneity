@@ -21,16 +21,30 @@ for rr = 2:4
 end
 
 %%
+for rr = 2:4
 for ss = 1:3
     for tt = 1:length(celltypes)
 
         for tt2 = 1:length(celltypes)
-            MeanCondISI.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}) = ...
-                bz_CollapseStruct(MUAConditionalISIDist_all.(statenames{ss}).(celltypes{tt})(CellClass.(celltypes{tt2})),...
-                3,'mean',true);
+            MeanCondISI.(regions{rr}).(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.pYX = ...
+                nanmean(MUAConditionalISIDist.(regions{rr}).(statenames{ss}).(celltypes{tt}).Dist.pYX(:,:,...
+                (PopCorr.(regions{rr}).CellClass.(celltypes{tt2}))),3);
+            
+            MeanCondISI.(regions{rr}).(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.SpikeRate = ...
+                nanmean(MUAConditionalISIDist.(regions{rr}).(statenames{ss}).(celltypes{tt}).Dist.SpikeRate(:,:,...
+                (PopCorr.(regions{rr}).CellClass.(celltypes{tt2}))),3);
+            
+            MeanCondISI.(regions{rr}).(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.Xbins = ...
+                nanmean(MUAConditionalISIDist.(regions{rr}).(statenames{ss}).(celltypes{tt}).Dist.Xbins(:,:,...
+                (PopCorr.(regions{rr}).CellClass.(celltypes{tt2}))),3);
+            MeanCondISI.(regions{rr}).(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.Ybins = ...
+                nanmean(MUAConditionalISIDist.(regions{rr}).(statenames{ss}).(celltypes{tt}).Dist.Ybins(:,:,...
+                (PopCorr.(regions{rr}).CellClass.(celltypes{tt2}))),3);
+            
         end
         
     end
+end
 end
 %%
 statenames = {'WAKEstate','NREMstate','REMstate'};
@@ -70,6 +84,38 @@ for tt = 1:2
 end
 end
 NiceSave('MUACorrandGSRate',figfolder,[])
+
+%%
+%% 
+for tt2 = 1:length(celltypes)
+figure
+for rr = 2:4
+for ss = 1:3
+    for tt = 1:length(celltypes) %Pop
+     %Ref
+
+    subplot(6,6,(tt-1)*18+(ss-1)*6+rr)
+        imagesc(MeanCondISI.(regions{rr}).(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.Xbins,...
+            MeanCondISI.(regions{rr}).(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.Ybins,...
+            MeanCondISI.(regions{rr}).(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.pYX')
+        hold on
+        plot(MeanCondISI.(regions{rr}).(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.Xbins,...
+            -log10(MeanCondISI.(regions{rr}).(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.SpikeRate),...
+            'r','LineWidth',2)
+           
+        xlabel([(celltypes{tt}),' Rate']);ylabel([(celltypes{tt2}),' ISI (s)'])
+        LogScale('y',10,'exp',true,'nohalf',true)
+        bz_AddRightRateAxis
+        if tt ==1 & tt2 == 1
+            title(statenames{ss})
+        end
+    end
+    end 
+end
+NiceSave('ISIbyMUA',figfolder,celltypes{tt2})
+end
+
+
 
 
 %%
