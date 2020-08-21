@@ -1,4 +1,4 @@
-function [PopCorr,MUAConditionalISIDist,MUAConditionalISIDist_all] = ...
+function [PopCorr,MUAConditionalISIDist,popratehist] = ...
     ISIModesbyPopActivityAnalysis(basePath,figfolder)
 
 %% DEV
@@ -10,7 +10,7 @@ function [PopCorr,MUAConditionalISIDist,MUAConditionalISIDist_all] = ...
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse24-131213';
 %basePath = pwd;
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModesbyPopActivityAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModesbyPopActivityAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
@@ -48,6 +48,7 @@ for ss = 1:3
     spikemat.instate.(statenames{ss}) = InIntervals(spikemat.timestamps,SleepState.ints.(statenames{ss}));
 end
 %% For each cell, calculate E and I pop rates of all OTHER cells
+ncellthresh = 5;
 
 for tt = 1:length(celltypes)
     Ncells.(celltypes{tt}) = sum(CellClass.(celltypes{tt}));
@@ -55,9 +56,9 @@ for tt = 1:length(celltypes)
     spikemat.poprate.(celltypes{tt}) = spikemat.totpoprate.(celltypes{tt})./Ncells.(celltypes{tt});
     spikemat.cellsync.(celltypes{tt}) = mean(spikemat.data(:,CellClass.(celltypes{tt}))>0.5,2);
     
-    if Ncells.(celltypes{tt})==0
-        celltypes(tt) = [];
-    end
+%     if Ncells.(celltypes{tt})==0
+%         celltypes(tt) = [];
+%     end
 end
 Ncells.ALL = Ncells.pE + Ncells.pI;
 spikemat.totpoprate.ALL = sum(spikemat.data(:,(CellClass.pI|CellClass.pE)),2);
@@ -69,14 +70,14 @@ for cc = 1:spikes.numcells %weird roundabout way to calculate is much faster
     thiscell(cc) = true;
     spikemat.cellrate{cc} = spikemat.data(:,cc);
     for tt = 1:length(celltypes)
-        popratehist.(celltypes{tt})(cc) = sum(CellClass.(celltypes{tt}) & ~thiscell);
+        PopCorr.cellcount.(celltypes{tt})(cc) = sum(CellClass.(celltypes{tt}) & ~thiscell);
         if CellClass.(celltypes{tt})(cc) %if it's in theclass, subtract off the current cell
             spikemat.bycellpoprate.(celltypes{tt}){cc} = ...
                 (spikemat.totpoprate.(celltypes{tt})-spikemat.cellrate{cc})./...
-               popratehist.(celltypes{tt})(cc);
+               PopCorr.cellcount.(celltypes{tt})(cc);
         else
             spikemat.bycellpoprate.(celltypes{tt}){cc} = ...
-                spikemat.totpoprate.(celltypes{tt})./popratehist.(celltypes{tt})(cc);
+                spikemat.totpoprate.(celltypes{tt})./PopCorr.cellcount.(celltypes{tt})(cc);
         end
     end
     
@@ -158,9 +159,9 @@ NiceSave('MUACorrandGSRate',figfolder,baseName)
 for cc = 1:spikes.numcells
     bz_Counter(cc,spikes.numcells,'Cell');    
     for tt = 1:length(celltypes)
-        if Ncells.(celltypes{tt})==0
-            continue
-        end
+%         if Ncells.(celltypes{tt})==0
+%             continue
+%         end
         MUA.timestamps = spikemat.timestamps;
         MUA.data = spikemat.bycellpoprate.(celltypes{tt}){cc};
         for ss = 1:3
@@ -181,6 +182,9 @@ for ss = 1:3
             bz_CollapseStruct(MUAConditionalISIDist_all.(statenames{ss}).(celltypes{tt}),3,'justcat',true);
 
         for tt2 = 1:length(celltypes)
+            if sum(CellClass.(celltypes{tt2}))==0
+                continue
+            end
             MeanCondISI.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}) = ...
                 bz_CollapseStruct(MUAConditionalISIDist_all.(statenames{ss}).(celltypes{tt})(CellClass.(celltypes{tt2})),...
                 3,'mean',true);
@@ -197,6 +201,7 @@ for ss = 1:3
 for tt = 1:length(celltypes) %Pop
     for tt2 = 1:length(celltypes) %Ref
 
+        try
     subplot(4,3,(tt2-1)*6+(tt-1)*3+ss)
         imagesc(MeanCondISI.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.Xbins,...
             MeanCondISI.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.Ybins,...
@@ -211,6 +216,8 @@ for tt = 1:length(celltypes) %Pop
         bz_AddRightRateAxis
         if tt ==1 & tt2 == 1
             title(statenames{ss})
+        end
+        catch
         end
     end 
 end

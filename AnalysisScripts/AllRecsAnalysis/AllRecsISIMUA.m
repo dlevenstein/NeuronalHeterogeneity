@@ -4,7 +4,7 @@ figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModesbyPopActivityAnalysi
 
 [baseNames] = getDatasetBasenames();
 regions = {'THAL','vCTX','fCTX','CA1','BLA','PIR'};
-for rr = 2:4
+for rr = 1:4
     %Get baseNames
     if rr == 5 || rr == 6
         ISIPop_ALL = GetMatResults([figfolder,'_',regions{rr}],['ISIModesbyPopActivityAnalysis','_',regions{rr}]);
@@ -19,12 +19,18 @@ for rr = 2:4
     MUAConditionalISIDist_all.(regions{rr}) = bz_CollapseStruct(ISIPop_ALL.MUAConditionalISIDist_all,'match','justcat');
 
 end
-
 %%
-for rr = 2:4
+statenames = {'WAKEstate','NREMstate','REMstate'};
+celltypes = {'pE','pI'};
+cellcolor = {'k','r'};
+statecolors = {[0 0 0],[0 0 1],[1 0 0]};
+%%
+for rr = 1:4
 for ss = 1:3
     for tt = 1:length(celltypes)
-
+        if ~isfield(MUAConditionalISIDist.(regions{rr}).(statenames{ss}),(celltypes{tt}))
+            continue
+        end
         for tt2 = 1:length(celltypes)
             MeanCondISI.(regions{rr}).(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.pYX = ...
                 nanmean(MUAConditionalISIDist.(regions{rr}).(statenames{ss}).(celltypes{tt}).Dist.pYX(:,:,...
@@ -46,11 +52,7 @@ for ss = 1:3
     end
 end
 end
-%%
-statenames = {'WAKEstate','NREMstate','REMstate'};
-celltypes = {'pE','pI'};
-cellcolor = {'k','r'};
-statecolors = {[0 0 0],[0 0 1],[1 0 0]};
+
 
 %%
 
