@@ -1,115 +1,115 @@
 #!/bin/bash
 
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130708/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130709/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130710/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130711/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130712/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130713/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130715/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130716/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130717/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130718/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130719/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130720/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130722/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140324/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140325/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140326/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140327/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140328/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140329/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140331/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140401/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140402/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140403/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140404/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140405/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140407/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140408/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140409/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140619/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140620/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140622/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140624/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140626/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140627/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140628/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140629/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140701/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140702/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140703/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140704/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140705/ .  #double region on a shank...
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140707/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140708/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150321/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150323/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150325/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150326/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150327/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150328/ .
-# sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150330/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150331/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150401/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150402/ .
-# #sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150403/ .
-#
-#
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130708/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130709/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130710/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130711/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130712/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130713/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130715/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130716/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130717/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130718/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130719/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130720/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130722/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140324/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140325/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140326/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140327/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140328/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140329/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140331/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140401/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140402/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140403/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140404/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140405/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140407/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140408/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140409/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140619/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140620/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140622/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140624/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140626/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140627/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140628/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140629/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140701/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140702/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140703/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140704/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140705/ .  #double region on a shank...
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140707/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140708/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150321/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150323/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150325/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150326/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150327/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150328/ .
-# sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150330/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150331/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150401/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150402/ .
-# #sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150403/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130708/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130709/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130710/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130711/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130712/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130713/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130715/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130716/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130717/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130718/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130719/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130720/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130722/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140324/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140325/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140326/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140327/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140328/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140329/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140331/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140401/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140402/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140403/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140404/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140405/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140407/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140408/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140409/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140619/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140620/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140622/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140624/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140626/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140627/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140628/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140629/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140701/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140702/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140703/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140704/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140705/ .  #double region on a shank...
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140707/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140708/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150321/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150323/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150325/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150326/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150327/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150328/ .
+sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150330/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150331/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150401/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150402/ .
+#sbatch ./MUAISI_bla.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150403/ .
+
+
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130708/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130709/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130710/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130711/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130712/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130713/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130715/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130716/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130717/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130718/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130719/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130720/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130722/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140324/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140325/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140326/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140327/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140328/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140329/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140331/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140401/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140402/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140403/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140404/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140405/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140407/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140408/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140409/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140619/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140620/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140622/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140624/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140626/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140627/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140628/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140629/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140701/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140702/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140703/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140704/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140705/ .  #double region on a shank...
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140707/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140708/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150321/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150323/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150325/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150326/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150327/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150328/ .
+sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150330/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150331/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150401/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150402/ .
+#sbatch ./MUAISI_pir.bash  /gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150403/ .
 
 
 
