@@ -4,7 +4,7 @@ figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModesbyPopActivityAnalysi
 
 [baseNames] = getDatasetBasenames();
 regions = {'THAL','vCTX','fCTX','CA1','BLA','PIR'};
-for rr = 1:4
+for rr = 1
     %Get baseNames
     if rr == 5 || rr == 6
         ISIPop_ALL = GetMatResults([figfolder,'_',regions{rr}],['ISIModesbyPopActivityAnalysis','_',regions{rr}]);
@@ -57,9 +57,12 @@ end
 %%
 
 figure
-for rr = 2:4
+for rr = 1:4
 for tt = 1:2
     for ss = 1:3
+        if ~isfield(PopCorr.(regions{rr}).(statenames{ss}),(celltypes{tt}))
+            continue
+        end
         subplot(6,6,(tt-1)*18+(ss-1)*6+rr)
         plot(PopCorr.(regions{rr}).(statenames{ss}).GSrate,PopCorr.(regions{rr}).(statenames{ss}).(celltypes{tt}),'.')
         hold on
@@ -91,9 +94,14 @@ NiceSave('MUACorrandGSRate',figfolder,[])
 %% 
 for tt2 = 1:length(celltypes)
 figure
-for rr = 2:4
+for rr = 1:4
 for ss = 1:3
     for tt = 1:length(celltypes) %Pop
+        if ~isfield( MeanCondISI.(regions{rr}).(statenames{ss}),(celltypes{tt})) | ...
+            ~isfield(MeanCondISI.(regions{rr}).(statenames{ss}).(celltypes{tt}),(celltypes{tt2})) | ...
+            all(isnan(MeanCondISI.(regions{rr}).(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.pYX))
+            continue
+        end
      %Ref
 
     subplot(6,6,(tt-1)*18+(ss-1)*6+rr)

@@ -10,7 +10,7 @@ function [PopCorr,MUAConditionalISIDist,popratehist] = ...
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse24-131213';
 %basePath = pwd;
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModesbyPopActivityAnalysis'];
+%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModesbyPopActivityAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
