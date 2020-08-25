@@ -3,10 +3,10 @@ reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModesbyPopActivityAnalysis']; 
 
 [baseNames] = getDatasetBasenames();
-regions = {'THAL','vCTX','fCTX','CA1','BLA','PIR'};
-for rr = 1
+regions = {'THAL','vCTX','fCTX','BLA','PIR','CA1'};
+for rr = 1:6
     %Get baseNames
-    if rr == 5 || rr == 6
+    if rr == 4 || rr == 5
         ISIPop_ALL = GetMatResults([figfolder,'_',regions{rr}],['ISIModesbyPopActivityAnalysis','_',regions{rr}]);
     else
         ISIPop_ALL = GetMatResults(figfolder,'ISIModesbyPopActivityAnalysis',...
@@ -16,7 +16,7 @@ for rr = 1
     
     PopCorr.(regions{rr}) = bz_CollapseStruct(ISIPop_ALL.PopCorr,'match','justcat',true);
     MUAConditionalISIDist.(regions{rr}) = bz_CollapseStruct(ISIPop_ALL.MUAConditionalISIDist,3,'justcat',true);
-    MUAConditionalISIDist_all.(regions{rr}) = bz_CollapseStruct(ISIPop_ALL.MUAConditionalISIDist_all,'match','justcat');
+    %MUAConditionalISIDist_all.(regions{rr}) = bz_CollapseStruct(ISIPop_ALL.MUAConditionalISIDist_all,'match','justcat');
 
 end
 %%
@@ -25,7 +25,7 @@ celltypes = {'pE','pI'};
 cellcolor = {'k','r'};
 statecolors = {[0 0 0],[0 0 1],[1 0 0]};
 %%
-for rr = 1:4
+for rr = 1:6
 for ss = 1:3
     for tt = 1:length(celltypes)
         if ~isfield(MUAConditionalISIDist.(regions{rr}).(statenames{ss}),(celltypes{tt}))
@@ -57,7 +57,7 @@ end
 %%
 
 figure
-for rr = 1:4
+for rr = 1:6
 for tt = 1:2
     for ss = 1:3
         if ~isfield(PopCorr.(regions{rr}).(statenames{ss}),(celltypes{tt}))
@@ -94,7 +94,7 @@ NiceSave('MUACorrandGSRate',figfolder,[])
 %% 
 for tt2 = 1:length(celltypes)
 figure
-for rr = 1:4
+for rr = 1:6
 for ss = 1:3
     for tt = 1:length(celltypes) %Pop
         if ~isfield( MeanCondISI.(regions{rr}).(statenames{ss}),(celltypes{tt})) | ...
