@@ -15,7 +15,7 @@ reporoot = '/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/';
 baseName = bz_BasenameFromBasepath(basePath);
 
 %spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
-%ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
+ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
 %OccupancyStats = bz_LoadCellinfo(basePath,'OccupancyStats');
 SleepState = bz_LoadStates(basePath,'SleepState');

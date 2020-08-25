@@ -1,43 +1,26 @@
-function [PopCorr,MUAConditionalISIDist] = ...
-    ISIModesbyPopActivityAnalysis_BLA(basePath,figfolder)
+function [] = ...
+    ISIPopTimescaleAnalysis(basePath,figfolder)
 
 %% DEV
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
-reporoot = '/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+%reporoot = '/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/AGData/Cicero/Cicero_09012014';
-%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse24-131213';
-%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Rat08-20130713';
 %basePath = pwd;
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModesbyPopActivityAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIPopTimescaleAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
-%spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
-ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
+spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
+%ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
 %OccupancyStats = bz_LoadCellinfo(basePath,'OccupancyStats');
 SleepState = bz_LoadStates(basePath,'SleepState');
 SleepState.ints.ALL = [0 Inf];
 % lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
 %     'basepath',basePath);
-%% Getting the right cells hack
-
-LFPMapFolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISILFPMap'];
-[ISILFPMap] = GetMatResults(LFPMapFolder,'ISILFPMap','baseNames',baseName);
-region = 'bla';
-lfpchannel = ISILFPMap.MIMap.selectedchans.(region).channel;
-usecells = ISILFPMap.MIMap.(ISILFPMap.MIMap.selectedchans.(region).regname).UIDs;
-spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true,'UID',usecells);
-
-
-CellClass.keep = ismember(CellClass.UID,usecells);
-CellClass.pE = CellClass.pE(CellClass.keep);
-CellClass.pI = CellClass.pI(CellClass.keep);
-CellClass.UID = CellClass.UID(CellClass.keep);
-CellClass.label = CellClass.label(CellClass.keep);
-
 %%
 cellinfo.CellClass = CellClass;
 %cellinfo.ISIStats = ISIStats.summstats;
@@ -57,8 +40,10 @@ cellcolor = {'k','r'};
 statenames = fieldnames(SleepState.ints);
 
 %% Calculate spike count matrix
+
+timescales = logspace(-2.5,1,15)
 binsize = 0.1; %s
-dt = 0.01;
+dt = 0.005;
 spikemat = bz_SpktToSpkmat(spikes,'binsize',binsize,'dt',dt,'bintype','gaussian','units','rate');
 
 for ss = 1:3
@@ -87,23 +72,23 @@ for cc = 1:spikes.numcells %weird roundabout way to calculate is much faster
     thiscell = false(size(CellClass.pE));
     thiscell(cc) = true;
     spikemat.cellrate{cc} = spikemat.data(:,cc);
-    spikemat.cellspike{cc} = spikemat.data(:,cc)>0.5;
+    spikemat.cellspike{cc} = double(spikemat.data(:,cc)>0.5);
     for tt = 1:length(celltypes)
-        PopCorr.cellcount.(celltypes{tt})(cc) = sum(CellClass.(celltypes{tt}) & ~thiscell);
+        MutInf.cellcount.(celltypes{tt})(cc) = sum(CellClass.(celltypes{tt}) & ~thiscell);
         if CellClass.(celltypes{tt})(cc) %if it's in theclass, subtract off the current cell
             spikemat.bycellpoprate.(celltypes{tt}){cc} = ...
                 (spikemat.totpoprate.(celltypes{tt})-spikemat.cellrate{cc})./...
-               PopCorr.cellcount.(celltypes{tt})(cc);
+               MutInf.cellcount.(celltypes{tt})(cc);
            
             spikemat.bycellpopsynch.(celltypes{tt}){cc} = ...
                 (spikemat.totpopsynch.(celltypes{tt})-spikemat.cellspike{cc})./...
-               PopCorr.cellcount.(celltypes{tt})(cc);
+               MutInf.cellcount.(celltypes{tt})(cc);
         else
             spikemat.bycellpoprate.(celltypes{tt}){cc} = ...
-                spikemat.totpoprate.(celltypes{tt})./PopCorr.cellcount.(celltypes{tt})(cc);
+                spikemat.totpoprate.(celltypes{tt})./MutInf.cellcount.(celltypes{tt})(cc);
             
             spikemat.bycellpopsynch.(celltypes{tt}){cc} = ...
-                spikemat.totpopsynch.(celltypes{tt})./PopCorr.cellcount.(celltypes{tt})(cc);
+                spikemat.totpopsynch.(celltypes{tt})./MutInf.cellcount.(celltypes{tt})(cc);
         end
     end
     
@@ -128,34 +113,39 @@ for cc = 1:spikes.numcells
     for ss = 1:3
         %Calculate Correlation
         for tt = 1:length(celltypes)
-            PopCorr.(statenames{ss}).rate.(celltypes{tt})(cc) = ...
-                corr(spikemat.cellrate{cc}(spikemat.instate.(statenames{ss})),...
-                spikemat.bycellpoprate.(celltypes{tt}){cc}(spikemat.instate.(statenames{ss})),...
-                'type','spearman');
-            PopCorr.(statenames{ss}).synch.(celltypes{tt})(cc) = ...
-                corr(spikemat.cellspike{cc}(spikemat.instate.(statenames{ss})),...
-                spikemat.bycellpopsynch.(celltypes{tt}){cc}(spikemat.instate.(statenames{ss})),...
-                'type','spearman');
+            MutInf.cellrate.(statenames{ss}).rate.(celltypes{tt})(cc) = ...
+                mutualinfo(spikemat.cellrate{cc}(spikemat.instate.(statenames{ss})),...
+                spikemat.bycellpoprate.(celltypes{tt}){cc}(spikemat.instate.(statenames{ss})));
+            MutInf.cellspike.(statenames{ss}).synch.(celltypes{tt})(cc) = ...
+                mutualinfo(spikemat.cellspike{cc}(spikemat.instate.(statenames{ss})),...
+                spikemat.bycellpopsynch.(celltypes{tt}){cc}(spikemat.instate.(statenames{ss})));
+            
+            MutInf.cellrate.(statenames{ss}).synch.(celltypes{tt})(cc) = ...
+                mutualinfo(spikemat.cellrate{cc}(spikemat.instate.(statenames{ss})),...
+                spikemat.bycellpopsynch.(celltypes{tt}){cc}(spikemat.instate.(statenames{ss})));
+            MutInf.cellspike.(statenames{ss}).rate.(celltypes{tt})(cc) = ...
+                mutualinfo(spikemat.cellspike{cc}(spikemat.instate.(statenames{ss})),...
+                spikemat.bycellpoprate.(celltypes{tt}){cc}(spikemat.instate.(statenames{ss})));
         end
     
         %Get the mean rate
-        PopCorr.(statenames{ss}).meanRate(cc) = ISIStats.summstats.(statenames{ss}).meanrate(cc);
+        MutInf.(statenames{ss}).meanRate(cc) = ISIStats.summstats.(statenames{ss}).meanrate(cc);
         %Get the GS rate
         cellUID(cc) = spikes.UID(cc);
         GFIDX = find(GammaFit.(statenames{ss}).cellstats.UID==cellUID(cc));
         if isempty(GFIDX)
-            PopCorr.(statenames{ss}).GSrate(cc) = nan;
-            PopCorr.(statenames{ss}).GSCV(cc) = nan;
-            PopCorr.(statenames{ss}).GSweight(cc) = nan;
+            MutInf.(statenames{ss}).GSrate(cc) = nan;
+            MutInf.(statenames{ss}).GSCV(cc) = nan;
+            MutInf.(statenames{ss}).GSweight(cc) = nan;
             continue
         end
         cellGamma = GammaFit.(statenames{ss}).singlecell(GFIDX);
-        PopCorr.(statenames{ss}).GSrate(cc) = cellGamma.GSlogrates;
-        PopCorr.(statenames{ss}).GSCV(cc) = cellGamma.GSCVs;
-        PopCorr.(statenames{ss}).GSweight(cc) = cellGamma.GSweights;
+        MutInf.(statenames{ss}).GSrate(cc) = cellGamma.GSlogrates;
+        MutInf.(statenames{ss}).GSCV(cc) = cellGamma.GSCVs;
+        MutInf.(statenames{ss}).GSweight(cc) = cellGamma.GSweights;
     end
 end
-PopCorr.CellClass = CellClass;
+MutInf.CellClass = CellClass;
 
 %%
 synchrate = {'rate','synch'};
@@ -165,10 +155,10 @@ for tt = 1:length(celltypes)
     for ss = 1:3
         for sr = 1:2
         subplot(4,3,(tt-1)*3+(sr-1).*6+ss)
-        plot(PopCorr.(statenames{ss}).GSrate,PopCorr.(statenames{ss}).(synchrate{sr}).(celltypes{tt}),'k.')
+        plot(MutInf.(statenames{ss}).GSrate,MutInf.(statenames{ss}).(synchrate{sr}).(celltypes{tt}),'k.')
         hold on
-        plot(log10(PopCorr.(statenames{ss}).meanRate(CellClass.pI)),...
-            PopCorr.(statenames{ss}).(synchrate{sr}).(celltypes{tt})(CellClass.pI),'r.')
+        plot(log10(MutInf.(statenames{ss}).meanRate(CellClass.pI)),...
+            MutInf.(statenames{ss}).(synchrate{sr}).(celltypes{tt})(CellClass.pI),'r.')
         axis tight
         box off
         plot(xlim(gca),[0 0],'k--')
@@ -182,7 +172,7 @@ for tt = 1:length(celltypes)
         end
         end
 %         subplot(4,3,(tt-1)*3+ss+6)
-%         plot(PopCorr.(statenames{ss}).GSCV,PopCorr.(statenames{ss}).rate.(celltypes{tt}),'.')
+%         plot(MutInf.(statenames{ss}).GSCV,MutInf.(statenames{ss}).rate.(celltypes{tt}),'.')
 %         hold on
 %         axis tight
 %         box off
