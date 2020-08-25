@@ -103,7 +103,7 @@ for cc = 1:spikes.numcells %weird roundabout way to calculate is much faster
                 spikemat.totpoprate.(celltypes{tt})./PopCorr.cellcount.(celltypes{tt})(cc);
             
             spikemat.bycellpopsynch.(celltypes{tt}){cc} = ...
-                spikemat.totpopsync.(celltypes{tt})./PopCorr.cellcount.(celltypes{tt})(cc);
+                spikemat.totpopsynch.(celltypes{tt})./PopCorr.cellcount.(celltypes{tt})(cc);
         end
     end
     
