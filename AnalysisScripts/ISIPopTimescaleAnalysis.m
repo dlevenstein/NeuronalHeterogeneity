@@ -1,4 +1,4 @@
-function [] = ...
+function [MutInf] = ...
     ISIPopTimescaleAnalysis(basePath,figfolder)
 
 %% DEV
@@ -40,9 +40,11 @@ cellcolor = {'k','r'};
 statenames = fieldnames(SleepState.ints);
 
 %% Calculate spike count matrix
-
-timescales = logspace(-2.5,1,15)
-binsize = 0.1; %s
+clear MutInf
+timescales = logspace(-2,0.5,2);
+for bb = 1:length(timescales)
+    bb
+binsize = timescales(bb); %s
 dt = 0.005;
 spikemat = bz_SpktToSpkmat(spikes,'binsize',binsize,'dt',dt,'bintype','gaussian','units','rate');
 
@@ -103,6 +105,7 @@ for cc = 1:spikes.numcells %weird roundabout way to calculate is much faster
 
 end
 
+
 %%
 % figure
 % plot(spikemat.poprate.(celltypes{1}),spikemat.popsynch.(celltypes{1}),'.')
@@ -111,21 +114,38 @@ end
 for cc = 1:spikes.numcells
     bz_Counter(cc,spikes.numcells,'Cell');
     for ss = 1:3
-        %Calculate Correlation
+        %Calculate MI - synch/rate and spike/rate
         for tt = 1:length(celltypes)
-            MutInf.cellrate.(statenames{ss}).rate.(celltypes{tt})(cc) = ...
+            MutInf.cellrate.(statenames{ss}).rate.(celltypes{tt})(cc,bb) = ...
                 mutualinfo(spikemat.cellrate{cc}(spikemat.instate.(statenames{ss})),...
                 spikemat.bycellpoprate.(celltypes{tt}){cc}(spikemat.instate.(statenames{ss})));
-            MutInf.cellspike.(statenames{ss}).synch.(celltypes{tt})(cc) = ...
+            MutInf.cellspike.(statenames{ss}).synch.(celltypes{tt})(cc,bb) = ...
                 mutualinfo(spikemat.cellspike{cc}(spikemat.instate.(statenames{ss})),...
                 spikemat.bycellpopsynch.(celltypes{tt}){cc}(spikemat.instate.(statenames{ss})));
             
-            MutInf.cellrate.(statenames{ss}).synch.(celltypes{tt})(cc) = ...
+            MutInf.cellrate.(statenames{ss}).synch.(celltypes{tt})(cc,bb) = ...
                 mutualinfo(spikemat.cellrate{cc}(spikemat.instate.(statenames{ss})),...
                 spikemat.bycellpopsynch.(celltypes{tt}){cc}(spikemat.instate.(statenames{ss})));
-            MutInf.cellspike.(statenames{ss}).rate.(celltypes{tt})(cc) = ...
+            MutInf.cellspike.(statenames{ss}).rate.(celltypes{tt})(cc,bb) = ...
                 mutualinfo(spikemat.cellspike{cc}(spikemat.instate.(statenames{ss})),...
                 spikemat.bycellpoprate.(celltypes{tt}){cc}(spikemat.instate.(statenames{ss})));
+            
+            
+            MUA.timestamps = spikemat.timestamps;
+            MUA.data = spikemat.bycellpoprate.(celltypes{tt}){cc};
+            [temp] = ...
+                bz_ConditionalISI(spikes.times{cc},MUA,...
+                'ints',SleepState.ints.(statenames{ss}),...
+                'showfig',false,'GammaFit',false,'ISIDist',false);
+            MutInf.cellISI.(statenames{ss}).rate.(celltypes{tt})(cc,bb) = temp.MutInf;
+
+            MUA.data = spikemat.bycellpopsynch.(celltypes{tt}){cc};
+                [temp] = ...
+                    bz_ConditionalISI(spikes.times{cc},MUA,...
+                    'ints',SleepState.ints.(statenames{ss}),...
+                    'showfig',false,'GammaFit',false,'ISIDist',false);
+            MutInf.cellISI.(statenames{ss}).synch.(celltypes{tt})(cc,bb) = temp.MutInf;
+            
         end
     
         %Get the mean rate
@@ -146,7 +166,26 @@ for cc = 1:spikes.numcells
     end
 end
 MutInf.CellClass = CellClass;
+end
 
+%% Mean all cells (e and I) for all metrics
+%%
+figure
+subplot(2,2,1)
+plot(MutInf.cellspike.(statenames{2}).synch.(celltypes{1}),...
+    MutInf.cellspike.(statenames{2}).rate.(celltypes{1}),'.')
+hold on
+legend
+UnityLine
+xlabel('Pop Synch');ylabel('Pop Rate');title('Cell Spike')
+
+subplot(2,2,2)
+plot(MutInf.cellrate.(statenames{2}).synch.(celltypes{1}),...
+    MutInf.cellrate.(statenames{2}).rate.(celltypes{1}),'.')
+axis tight
+hold on
+UnityLine
+xlabel('Pop Synch');ylabel('Pop Rate');title('Cell Rate')
 %%
 synchrate = {'rate','synch'};
 %%
