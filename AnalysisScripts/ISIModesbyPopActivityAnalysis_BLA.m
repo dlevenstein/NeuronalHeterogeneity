@@ -71,7 +71,8 @@ for tt = 1:length(celltypes)
     Ncells.(celltypes{tt}) = sum(CellClass.(celltypes{tt}));
     spikemat.totpoprate.(celltypes{tt}) = sum(spikemat.data(:,CellClass.(celltypes{tt})),2);
     spikemat.poprate.(celltypes{tt}) = spikemat.totpoprate.(celltypes{tt})./Ncells.(celltypes{tt});
-    spikemat.cellsync.(celltypes{tt}) = mean(spikemat.data(:,CellClass.(celltypes{tt}))>0.5,2);
+    spikemat.totpopsynch.(celltypes{tt}) = sum(spikemat.data(:,CellClass.(celltypes{tt}))>0.5,2);
+    spikemat.popsynch.(celltypes{tt}) = spikemat.totpopsynch.(celltypes{tt})./Ncells.(celltypes{tt});
     
 %     if Ncells.(celltypes{tt})==0
 %         celltypes(tt) = [];
@@ -86,15 +87,23 @@ for cc = 1:spikes.numcells %weird roundabout way to calculate is much faster
     thiscell = false(size(CellClass.pE));
     thiscell(cc) = true;
     spikemat.cellrate{cc} = spikemat.data(:,cc);
+    spikemat.cellspike{cc} = spikemat.data(:,cc)>0.5;
     for tt = 1:length(celltypes)
         PopCorr.cellcount.(celltypes{tt})(cc) = sum(CellClass.(celltypes{tt}) & ~thiscell);
         if CellClass.(celltypes{tt})(cc) %if it's in theclass, subtract off the current cell
             spikemat.bycellpoprate.(celltypes{tt}){cc} = ...
                 (spikemat.totpoprate.(celltypes{tt})-spikemat.cellrate{cc})./...
                PopCorr.cellcount.(celltypes{tt})(cc);
+           
+            spikemat.bycellpopsynch.(celltypes{tt}){cc} = ...
+                (spikemat.totpopsynch.(celltypes{tt})-spikemat.cellspike{cc})./...
+               PopCorr.cellcount.(celltypes{tt})(cc);
         else
             spikemat.bycellpoprate.(celltypes{tt}){cc} = ...
                 spikemat.totpoprate.(celltypes{tt})./PopCorr.cellcount.(celltypes{tt})(cc);
+            
+            spikemat.bycellpopsynch.(celltypes{tt}){cc} = ...
+                spikemat.totpopsync.(celltypes{tt})./PopCorr.cellcount.(celltypes{tt})(cc);
         end
     end
     
@@ -109,6 +118,9 @@ for cc = 1:spikes.numcells %weird roundabout way to calculate is much faster
 
 end
 
+%%
+% figure
+% plot(spikemat.poprate.(celltypes{1}),spikemat.popsynch.(celltypes{1}),'.')
 %% Correlation and Gamma parms
 
 for cc = 1:spikes.numcells
@@ -116,12 +128,18 @@ for cc = 1:spikes.numcells
     for ss = 1:3
         %Calculate Correlation
         for tt = 1:length(celltypes)
-            PopCorr.(statenames{ss}).(celltypes{tt})(cc) = ...
+            PopCorr.(statenames{ss}).rate.(celltypes{tt})(cc) = ...
                 corr(spikemat.cellrate{cc}(spikemat.instate.(statenames{ss})),...
                 spikemat.bycellpoprate.(celltypes{tt}){cc}(spikemat.instate.(statenames{ss})),...
                 'type','spearman');
+            PopCorr.(statenames{ss}).synch.(celltypes{tt})(cc) = ...
+                corr(spikemat.cellspike{cc}(spikemat.instate.(statenames{ss})),...
+                spikemat.bycellpopsynch.(celltypes{tt}){cc}(spikemat.instate.(statenames{ss})),...
+                'type','spearman');
         end
-
+    
+        %Get the mean rate
+        PopCorr.(statenames{ss}).meanRate(cc) = ISIStats.summstats.(statenames{ss}).meanrate(cc);
         %Get the GS rate
         cellUID(cc) = spikes.UID(cc);
         GFIDX = find(GammaFit.(statenames{ss}).cellstats.UID==cellUID(cc));
@@ -138,30 +156,39 @@ for cc = 1:spikes.numcells
     end
 end
 PopCorr.CellClass = CellClass;
+
+%%
+synchrate = {'rate','synch'};
 %%
 figure
 for tt = 1:length(celltypes)
     for ss = 1:3
-        subplot(4,4,(tt-1)*4+ss)
-        plot(PopCorr.(statenames{ss}).GSrate,PopCorr.(statenames{ss}).(celltypes{tt}),'.')
+        for sr = 1:2
+        subplot(4,3,(tt-1)*3+(sr-1).*6+ss)
+        plot(PopCorr.(statenames{ss}).GSrate,PopCorr.(statenames{ss}).(synchrate{sr}).(celltypes{tt}),'k.')
         hold on
+        plot(log10(PopCorr.(statenames{ss}).meanRate(CellClass.pI)),...
+            PopCorr.(statenames{ss}).(synchrate{sr}).(celltypes{tt})(CellClass.pI),'r.')
         axis tight
         box off
         plot(xlim(gca),[0 0],'k--')
-        xlabel('GS Rate (Hz)');ylabel([(celltypes{tt}),' Corr'])
+        xlabel('GS/Mean Rate (Hz)');
         LogScale('x',10,'exp',true,'nohalf',true)
+        if ss ==1
+            ylabel([(celltypes{tt}),' ',(synchrate{sr}),' Corr'])
+        end
         if tt == 1
             title(statenames{ss})
         end
-        
-        subplot(4,3,(tt-1)*3+ss+6)
-        plot(PopCorr.(statenames{ss}).GSCV,PopCorr.(statenames{ss}).(celltypes{tt}),'.')
-        hold on
-        axis tight
-        box off
-        plot(xlim(gca),[0 0],'k--')
-        xlabel('GS CV');ylabel([(celltypes{tt}),' Corr'])
-        %LogScale('x',10,'exp',false,'nohalf',true)
+        end
+%         subplot(4,3,(tt-1)*3+ss+6)
+%         plot(PopCorr.(statenames{ss}).GSCV,PopCorr.(statenames{ss}).rate.(celltypes{tt}),'.')
+%         hold on
+%         axis tight
+%         box off
+%         plot(xlim(gca),[0 0],'k--')
+%         xlabel('GS CV');ylabel([(celltypes{tt}),' Corr'])
+%         %LogScale('x',10,'exp',false,'nohalf',true)
         
     end 
     
@@ -172,7 +199,7 @@ NiceSave('MUACorrandGSRate',figfolder,baseName)
 %% Conditional ISI distrobution 
 
 %Should implement number cells threshold...
-
+clear MUAConditionalISIDist_all
 for cc = 1:spikes.numcells
     bz_Counter(cc,spikes.numcells,'Cell');    
     for tt = 1:length(celltypes)
@@ -182,10 +209,19 @@ for cc = 1:spikes.numcells
         MUA.timestamps = spikemat.timestamps;
         MUA.data = spikemat.bycellpoprate.(celltypes{tt}){cc};
         for ss = 1:3
-            [MUAConditionalISIDist_all.(statenames{ss}).(celltypes{tt})(cc)] = ...
+            [MUAConditionalISIDist_all.(statenames{ss}).rate.(celltypes{tt})(cc)] = ...
                 bz_ConditionalISI(spikes.times{cc},MUA,...
                 'ints',SleepState.ints.(statenames{ss}),...
                 'showfig',false,'GammaFit',false,'minX',0,'numISIbins',100);
+        end
+        
+        MUA.data = spikemat.bycellpopsynch.(celltypes{tt}){cc};
+        for ss = 1:3
+            [MUAConditionalISIDist_all.(statenames{ss}).synch.(celltypes{tt})(cc)] = ...
+                bz_ConditionalISI(spikes.times{cc},MUA,...
+                'ints',SleepState.ints.(statenames{ss}),...
+                'showfig',false,'GammaFit',false,'minX',50,'numISIbins',100,...
+                'normtype','none','Xwin',[0 1],'numXbins',20);
         end
         
     end
@@ -194,25 +230,29 @@ end
 %%
 for ss = 1:3
     for tt = 1:length(celltypes)
-
-        MUAConditionalISIDist.(statenames{ss}).(celltypes{tt}) = ...
-            bz_CollapseStruct(MUAConditionalISIDist_all.(statenames{ss}).(celltypes{tt}),3,'justcat',true);
+    for sr = 1:2
+        MUAConditionalISIDist.(statenames{ss}).(synchrate{sr}).(celltypes{tt}) = ...
+            bz_CollapseStruct(MUAConditionalISIDist_all.(statenames{ss}).(synchrate{sr}).(celltypes{tt}),3,'justcat',true);
 
         for tt2 = 1:length(celltypes)
             if sum(CellClass.(celltypes{tt2}))==0
                 continue
             end
-            MeanCondISI.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}) = ...
-                bz_CollapseStruct(MUAConditionalISIDist_all.(statenames{ss}).(celltypes{tt})(CellClass.(celltypes{tt2})),...
+            MeanCondISI.(statenames{ss}).(synchrate{sr}).(celltypes{tt}).(celltypes{tt2}) = ...
+                bz_CollapseStruct(MUAConditionalISIDist_all.(statenames{ss}).(synchrate{sr}).(celltypes{tt})(CellClass.(celltypes{tt2})),...
                 3,'mean',true);
         end
-        
+    end
     end
 end
 
-
+%%
+excell = 1;
+figure
+%imagesc(MUAConditionalISIDist.(statenames{2}).(synchrate{2}).(celltypes{1}).Dist.pYX(:,:,excell))
+plot(MUAConditionalISIDist.(statenames{2}).(synchrate{2}).(celltypes{1}).Dist.Xhist(:,:,excell))
 %% 
-
+for sr = 1:2 
 figure
 for ss = 1:3
 for tt = 1:length(celltypes) %Pop
@@ -220,15 +260,15 @@ for tt = 1:length(celltypes) %Pop
 
         try
     subplot(4,3,(tt2-1)*6+(tt-1)*3+ss)
-        imagesc(MeanCondISI.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.Xbins,...
-            MeanCondISI.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.Ybins,...
-            MeanCondISI.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.pYX')
+        imagesc(MeanCondISI.(statenames{ss}).(synchrate{sr}).(celltypes{tt}).(celltypes{tt2}).Dist.Xbins,...
+            MeanCondISI.(statenames{ss}).(synchrate{sr}).(celltypes{tt}).(celltypes{tt2}).Dist.Ybins,...
+            MeanCondISI.(statenames{ss}).(synchrate{sr}).(celltypes{tt}).(celltypes{tt2}).Dist.pYX')
         hold on
-        plot(MeanCondISI.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.Xbins,...
-            -log10(MeanCondISI.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).Dist.SpikeRate),...
+        plot(MeanCondISI.(statenames{ss}).(synchrate{sr}).(celltypes{tt}).(celltypes{tt2}).Dist.Xbins,...
+            -log10(MeanCondISI.(statenames{ss}).(synchrate{sr}).(celltypes{tt}).(celltypes{tt2}).Dist.SpikeRate),...
             'r','LineWidth',2)
            
-        xlabel([(celltypes{tt}),' Rate']);ylabel([(celltypes{tt2}),' ISI (s)'])
+        xlabel([(celltypes{tt}),' ',(synchrate{sr})]);ylabel([(celltypes{tt2}),' ISI (s)'])
         LogScale('y',10,'exp',true,'nohalf',true)
         bz_AddRightRateAxis
         if tt ==1 & tt2 == 1
@@ -241,7 +281,7 @@ end
 end
 
 
-NiceSave('ISIbyMUA',figfolder,baseName)
+NiceSave(['ISIbyMUA_',(synchrate{sr})],figfolder,baseName)
 
-
+end
 end
