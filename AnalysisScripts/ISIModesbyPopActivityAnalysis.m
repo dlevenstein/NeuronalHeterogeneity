@@ -4,7 +4,7 @@ function [PopCorr,MUAConditionalISIDist] = ...
 %% DEV
 %reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %reporoot = '/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/';
-%basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
+%basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/AGData/Cicero/Cicero_09012014';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
@@ -43,7 +43,8 @@ statenames = fieldnames(SleepState.ints);
 binsize = 0.1; %s
 dt = 0.01;
 spikemat = bz_SpktToSpkmat(spikes,'binsize',binsize,'dt',dt,'bintype','gaussian','units','rate');
-
+spikemat.isspike = spikemat.data;
+spikemat.isspike(spikemat.isspike>1) = 1;
 for ss = 1:3
     spikemat.instate.(statenames{ss}) = InIntervals(spikemat.timestamps,SleepState.ints.(statenames{ss}));
 end
@@ -54,7 +55,7 @@ for tt = 1:length(celltypes)
     Ncells.(celltypes{tt}) = sum(CellClass.(celltypes{tt}));
     spikemat.totpoprate.(celltypes{tt}) = sum(spikemat.data(:,CellClass.(celltypes{tt})),2);
     spikemat.poprate.(celltypes{tt}) = spikemat.totpoprate.(celltypes{tt})./Ncells.(celltypes{tt});
-    spikemat.totpopsynch.(celltypes{tt}) = sum(spikemat.data(:,CellClass.(celltypes{tt}))>0.5,2);
+    spikemat.totpopsynch.(celltypes{tt}) = sum(spikemat.isspike(:,CellClass.(celltypes{tt})),2);
     spikemat.popsynch.(celltypes{tt}) = spikemat.totpopsynch.(celltypes{tt})./Ncells.(celltypes{tt});
     
 %     if Ncells.(celltypes{tt})==0
@@ -70,7 +71,10 @@ for cc = 1:spikes.numcells %weird roundabout way to calculate is much faster
     thiscell = false(size(CellClass.pE));
     thiscell(cc) = true;
     spikemat.cellrate{cc} = spikemat.data(:,cc);
-    spikemat.cellspike{cc} = spikemat.data(:,cc)>0.5;
+    spikemat.cellspike{cc} = spikemat.isspike(:,cc); %New Way Below
+%     spikemat.cellspike{cc} = spikemat.cellrate{cc};
+%     spikemat.cellspike{cc}(spikemat.cellspike{cc}>1) = 1;
+%     spikemat.cellspike{cc}(spikemat.cellspike{cc}<0) = 0;
     for tt = 1:length(celltypes)
         PopCorr.cellcount.(celltypes{tt})(cc) = sum(CellClass.(celltypes{tt}) & ~thiscell);
         if CellClass.(celltypes{tt})(cc) %if it's in theclass, subtract off the current cell
@@ -180,7 +184,10 @@ end
 NiceSave('MUACorrandGSRate',figfolder,baseName)
 
 %% Conditional ISI distrobution 
-
+synchbins.pE = 10;
+synchbins.pI = 10;
+synchbounds.pE = [-1.5 -0.5];
+synchbounds.pI = [-1 0];
 %Should implement number cells threshold...
 clear MUAConditionalISIDist_all
 for cc = 1:spikes.numcells
@@ -198,13 +205,13 @@ for cc = 1:spikes.numcells
                 'showfig',false,'GammaFit',false,'minX',20,'numISIbins',100);
         end
         
-        MUA.data = spikemat.bycellpopsynch.(celltypes{tt}){cc};
+        MUA.data = log10(spikemat.bycellpopsynch.(celltypes{tt}){cc});
         for ss = 1:3
             [MUAConditionalISIDist_all.(statenames{ss}).synch.(celltypes{tt})(cc)] = ...
                 bz_ConditionalISI(spikes.times{cc},MUA,...
                 'ints',SleepState.ints.(statenames{ss}),...
-                'showfig',false,'GammaFit',false,'minX',40,'numISIbins',100,...
-                'normtype','percentile','Xwin',[0 1],'numXbins',15);
+                'showfig',false,'GammaFit',false,'minX',50,'numISIbins',100);
+                %'normtype','none','Xwin',synchbounds.(celltypes{tt}),'numXbins',synchbins.(celltypes{tt}) );
         end
         
     end
@@ -230,10 +237,12 @@ for ss = 1:3
 end
 
 %%
-excell = 1;
-figure
-%imagesc(MUAConditionalISIDist.(statenames{2}).(synchrate{2}).(celltypes{1}).Dist.pYX(:,:,excell))
-plot(MUAConditionalISIDist.(statenames{2}).(synchrate{2}).(celltypes{1}).Dist.Xhist(:,:,excell))
+% excell = 13;
+% figure
+% subplot(2,2,1)
+% imagesc(MUAConditionalISIDist.(statenames{2}).(synchrate{2}).(celltypes{1}).Dist.pYX(:,:,excell)')
+% subplot(2,2,3)
+% plot(MUAConditionalISIDist.(statenames{2}).(synchrate{2}).(celltypes{1}).Dist.Xhist(:,:,excell))
 %% 
 for sr = 1:2 
 figure

@@ -14,7 +14,7 @@ figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIPopTimescaleAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
-%ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
+ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
 %OccupancyStats = bz_LoadCellinfo(basePath,'OccupancyStats');
 SleepState = bz_LoadStates(basePath,'SleepState');
@@ -41,7 +41,7 @@ statenames = fieldnames(SleepState.ints);
 
 %% Calculate spike count matrix
 clear MutInf
-timescales = logspace(-2,0.5,2);
+timescales = logspace(-2,0.5,6);
 for bb = 1:length(timescales)
     bb
 binsize = timescales(bb); %s

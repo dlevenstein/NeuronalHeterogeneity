@@ -26,7 +26,7 @@ celltypes = {'pE','pI'};
 cellcolor = {'k','r'};
 statecolors = {[0 0 0],[0 0 1],[1 0 0]};
 
-cellthresh.pE = 25;
+cellthresh.pE = 20;
 cellthresh.pI = 5;
 %%
 for sr = 1:2
