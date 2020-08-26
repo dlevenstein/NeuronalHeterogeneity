@@ -42,7 +42,8 @@ statenames = fieldnames(SleepState.ints);
 %% Calculate spike count matrix
 clear MutInf
 timescales = logspace(-2.5,1.5,17);
-timescales = logspace(-2,0.5,6);
+%timescales = logspace(-2,0.5,6);
+MutInf.timescales = timescales;
 for bb = 1:length(timescales)
     bb
 binsize = timescales(bb); %s
