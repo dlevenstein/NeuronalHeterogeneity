@@ -38,7 +38,8 @@ for cellsr = 1:3
         for popsr = 1:2
             for poptt = 1:2
                 for celltt = 1:2
-                    usecells = MutInf.(regions{rr}).CellClass.(celltypes{celltt}) & 
+                    usecells = MutInf.(regions{rr}).CellClass.(celltypes{celltt}) & ...
+                        MutInf.(regions{rr}).cellcount.(celltypes{poptt}) >cellthresh.(celltypes{poptt});
 meanMI.(regions{rr}).(spikerate{cellsr}).(statenames{ss}).(synchrate{popsr}).(celltypes{poptt}).(celltypes{celltt}) = ...
     nanmedian(MutInf.(regions{rr}).(spikerate{cellsr}).(statenames{ss}).(synchrate{popsr}).(celltypes{poptt})(usecells,:),1);
                 end
