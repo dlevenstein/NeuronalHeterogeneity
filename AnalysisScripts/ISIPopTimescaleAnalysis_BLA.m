@@ -1,9 +1,9 @@
 function [MutInf] = ...
-    ISIPopTimescaleAnalysis(basePath,figfolder)
+    ISIPopTimescaleAnalysis_BLA(basePath,figfolder)
 
 %% DEV
 %reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
-%reporoot = '/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/';
+reporoot = '/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/AGData/Cicero/Cicero_09012014';
@@ -13,7 +13,7 @@ function [MutInf] = ...
 %figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIPopTimescaleAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
-spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
+%spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
 %ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 CellClass = bz_LoadCellinfo(basePath,'CellClass');
 %OccupancyStats = bz_LoadCellinfo(basePath,'OccupancyStats');
@@ -21,6 +21,21 @@ SleepState = bz_LoadStates(basePath,'SleepState');
 SleepState.ints.ALL = [0 Inf];
 % lfp = bz_GetLFP(SleepState.detectorinfo.detectionparms.SleepScoreMetrics.SWchanID,...
 %     'basepath',basePath);
+%% Getting the right cells hack
+
+LFPMapFolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISILFPMap'];
+[ISILFPMap] = GetMatResults(LFPMapFolder,'ISILFPMap','baseNames',baseName);
+region = 'bla';
+lfpchannel = ISILFPMap.MIMap.selectedchans.(region).channel;
+usecells = ISILFPMap.MIMap.(ISILFPMap.MIMap.selectedchans.(region).regname).UIDs;
+spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true,'UID',usecells);
+
+
+CellClass.keep = ismember(CellClass.UID,usecells);
+CellClass.pE = CellClass.pE(CellClass.keep);
+CellClass.pI = CellClass.pI(CellClass.keep);
+CellClass.UID = CellClass.UID(CellClass.keep);
+CellClass.label = CellClass.label(CellClass.keep);
 %%
 cellinfo.CellClass = CellClass;
 %cellinfo.ISIStats = ISIStats.summstats;

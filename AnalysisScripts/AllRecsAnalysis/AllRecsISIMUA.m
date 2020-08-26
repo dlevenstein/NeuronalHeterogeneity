@@ -78,10 +78,11 @@ for tt = 1:2
         
         subplot(6,6,(tt-1)*18+(ss-1)*6+rr)
         plot(PopCorr.(regions{rr}).(statenames{ss}).GSrate(usecells),...
-            PopCorr.(regions{rr}).(statenames{ss}).(synchrate{sr}).(celltypes{tt})(usecells),'k.')
+            PopCorr.(regions{rr}).(statenames{ss}).(synchrate{sr}).(celltypes{tt})(usecells),'k.','markersize',1)
         hold on
         plot(log10(PopCorr.(regions{rr}).(statenames{ss}).meanRate(PopCorr.(regions{rr}).CellClass.pI&usecells)),...
-            PopCorr.(regions{rr}).(statenames{ss}).(synchrate{sr}).(celltypes{tt})(PopCorr.(regions{rr}).CellClass.pI&usecells),'r.')
+            PopCorr.(regions{rr}).(statenames{ss}).(synchrate{sr}).(celltypes{tt})(PopCorr.(regions{rr}).CellClass.pI&usecells),...
+            'r.','markersize',1)
         axis tight
         box off
         plot(xlim(gca),[0 0],'k--')
@@ -132,12 +133,26 @@ for ss = 1:3
             -log10(MeanCondISI.(regions{rr}).(statenames{ss}).(synchrate{sr}).(celltypes{tt}).(celltypes{tt2}).Dist.SpikeRate),...
             'r','LineWidth',2)
            
-        xlabel([(celltypes{tt}),' ',(synchrate{sr})]);ylabel([(celltypes{tt2}),' ISI (s)'])
+        
         LogScale('y',10,'exp',true,'nohalf',true)
-        bz_AddRightRateAxis
-        if tt ==1 & tt2 == 1
-            title(statenames{ss})
+        if rr == 1
+            ylabel({(statenames{ss}),[(celltypes{tt2}),' ISI (s)']})
+        elseif rr == 6
+            set (gca,'yticklabels',[])
+            bz_AddRightRateAxis
+        else
+            set (gca,'yticklabels',[])
         end
+        
+        if ss == 3
+            xlabel([(celltypes{tt}),' ',(synchrate{sr})]);
+        else
+        set (gca,'xticklabels',[])
+        end
+        if ss == 1
+            title(regions{rr})  
+        end
+        
     end
     end 
 end
