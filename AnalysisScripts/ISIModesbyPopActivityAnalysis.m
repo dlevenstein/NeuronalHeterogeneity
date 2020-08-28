@@ -210,7 +210,7 @@ for cc = 1:spikes.numcells
 
         %First synchrony
         MUA.timestamps = spikemat.timestamps;
-        MUA.data = log10(spikemat.bycellpopsynch.(celltypes{tt}){cc});
+        MUA.data = (spikemat.bycellpopsynch.(celltypes{tt}){cc});
         for ss = 1:3
             [MUAConditionalISIDist_all.(statenames{ss}).synch.(celltypes{tt})(cc)] = ...
                 bz_ConditionalISI(spikes.times{cc},MUA,...
@@ -305,7 +305,7 @@ for cc = 1:spikes.numcells
     for ss = 1:3
         for tt = 1:2
         instate = spikemat.instate.(statenames{ss});
-        percentilenorm = NormToInt(log10(spikemat.bycellpoprate.(celltypes{tt}){cc}(instate)),'percentile');
+        percentilenorm = NormToInt((spikemat.bycellpoprate.(celltypes{tt}){cc}(instate)),'percentile');
 
         IDX.timestamps = spikemat.timestamps(instate);
         IDX.states = zeros(size(IDX.timestamps));
