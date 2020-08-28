@@ -87,7 +87,7 @@ for cc = 1:spikes.numcells %weird roundabout way to calculate is much faster
                PopCorr.cellcount.(celltypes{tt})(cc);
            %Here: add tiny random amount... for percentile...
            spikemat.bycellpopsynch.(celltypes{tt}){cc} = ...
-               spikemat.bycellpopsynch.(celltypes{tt}){cc}+0.01*rand(size(spikemat.bycellpopsynch.(celltypes{tt}){cc});
+               spikemat.bycellpopsynch.(celltypes{tt}){cc}+0.01*rand(size(spikemat.bycellpopsynch.(celltypes{tt}){cc}));
         else
             spikemat.bycellpoprate.(celltypes{tt}){cc} = ...
                 spikemat.totpoprate.(celltypes{tt})./PopCorr.cellcount.(celltypes{tt})(cc);
@@ -95,7 +95,7 @@ for cc = 1:spikes.numcells %weird roundabout way to calculate is much faster
             spikemat.bycellpopsynch.(celltypes{tt}){cc} = ...
                 spikemat.totpopsynch.(celltypes{tt})./PopCorr.cellcount.(celltypes{tt})(cc);
             %Here: add tiny random amount... for percentile...
-            spikemat.bycellpopsynch.(celltypes{tt}){cc}+0.01*rand(size(spikemat.bycellpopsynch.(celltypes{tt}){cc});
+            spikemat.bycellpopsynch.(celltypes{tt}){cc}+0.01*rand(size(spikemat.bycellpopsynch.(celltypes{tt}){cc}));
         end
     end
     
