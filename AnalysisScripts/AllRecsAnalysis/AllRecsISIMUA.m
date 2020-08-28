@@ -30,7 +30,7 @@ cellthresh.pE = 20;
 cellthresh.pI = 5;
 %%
 for sr = 1:2
-for rr = 1:6
+for rr = 2:6
 for ss = 1:3
     for tt = 1:length(celltypes)
         

@@ -60,8 +60,8 @@ statenames = fieldnames(SleepState.ints);
 binsize = 0.06; %s
 dt = 0.01;
 spikemat = bz_SpktToSpkmat(spikes,'binsize',binsize,'dt',dt,'bintype','gaussian','units','rate');
-spikemat.isspike = spikemat.data;
-spikemat.isspike(spikemat.isspike>1) = 1;
+spikemat.isspike = spikemat.data>0.5;
+%spikemat.isspike(spikemat.isspike>1) = 1;
 for ss = 1:3
     spikemat.instate.(statenames{ss}) = InIntervals(spikemat.timestamps,SleepState.ints.(statenames{ss}));
 end
@@ -102,12 +102,17 @@ for cc = 1:spikes.numcells %weird roundabout way to calculate is much faster
             spikemat.bycellpopsynch.(celltypes{tt}){cc} = ...
                 (spikemat.totpopsynch.(celltypes{tt})-spikemat.cellspike{cc})./...
                PopCorr.cellcount.(celltypes{tt})(cc);
+           %Here: add tiny random amount... for percentile...
+           spikemat.bycellpopsynch.(celltypes{tt}){cc} = ...
+               spikemat.bycellpopsynch.(celltypes{tt}){cc}+0.01*rand(size(spikemat.bycellpopsynch.(celltypes{tt}){cc});
         else
             spikemat.bycellpoprate.(celltypes{tt}){cc} = ...
                 spikemat.totpoprate.(celltypes{tt})./PopCorr.cellcount.(celltypes{tt})(cc);
             
             spikemat.bycellpopsynch.(celltypes{tt}){cc} = ...
                 spikemat.totpopsynch.(celltypes{tt})./PopCorr.cellcount.(celltypes{tt})(cc);
+            %Here: add tiny random amount... for percentile...
+            spikemat.bycellpopsynch.(celltypes{tt}){cc}+0.01*rand(size(spikemat.bycellpopsynch.(celltypes{tt}){cc});
         end
     end
     
@@ -232,7 +237,7 @@ for cc = 1:spikes.numcells
         end
         
         %Then Rate
-        MUA.data = log10(spikemat.bycellpoprate.(celltypes{tt}){cc});
+        MUA.data = (spikemat.bycellpoprate.(celltypes{tt}){cc});
         for ss = 1:3
             [MUAConditionalISIDist_all.(statenames{ss}).rate.(celltypes{tt})(cc)] = ...
                 bz_ConditionalISI(spikes.times{cc},MUA,...
