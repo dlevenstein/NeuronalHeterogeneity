@@ -1,4 +1,4 @@
-function [PopCorr,MUAConditionalISIDist] = ...
+function [PopCorr,MUAConditionalISIDist,MUAConditionalISIDist_gamma,ISIdists] = ...
     ISIModesbyPopActivityAnalysis_BLA(basePath,figfolder)
 
 %% DEV
@@ -57,7 +57,7 @@ cellcolor = {'k','r'};
 statenames = fieldnames(SleepState.ints);
 
 %% Calculate spike count matrix
-binsize = 0.1; %s
+binsize = 0.06; %s
 dt = 0.01;
 spikemat = bz_SpktToSpkmat(spikes,'binsize',binsize,'dt',dt,'bintype','gaussian','units','rate');
 spikemat.isspike = spikemat.data;
@@ -200,6 +200,12 @@ end
 
 NiceSave('MUACorrandGSRate',figfolder,baseName)
 
+
+%%
+% for ss = 1:3
+%     PopCorr.(statenames{ss}).GSmod = nan(size(MutInf.WAKEstate.PSS));
+%     PopCorr.(statenames{ss}).GSmod_p = nan(size(MutInf.WAKEstate.PSS));
+% end
 %% Conditional ISI distrobution 
 synchbins.pE = 10;
 synchbins.pI = 10;
@@ -213,15 +219,9 @@ for cc = 1:spikes.numcells
 %         if Ncells.(celltypes{tt})==0
 %             continue
 %         end
+
+        %First synchrony
         MUA.timestamps = spikemat.timestamps;
-        MUA.data = spikemat.bycellpoprate.(celltypes{tt}){cc};
-        for ss = 1:3
-            [MUAConditionalISIDist_all.(statenames{ss}).rate.(celltypes{tt})(cc)] = ...
-                bz_ConditionalISI(spikes.times{cc},MUA,...
-                'ints',SleepState.ints.(statenames{ss}),...
-                'showfig',false,'GammaFit',false,'minX',20,'numISIbins',100);
-        end
-        
         MUA.data = log10(spikemat.bycellpopsynch.(celltypes{tt}){cc});
         for ss = 1:3
             [MUAConditionalISIDist_all.(statenames{ss}).synch.(celltypes{tt})(cc)] = ...
@@ -231,12 +231,121 @@ for cc = 1:spikes.numcells
                 %'normtype','none','Xwin',synchbounds.(celltypes{tt}),'numXbins',synchbins.(celltypes{tt}) );
         end
         
+        %Then Rate
+        MUA.data = log10(spikemat.bycellpoprate.(celltypes{tt}){cc});
+        for ss = 1:3
+            [MUAConditionalISIDist_all.(statenames{ss}).rate.(celltypes{tt})(cc)] = ...
+                bz_ConditionalISI(spikes.times{cc},MUA,...
+                'ints',SleepState.ints.(statenames{ss}),...
+                'showfig',false,'GammaFit',false,'minX',20,'numISIbins',100);
+        
+        
+            %Gamma fit - this is expensive and inefficient to do it twice..
+            cellUID(cc) = spikes.UID(cc);
+            GFIDX = find(GammaFit.(statenames{ss}).cellstats.UID==cellUID(cc));
+            if isempty(GFIDX)
+                PopCorr.(statenames{ss}).(celltypes{tt}).GSmod(cc) = nan;
+                PopCorr.(statenames{ss}).(celltypes{tt}).GSmod_p(cc) = nan;
+                continue
+            end
+
+            cellGamma = GammaFit.(statenames{ss}).singlecell(GFIDX);
+            try
+            [MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{tt})(cc)] = ...
+                bz_ConditionalISI(spikes.times(cc),MUA,...
+                'ints',SleepState.ints.(statenames{ss}),...
+                'GammaFitParms',cellGamma,'GammaFit',true,...
+                'showfig',false,'numISIbins',100);
+            catch
+
+                continue
+            end
+            
+            PopCorr.(statenames{ss}).(celltypes{tt}).GSmod(cc) = MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{tt})(cc).GammaModes.GS_R;
+            PopCorr.(statenames{ss}).(celltypes{tt}).GSmod_p(cc) = MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{tt})(cc).GammaModes.GScorr_p;
+        end
     end
 end
 
 %%
 for ss = 1:3
+    for tt = 1:2
+    MUAConditionalISIDist_gamma.modes.(statenames{ss}).(celltypes{tt}) = bz_CollapseStruct([MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{tt}).GammaModes],3,'justcat');
+    MUAConditionalISIDist_gamma.dist.(statenames{ss}).(celltypes{tt}) = bz_CollapseStruct([MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{tt}).Dist],3,'justcat');
+    end
+end
+
+%%
+figure
+for tt = 1:2
+for ss = 1:3
+subplot(3,2,tt+2.*(ss-1))
+hold on
+keepcells = MUAConditionalISIDist_gamma.modes.(statenames{ss}).(celltypes{tt}).GScorr_p<=0.05;
+%keepcells = true(size(keepcells))
+for aa = 1:5
+    %keepmodes = keepcells&mean(PSSConditionalGamma.modes.(states{ss}).ASweights(:,aa,:),1)>0.02;
+    keepmodes = (MUAConditionalISIDist_gamma.modes.(statenames{ss}).(celltypes{tt}).AScorr_p(:,aa,:))<=0.05;
+    %keepmodes = true(size(keepmodes))
+scatter(-MUAConditionalISIDist_gamma.modes.(statenames{ss}).(celltypes{tt}).ASlogrates(1,aa,keepmodes),...
+    log10(MUAConditionalISIDist_gamma.modes.(statenames{ss}).(celltypes{tt}).ASCVs(1,aa,keepmodes)),...
+    60*mean(MUAConditionalISIDist_gamma.modes.(statenames{ss}).(celltypes{tt}).ASweights(:,aa,keepmodes),1)+eps,...
+    squeeze(MUAConditionalISIDist_gamma.modes.(statenames{ss}).(celltypes{tt}).AS_R(1,aa,keepmodes)),'filled')
+end
+scatter(-MUAConditionalISIDist_gamma.modes.(statenames{ss}).(celltypes{tt}).GSlogrates(1,1,keepcells),...
+    log10(MUAConditionalISIDist_gamma.modes.(statenames{ss}).(celltypes{tt}).GSCVs(1,1,keepcells)),...
+    10,...
+    squeeze(MUAConditionalISIDist_gamma.modes.(statenames{ss}).(celltypes{tt}).GS_R(1,1,keepcells)))
+colorbar
+axis tight
+caxis([-0.15 0.15])
+crameri('vik','pivot',0)
+xlabel('Mean');ylabel('CV')
+if ss == 1
+    title(celltypes{tt})
+end
+end
+end
+NiceSave('ASModPopRate',figfolder,baseName)
+
+
+%% Hi/Low PSS ints
+RateThresh = [0.8 0.2];
+clear ISIdists
+for cc = 1:spikes.numcells
+    bz_Counter(cc,spikes.numcells,'Cell');  
+    for ss = 1:3
+        for tt = 1:2
+        instate = spikemat.instate.(statenames{ss});
+        percentilenorm = NormToInt(log10(spikemat.bycellpoprate.(celltypes{tt}){cc}(instate)),'percentile');
+
+        IDX.timestamps = spikemat.timestamps(instate);
+        IDX.states = zeros(size(IDX.timestamps));
+        IDX.states(percentilenorm<=RateThresh(1)) = 1;
+        IDX.states(percentilenorm>=RateThresh(2)) = 2;
+        IDX.statenames = {'LowPopRate','HighPopRate'};
+        INT = bz_IDXtoINT(IDX);
+
+        spikestemp.times = spikes.times(cc);
+        spikestemp.UID = spikes.UID(cc);
+        tempstruct = bz_ISIStats(spikestemp,'ints',INT,'showfig',false);
+        tempstruct.ISIhist.UID = spikes.UID(cc);
+        
+
+         tempstruct.ISIhist.summstats = ...
+             tempstruct.summstats;
+         %Threshold number of spikes for calculating return ap
+    %Later - put this as temp and save the things you want (i.e. no
+    %allspikes...)
+        ISIdists.(statenames{ss}).(celltypes{tt})(cc) = tempstruct.ISIhist;
+        end
+    end
+end
+%%
+for ss = 1:3
     for tt = 1:length(celltypes)
+        ISIdists_temp.(statenames{ss}).(celltypes{tt}) = ...
+            bz_CollapseStruct(ISIdists.(statenames{ss}).(celltypes{tt}),3,'justcat',true);
     for sr = 1:2
         MUAConditionalISIDist.(statenames{ss}).(synchrate{sr}).(celltypes{tt}) = ...
             bz_CollapseStruct(MUAConditionalISIDist_all.(statenames{ss}).(synchrate{sr}).(celltypes{tt}),3,'justcat',true);
@@ -248,18 +357,55 @@ for ss = 1:3
             MeanCondISI.(statenames{ss}).(synchrate{sr}).(celltypes{tt}).(celltypes{tt2}) = ...
                 bz_CollapseStruct(MUAConditionalISIDist_all.(statenames{ss}).(synchrate{sr}).(celltypes{tt})(CellClass.(celltypes{tt2})),...
                 3,'mean',true);
+            
+            numspksthresh = 300;
+            numspks = squeeze(ISIdists_temp.(statenames{ss}).(celltypes{tt}).summstats.LowPopRatestate.numspikes)';
+            MeanISIdists.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}) = ...
+                bz_CollapseStruct(ISIdists.(statenames{ss}).(celltypes{tt})(...
+                CellClass.(celltypes{tt2})&numspks>numspksthresh),3,'mean',true);
         end
     end
+
     end
 end
+ISIdists = ISIdists_temp;
+%%
+lowhi = {'HighPopRatestate','LowPopRatestate'};
 
+%%
+for tt2 = 1:length(celltypes)
+figure
+for ss = 1:3
+    for tt = 1:length(celltypes)
+        
+            for ll = 1:2
+                
+         subplot(4,6,ss+(tt-1)*3)
+         hold on
+         plot(MeanISIdists.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).logbins,...
+             MeanISIdists.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).(lowhi{ll}).log)
+         axis tight
+         LogScale('x',10,'exp',true) 
+                
+         subplot(4,6,ss+(tt-1)*3+(ll-1)*6+6)
+         imagesc(MeanISIdists.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).logbins,...
+             MeanISIdists.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).logbins,...
+             MeanISIdists.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}).(lowhi{ll}).return)
+         axis xy
+         LogScale('xy',10,'exp',true)
+            end
+        
+    end
+end
+NiceSave(['HiLoReturnMaps_',(celltypes{tt2})],figfolder,baseName)
+end
 %%
 % excell = 13;
 % figure
 % subplot(2,2,1)
 % imagesc(MUAConditionalISIDist.(statenames{2}).(synchrate{2}).(celltypes{1}).Dist.pYX(:,:,excell)')
 % subplot(2,2,3)
-% plot(MUAConditionalISIDist.(statenames{2}).(synchrate{2}).(celltypes{1}).Dist.Xhist(:,:,excell))
+% plot(MUAConditionalISIDist.(statenames{2}).(synchrate{2}).(celltypes{1}).Dist.Xocc(:,:,excell))
 %% 
 for sr = 1:2 
 figure

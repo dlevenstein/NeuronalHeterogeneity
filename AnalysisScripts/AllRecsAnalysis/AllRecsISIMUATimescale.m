@@ -48,8 +48,10 @@ meanMI.(regions{rr}).(spikerate{cellsr}).(statenames{ss}).(synchrate{popsr}).(ce
     end
 end
 end
-
 %%
+timescales = MutInf.BLA.timescales(1,:);
+%%
+for rr = 1:6
 figure
 % for sr = 1:2
 % subplot(2,2,sr)
@@ -62,29 +64,39 @@ figure
 % UnityLine
 % xlabel('Pop Synch');ylabel('Pop Rate');title(spikerate{sr})
 % end
-
+%celltt = 2;
+for ss = 1:3
 for popsr = 1:2
 for cellsr = 1:3
-    for celltt = 1:2
-subplot(4,3,(popsr-1)*6+cellsr+(celltt-1)*3)
+    
+subplot(6,3,(popsr-1)*9+cellsr+(ss-1)*3)
 hold on
 %plot(log10(timescales),(MutInf.(spikerate{sr}).(statenames{1}).synch.(celltypes{1})(MutInf.CellClass.(celltypes{tt}),:)),'k')
 %plot(log10(timescales),(MutInf.(spikerate{sr}).(statenames{1}).synch.(celltypes{2})(MutInf.CellClass.(celltypes{tt}),:)),'r')
-
-for poptt = 1:2
+for celltt = 1:2
+%for poptt = 1:2
+poptt = 1;
 plot(log10(timescales),(meanMI.(regions{rr}).(spikerate{cellsr}).(statenames{ss}).(synchrate{popsr}).(celltypes{poptt}).(celltypes{celltt})),...
-    'color',cellcolor{poptt})
+    'color',cellcolor{celltt})
+poptt = 2;
+plot(log10(timescales),(meanMI.(regions{rr}).(spikerate{cellsr}).(statenames{ss}).(synchrate{popsr}).(celltypes{poptt}).(celltypes{celltt})),...
+    '--','color',cellcolor{celltt})
+%end
 end
-
-LogScale('x',10)
+axis tight
+LogScale('x',10,'nohalf',true)
+if ss~=1
 xlabel('Time Window (s)');
-if cellsr == 1
-    ylabel({celltypes{celltt},'MI'})
 end
-if celltt==1
+if cellsr == 1
+    ylabel({(statenames{ss}),'MI (bits)'})
+end
+if ss == 1
 title([ spikerate{cellsr}, ' by pop ',(synchrate{popsr})])
 end
-    end
+    
 end
 end
-NiceSave('CellModulationByPop',figfolder,[])
+end
+NiceSave('CellModulationByPop',figfolder,(regions{rr}))
+end
