@@ -2,16 +2,16 @@ function [PopCorr,MUAConditionalISIDist,MUAConditionalISIDist_gamma,ISIdists] = 
     ISIModesbyPopActivityAnalysis(basePath,figfolder)
 
 %% DEV
-reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %reporoot = '/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/AGData/Cicero/Cicero_09012014';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse24-131213';
-basePath = '/Users/dl2820/Dropbox/Research/Datasets/YMV12_171211';
+%basePath = '/Users/dl2820/Dropbox/Research/Datasets/YMV12_171211';
 %basePath = pwd;
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModesbyPopActivityAnalysis'];
+%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModesbyPopActivityAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
