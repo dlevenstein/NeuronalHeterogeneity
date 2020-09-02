@@ -279,6 +279,7 @@ for cc = 1:spikes.numcells
                 catch
                     PopCorr.(statenames{ss}).(celltypes{tt}).GSmod(cc) = nan;
                     PopCorr.(statenames{ss}).(celltypes{tt}).GSmod_p(cc) = nan;
+                    continue
                 end
             end
             %catch
@@ -335,7 +336,7 @@ NiceSave('ASModPopRate',figfolder,baseName)
 
 
 %% Hi/Low PSS ints
-RateThresh = [0.8 0.2];
+RateThresh = [0.8 0.25];
 clear ISIdists
 for cc = 1:spikes.numcells
     bz_Counter(cc,spikes.numcells,'Cell');  
