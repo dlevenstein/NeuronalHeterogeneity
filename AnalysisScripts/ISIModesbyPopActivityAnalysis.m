@@ -133,10 +133,14 @@ for cc = 1:spikes.numcells
                 'type','spearman');
         end
     
-        %Get the mean rate
-        PopCorr.(statenames{ss}).meanRate(cc) = ISIStats.summstats.(statenames{ss}).meanrate(cc);
-        %Get the GS rate
+        
         cellUID(cc) = spikes.UID(cc);
+        
+        %Get the mean rate
+        ISIidx = find(ISIStats.UID==cellUID(cc));
+        PopCorr.(statenames{ss}).meanRate(cc) = ISIStats.summstats.(statenames{ss}).meanrate(ISIidx);
+        %Get the GS rate
+        
         GFIDX = find(GammaFit.(statenames{ss}).cellstats.UID==cellUID(cc));
         if isempty(GFIDX)
             PopCorr.(statenames{ss}).GSrate(cc) = nan;
@@ -249,11 +253,16 @@ for cc = 1:spikes.numcells
                 MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{tt})(cc).GammaModes = ...
                     structfun(@(X) nan.*X,MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{1})(cc).GammaModes,'UniformOutput',false);
             else
-            [MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{tt})(cc)] = ...
-                bz_ConditionalISI(spikes.times(cc),MUA,...
-                'ints',SleepState.ints.(statenames{ss}),...
-                'GammaFitParms',cellGamma,'GammaFit',true,...
-                'showfig',false,'numISIbins',100);
+                try
+                    [MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{tt})(cc)] = ...
+                        bz_ConditionalISI(spikes.times(cc),MUA,...
+                        'ints',SleepState.ints.(statenames{ss}),...
+                        'GammaFitParms',cellGamma,'GammaFit',true,...
+                        'showfig',false,'numISIbins',100);
+                catch
+                    PopCorr.(statenames{ss}).(celltypes{tt}).GSmod(cc) = nan;
+                    PopCorr.(statenames{ss}).(celltypes{tt}).GSmod_p(cc) = nan;
+                end
             end
             %catch
 
