@@ -2,15 +2,15 @@ function [PopCorr,MUAConditionalISIDist,MUAConditionalISIDist_gamma,ISIdists] = 
     ISIModesbyPopActivityAnalysis(basePath,figfolder)
 
 %% DEV
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %reporoot = '/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/BWCRCNS/JennBuzsaki22/20140526_277um';
 %basePath = '/mnt/proraidDL/Database/AGData/Cicero/Cicero_09012014';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
-%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse24-131213';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse24-131213';
 %basePath = pwd;
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModesbyPopActivityAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModesbyPopActivityAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 spikes = bz_GetSpikes('basePath',basePath,'noPrompts',true);
@@ -81,13 +81,16 @@ for cc = 1:spikes.numcells %weird roundabout way to calculate is much faster
             spikemat.bycellpoprate.(celltypes{tt}){cc} = ...
                 (spikemat.totpoprate.(celltypes{tt})-spikemat.cellrate{cc})./...
                PopCorr.cellcount.(celltypes{tt})(cc);
+           %Here: add tiny random amount... for percentile...
+           spikemat.bycellpoprate.(celltypes{tt}){cc} = ...
+               spikemat.bycellpoprate.(celltypes{tt}){cc}+0.001*rand(size(spikemat.bycellpoprate.(celltypes{tt}){cc}));
            
             spikemat.bycellpopsynch.(celltypes{tt}){cc} = ...
                 (spikemat.totpopsynch.(celltypes{tt})-spikemat.cellspike{cc})./...
                PopCorr.cellcount.(celltypes{tt})(cc);
            %Here: add tiny random amount... for percentile...
            spikemat.bycellpopsynch.(celltypes{tt}){cc} = ...
-               spikemat.bycellpopsynch.(celltypes{tt}){cc}+0.01*rand(size(spikemat.bycellpopsynch.(celltypes{tt}){cc}));
+               spikemat.bycellpopsynch.(celltypes{tt}){cc}+0.001*rand(size(spikemat.bycellpopsynch.(celltypes{tt}){cc}));
         else
             spikemat.bycellpoprate.(celltypes{tt}){cc} = ...
                 spikemat.totpoprate.(celltypes{tt})./PopCorr.cellcount.(celltypes{tt})(cc);
@@ -231,23 +234,31 @@ for cc = 1:spikes.numcells
             %Gamma fit - this is expensive and inefficient to do it twice..
             cellUID(cc) = spikes.UID(cc);
             GFIDX = find(GammaFit.(statenames{ss}).cellstats.UID==cellUID(cc));
-            if isempty(GFIDX)
+            if isempty(GFIDX) || ss == 3
                 PopCorr.(statenames{ss}).(celltypes{tt}).GSmod(cc) = nan;
                 PopCorr.(statenames{ss}).(celltypes{tt}).GSmod_p(cc) = nan;
                 continue
             end
 
             cellGamma = GammaFit.(statenames{ss}).singlecell(GFIDX);
-            try
+            %try
+            if isnan(MUA.data) & tt == 2
+                %For recordings with no pI
+                MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{tt})(cc).Dist = ...
+                    MUAConditionalISIDist_all.(statenames{ss}).rate.(celltypes{tt})(cc).Dist;
+                MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{tt})(cc).GammaModes = ...
+                    structfun(@(X) nan.*X,MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{1})(cc).GammaModes,'UniformOutput',false);
+            else
             [MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{tt})(cc)] = ...
                 bz_ConditionalISI(spikes.times(cc),MUA,...
                 'ints',SleepState.ints.(statenames{ss}),...
                 'GammaFitParms',cellGamma,'GammaFit',true,...
                 'showfig',false,'numISIbins',100);
-            catch
-
-                continue
             end
+            %catch
+
+            %    continue
+            %end
             
             PopCorr.(statenames{ss}).(celltypes{tt}).GSmod(cc) = MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{tt})(cc).GammaModes.GS_R;
             PopCorr.(statenames{ss}).(celltypes{tt}).GSmod_p(cc) = MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{tt})(cc).GammaModes.GScorr_p;
@@ -256,8 +267,8 @@ for cc = 1:spikes.numcells
 end
 
 %%
-for ss = 1:3
-    for tt = 1:2
+for ss = 1:2
+    for tt = 1:length(celltypes)
     MUAConditionalISIDist_gamma.modes.(statenames{ss}).(celltypes{tt}) = bz_CollapseStruct([MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{tt}).GammaModes],3,'justcat');
     MUAConditionalISIDist_gamma.dist.(statenames{ss}).(celltypes{tt}) = bz_CollapseStruct([MUAConditionalISIDist_gamma.(statenames{ss}).(celltypes{tt}).Dist],3,'justcat');
     end
@@ -265,8 +276,8 @@ end
 
 %%
 figure
-for tt = 1:2
-for ss = 1:3
+for tt = 1:length(celltypes)
+for ss = 1:2
 subplot(3,2,tt+2.*(ss-1))
 hold on
 keepcells = MUAConditionalISIDist_gamma.modes.(statenames{ss}).(celltypes{tt}).GScorr_p<=0.05;
@@ -350,7 +361,11 @@ for ss = 1:3
             numspks = squeeze(ISIdists_temp.(statenames{ss}).(celltypes{tt}).summstats.LowPopRatestate.numspikes)';
             MeanISIdists.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}) = ...
                 bz_CollapseStruct(ISIdists.(statenames{ss}).(celltypes{tt})(...
-                CellClass.(celltypes{tt2})&numspks>numspksthresh),3,'mean',true);
+                CellClass.(celltypes{tt2})),3,'mean',true);
+            
+%             MeanISIdists.(statenames{ss}).(celltypes{tt}).(celltypes{tt2}) = ...
+%                 bz_CollapseStruct(ISIdists.(statenames{ss}).(celltypes{tt})(...
+%                 CellClass.(celltypes{tt2})&numspks>ncellthresh),3,'mean',true);
         end
     end
 
@@ -362,6 +377,9 @@ lowhi = {'HighPopRatestate','LowPopRatestate'};
 
 %%
 for tt2 = 1:length(celltypes)
+            if sum(CellClass.(celltypes{tt2}))==0
+                continue
+            end
 figure
 for ss = 1:3
     for tt = 1:length(celltypes)
