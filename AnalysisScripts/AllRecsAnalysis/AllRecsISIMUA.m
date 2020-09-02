@@ -4,7 +4,7 @@ figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/ISIModesbyPopActivityAnalysi
 
 [baseNames] = getDatasetBasenames();
 regions = {'THAL','vCTX','fCTX','BLA','PIR','CA1'};
-for rr = 3
+for rr = 1:6
     %Get baseNames
     if rr == 4 || rr == 5
         ISIPop_ALL = GetMatResults([figfolder,'_',regions{rr}],['ISIModesbyPopActivityAnalysis','_',regions{rr}]);
