@@ -57,7 +57,7 @@ cellcolor = {'k','r'};
 statenames = fieldnames(SleepState.ints);
 
 %% Calculate spike count matrix
-binsize = 0.06; %s
+binsize = 0.08; %s
 dt = 0.01;
 spikemat = bz_SpktToSpkmat(spikes,'binsize',binsize,'dt',dt,'bintype','gaussian','units','rate');
 spikemat.isspike = spikemat.data>0.5;
@@ -336,7 +336,7 @@ NiceSave('ASModPopRate',figfolder,baseName)
 
 
 %% Hi/Low PSS ints
-RateThresh = [0.8 0.25];
+RateThresh = [0.8 0.2];
 clear ISIdists
 for cc = 1:spikes.numcells
     bz_Counter(cc,spikes.numcells,'Cell');  
