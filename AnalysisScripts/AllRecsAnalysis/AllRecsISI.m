@@ -1,6 +1,10 @@
-reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/'; %Laptop
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsAnalysis'];
+
+savefolder = [reporoot,'AnalysisScripts/AnalysisFigs/SpikeStatsAnalysis_Load'];
+
+[baseNames] = getDatasetBasenames();
 
 datasetPath.fCTX = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/BW_CTX';
 datasetPath.CA1 = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/Datasets/onProbox/AG_HPC';
@@ -13,8 +17,14 @@ rnames =  {''    ,''    ,''    ,'bla','pir',''   };
 %regions = {'fCTX'};
 %%
 for rr = 1:length(regions)
-    [ISIstats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
-    CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
+    SpikeStats = GetMatResults(savefolder,'SpikeStatsAnalysis_Load',...
+        'baseNames',baseNames.(regions{rr}));
+   % ISIstats.(regions{rr}) = CollapseStruct(
+   SpikeStats = bz_CollapseStruct(SpikeStats);
+    ISIstats.(regions{rr}) = bz_CollapseStruct(SpikeStats.ISIStats,'match','justcat',true);
+    CellClass.(regions{rr}) = bz_CollapseStruct(SpikeStats.CellClass,'match','justcat',true);
+    %[ISIstats.(regions{rr}),baseNames] = bz_LoadCellinfo(datasetPath.(regions{rr}),'ISIStats','dataset',true,'catall',true);
+    %CellClass.(regions{rr}) = bz_LoadCellinfo(datasetPath.(regions{rr}),'CellClass','dataset',true,'catall',true,'baseNames',baseNames);
     numcells.(regions{rr}) = length(CellClass.(regions{rr}).UID);
     
     %Remove cells not in the proper region by removing their cell class!
