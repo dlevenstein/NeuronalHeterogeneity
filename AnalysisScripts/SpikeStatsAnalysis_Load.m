@@ -36,5 +36,7 @@ ISIStats = bz_LoadCellinfo(basePath,'ISIStats');
 %     celltypes = unique(CellClass.label);
 % end
 % cellcolor = {'k','r'};
-CellClass = rmfield(CellClass,'Waveforms');
+if isfield(CellClass,'Waveforms')
+    CellClass = rmfield(CellClass,'Waveforms');
+end
 ISIStats = rmfield(ISIStats,'allspikes');
