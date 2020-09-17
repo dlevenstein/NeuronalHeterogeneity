@@ -181,6 +181,8 @@ end
 
 
 %%
+modmap = makeColorMap([0 0 0.8], [0.8 0.8 0.8], [0.8 0 0]);
+
 figure
 for rr = 1:6
 for tt = 1:length(celltypes)
@@ -205,8 +207,9 @@ scatter(-MUAConditionalISIDist_gamma.(regions{rr}).modes.(statenames{ss}).(cellt
     squeeze(MUAConditionalISIDist_gamma.(regions{rr}).modes.(statenames{ss}).(celltypes{tt}).GS_R(1,1,keepcells)),'linewidth',0.1)
 %colorbar
 axis tight
-caxis([-0.2 0.2])
-crameri('vik','pivot',0)
+caxis([-0.3 0.3])
+%crameri('vik','pivot',0)
+colormap(modmap)
 xlabel('Mean ISI');
 if rr == 1
     ylabel({[(celltypes{tt}),' Pop'],(statenames{ss}),'CV'})

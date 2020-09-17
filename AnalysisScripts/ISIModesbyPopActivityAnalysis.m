@@ -43,7 +43,7 @@ statenames = fieldnames(SleepState.ints);
 %% Calculate spike count matrix
 binsize = 0.08; %s
 dt = 0.01;
-spikemat = bz_SpktToSpkmat(spikes,'binsize',binsize,'dt',dt,'bintype','gaussian','units','rate');
+spikemat = bz_SpktToSpkmat(spikes,'binsize',binsize,'dt',dt,'bintype','gaussian','units','count');
 spikemat.isspike = spikemat.data>0.5;
 %spikemat.isspike(spikemat.isspike>1) = 1;
 for ss = 1:3
