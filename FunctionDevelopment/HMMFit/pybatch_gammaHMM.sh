@@ -11,7 +11,7 @@
 
 file=$1
 
-module load python/gcc/3.6.5
+module load python/cpu/3.6.5
 # Slurm array must be max number of pairs per session
 # If there are fewer pairs in session, these jobs will
 # finish gracefully within MATLAB
