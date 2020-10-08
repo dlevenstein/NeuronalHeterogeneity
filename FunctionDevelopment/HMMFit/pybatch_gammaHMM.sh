@@ -6,7 +6,7 @@
 #SBATCH --mem-per-cpu=5GB
 #SBATCH --nodes=1
 #SBATCH --tasks=1
-#SBATCH --array=1-10      # job array of input size
+#SBATCH --array=1-250      # job array of input size
 
 
 file=$1
