@@ -181,6 +181,8 @@ NiceSave('InOutField_Return',figfolder,[])
 
 
 %%
+modmap = makeColorMap([0 0 0.8], [0.8 0.8 0.8], [0.8 0 0]);
+
 figure
 subplot(3,3,1)
 plot(squeeze(1-cellISIStats.GammaModes.GSweights(1,2,:)),squeeze(1-cellISIStats.GammaModes.GSweights(1,3,:)),'k.','markersize',8)
@@ -207,7 +209,8 @@ end
 axis tight
 plot(xlim(gca),[0 0],'k--')
 ColorbarWithAxis([-0.2 0.2],'Delta AR','inclusive',{'<','>'})
-crameri('berlin','pivot',0)
+%crameri('berlin','pivot',0)
+colormap(modmap)
 LogScale('x',10,'exp',true,'nohalf',true)
 LogScale('y',10,'exp',false,'nohalf',true)
 xlabel('AS Mean ISI (s)');ylabel('AS Mode CV')

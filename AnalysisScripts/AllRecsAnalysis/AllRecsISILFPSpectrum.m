@@ -251,6 +251,8 @@ end
 
 %% AS/GS mod all regions
 
+modmap = makeColorMap([0 0 0.8], [0.8 0.8 0.8], [0.8 0 0]);
+
 figure
 for rr = 1:length(regions)
 for ss = 1:3
@@ -275,8 +277,9 @@ scatter(-PSSConditionalGamma.(regions{rr}).modes.(states{ss}).GSlogrates(1,1,kee
 %colorbar
 
 axis tight
-caxis([-0.2 0.2])
-crameri('vik','pivot',0)
+caxis([-0.25 0.25])
+%crameri('vik','pivot',0)
+colormap(modmap)
 %xlabel('Mean');
 
 xlim([-3 1.7]);ylim([-2 0.5])
@@ -298,7 +301,7 @@ end
 
 end
 end
-NiceSave('GSASModPSS',figfolder,'AllRegions')
+NiceSave('GSASModPSS',figfolder,'')
 
 
 %% In/Out Field: REturn Maps

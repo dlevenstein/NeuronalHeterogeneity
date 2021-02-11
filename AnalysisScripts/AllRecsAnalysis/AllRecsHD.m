@@ -119,6 +119,9 @@ end
 
 NiceSave('InOutField_Return',figfolder,[])
 %%
+
+modmap = makeColorMap([0 0 0.8], [0.8 0.8 0.8], [0.8 0 0]);
+
 figure
 for kk = 1:3
 subplot(3,3,kk)
@@ -148,8 +151,9 @@ scatter(-cellISIStats.GammaModes.ASlogrates(1,aa,tunedcells.(MIkinds{kk})),...
 end
 axis tight
 plot(xlim(gca),[0 0],'k--')
-ColorbarWithAxis([-0.15 0.15],'Delta AR','inclusive',{'<','>'})
-crameri('berlin','pivot',0)
+ColorbarWithAxis([-0.2 0.2],'Delta AR','inclusive',{'<','>'})
+%crameri('berlin','pivot',0)
+colormap(modmap)
 LogScale('x',10,'exp',true,'nohalf',true)
 LogScale('y',10,'exp',false,'nohalf',true)
 xlabel('AS Mean ISI (s)');ylabel('AS Mode CV')
