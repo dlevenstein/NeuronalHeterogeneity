@@ -12,7 +12,7 @@ function [] = bz_PlotModeRaster(spikemodes,modeintervals,plotcells,modecolors,wi
 %   win             time window to plot
 
 
-plotnumcells = length(plotcells)
+plotnumcells = length(plotcells);
 
 hold on
 for cc = 1:plotnumcells

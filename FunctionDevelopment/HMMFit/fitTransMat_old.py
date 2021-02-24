@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 import sys
-import code.util as util
+#import code.util as util
+import util
 import numpy as np
 from scipy import io as scio
 from pomegranate import *
@@ -28,29 +29,17 @@ def main():
     # Load spike train
     spk = spikes['times'][0,UID].flatten()
 
-
     brainstates = ['NREMstate', 'WAKEstate']
     brainstates1 = ['NREM', 'WAKE']
 
-    # Number of restarts from a randomly initialized transition matrix
-    nrestarts = 10
-    models = []
-    lls = []
-    dirname = 'GammaProcessed1'
-
     out = {}
-    outfile = os.path.join( basepath, dirname, str(UID+1)+'.mat' )
-    if not os.path.isdir( os.path.join( basepath, dirname)  ):
-        os.mkdir( os.path.join( basepath, dirname) )
+    outfile = os.path.join( basepath, 'GammaProcessed', str(UID+1)+'.mat' )
 
     # Loop over NREM / WAKE states
     for state in range(len(brainstates)):
 
         # Pull out UIDs
-        try:
-            UID_state = GammaFits[brainstates[state]][0,0]['cellstats'][0,0]['UID'].flatten() - 1
-        except:
-            continue
+        UID_state = GammaFits[brainstates[state]][0,0]['cellstats'][0,0]['UID'].flatten() - 1
 
         # If this UID has been fit
         index = np.argwhere( UID_state == UID )
@@ -60,9 +49,6 @@ def main():
             ## Get state specific ISIs and state specific GammaFit params specifi
 
             spk_stateISI, spk_stateT = util.getStateDepISIs(SleepState, spk)
-
-            # Number of sequences in this brain state
-            nseq = len( spk_stateISI[brainstates1[state]] )
 
             # Parameters for ground state (neuron specific)
             gscvs = GammaFits[brainstates[state]]['sharedfit'][0,0]['GSCVs'][0,0]
@@ -85,28 +71,19 @@ def main():
             dists = [GammaDistribution(k_as[x], lambda_as[x]) for x in range(lambda_as.size)]
             dists.insert(0, GammaDistribution(k_gs[index], lambda_gs[index]))
 
+            # Random (and dense) transition matrix
+            trans_mat = np.random.uniform(0,1, (len(dists),len(dists)))
+            for kp in range(len(dists)):
+                trans_mat[kp,:] = np.divide( trans_mat[kp,:], np.sum( trans_mat[kp,:] ) )
+
             starts = np.tile(1/len(dists), len(dists))
             ends = np.tile(0, len(dists))
 
-            # Fit model multiple times - different initializations of the transition matrix
-            for ip in range(nrestarts):
-
-                # Random (and dense) transition matrix
-                trans_mat = np.random.uniform(0,1, (len(dists),len(dists)))
-                for kp in range(len(dists)):
-                    trans_mat[kp,:] = np.divide( trans_mat[kp,:], np.sum( trans_mat[kp,:] ) )
-
-                # Initialize and freeze emission distribution parameters
-                model = HiddenMarkovModel.from_matrix(trans_mat, dists, starts, ends, state_names)
-                model.freeze_distributions()
-                # Fit the transition matrix
-                model.fit( sequences=spk_stateISI[brainstates1[state]], algorithm='baum-welch')
-
-                # Store the models and their associated log likelihoods
-                models.append( model.copy() )
-                lls.append( sum( [ model.log_probability(spk_stateISI[brainstates1[state]][k] ) for k in range( nseq ) ] ) )
-
-            model = models[ np.argmax(lls) ]
+            # Initialize and freeze emission distribution parameters
+            model = HiddenMarkovModel.from_matrix(trans_mat, dists, starts, ends, state_names)
+            model.freeze_distributions()
+            # Fit the transition matrix
+            model.fit( sequences=spk_stateISI[brainstates1[state]], algorithm='baum-welch')
 
             # Extract state parameters in order of storage
             k_all = [ model.states[x].distribution.parameters[0] for x in range(len( model.states )-2) ]
@@ -117,16 +94,14 @@ def main():
             # Predict
             seq_len = len( spk_stateISI[brainstates1[state]] )
             decoded_mode = np.empty(seq_len,dtype=object)
-            prob_mode = np.empty(seq_len,dtype=object)
             state_isi = np.empty(seq_len,dtype=object)
             state_spk = np.empty(seq_len,dtype=object)
             for seq_index in range( seq_len ):
                 decoded_mode[seq_index] = np.array( model.predict(spk_stateISI[brainstates1[state]][seq_index], algorithm='viterbi')[1:] )+1
-                prob_mode[seq_index] = model.predict_proba( spk_stateISI[brainstates1[state]][seq_index] )
                 state_isi[seq_index] = spk_stateISI[brainstates1[state]][seq_index]
                 state_spk[seq_index] = spk_stateT[brainstates1[state]][seq_index]
 
-            out[brainstates1[state]] = {'UID':UID+1,'basepath':basepath_original, 'decoded_mode':decoded_mode, 'prob_mode':prob_mode, 'state_isi':state_isi, 'state_label':state_names, 'state_spk':state_spk, 'logrates':logrates, 'cvs':cvs, 'trans_mat':model.dense_transition_matrix()[:logrates.size+1,:logrates.size]}
+            out[brainstates1[state]] = {'UID':UID+1,'basepath':basepath, 'decoded_mode':decoded_mode, 'state_isi':state_isi, 'state_label':state_names, 'state_spk':state_spk, 'logrates':logrates, 'cvs':cvs, 'trans_mat':model.dense_transition_matrix()[:logrates.size+1,:logrates.size]}
 
     scio.savemat(outfile, out)
 
