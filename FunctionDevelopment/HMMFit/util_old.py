@@ -37,13 +37,13 @@ def getKilosortFolder(basepath):
     return kilosort_file
 
 # Return spikes
-def getSpikes(basepath, loadKilo=False):
+def getSpikes(basepath):
     basename = os.path.basename(basepath)
     kilosort_file = getKilosortFolder(basepath)
-    if kilosort_file and loadKilo:
-        spikespath = os.path.join(basepath, kilosort_file, basename+'.spikes.cellinfo.mat')
-    else:
+    if not kilosort_file:
         spikespath = os.path.join(basepath, basename+'.spikes.cellinfo.mat')
+    else:
+        spikespath = os.path.join(basepath, kilosort_file, basename+'.spikes.cellinfo.mat')
     out = scio.loadmat(spikespath)
     return out['spikes'][0,0]
 
