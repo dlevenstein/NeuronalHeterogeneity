@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 import sys
-import code.util as util
+#import code.util as util
+import util
 import numpy as np
 from scipy import io as scio
 from pomegranate import *
