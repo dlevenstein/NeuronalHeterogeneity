@@ -127,7 +127,7 @@ def main():
                 state_isi[seq_index] = spk_stateISI[brainstates1[state]][seq_index]
                 state_spk[seq_index] = spk_stateT[brainstates1[state]][seq_index]
 
-            out[brainstates1[state]] = {'UID':UID+1,'basepath':basepath_original, 'decoded_mode':decoded_mode, 'prob_mode':prob_mode, 'state_isi':state_isi, 'state_label':state_names, 'state_spk':state_spk, 'logrates':logrates, 'cvs':cvs, 'trans_mat':model.dense_transition_matrix()[:logrates.size+1,:logrates.size]}
+            out[brainstates1[state]] = {'UID':UID+1,'basepath':basepath, 'decoded_mode':decoded_mode, 'prob_mode':prob_mode, 'state_isi':state_isi, 'state_label':state_names, 'state_spk':state_spk, 'logrates':logrates, 'cvs':cvs, 'trans_mat':model.dense_transition_matrix()[:logrates.size+1,:logrates.size]}
 
     scio.savemat(outfile, out)
 
