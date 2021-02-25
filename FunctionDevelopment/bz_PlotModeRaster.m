@@ -7,7 +7,7 @@ function [] = bz_PlotModeRaster(spikemodes,modeintervals,plotcells,modecolors,wi
 %       .next_state
 %       .state_spk
 %   modeintervals   (numcells) structure with field for time intervals of each mode
-%   plotcells       which cells to plot
+%   plotcells       which cells to plot (UID OR INDEX????!)
 %   modecolors
 %   win             time window to plot
 

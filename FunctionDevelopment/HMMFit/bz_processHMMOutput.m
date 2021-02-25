@@ -1,7 +1,12 @@
-function [] = bz_processHMMOutput(basepath)
-    if exist( fullfile( basepath, 'GammaProcessed' ) )
+function [] = bz_processHMMOutput(basepath,GammaFolder)
+
+if ~exist('GammaFolder','var')
+    GammaFolder = 'GammaProcessed';
+end
+
+    if exist( fullfile( basepath, GammaFolder ) )
         
-        cd(fullfile( basepath, 'GammaProcessed' ))
+        cd(fullfile( basepath, GammaFolder ))
         fils = dir(pwd); fils(1:2) = [];
         
         NREMall = [];
