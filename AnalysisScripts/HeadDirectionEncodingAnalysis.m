@@ -1,4 +1,4 @@
-function [ISIbyHD_align,MutInfo,cellISIStats ] = HeadDirectionTuningAnalysis(basePath,figfolder)
+function [ISIbyHD_align,MutInfo,cellISIStats ] = HeadDirectionEncodingAnalysis(basePath,figfolder)
 % Date XX/XX/20XX %ISIbyHD_alignGam
 %
 %Question: 
@@ -9,7 +9,7 @@ function [ISIbyHD_align,MutInfo,cellISIStats ] = HeadDirectionTuningAnalysis(bas
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
@@ -17,7 +17,7 @@ basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse12-120807';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Mouse24-131213';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
 %basePath = pwd;
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -68,38 +68,59 @@ ISIbyHD.fieldpeak = ISIbyHD.Dist.Xbins(ISIbyHD.fieldpeak);
 
 %%
 
-%% Compare ISI MI vs Rate MI
-
-
-binsizes = logspace(-2.5,1.5,25);
-for bb = 1:length(binsizes)
-    bz_Counter(bb,length(binsizes),'Bin')
-spkmat = bz_SpktToSpkmat(spikes.times,'dt',binsizes(bb),'binsize',binsizes(bb),'units','rate');
-spkmat.pos = interp1(headdir.timestamps,headdir.data,spkmat.timestamps,'nearest');
-spkmat.InWake = InIntervals(spkmat.timestamps,SleepState.ints.WAKEstate);
-
-for cc = 1:spikes.numcells
-    MutInfo.Rate_BinCompare(cc,bb) = mutualinfo(spkmat.data(spkmat.InWake,cc),spkmat.pos(spkmat.InWake));
-    
-end
-MutInfo.Rate_SkaggsCompare(bb) = corr(MutInfo.Skaggs,MutInfo.Rate_BinCompare(:,bb));
-end
 
 
 
 %%
 MutInfo.ISI = squeeze(ISIbyHD.MutInf)';
-usebin = 0.03;
-%usebin = 0.06;
-spkmat = bz_SpktToSpkmat(spikes.times,'dt',usebin,'binsize',usebin,'units','counts');
+binsize = 0.1;
+dt = 0.05;
+spkmat = bz_SpktToSpkmat(spikes.times,'dt',dt,'binsize',binsize,'units','counts');
 spkmat.pos = interp1(headdir.timestamps,headdir.data,spkmat.timestamps,'nearest');
 spkmat.InWake = InIntervals(spkmat.timestamps,SleepState.ints.WAKEstate);
 
-maxspikes = 10;
+maxspikes = 15;
 for cc = 1:spikes.numcells
     MutInfo.Rate(cc) = mutualinfo(spkmat.data(spkmat.InWake,cc),spkmat.pos(spkmat.InWake));
-    
+    CONDXY(cc) = ConditionalHist(spkmat.pos(spkmat.InWake),spkmat.data(spkmat.InWake,cc),...
+         'numXbins',20,'Xbounds',[0 2*pi],'numYbins',maxspikes+1,'Ybounds',[0 maxspikes],...
+         'Xbinoverlap',2);
 end
+
+%% Spike count histogram
+MIthresh = 0.3;
+HDcells = find(MutInfo.Skaggs>MIthresh);
+
+figure
+for cc = 1:length(HDcells)
+    subplot(4,3,cc)
+        imagesc(CONDXY(1).Xbins,CONDXY(1).Ybins,CONDXY(HDcells(cc)).pYX')
+        hold on
+        %imagesc(CONDXY(1).Xbins+2.*pi,CONDXY(1).Ybins,CONDXY(HDcells(cc)).pYX')
+        axis xy
+        %xlim([0 4*pi])
+        bz_piTickLabel('x')
+        ColorbarWithAxis([0 0.4],'P[s|HD]')
+        xlabel('Head Direction');ylabel('Spike Count')
+        title(['UID: ',num2str(spikes.UID(HDcells(cc)))])
+
+end
+NiceSave('HDCells_SpikeCount',figfolder,baseName)
+%%
+
+
+testcell = 21;
+
+
+
+FitEncodingModel_HD(spkmat.data(spkmat.InWake,testcell),spkmat.pos(spkmat.InWake),dt)
+
+
+
+
+
+
+%%
 
 
 %% Get gamma mode
