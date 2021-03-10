@@ -6,7 +6,7 @@ function [model_m,model_c,tuningcurve] = FitEncodingModel_HD(s,x,dt)
 
 maxspikes = 15;
     CONDXY = ConditionalHist(x,s,...
-         'numXbins',20,'Xbounds',[0 2*pi],'numYbins',maxspikes+1,'Ybounds',[0 maxspikes],...
+         'numXbins',30,'Xbounds',[0 2*pi],'numYbins',maxspikes+1,'Ybounds',[0 maxspikes],...
          'Xbinoverlap',2);
      
 [peakrate,peakx]=max(CONDXY.meanYX);
@@ -20,7 +20,7 @@ init(2) = 1;    %k
 init(3) = 0.8;  %pAS_0
 init(4) = 0.1;  %pAS_pi
 init(5) = peakrate;   %rAS
-init(6) = 0.5;    %rGS
+init(6) = 0.1;    %rGS
 
 lb(1) = -5*pi;    %x0
 lb(2) = 0.01;    %k
@@ -125,7 +125,8 @@ figure
         axis xy
         %xlim([0 4*pi])
         bz_piTickLabel('x')
-        ColorbarWithAxis([0 0.5],'P[s|HD]')
+        crameri('bilbao')
+        ColorbarWithAxis([0 0.4],'P[s|HD]')
         xlabel('Head Direction');ylabel('Spike Count')
         title('Observed')
 
@@ -137,7 +138,8 @@ figure
     subplot(3,3,2)
         imagesc(x_plot,s_plot,pS_x_modal)
         xlabel('x');ylabel('s')
-        ColorbarWithAxis([0 0.5] ,'P[s|x]')
+        crameri('bilbao')
+        ColorbarWithAxis([0 0.4] ,'P[s|x]')
         axis xy
         title('Probabilistic Modal Tuning')
         bz_piTickLabel('x')
@@ -145,7 +147,8 @@ figure
         subplot(3,3,3)
             imagesc(x_plot,s_plot,pS_x_cont)
             xlabel('x');ylabel('s')
-            ColorbarWithAxis([0 0.5] ,'P[s|x]')
+            crameri('bilbao')
+            ColorbarWithAxis([0 0.4] ,'P[s|x]')
             axis xy
             title('Continuous Rate Tuning')
             bz_piTickLabel('x')
@@ -169,7 +172,7 @@ subplot(3,3,6)
     bz_piTickLabel('x')
     yyaxis right
     plot (x_plot,R_x(1,:),'--')
-    ylim([rGS rAS])
+    ylim([min([rGS rAS]) max([rGS rAS])])
     ylabel('R[x]') 
 end
 

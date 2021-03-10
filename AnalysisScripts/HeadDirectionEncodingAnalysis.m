@@ -121,14 +121,14 @@ NiceSave('HDCells_SpikeCount',figfolder,baseName)
 
 
 
-%testcell = 29;
-%testcell = 21;
+%testcell_IDX = 29;
+%testcell_IDX = 21;
 testcell_IDX = randsample(HDcells_IDX,1);
 FitEncodingModel_HD(spkmat.data(spkmat.InWake,testcell_IDX),spkmat.pos(spkmat.InWake),binsize);
 
 subplot(2,3,4)
 try
-bz_PlotISIDistModes(GammaFit.WAKEstate,HDcells_UID(testcell_IDX))
+bz_PlotISIDistModes(GammaFit.WAKEstate,spikes.UID(testcell_IDX),'sharORsing','singlecell')
 catch
 end
 NiceSave(['EncodingModelFit_UID',num2str(testcell_IDX)],figfolder,baseName)
