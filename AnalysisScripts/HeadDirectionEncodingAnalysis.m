@@ -111,7 +111,7 @@ for cc = 1:length(HDcells)
         title(['UID: ',num2str(spikes.UID(HDcells(cc)))])
     
    if cc == 12
-       continue
+       break
    end
 end
 NiceSave('HDCells_SpikeCount',figfolder,baseName)
@@ -125,7 +125,10 @@ testcell = randsample(HDcells,1);
 FitEncodingModel_HD(spkmat.data(spkmat.InWake,testcell),spkmat.pos(spkmat.InWake),binsize);
 
 subplot(2,3,4)
+try
 bz_PlotISIDistModes(GammaFit.WAKEstate,testcell)
+catch
+end
 NiceSave(['EncodingModelFit_UID',num2str(testcell)],figfolder,baseName)
 
 %% Run All cells
