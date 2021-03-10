@@ -86,6 +86,7 @@ spkmat.InWake = InIntervals(spkmat.timestamps,SleepState.ints.WAKEstate);
 
 maxspikes = 15;
 for cc = 1:spikes.numcells
+    MutInfo.UID(cc) = spikes.UID(cc);
     MutInfo.Rate(cc) = mutualinfo(spkmat.data(spkmat.InWake,cc),spkmat.pos(spkmat.InWake));
     CONDXY(cc) = ConditionalHist(spkmat.pos(spkmat.InWake),spkmat.data(spkmat.InWake,cc),...
          'numXbins',20,'Xbounds',[0 2*pi],'numYbins',maxspikes+1,'Ybounds',[0 maxspikes],...
@@ -94,13 +95,14 @@ end
 
 %% Spike count histogram
 MIthresh = 0.3;
-HDcells = find(MutInfo.Skaggs>MIthresh);
-[~,HDcells_GammaIDX] = intersect(GammaFit.WAKEstate.cellstats.UID,HDcells,'stable');
+HDcells_IDX = find(MutInfo.Skaggs>MIthresh);
+HDcells_UID = MutInfo.UID(HDcells_IDX);
+[~,HDcells_GammaIDX] = intersect(GammaFit.WAKEstate.cellstats.UID,HDcells_UID,'stable');
 
 figure
-for cc = 1:length(HDcells)
+for cc = 1:length(HDcells_IDX)
     subplot(4,3,cc)
-        imagesc(CONDXY(1).Xbins,CONDXY(1).Ybins,CONDXY(HDcells(cc)).pYX')
+        imagesc(CONDXY(1).Xbins,CONDXY(1).Ybins,CONDXY(HDcells_IDX(cc)).pYX')
         hold on
         %imagesc(CONDXY(1).Xbins+2.*pi,CONDXY(1).Ybins,CONDXY(HDcells(cc)).pYX')
         axis xy
@@ -108,7 +110,7 @@ for cc = 1:length(HDcells)
         bz_piTickLabel('x')
         ColorbarWithAxis([0 0.4],'P[s|HD]')
         xlabel('Head Direction');ylabel('Spike Count')
-        title(['UID: ',num2str(spikes.UID(HDcells(cc)))])
+        title(['UID: ',num2str(spikes.UID(HDcells_IDX(cc)))])
     
    if cc == 12
        break
@@ -121,22 +123,25 @@ NiceSave('HDCells_SpikeCount',figfolder,baseName)
 
 %testcell = 29;
 %testcell = 21;
-testcell = randsample(HDcells,1);
-FitEncodingModel_HD(spkmat.data(spkmat.InWake,testcell),spkmat.pos(spkmat.InWake),binsize);
+testcell_IDX = randsample(HDcells_IDX,1);
+FitEncodingModel_HD(spkmat.data(spkmat.InWake,testcell_IDX),spkmat.pos(spkmat.InWake),binsize);
 
 subplot(2,3,4)
 try
-bz_PlotISIDistModes(GammaFit.WAKEstate,testcell)
+bz_PlotISIDistModes(GammaFit.WAKEstate,HDcells_UID(testcell_IDX))
 catch
 end
-NiceSave(['EncodingModelFit_UID',num2str(testcell)],figfolder,baseName)
+NiceSave(['EncodingModelFit_UID',num2str(testcell_IDX)],figfolder,baseName)
 
 %% Run All cells
-for cc = 1:length(HDcells)
+for cc = 1:length(HDcells_IDX)
 cc
-[model_m(cc),model_c(cc),tuningcurve(cc)] = FitEncodingModel_HD(spkmat.data(spkmat.InWake,HDcells(cc)),spkmat.pos(spkmat.InWake),binsize);
-model_m(cc).GSRate = GammaFit.WAKEstate.sharedfit.GSlogrates(HDcells_GammaIDX(cc));
-model_c(cc).GSRate = GammaFit.WAKEstate.sharedfit.GSlogrates(HDcells_GammaIDX(cc));
+[model_m(cc),model_c(cc),tuningcurve(cc)] = FitEncodingModel_HD(spkmat.data(spkmat.InWake,HDcells_IDX(cc)),spkmat.pos(spkmat.InWake),binsize);
+close all
+end
+for cc = 1:length(HDcells_IDX)
+model_m(cc).GSlogRate = GammaFit.WAKEstate.sharedfit.GSlogrates(HDcells_GammaIDX(cc));
+model_c(cc).GSlogRate = GammaFit.WAKEstate.sharedfit.GSlogrates(HDcells_GammaIDX(cc));
 close all
 end
 %%
@@ -170,7 +175,9 @@ box off
 xlabel('R_G_S');ylabel('p[AS|x=x_0+pi]')
 
 subplot(3,3,5)
-plot(log10(allcells_m.parms.rGS),GammaFit.WAKEstate.sharedfit.GSlogrates(HDcells_GammaIDX),'.')
+plot(log10(allcells_m.parms.rGS),allcells_m.GSlogRate,'.')
+hold on
+UnityLine
 LogScale('xy',10)
 box off
 xlabel('GS Rate: Encoding Model');ylabel('GS Rate: Gamma ISI Model')

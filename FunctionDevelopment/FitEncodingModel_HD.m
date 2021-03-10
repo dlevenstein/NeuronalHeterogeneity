@@ -23,7 +23,7 @@ init(5) = peakrate;   %rAS
 init(6) = 0.5;    %rGS
 
 lb(1) = -5*pi;    %x0
-lb(2) = 0.1;    %k
+lb(2) = 0.01;    %k
 lb(3) = 0;   %pAS_0
 lb(4) = 0;  %pAS_pi
 lb(5) = 1;   %rAS
@@ -81,7 +81,7 @@ model_c.parms.k=kernelPredict_c(2);
 model_c.parms.R_0 = kernelPredict_c(5);
 model_c.parms.R_pi = kernelPredict_c(6);
 
-tuningcurve.Xbins = CONDXY.Xbins
+tuningcurve.Xbins = CONDXY.Xbins;
 tuningcurve.meanRate = CONDXY.meanYX./dt;
 %%
 
@@ -125,7 +125,7 @@ figure
         axis xy
         %xlim([0 4*pi])
         bz_piTickLabel('x')
-        ColorbarWithAxis([0 0.4],'P[s|HD]')
+        ColorbarWithAxis([0 0.5],'P[s|HD]')
         xlabel('Head Direction');ylabel('Spike Count')
         title('Observed')
 
