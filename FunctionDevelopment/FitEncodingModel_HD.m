@@ -1,4 +1,4 @@
-function [model_m,model_c] = FitEncodingModel_HD(s,x,dt)
+function [model_m,model_c,tuningcurve] = FitEncodingModel_HD(s,x,dt)
 %UNTITLED3 Summary of this function goes here
 %   Detailed explanation goes here
 
@@ -20,7 +20,7 @@ init(2) = 1;    %k
 init(3) = 0.8;  %pAS_0
 init(4) = 0.1;  %pAS_pi
 init(5) = peakrate;   %rAS
-init(6) = 1;    %rGS
+init(6) = 0.5;    %rGS
 
 lb(1) = -5*pi;    %x0
 lb(2) = 0.1;    %k
@@ -48,6 +48,8 @@ options.MaxFunctionEvaluations = 2e4;
 
 %%
 kernelPredict_c = fmincon(nlogL_c,init,[],[],[],[],lb,ub,[],options);
+
+init(5)=kernelPredict_c(5); init(1)=kernelPredict_c(1);
 kernelPredict_m = fmincon(nlogL_m,init,[],[],[],[],lb,ub,[],options);
 
 %%
@@ -78,6 +80,9 @@ model_c.parms.x0 = kernelPredict_c(1);
 model_c.parms.k=kernelPredict_c(2);
 model_c.parms.R_0 = kernelPredict_c(5);
 model_c.parms.R_pi = kernelPredict_c(6);
+
+tuningcurve.Xbins = CONDXY.Xbins
+tuningcurve.meanRate = CONDXY.meanYX./dt;
 %%
 
 %Check out best nlogL vs one you pick by eye...

@@ -1,4 +1,4 @@
-function [model_m,model_c] = HeadDirectionEncodingAnalysis(basePath,figfolder)
+function [model_m,model_c,tuningcurve] = HeadDirectionEncodingAnalysis(basePath,figfolder)
 % Date XX/XX/20XX %ISIbyHD_alignGam
 %
 %Question: 
@@ -134,8 +134,9 @@ NiceSave(['EncodingModelFit_UID',num2str(testcell)],figfolder,baseName)
 %% Run All cells
 for cc = 1:length(HDcells)
 cc
-[model_m(cc),model_c(cc)] = FitEncodingModel_HD(spkmat.data(spkmat.InWake,HDcells(cc)),spkmat.pos(spkmat.InWake),binsize);
-
+[model_m(cc),model_c(cc),tuningcurve(cc)] = FitEncodingModel_HD(spkmat.data(spkmat.InWake,HDcells(cc)),spkmat.pos(spkmat.InWake),binsize);
+model_m(cc).GSRate = GammaFit.WAKEstate.sharedfit.GSlogrates(HDcells_GammaIDX(cc));
+model_c(cc).GSRate = GammaFit.WAKEstate.sharedfit.GSlogrates(HDcells_GammaIDX(cc));
 close all
 end
 %%
