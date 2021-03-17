@@ -4,7 +4,7 @@ function [model_m,model_c,tuningcurve] = FitEncodingModel_HD(s,x,dt)
 
 % Possible here: make a guess that's close! (Use continuous model fit?....)
 
-maxspikes = 15;
+maxspikes = 10;
     CONDXY = ConditionalHist(x,s,...
          'numXbins',30,'Xbounds',[0 2*pi],'numYbins',maxspikes+1,'Ybounds',[0 maxspikes],...
          'Xbinoverlap',2);
@@ -114,7 +114,7 @@ R_pi = kernelPredict_c(6);
 %Tuning Curves
 %AS/GS observation distirbution
 %Comapre to ISI dist and fit!
-
+GScolor = [0.6 0.4 0];
 
 figure
 
@@ -154,24 +154,24 @@ figure
             bz_piTickLabel('x')
             
     subplot(3,3,5)
-        plot(s_plot,pS_AS(:,1))
+        plot(s_plot,pS_AS(:,1),'color','k','linewidth',2)
         hold on
-        plot(s_plot,pS_GS(:,1))
+        plot(s_plot,pS_GS(:,1),'color',GScolor,'linewidth',2)
         xlabel(['# Spikes in dt=',num2str(dt),' bin (s)'])
         ylabel('P(s|state)')
         box off
-        legend(['AS: ',num2str(rAS),'Hz'],['GS: ',num2str(rGS),'Hz'])
+        legend(['AS: ',num2str(round(rAS,1)),'Hz'],['GS: ',num2str(round(rGS,1)),'Hz'])
         
 subplot(3,3,6)
     %plot(x,pAS_x(1,:))
-    plot(x_plot,pAS_x(1,:))
+    plot(x_plot,pAS_x(1,:),'k','linewidth',2)
     xlabel('x');ylabel('P[AS|x]') 
     ylim([0 1])
     %xlim([-pi pi]+peakx)
     xlim([0 2.*pi])
     bz_piTickLabel('x')
     yyaxis right
-    plot (x_plot,R_x(1,:),'--')
+    plot (x_plot,R_x(1,:),'r--','linewidth',2)
     ylim([min([rGS rAS]) max([rGS rAS])])
     ylabel('R[x]') 
 end

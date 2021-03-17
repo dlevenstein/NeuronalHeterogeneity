@@ -18,7 +18,7 @@ BoxAndScatterPlot(allcells_m.BIC-allcells_c.BIC)
 hold on
 box off
 UnityLine
-ylabel('Modal-Continuous Model BIC')
+ylabel('Diff BIC')
 subplot(3,3,2)
 plot(allcells_m.parms.pAS_0,allcells_m.parms.pAS_pi,'.')
 hold on
@@ -32,15 +32,17 @@ hold on
 xlabel('R_A_S');ylabel('p[AS|x=x_0]')
 
 subplot(3,3,4)
-plot(allcells_m.parms.rGS,allcells_m.parms.pAS_pi,'.')
+plot(log10(allcells_m.parms.rGS),allcells_m.parms.pAS_pi,'.')
 hold on
 %UnityLine
 box off
 xlabel('R_G_S');ylabel('p[AS|x=x_0+pi]')
 
-% subplot(3,3,5)
-% plot(log10(allcells_m.parms.rGS),GammaFit.WAKEstate.sharedfit.GSlogrates(HDcells_GammaIDX),'.')
-% LogScale('xy',10)
-% box off
-% xlabel('GS Rate: Encoding Model');ylabel('GS Rate: Gamma ISI Model')
+subplot(3,3,5)
+plot(log10(allcells_m.parms.rGS),allcells_m.GSlogRate,'.')
+hold on
+LogScale('xy',10)
+UnityLine
+box off
+xlabel('GS Rate: Encoding Model');ylabel('GS Rate: Gamma ISI Model')
 NiceSave('EncodingModelStats',figfolder,[])

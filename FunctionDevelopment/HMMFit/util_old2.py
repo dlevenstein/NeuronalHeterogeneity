@@ -1,9 +1,6 @@
 from scipy import io as scio
 import numpy as np
 import os
-from scipy.interpolate import pchip_interpolate
-from itertools import combinations
-from scipy.optimize import curve_fit
 
 # Utility functions
 
@@ -128,99 +125,3 @@ def toRateCV(lambd, k):
     lograte = np.log10( np.divide(lambd, k) )
 
     return lograte, cv
-
-def get2folds( isi_seq ):
-
-    # this can't really be changed.. 
-    prop = 0.5
-
-    nisis = np.array( [ isi_seq[x].size for x in range(len( isi_seq)) ] )
-    nisis_tot = np.sum( nisis )
-
-    sort_inds = np.flip( np.argsort(nisis, axis=None) )
-
-    vtot = 0
-    fold1 = []
-    fold2 = []
-    for kp in range(sort_inds.size):
-        vtot += nisis[ sort_inds[kp] ]
-        if vtot / nisis_tot > prop:
-            vtot -= nisis[ sort_inds[kp] ]
-            fold1.append( sort_inds[kp] )
-        else:
-            fold2.append( sort_inds[kp] )
-
-    fold1_isis = [ isi_seq[x] for x in fold1 ]
-    fold2_isis = [ isi_seq[x] for x in fold2 ]
-    return (fold1_isis, fold2_isis)
-
-def getOptNStates( x_orig, deviance ):
-
-    # Describe likelihood curve with a model
-    x = np.linspace(x_orig[0], x_orig[-1], num=1000)
-    y = pchip_interpolate(x_orig, deviance, x)
-
-    # Estimate derivatives by numerical differencing
-    der1 = np.diff(y)
-    der2 = np.diff(der1)
-    der1 = der1[:-1]
-
-    est_curvature = abs(der2)*(1 + der1**2)**-1.5
-    max_curvature = np.argmax( est_curvature )
-
-    # Number of states to return is that with greatest curvature
-    return x_orig[ np.argmin( np.abs( x[ max_curvature ] - x_orig ) ) ]
-
-# Describe likelihood curve with a model - exponential
-def getOptNStates_v1( x_orig, ll ):
-    
-    x = np.linspace( x_orig[0], x_orig[-1], num=100)
-
-    # Define exponential function
-    def func(t, a, b, alpha):
-        return a - b * np.exp(-alpha * t)
-
-    # Initial parameters of exponential 
-    a0 = ll[-1]
-    b0 = ll[0]
-    alpha0 = 1/x_orig[-1]
-
-    # Coefficients and curve fit for curve
-    popt4, pcov4 = curve_fit(func, x_orig, ll, p0=(a0, b0, alpha0))
-
-    a, b, alpha = popt4
-    y_hat = func(x, a, b, alpha)
-
-    der1 = np.diff(y_hat)
-    der2 = np.diff(der1)
-    der1 = der1[:-1]
-
-    est_curvature = abs(der2)*(1 + der1**2)**-1.5
-    max_curvature = np.argmax( est_curvature )
-
-    params = {}
-    params['a'] = a
-    params['b'] = b
-    params['alpha'] = alpha
-    # Number of states to return is that with greatest curvature
-    optNstates = x_orig[ np.argmin( np.abs( x[ max_curvature ] - x_orig ) ) ]
-    return optNstates, params
-
-def getCombos(nums, rang):
-    all_tup = []
-    start = rang[0]
-    stop = rang[1]+1
-    for i in range(start,stop):
-        all_tup.extend( list(combinations(nums, i)) )
-    all_tup = np.array( all_tup )
-    # Get all tuples with no 0 at the start
-    to_delete = np.argwhere( [ all_tup[k][0] != 0 for k in range(len(all_tup)) ]  ).flatten()
-    return np.delete(all_tup, to_delete)
-
-# Split list into desired number of sublists
-def get_sublists(original_list, number_of_sub_list_wanted):
-    sublists = list()
-    for sub_list_count in range(number_of_sub_list_wanted): 
-        sublists.append(np.array( original_list[sub_list_count::number_of_sub_list_wanted] ) )
-    return sublists
-

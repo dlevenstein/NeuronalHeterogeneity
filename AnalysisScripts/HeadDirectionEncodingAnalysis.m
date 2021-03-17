@@ -84,7 +84,7 @@ spkmat.InWake = InIntervals(spkmat.timestamps,SleepState.ints.WAKEstate);
 %Remove bins in which position changes too much
 
 
-maxspikes = 15;
+maxspikes = 10;
 for cc = 1:spikes.numcells
     MutInfo.UID(cc) = spikes.UID(cc);
     MutInfo.Rate(cc) = mutualinfo(spkmat.data(spkmat.InWake,cc),spkmat.pos(spkmat.InWake));
