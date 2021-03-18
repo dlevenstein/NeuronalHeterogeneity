@@ -68,12 +68,12 @@ for aa = 1:numAS
         GFmodel.ASweights(aa)',...
         GammaFits.taubins').*scaleDist+offset,'k','linewidth',0.25);
 end
-%box off
+box on
 axis tight
 
     ylabel(['UID: ',num2str(GammaFits.cellstats.UID(plotcell))])
 
-xlim([-3 2])
+%xlim([-3 2])
 
 
 scatter(-GFmodel.ASlogrates(:),...
@@ -86,10 +86,10 @@ scatter(-GFmodel.GSlogrates,...
 plot(GammaFits.logtimebins([1 end]),[0 0],'k--')
 ylabel('CV');xlabel('mean ISI (s)')
 xlim([-2.75 1.75])
-% ylim([-2 0.75])
+%ylim([-2 0.75])
 LogScale('x',10,'exp',true,'nohalf',true)
 LogScale('y',10)
-box off
+%box off
 
 
 

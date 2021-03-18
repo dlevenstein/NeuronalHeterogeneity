@@ -253,20 +253,22 @@ modecolors = crameri('bamako',5);
 modecolors = {modecolors(1,:),modecolors(2,:),modecolors(3,:),modecolors(4,:),modecolors(5,:),...
     GScolor};
 
-linethick = 2;
+linethick = 1;
 
-figure
+fig1=figure;
+fig1.Renderer='Painters';
 subplot(2,3,1.25)
 bz_PlotISIDistModes(GammaFit.WAKEstate,cellUID);
 
-subplot(2,2,3)
+subplot(3,3,7)
 for tt = 1:length(enterfield)
     temp_spikemodes(tt) = ModeHMM.WAKEstate(whichcell);
     temp_spikemodes(tt).state_spk =  temp_spikemodes(tt).state_spk - enterfield(tt);
     temp_modeintervals(tt) = ModeInts_time.WAKEstate.cells(whichcell);
     temp_modeintervals(tt) = structfun(@(X) X-enterfield(tt),temp_modeintervals(tt),'UniformOutput',false);
 end
-bz_PlotModeRaster(temp_spikemodes,temp_modeintervals,[1:length(enterfield)],modecolors,[-3 3],linethick);
+bz_PlotModeRaster(temp_spikemodes,temp_modeintervals,[1:length(enterfield)],modecolors,[-2.5 2.5],...
+    'linethick',linethick,'spikewidth',0.5);
 plot([0 0],ylim(gca),'k--')
 title(['Cell UID: ',num2str(cellUID),'. Peak Rate: ',num2str(peakrate)])
 ylabel('Trial')
@@ -278,7 +280,8 @@ exwin = enterfield(tt)+[-1 1];
 subplot(4,2,xx*2)
 bz_MultiLFPPlot(thetalfp,'timewin',exwin,'LFPmidpoints',3,'scaleLFP',0.5e-3)
 hold on
-bz_PlotModeRaster(ModeHMM.WAKEstate,ModeInts_time.WAKEstate.cells,whichcell,modecolors,exwin,linethick);
+bz_PlotModeRaster(ModeHMM.WAKEstate,ModeInts_time.WAKEstate.cells,whichcell,modecolors,exwin,...
+    'linethick',linethick,'spikewidth',0.5);
 hold on
 ylim([-1 4])
 %subplot(4,2,4)

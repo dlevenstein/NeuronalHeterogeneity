@@ -1,4 +1,4 @@
-function [] = bz_PlotModeRaster(spikemodes,modeintervals,plotcells,modecolors,win,linethick)
+function [] = bz_PlotModeRaster(spikemodes,modeintervals,plotcells,modecolors,win,varargin)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
 %
@@ -10,7 +10,16 @@ function [] = bz_PlotModeRaster(spikemodes,modeintervals,plotcells,modecolors,wi
 %   plotcells       which cells to plot (UID OR INDEX????!)
 %   modecolors
 %   win             time window to plot
+%%
+p = inputParser;
+addParameter(p,'spikewidth',1)
+addParameter(p,'linethick',2)
+parse(p,varargin{:})
+spikewidth = p.Results.spikewidth;
+linethick = p.Results.linethick;
 
+
+%%
 
 plotnumcells = length(plotcells);
 
@@ -30,10 +39,10 @@ for sm = 1:6
     %end
     plot([spikemodes(whichcell).state_spk(instate_either);spikemodes(whichcell).state_spk(instate_either)],...
         cc+[zeros(size(spikemodes(whichcell).state_spk(instate_either)))-0.4;0.4+zeros(size(spikemodes(whichcell).state_spk(instate_either)))],...
-        'color',[0.5 0.5 0.5],'linewidth',1)
+        'color',[0.5 0.5 0.5],'linewidth',spikewidth)
     plot([spikemodes(whichcell).state_spk(instate_both);spikemodes(whichcell).state_spk(instate_both)],...
         cc+[zeros(size(spikemodes(whichcell).state_spk(instate_both)))-0.4;0.4+zeros(size(spikemodes(whichcell).state_spk(instate_both)))],...
-        'color','k','linewidth',1)
+        'color','k','linewidth',spikewidth)
     
 end
 end
