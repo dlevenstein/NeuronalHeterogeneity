@@ -88,6 +88,16 @@ for sm = 1:6
     end
 end
 
+    %All mean
+    MeanReturn.(states{ss}).cells(cc).allspikes(:,:) = hist3([log10(ModeHMM.(states{ss})(cc).prev_isi)',log10(ModeHMM.(states{ss})(cc).next_isi)'],...
+        {MeanReturn.logbins,MeanReturn.logbins});
+    numspk = sum(sum(MeanReturn.(states{ss}).cells(cc).allspikes(:,:)));
+    if numspk<spkthresh
+        MeanReturn.(states{ss}).cells(cc).allspikes(:,:) = nan(length(MeanReturn.logbins));
+    else
+        MeanReturn.(states{ss}).cells(cc).allspikes(:,:) =  MeanReturn.(states{ss}).cells(cc).allspikes(:,:)./numspk;
+    end
+    
 end
 MeanReturn.(states{ss}).mean = bz_CollapseStruct(MeanReturn.(states{ss}),4,'mean',true);
 
@@ -99,7 +109,7 @@ end
 
 %%
 ss =1
-cc = 7;
+cc = 9;
 figure
 subplot(3,3,1)
 plot(log10(ModeHMM.WAKEstate(cc).prev_isi),log10(ModeHMM.WAKEstate(cc).next_isi),'k.','markersize',1)
@@ -212,34 +222,52 @@ modecolors = {modecolors(1,:),modecolors(2,:),modecolors(3,:),modecolors(4,:),mo
 
 [ exwin ] = bz_RandomWindowInIntervals( SleepState.ints.WAKEstate,60,1 );
 
-exwin = [3308 3329];
+%exwin = [3308 3329];
+exwin_long = [3300 3340];
+exwin_short = [3335 3336];
+
+%exwin_long = [3500 3600];
 
 linethick = 10;
 
-cc = 6;
+for cc = 24
+%cc = 6;
+
+
+
+
 figure
 subplot(4,1,1)
-bz_PlotModeRaster(ModeHMM.WAKEstate,ModeInts_time.WAKEstate.cells,6,modecolors,exwin,linethick)
+bz_PlotModeRaster(ModeHMM.WAKEstate,ModeInts_time.WAKEstate.cells,cc,modecolors,exwin_short,linethick)
+subplot(4,1,2)
+bz_PlotModeRaster(ModeHMM.WAKEstate,ModeInts_time.WAKEstate.cells,cc,modecolors,exwin_long,linethick)
 
-subplot(3,3,4)
+subplot(6,7,3*7+1)
 plot(log10(ModeHMM.WAKEstate(cc).prev_isi),log10(ModeHMM.WAKEstate(cc).next_isi),'k.','markersize',1)
 xlim([-3 2]);ylim([-3 2])
 title('All Spikes')
 xlabel('ISI_n');ylabel('ISI_n_+_1')
 LogScale('xy',10,'exp',true)
 
-subplot(5,3,9)
-hist(log10(ModeHMM.WAKEstate(cc).prev_isi),60)
-box off
-LogScale('x',10,'nohalf',true)
+subplot(6,7,5*7+1)
+    imagesc(MeanReturn.WAKEstate.mean.cells.allspikes(:,:))
+    axis xy
+    set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
+
+% subplot(5,3,9)
+% hist(log10(ModeHMM.WAKEstate(cc).prev_isi),60)
+% box off
+% LogScale('x',10,'nohalf',true)
 
 for sm = 1:6
+    moderate = round(10.^ModeHMM.WAKEstate(cc).logrates(sm),0);
+    modeCV = round(ModeHMM.WAKEstate(cc).cvs(sm),1);
     %if ss==6
         instate_both = ModeHMM.WAKEstate(cc).prev_state == sm & ModeHMM.WAKEstate(cc).next_state==sm;
     %else
         instate_either = ModeHMM.WAKEstate(cc).prev_state == sm | ModeHMM.WAKEstate(cc).next_state==sm;
     %end
-subplot(6,6,5*6+(sm))
+subplot(6,7,3*7+(sm)+1)
     plot(log10(ModeHMM.WAKEstate(cc).prev_isi(instate_either)),log10(ModeHMM.WAKEstate(cc).next_isi(instate_either)),...
         '.','color',[0.5 0.5 0.5],'markersize',0.5)
     hold on
@@ -250,16 +278,25 @@ subplot(6,6,5*6+(sm))
     if sm == 6
         title('GS','Color',modecolors{sm})
     else
-        title(['AS',num2str(sm)],'Color',modecolors{sm})
+        title(['AS',num2str(sm),' (',num2str(moderate),'Hz, CV: ',num2str(modeCV),')'],'Color',modecolors{sm})
     end
+
+    subplot(6,7,4*7+(sm)+1)
+        imagesc(MeanReturn.WAKEstate.mean.cells.both(:,:,sm))
+        axis xy
+        set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
+        
+    subplot(6,7,5*7+(sm)+1)
+        imagesc(MeanReturn.WAKEstate.mean.cells.either(:,:,sm))
+        axis xy
+        set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
+
 end
 
 
-
-
 NiceSave(['CellExample_',num2str(cc)],figfolder,baseName)
-
-
+%close all
+end
 %% Get rates for sorting
 [~,ordermatch] = ismember([ModeHMM.WAKEstate(:).UID],ISIStats.UID);
 cellrates.WAKEstate = ISIStats.summstats.WAKEstate.meanrate(ordermatch);
@@ -372,6 +409,106 @@ end
 
 for sm = 1:6
     subplot(6,6,4*6+(sm))
+        imagesc(MeanReturn.WAKEstate.mean.cells.both(:,:,sm))
+        axis xy
+        set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
+        
+    subplot(6,6,5*6+(sm))
+        imagesc(MeanReturn.WAKEstate.mean.cells.either(:,:,sm))
+        axis xy
+        set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
+
+end
+
+NiceSave('ModeRaster',figfolder,baseName)
+
+
+%%
+position = bz_LoadBehavior( basePath,'position' ); %For finding a good time window
+[ exwin ] = bz_RandomWindowInIntervals( position.Epochs.MazeEpoch,30,1 )
+%%
+%spiketimes
+
+
+% plotnumcells  = 1;
+% plotrates = cellrates.WAKEstate(1:plotnumcells);
+% [~,cellorder] = sort(plotrates);
+% %rates = 
+% figure
+% subplot(2,1,1)
+% hold on
+% for cc = 1:plotnumcells
+%     whichcell = cellorder(cc);
+%     plotints =  structfun(@(modeints) RestrictInts(modeints,exwin,'inclusive',true),ModeInts_time.WAKEstate.cells(whichcell),'UniformOutput',false);
+% StateScorePlot( plotints,modecolors,'y',cc,'LineWidth',5)
+% 
+% for sm = 1:6
+%     %if ss==6
+%         instate_both = ModeHMM.WAKEstate(whichcell).prev_state == sm & ModeHMM.WAKEstate(whichcell).next_state==sm & ...
+%             InIntervals(ModeHMM.WAKEstate(whichcell).state_spk',exwin)';
+%     %else
+%         instate_either = (ModeHMM.WAKEstate(whichcell).prev_state == sm | ModeHMM.WAKEstate(whichcell).next_state==sm) & ...
+%             InIntervals(ModeHMM.WAKEstate(whichcell).state_spk',exwin)';
+%     %end
+%     plot([ModeHMM.WAKEstate(whichcell).state_spk(instate_either);ModeHMM.WAKEstate(whichcell).state_spk(instate_either)],...
+%         cc+[zeros(size(ModeHMM.WAKEstate(whichcell).state_spk(instate_either)))-0.4;0.4+zeros(size(ModeHMM.WAKEstate(whichcell).state_spk(instate_either)))],...
+%         'color',[0.5 0.5 0.5],'linewidth',0.5)
+%     plot([ModeHMM.WAKEstate(whichcell).state_spk(instate_both);ModeHMM.WAKEstate(whichcell).state_spk(instate_both)],...
+%         cc+[zeros(size(ModeHMM.WAKEstate(whichcell).state_spk(instate_both)))-0.4;0.4+zeros(size(ModeHMM.WAKEstate(whichcell).state_spk(instate_both)))],...
+%         'color','k','linewidth',1)
+%     
+% end
+% end
+% xlim(exwin)
+% ylim([0 plotnumcells+1])
+% box off
+% bz_ScaleBar('s')
+
+
+
+% subplot(3,3,1)
+% plot(log10(ModeHMM.WAKEstate(cc).prev_isi),log10(ModeHMM.WAKEstate(cc).next_isi),'k.','markersize',1)
+% xlim([-3 2]);ylim([-3 2])
+% title('All Spikes')
+% xlabel('ISI_n');ylabel('ISI_n_+_1')
+% LogScale('xy',10,'exp',true)
+% 
+% subplot(3,3,7)
+% imagesc(MeanTransition.(states{ss})([2,4,1,5,3,6],[2,4,1,5,3,6],:))
+% xlabel('To State');ylabel('From State')
+% ColorbarWithAxis([0 0.6],'P(Transition)','inclusive',{'','>'})
+%cc = 8;
+%for cc = 1:numcells
+figure
+subplot(4,1,1)
+bz_PlotModeRaster(ModeHMM.WAKEstate,ModeInts_time.WAKEstate.cells,cc,modecolors,exwin,linethick)
+
+
+for sm = 1:6
+    moderate = round(10.^ModeHMM.WAKEstate(cc).logrates(sm),0);
+    modeCV = round(ModeHMM.WAKEstate(cc).cvs(sm),1);
+    %if ss==6
+        instate_both = ModeHMM.WAKEstate(cc).prev_state == sm & ModeHMM.WAKEstate(cc).next_state==sm;
+    %else
+        instate_either = ModeHMM.WAKEstate(cc).prev_state == sm | ModeHMM.WAKEstate(cc).next_state==sm;
+    %end
+subplot(6,6,3*6+(sm))
+    plot(log10(ModeHMM.WAKEstate(cc).prev_isi(instate_either)),log10(ModeHMM.WAKEstate(cc).next_isi(instate_either)),...
+        '.','color',[0.5 0.5 0.5],'markersize',0.5)
+    hold on
+    plot(log10(ModeHMM.WAKEstate(cc).prev_isi(instate_both)),log10(ModeHMM.WAKEstate(cc).next_isi(instate_both)),...
+        'k.','markersize',0.5)
+     set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
+    xlim([-3 2]);ylim([-3 2])
+    if sm == 6
+        title('GS','Color',modecolors{sm})
+    else
+        title(['AS',num2str(sm),' (',num2str(moderate),'Hz, CV: ',num2str(modeCV),')'],'Color',modecolors{sm})
+    end
+end
+
+for sm = 1:6
+    subplot(6,6,4*6+(sm))
         imagesc(MeanReturn.(states{ss}).mean.cells.both(:,:,sm))
         axis xy
         set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
@@ -383,7 +520,8 @@ for sm = 1:6
 
 end
 
-NiceSave('ModeRaster',figfolder,baseName)
-
+NiceSave(['ModeRaster_UID',num2str(ModeHMM.WAKEstate(cc).UID)],figfolder,baseName)
+close all
+%end
 
 end
