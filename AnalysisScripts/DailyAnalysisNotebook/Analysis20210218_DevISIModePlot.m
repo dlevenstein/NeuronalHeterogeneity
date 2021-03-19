@@ -267,17 +267,19 @@ for tt = 1:length(enterfield)
     temp_modeintervals(tt) = ModeInts_time.WAKEstate.cells(whichcell);
     temp_modeintervals(tt) = structfun(@(X) X-enterfield(tt),temp_modeintervals(tt),'UniformOutput',false);
 end
-bz_PlotModeRaster(temp_spikemodes,temp_modeintervals,[1:length(enterfield)],modecolors,[-2.5 2.5],...
+bz_PlotModeRaster(temp_spikemodes,temp_modeintervals,[1:length(enterfield)],modecolors,[-2 2.5],...
     'linethick',linethick,'spikewidth',0.5);
 plot([0 0],ylim(gca),'k--')
 title(['Cell UID: ',num2str(cellUID),'. Peak Rate: ',num2str(peakrate)])
 ylabel('Trial')
 
 
+position.cellfield = interp1(firingMaps.xbins{cc}{1},firingMaps.rateMaps{cc}{1},position.position.lin);
+
 for xx = 1:4
 tt = randsample(1:length(enterfield),1); %trial example
-exwin = enterfield(tt)+[-1 1];
-subplot(4,2,xx*2)
+exwin = enterfield(tt)+[-2 1.5];
+subplot(8,2,xx*4)
 bz_MultiLFPPlot(thetalfp,'timewin',exwin,'LFPmidpoints',3,'scaleLFP',0.5e-3)
 hold on
 bz_PlotModeRaster(ModeHMM.WAKEstate,ModeInts_time.WAKEstate.cells,whichcell,modecolors,exwin,...
@@ -285,6 +287,14 @@ bz_PlotModeRaster(ModeHMM.WAKEstate,ModeInts_time.WAKEstate.cells,whichcell,mode
 hold on
 ylim([-1 4])
 %subplot(4,2,4)
+xlabel('')
+
+subplot(8,2,xx*4-2)
+plot(position.timestamps,position.data,'k.')
+plot(position.timestamps,position.cellfield,'r')
+xlim(exwin)
+set(gca,'xtick',[])
+box off
 end
 
 NiceSave(['PlaceField_Cell',num2str(cellUID)],figfolder,baseName)
