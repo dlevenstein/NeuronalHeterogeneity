@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --time=1-00:00:00       # walltime
-#SBATCH --partition=cpu_medium
+#SBATCH --time=12:00:00       # walltime
+#SBATCH --partition=cpu_short
 #SBATCH -J "gammaHMM"       # job name
 #SBATCH --mem-per-cpu=5GB
 #SBATCH --nodes=1
