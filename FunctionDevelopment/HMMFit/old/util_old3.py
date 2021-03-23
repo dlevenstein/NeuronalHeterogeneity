@@ -224,10 +224,3 @@ def get_sublists(original_list, number_of_sub_list_wanted):
         sublists.append(np.array( original_list[sub_list_count::number_of_sub_list_wanted] ) )
     return sublists
 
-def UIDtoIndex(all_UID, UID):
-    index = np.argwhere( all_UID  == UID )
-    if index.size == 0:
-        return None
-    else:   
-        return index[0][0]
-
