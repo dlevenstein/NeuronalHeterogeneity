@@ -51,7 +51,7 @@ def main():
 
         # Pull out UIDs
         try:
-            UID_state = GammaFits[brainstates[state]][0,0]['cellstats'][0,0]['UID'].flatten() - 1
+            UID_state = GammaFits[brainstates[state]][0,0]['cellstats'][0,0]['UID'].flatten()
         except:
             continue
 

@@ -39,7 +39,7 @@ def main():
 
     # Number of restarts from a randomly initialized transition matrix
     nrestarts = 10
-    nfolds = 10
+    nfolds = 6
     nstates = 8
     models = []
     lls = []
@@ -55,7 +55,7 @@ def main():
 
         # Pull out UIDs of units that have been considered in mode decomposition up till this point
         try:
-            UID_state = GammaFits[brainstates[state]][0,0]['cellstats'][0,0]['UID'].flatten() - 1
+            UID_state = GammaFits[brainstates[state]][0,0]['cellstats'][0,0]['UID'].flatten()
         except:
             continue
 
