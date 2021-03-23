@@ -42,7 +42,7 @@ def main():
     dirname = 'GammaProcessed1'
 
     out = {}
-    outfile = os.path.join( basepath, dirname, str(UID+1)+'.mat' )
+    outfile = os.path.join( basepath, dirname, str(UID)+'.mat' )
     if not os.path.isdir( os.path.join( basepath, dirname)  ):
         os.mkdir( os.path.join( basepath, dirname) )
 
