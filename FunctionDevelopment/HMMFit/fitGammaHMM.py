@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 import sys
-import code.util as util
+#import code.util as util
+import util
 import numpy as np
 from scipy import io as scio
 from pomegranate import *
@@ -15,10 +16,11 @@ def main():
     UID = int(sys.argv[2])
 
     # Retrieve basepath
-    base_dict = scio.loadmat('/gpfs/scratch/rh2618/basepaths_mac.mat')
-    basepath_original = base_dict['basepaths_all'][basepath_ind,0][0]
-    base_split = basepath_original.split(os.path.sep)
-    basepath = os.path.join('/gpfs/scratch/rh2618/rh_data', base_split[-1-2], base_split[-1-1], base_split[-1])
+    base_dict = scio.loadmat('/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/FunctionDevelopment/HMMFit/basepaths_test.mat')
+    basepath = base_dict['basepaths'][basepath_ind,0][0]
+    #basepath_original = base_dict['basepaths'][basepath_ind,0][0]
+    #base_split = basepath_original.split(os.path.sep)
+    #basepath = os.path.join('/gpfs/scratch/rh2618/rh_data', base_split[-1-2], base_split[-1-1], base_split[-1])
 
     # Load in data
     GammaFits = util.getGammaFits(basepath)
@@ -62,13 +64,13 @@ def main():
         if gamma_index is not None:
             print('Fitting '+brainstates1[state])
             ## Get state specific ISIs and state specific GammaFit params specifi
-            
+
             spk_stateISI, spk_stateT = util.getStateDepISIs(SleepState, spk)
 
             # Number of sequences in this brain state
             seq_len = len( spk_stateISI[brainstates1[state]] )
-            
-            
+
+
             # # Meaningful state names
             # sep = " "
             # state_names = [sep.join(("Activated state",str(x+1))) for x in range(lambda_as.size) ]
@@ -122,7 +124,7 @@ def main():
                 # Store the models and their associated log likelihoods
                 models.append( model.copy() )
                 lls.append( sum( [ model.log_probability(spk_stateISI[brainstates1[state]][k] ) for k in range( seq_len ) ] ) )
-            
+
             model = models[ np.argmax(lls) ]
 
             # Extract state parameters in order of storage
@@ -130,7 +132,7 @@ def main():
             lambda_all = [ model.states[x].distribution.parameters[1] for x in range(len( model.states )-2) ]
             # state_names = [ model.states[x].name for x in range(len( model.states )-2) ]
             logrates, cvs = util.toRateCV(lambda_all, k_all)
-            
+
             # Predict
             # seq_len = len( spk_stateISI[brainstates1[state]] )
             decoded_mode = np.empty(seq_len,dtype=object)
@@ -143,7 +145,7 @@ def main():
                 state_isi[seq_index] = spk_stateISI[brainstates1[state]][seq_index]
                 state_spk[seq_index] = spk_stateT[brainstates1[state]][seq_index]
 
-            out[brainstates1[state]] = {'UID':UID,'basepath':basepath_original, 'decoded_mode':decoded_mode, 'prob_mode':prob_mode, 'state_isi':state_isi, \
+            out[brainstates1[state]] = {'UID':UID,'basepath':basepath, 'decoded_mode':decoded_mode, 'prob_mode':prob_mode, 'state_isi':state_isi, \
             'state_spk':state_spk, 'logrates':logrates, 'cvs':cvs, 'trans_mat':model.dense_transition_matrix()[:logrates.size+1,:logrates.size], \
             'all_lls':all_lls, 'optNstates':optNstates, 'exp_params':exp_params}
 
