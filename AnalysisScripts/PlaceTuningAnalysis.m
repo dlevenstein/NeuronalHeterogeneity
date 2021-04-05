@@ -9,14 +9,14 @@ function [ISIbyPOS_norm,MutInfo,cellISIStats ] = PlaceTuningAnalysis(basePath,fi
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %reporoot = '/Users/dlevenstein/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
-%basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
 %basePath = [reporoot,'/Datasets/onProbox/AG_HPC/Achilles_10252013'];
 %basePath = pwd;
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 
 %Load Stuff
@@ -37,6 +37,11 @@ cellcolor = {'k','r'};
 position = bz_LoadBehavior( basePath,'position' );
 
 %%
+ISIStats.allspikes.position = cellfun(@(X) interp1(position.timestamps,position.position.lin,X,'nearest'),...
+    ISIStats.allspikes.times,'UniformOutput',false);
+ISIStats.allspikes.ISInp1 = cellfun(@(X) [X(2:end);nan],...
+    ISIStats.allspikes.ISIs,'UniformOutput',false);
+%%
 nantimes = isnan(position.position.lin);
 position.data = position.position.lin(~(nantimes));
 %Possible here: remove drops for more than a... second?
@@ -50,22 +55,7 @@ position.data = interp1(position.timestamps(~(nantimes)),position.data,position.
     'normtype','none','Xwin',[0 3],'Xbinoverlap',6,'minX',15);
 
 
-%%
-% excell = 44;
-% figure
-% subplot(2,2,1)
-% plot(firingMaps.xbins{excell}{1},firingMaps.rateMaps{excell}{1})
-% hold on
-% plot(ISIbyPOS.Dist.Xbins(1,:,excell),ISIbyPOS.Dist.SpikeRate(1,:,excell),'k')
-% 
-% subplot(2,2,3)
-%     imagesc(ISIbyPOS.Dist.Xbins(1,:,excell),ISIbyPOS.Dist.Ybins(1,:,excell),ISIbyPOS.Dist.pYX(:,:,excell)')
-%     hold on
-%     plot(ISIbyPOS.Dist.Xbins(1,:,excell),-log10(ISIbyPOS.Dist.SpikeRate(1,:,excell)),'r')
-%     LogScale('y',10,'nohalf',true)
-%     ylabel('ISI (s)')
-%     bz_AddRightRateAxis
-%     xlabel('Position relative to PF Peak (m)')
+
 %%
 MutInfo.numspks = squeeze(sum(ISIbyPOS.Dist.Xhist));
 %%
@@ -287,6 +277,7 @@ cellISIStats.Dist  = bz_CollapseStruct(StateConditionalISI.Dist,3,'justcat',true
 % outfieldspikes = squeeze(cellISIStats.Dist.Xhist(1,2,:));
 %%
 meanISIhist = bz_CollapseStruct(tempstruct.ISIhist,3,'mean',true);
+cellISIStats.UID = bz_CollapseStruct(tempstruct.UID,3,'justcat',true);
 cellISIStats.allISIhist = bz_CollapseStruct(tempstruct.ISIhist,3,'justcat',true);
 cellISIStats.allJointhist = bz_CollapseStruct(tempstruct.Jointhist,3,'justcat',true);
 
@@ -300,6 +291,79 @@ cellISIStats.GammaModes = bz_CollapseStruct(StateConditionalISI.GammaModes,3,'ju
 cellISIStats.GammaModes.states =  StateConditionalISI.states(1,:,1);
 
 [~,sortGS] = sort(cellISIStats.GSrate);
+
+
+%%
+%%
+close all
+%bluemap = colormap(gcf);
+%bluemap = [1 1 1;bluemap];
+%for excell_IDX = 1:length(firingMaps.UID)
+for excell_IDX = 25
+%excell_IDX = 25;
+excell_UID = firingMaps.UID(excell_IDX);
+figure
+subplot(2,2,2)
+plot(firingMaps.xbins{excell_IDX}{1},firingMaps.rateMaps{excell_IDX}{1})
+hold on
+plot(ISIbyPOS.Dist.Xbins(1,:,excell_IDX),ISIbyPOS.Dist.SpikeRate(1,:,excell_IDX),'k')
+box off
+title(['UID: ',num2str(excell_UID)])
+    if excell_UID==25
+        xlim([0.55 2.6])
+    end
+    
+    
+subplot(2,2,3)
+    imagesc(ISIbyPOS.Dist.Xbins(1,:,excell_IDX),ISIbyPOS.Dist.Ybins(1,:,excell_IDX),ISIbyPOS.Dist.pYX(:,:,excell_IDX)')
+    hold on
+    plot(ISIbyPOS.Dist.Xbins(1,:,excell_IDX),-log10(ISIbyPOS.Dist.SpikeRate(1,:,excell_IDX)),'r')
+    LogScale('y',10,'nohalf',true)
+    ylabel('ISI (s)')
+    bz_AddRightRateAxis
+    xlabel('Position relative to PF Peak (m)')
+    title('Conditional ISI (P[ISI|x])')
+    if excell_UID==25
+        xlim([0.55 2.6])
+    end
+    
+subplot(2,2,4)
+	imagesc(ISIbyPOS.Dist.Xbins(:,:,excell_IDX),ISIbyPOS.Dist.Ybins(:,:,excell_IDX),ISIbyPOS.Dist.XYprob(:,:,excell_IDX)')
+    hold on
+    plot(ISIStats.allspikes.position{excell_IDX},log10(ISIStats.allspikes.ISIs{excell_IDX}),'k.','markersize',0.01)
+    plot(ISIStats.allspikes.position{excell_IDX},log10(ISIStats.allspikes.ISInp1{excell_IDX}),'k.','markersize',0.01)
+    %plot(ISIStats.ISIhist.WAKEstate.log(excell_IDX,:)*10+max(ISIbyPOS.Dist.Xbins(:,:,excell_IDX)),ISIStats.ISIhist.logbins,'k','linewidth',2)
+    plot(ISIbyPOS.Dist.Xbins(:,:,excell_IDX),log10(1./ISIbyPOS.Dist.SpikeRate(:,:,excell_IDX)),'r','linewidth',1)
+    %
+    axis tight
+    ylim([-3 2])
+    title('ISI Spike Density')
+    xlabel('Position (m)')
+   % title(excell_IDX(ee))
+    box off
+    ylabel('ISI (s)')
+    %colormap(bluemap)
+    caxis([0 1.5e-3])
+    crameri('bilbao')
+    LogScale('y',10,'exp',true)
+    if excell_UID==25
+        xlim([0.55 2.6])
+    end
+    
+    
+    
+thiscell = find(cellISIStats.UID==excell_UID);
+if ~isempty(thiscell)
+subplot(2,2,1)
+for ss = 2:3
+hold on
+    plot(meanISIhist.logbins,squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log(1,:,thiscell))')
+end
+else
+end
+NiceSave(['PlaceCell_UID',num2str(excell_UID)],figfolder,baseName)
+
+end
 %%
 figure
 subplot(2,2,1)

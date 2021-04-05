@@ -247,6 +247,14 @@ modecolors = crameri('bamako',5);
 modecolors = {modecolors(1,:),modecolors(2,:),modecolors(3,:),modecolors(4,:),modecolors(5,:),...
     GScolor};
 
+lowthreshcolor = [0.95 0.95 0.95];
+numrepeats = 3;
+%excell = excells;
+histcolors = [repmat([1 1 1],numrepeats,1);makeColorMap(lowthreshcolor,[0 0 0])];
+NREMhistcolors = [repmat([1 1 1],numrepeats,1);makeColorMap(lowthreshcolor,[0 0 0.8])];
+REMhistcolors = [repmat([1 1 1],numrepeats,1);makeColorMap(lowthreshcolor,[0.8 0 0])];
+statecolormap = {histcolors,NREMhistcolors,REMhistcolors};
+
 [ exwin ] = bz_RandomWindowInIntervals( SleepState.ints.WAKEstate,60,1 );
 
 %exwin = [3308 3329];
@@ -257,7 +265,7 @@ exwin_short = [3335 3336];
 
 linethick = 10;
 
-for cc = 24
+for cc = 13
 %cc = 6;
 
 
@@ -278,6 +286,7 @@ LogScale('xy',10,'exp',true)
 
 subplot(6,7,5*7+1)
     imagesc(MeanReturn.WAKEstate.mean.cells.allspikes(:,:))
+    colormap(gca,statecolormap{1})
     axis xy
     set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
 
@@ -310,11 +319,13 @@ subplot(6,7,3*7+(sm)+1)
 
     subplot(6,7,4*7+(sm)+1)
         imagesc(MeanReturn.WAKEstate.mean.cells.both(:,:,sm))
+            colormap(gca,statecolormap{1})
         axis xy
         set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
         
     subplot(6,7,5*7+(sm)+1)
         imagesc(MeanReturn.WAKEstate.mean.cells.either(:,:,sm))
+            colormap(gca,statecolormap{1})
         axis xy
         set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
 
