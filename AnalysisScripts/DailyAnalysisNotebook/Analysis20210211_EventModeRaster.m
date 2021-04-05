@@ -35,18 +35,20 @@ states = fieldnames(SleepState.ints);
 %     celltypes = unique(CellClass.label);
 % end
 % cellcolor = {'k','r'};
+%% Sort by Rate.... for SWR plot
 
+SharpWaves = bz_LoadEvents(basePath,'SWR');
 %%
 
 lfpchan = SharpWaves.detectorparams.Channels;
-downsamplefactor = 1;
+downsamplefactor = 2;
 lfp = bz_GetLFP(lfpchan,...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 %Noralize the LFP
 %lfp.data = NormToInt(single(lfp.data),'modZ', SleepState.ints.NREMstate,lfp.samplingRate);
 %%
 lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID;
-downsamplefactor = 1;
+downsamplefactor = 2;
 thetalfp = bz_GetLFP(lfpchan,...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 %%
@@ -64,7 +66,7 @@ position.data = interp1(position.timestamps(~(nantimes)),position.data,position.
 positions = [position.timestamps position.data];
 firingMaps = bz_firingMapAvg(positions,spikes);
 %%
-load([basePath,'/GammaProcessed/hmm_out.mat'])
+load([basePath,'/GammaProcessed1/hmm_out.mat'])
 
 %%
 ModeHMM.WAKEstate = WAKEall;
@@ -201,9 +203,13 @@ end
 
 for cc = 1:length(placeFieldStats.UID)
     %bz_Counter(cc,spikes.numcells,'Cell')
-    cellUID = placeFieldStats.UID(cc)
+    cellUID = placeFieldStats.UID(cc);
     whichcell = find(ismember([ModeHMM.WAKEstate(:).UID],cellUID));
     
+    if isempty(whichcell)
+        display('no HMM')
+        continue
+    end
     if isnan(placeFieldStats.mapStats{cc}{1}.fieldX)
         display('no field')
         fieldpeak(cc) = nan;
@@ -247,7 +253,7 @@ for tt = 1:length(enterfield)
     temp_modeintervals(tt) = ModeInts_time.WAKEstate.cells(whichcell);
     temp_modeintervals(tt) = structfun(@(X) X-enterfield(tt),temp_modeintervals(tt),'UniformOutput',false);
 end
-bz_PlotModeRaster(temp_spikemodes,temp_modeintervals,[1:length(enterfield)],modecolors,[-3 3],linethick);
+bz_PlotModeRaster(temp_spikemodes,temp_modeintervals,[1:length(enterfield)],modecolors,[-3 3],'linethick',linethick);
 plot([0 0],ylim(gca),'k--')
 title(['Cell UID: ',num2str(cellUID),'. Peak Rate: ',num2str(peakrate)])
 ylabel('Trial')
@@ -259,7 +265,7 @@ exwin = enterfield(tt)+[-1 1];
 subplot(4,2,xx*2)
 bz_MultiLFPPlot(thetalfp,'timewin',exwin,'LFPmidpoints',3,'scaleLFP',0.5e-3)
 hold on
-bz_PlotModeRaster(ModeHMM.WAKEstate,ModeInts_time.WAKEstate.cells,whichcell,modecolors,exwin,linethick)
+bz_PlotModeRaster(ModeHMM.WAKEstate,ModeInts_time.WAKEstate.cells,whichcell,modecolors,exwin,'linethick',linethick);
 hold on
 ylim([-1 4])
 %subplot(4,2,4)
@@ -298,9 +304,7 @@ plot(position.timestamps,position.data)
 xlim(exwin)
 
 
-%% Sort by Rate.... for SWR plot
 
-SharpWaves = bz_LoadEvents(basePath,'SWR');
 
 %% Get rates for sorting
 [~,ordermatch] = ismember([ModeHMM.NREMstate(:).UID],ISIStats.UID);

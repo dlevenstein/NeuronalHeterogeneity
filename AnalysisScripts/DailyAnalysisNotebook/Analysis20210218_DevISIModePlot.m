@@ -39,7 +39,7 @@ states = fieldnames(SleepState.ints);
 %%
 GammaFit = bz_LoadCellinfo(basePath,'GammaFit');
 
-
+load([basePath,'/GammaProcessed1/hmm_out.mat'])
 
 
 %%
@@ -55,14 +55,14 @@ SharpWaves = bz_LoadEvents(basePath,'SWR');
 %%
 
 lfpchan = SharpWaves.detectorparams.Channels;
-downsamplefactor = 1;
+downsamplefactor = 2;
 lfp = bz_GetLFP(lfpchan,...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 %Noralize the LFP
 %lfp.data = NormToInt(single(lfp.data),'modZ', SleepState.ints.NREMstate,lfp.samplingRate);
 %%
 lfpchan = SleepState.detectorinfo.detectionparms.SleepScoreMetrics.THchanID;
-downsamplefactor = 1;
+downsamplefactor = 2;
 thetalfp = bz_GetLFP(lfpchan,...
     'basepath',basePath,'noPrompts',true,'downsample',downsamplefactor);
 %%
@@ -79,8 +79,7 @@ position.data = interp1(position.timestamps(~(nantimes)),position.data,position.
 
 positions = [position.timestamps position.data];
 firingMaps = bz_firingMapAvg(positions,spikes);
-%%
-load([basePath,'/GammaProcessed/hmm_out.mat'])
+
 
 %%
 ModeHMM.WAKEstate = WAKEall;
@@ -219,7 +218,10 @@ for cc = 1:length(placeFieldStats.UID)
     %bz_Counter(cc,spikes.numcells,'Cell')
     cellUID = placeFieldStats.UID(cc);
     whichcell = find(ismember([ModeHMM.WAKEstate(:).UID],cellUID));
-    
+    if isempty(whichcell)
+        display('no HMM')
+        continue
+    end
     if isnan(placeFieldStats.mapStats{cc}{1}.fieldX)
         display('no field')
         fieldpeak(cc) = nan;
@@ -346,7 +348,8 @@ exwin = randsample(SharpWaves.peaktimes,1) + [-2 2]
 linethick = 4
 figure
 subplot(3,1,2:3)
-bz_PlotModeRaster(ModeHMM.NREMstate,ModeInts_time.NREMstate.cells,cellorder,modecolors,exwin,linethick)
+bz_PlotModeRaster(ModeHMM.NREMstate,ModeInts_time.NREMstate.cells,cellorder,modecolors,exwin,...
+    'linethick',linethick,'spikewidth',1);
 hold on
 plot(mean(exwin).*[1 1],ylim(gca),'k--')
 ylabel('Cell (30), sort by rate')
