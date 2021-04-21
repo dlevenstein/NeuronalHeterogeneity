@@ -3,7 +3,7 @@
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
 #SBATCH --time=12:00:00
-#SBATCH --mem-per-cpu=56G
+#SBATCH --mem-per-cpu=36G # 56G.... for BLA/PIR?
 echo $1
 module load matlab/R2018a
 

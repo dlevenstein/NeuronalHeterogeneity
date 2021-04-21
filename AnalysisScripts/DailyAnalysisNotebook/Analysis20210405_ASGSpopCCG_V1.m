@@ -13,7 +13,8 @@ function [ ] = AnalysisXXXXXXXX(basePath,figfolder)
 reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %basePath = '/Users/dlevenstein/Dropbox/Research/Datasets/20140526_277um';
 %basePath = '/Users/dl2820/Dropbox/Research/Datasets/Cicero_09102014';
-basePath = '/Users/dl2820/Dropbox/Research/Datasets/YMV11_171208';
+basePath = '/Users/dl2820/Dropbox/Research/Datasets/Dino_072414';
+%basePath = '/Users/dl2820/Dropbox/Research/Datasets/YMV11_171208';
 %basePath = pwd;
 %basePath = fullfile(reporoot,'Datasets/onProbox/AG_HPC/Cicero_09102014');
 figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
@@ -45,7 +46,7 @@ GammaFit = bz_LoadCellinfo(basePath,'GammaFit');
 ModeHMM.WAKEstate = WAKEall;
 ModeHMM.NREMstate = NREMall;
 
-numcells = length(WAKEall);
+numcells = length(NREMall);
 spkthresh = 50;
 MeanReturn.logbins = linspace(-3,2,50);
 %get next ISI (nan for last one in the state)
@@ -73,8 +74,9 @@ end
 end
 
 %%
+for ss = 1:2
 ignorepairs = false(numcells.*7);
-ss = 2;
+%ss = 2;
 for sm = 1:7
     CellClass.celltypes{sm} = ['Mode',num2str(sm)];
     CellClass.(CellClass.celltypes{sm}) = false(numcells.*7);
@@ -106,11 +108,12 @@ duration = 0.5;
     'classnames',CellClass.celltypes,'ignorepairs',ignorepairs,'minspikes',minSpikes,...
     'duration',duration);%,...
     %'sort',ISIStats.sorts.(states{ss}).ratebyclass);
-
+end
 %%
+ss=1;
 for sm1 = 1:6
     for sm2 = 1:6
-        temp(:,sm1,sm2) = popCCG.NREMstate.cellsmean.(CellClass.celltypes{sm1})(:,sm2);
+        temp(:,sm1,sm2) = popCCG.(states{ss}).cellsmean.(CellClass.celltypes{sm1})(:,sm2);
     end
 end
 
@@ -138,10 +141,10 @@ GScolor = [0.6 0.4 0];
 figure
 subplot(3,3,1)
 %plot(popCCG.WAKEstate.t_ccg,GSGS)
-plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.pop.Mode6(:,6),'linewidth',1,'color',GScolor)
+plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).pop.Mode6(:,6),'linewidth',1,'color',GScolor)
 hold on
 box off
-plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.pop.Mode6(:,7),'linewidth',1,'color',GScolor.*0.7)
+plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).pop.Mode6(:,7),'linewidth',1,'color',GScolor.*0.7)
 %xlabel('Time relative to GS spike')
 %plot(popCCG.WAKEstate.t_ccg,GSAS)
 legend('GS','AS')
@@ -150,10 +153,10 @@ plot([0 0],[0 1],'--','color',GScolor.*0.7)
 xlabel('t - rel to ref spike (s)')
 
 subplot(3,3,2)
-plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.pop.Mode7(:,6),'linewidth',1,'color',GScolor.*0.7)
+plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).pop.Mode7(:,6),'linewidth',1,'color',GScolor.*0.7)
 hold on
 box off
-plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.pop.Mode7(:,7),'k','linewidth',1)
+plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).pop.Mode7(:,7),'k','linewidth',1)
 legend('GS','AS')
 ylabel('AS Rate')
 plot([0 0],[0 1],'--','color',GScolor.*0.7)
@@ -161,23 +164,23 @@ xlabel('t - rel to ref spike (s)')
 
 
 subplot(3,3,4)
-plot(popCCG.NREMstate.t_ccg,GSGS,'linewidth',1,'color',GScolor)
+plot(popCCG.(states{ss}).t_ccg,GSGS,'linewidth',1,'color',GScolor)
 %plot(popCCG.WAKEstate.t_ccg,popCCG.WAKEstate.pop.Mode6(:,6))
 hold on
 box off
 %plot(popCCG.WAKEstate.t_ccg,popCCG.WAKEstate.pop.Mode6(:,7))
-plot(popCCG.NREMstate.t_ccg,GSAS,'linewidth',1,'color',GScolor.*0.7)
+plot(popCCG.(states{ss}).t_ccg,GSAS,'linewidth',1,'color',GScolor.*0.7)
 legend('GS','AS')
 ylabel('GS Rate')
 plot([0 0],[0 1],'--','color',GScolor.*0.7)
 xlabel('t - rel to ref spike (s)')
 
 subplot(3,3,5)
-plot(popCCG.NREMstate.t_ccg,ASGS,'linewidth',1,'color',GScolor.*0.7)
+plot(popCCG.(states{ss}).t_ccg,ASGS,'linewidth',1,'color',GScolor.*0.7)
 hold on
 box off
-plot(popCCG.NREMstate.t_ccg,ASAS_same,'linewidth',1,'color','k')
-plot(popCCG.NREMstate.t_ccg,ASAS_diff,'linewidth',1,'color',[0.5 0.5 0.5])
+plot(popCCG.(states{ss}).t_ccg,ASAS_same,'linewidth',1,'color','k')
+plot(popCCG.(states{ss}).t_ccg,ASAS_diff,'linewidth',1,'color',[0.5 0.5 0.5])
 legend('GS','Same','Diff')
 ylabel('AS Rate')
 plot([0 0],[0 0.15],'--','color',GScolor.*0.7)
@@ -185,32 +188,32 @@ xlabel('t - rel to ref spike (s)')
 
 
 subplot(3,3,7)
-plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.pop.Mode6(:,6),'linewidth',1,'color',GScolor)
+plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).pop.Mode6(:,6),'linewidth',1,'color',GScolor)
 hold on
 box off
-plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.pop.Mode7(:,6),'k','linewidth',1)
+plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).pop.Mode7(:,6),'k','linewidth',1)
 plot([0 0],[0 1],'--','color',GScolor)
 xlabel('t - rel to GS spike (s)')
 ylabel('Pop Rate (spk/s)')
 
 subplot(3,3,8)
-plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.pop.Mode6(:,7),'linewidth',1,'color',GScolor)
+plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).pop.Mode6(:,7),'linewidth',1,'color',GScolor)
 hold on
 box off
-plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.pop.Mode7(:,7),'k','linewidth',1)
+plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).pop.Mode7(:,7),'k','linewidth',1)
 plot([0 0],[0 1],'--','color','k')
 xlabel('t - rel to AS spike (s)')
 ylabel('Pop Rate (spk/s)')
 
-NiceSave('GSASPopGGS',figfolder,baseName);
+NiceSave(['GSASPopGGS_',(states{ss})],figfolder,baseName);
 %%
 figure
 subplot(3,3,1)
 %plot(popCCG.WAKEstate.t_ccg,GSGS)
-plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.pop.Mode6(:,6),'linewidth',0.5,'color',GScolor)
+plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).pop.Mode6(:,6),'linewidth',0.5,'color',GScolor)
 hold on
 box off
-plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.pop.Mode6(:,7),'linewidth',0.5,'color',GScolor.*0.7)
+plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).pop.Mode6(:,7),'linewidth',0.5,'color',GScolor.*0.7)
 %xlabel('Time relative to GS spike')
 %plot(popCCG.WAKEstate.t_ccg,GSAS)
 %legend('GS','AS')
@@ -221,10 +224,10 @@ xlabel('t - rel to ref spike (s)')
 xlim(0.03.*[-1 1])
 
 subplot(3,3,2)
-plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.pop.Mode7(:,6),'linewidth',0.5,'color',GScolor.*0.7)
+plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).pop.Mode7(:,6),'linewidth',0.5,'color',GScolor.*0.7)
 hold on
 box off
-plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.pop.Mode7(:,7),'k','linewidth',0.5)
+plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).pop.Mode7(:,7),'k','linewidth',0.5)
 %legend('GS','AS')
 ylabel('AS Rate')
 axis tight
@@ -234,12 +237,12 @@ xlim(0.03.*[-1 1])
 
 
 subplot(3,3,4)
-plot(popCCG.NREMstate.t_ccg,GSGS,'linewidth',0.5,'color',GScolor)
+plot(popCCG.(states{ss}).t_ccg,GSGS,'linewidth',0.5,'color',GScolor)
 %plot(popCCG.WAKEstate.t_ccg,popCCG.WAKEstate.pop.Mode6(:,6))
 hold on
 box off
 %plot(popCCG.WAKEstate.t_ccg,popCCG.WAKEstate.pop.Mode6(:,7))
-plot(popCCG.NREMstate.t_ccg,GSAS,'linewidth',0.5,'color',GScolor.*0.7)
+plot(popCCG.(states{ss}).t_ccg,GSAS,'linewidth',0.5,'color',GScolor.*0.7)
 %legend('GS','AS')
 ylabel('GS Rate')
 axis tight
@@ -248,11 +251,11 @@ xlabel('t - rel to ref spike (s)')
 xlim(0.03.*[-1 1])
 
 subplot(3,3,5)
-plot(popCCG.NREMstate.t_ccg,ASGS,'linewidth',0.5,'color',GScolor.*0.7)
+plot(popCCG.(states{ss}).t_ccg,ASGS,'linewidth',0.5,'color',GScolor.*0.7)
 hold on
 box off
-plot(popCCG.NREMstate.t_ccg,ASAS_same,'linewidth',0.5,'color','k')
-plot(popCCG.NREMstate.t_ccg,ASAS_diff,'linewidth',0.5,'color',[0.5 0.5 0.5])
+plot(popCCG.(states{ss}).t_ccg,ASAS_same,'linewidth',0.5,'color','k')
+plot(popCCG.(states{ss}).t_ccg,ASAS_diff,'linewidth',0.5,'color',[0.5 0.5 0.5])
 % legend('GS','Same','Diff')
 ylabel('AS Rate')
 axis tight
@@ -262,10 +265,10 @@ xlim(0.03.*[-1 1])
 
 
 subplot(3,3,7)
-plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.pop.Mode6(:,6),'linewidth',0.5,'color',GScolor)
+plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).pop.Mode6(:,6),'linewidth',0.5,'color',GScolor)
 hold on
 box off
-plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.pop.Mode7(:,6),'k','linewidth',0.5)
+plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).pop.Mode7(:,6),'k','linewidth',0.5)
 axis tight
 plot([0 0],ylim,'--','color',GScolor)
 xlabel('t - rel to GS spike (s)')
@@ -273,10 +276,10 @@ ylabel('Pop Rate (spk/s)')
 xlim(0.03.*[-1 1])
 
 subplot(3,3,8)
-plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.pop.Mode6(:,7),'linewidth',0.5,'color',GScolor)
+plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).pop.Mode6(:,7),'linewidth',0.5,'color',GScolor)
 hold on
 box off
-plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.pop.Mode7(:,7),'k','linewidth',0.5)
+plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).pop.Mode7(:,7),'k','linewidth',0.5)
 axis tight
 plot([0 0],ylim,'--','color','k')
 xlabel('t - rel to AS spike (s)')
@@ -284,7 +287,7 @@ ylabel('Pop Rate (spk/s)')
 xlim(0.03.*[-1 1])
 
 
-NiceSave('GSASPopGGS_zoom',figfolder,baseName);
+NiceSave(['GSASPopGGS_zoom',(states{ss})],figfolder,baseName);
 %%
 %%
 modenames = {'AS1','AS2','AS3','AS4','AS5','GS'};
@@ -300,10 +303,10 @@ figure
 for sm1 = 1:6
     for sm2 = 1:6
         subplot(6,6,sm2+(sm1-1).*6)
-            ylim([min(popCCG.NREMstate.cellsmean.(CellClass.celltypes{morder(sm1)})(:)) max(popCCG.NREMstate.cellsmean.(CellClass.celltypes{morder(sm1)})(:))])
+            ylim([min(popCCG.(states{ss}).cellsmean.(CellClass.celltypes{morder(sm1)})(:)) max(popCCG.(states{ss}).cellsmean.(CellClass.celltypes{morder(sm1)})(:))])
             plot([0 0],ylim,'--','color',modecolors{morder(sm2)},'linewidth',1)
             hold on
-            plot(popCCG.NREMstate.t_ccg,popCCG.NREMstate.cellsmean.(CellClass.celltypes{morder(sm1)})(:,morder(sm2)),'linewidth',0.5,'color',modecolors{morder(sm1)})
+            plot(popCCG.(states{ss}).t_ccg,popCCG.(states{ss}).cellsmean.(CellClass.celltypes{morder(sm1)})(:,morder(sm2)),'linewidth',0.5,'color',modecolors{morder(sm1)})
             hold on
             box on
             
@@ -321,15 +324,15 @@ for sm1 = 1:6
     
     
 end
-NiceSave('AllModePopCCG',figfolder,baseName);
+NiceSave(['AllModePopCCG',(states{ss})],figfolder,baseName);
 
 
 
 %%
-GScouplingallcells = popCCG.NREMstate.cells.Mode6(:,CellClass.Mode6);
-tempmerge = cat(1,ModeHMM.NREMstate(:).logrates);
+GScouplingallcells = popCCG.(states{ss}).cells.Mode6(:,CellClass.Mode6);
+tempmerge = cat(1,ModeHMM.(states{ss})(:).logrates);
 GSrate = tempmerge(:,6);
-tempmerge = cat(1,ModeHMM.NREMstate(:).cvs);
+tempmerge = cat(1,ModeHMM.(states{ss})(:).cvs);
 GScv = tempmerge(:,6);
 
 [~,sortGSrate] = sort(GSrate);
@@ -358,4 +361,4 @@ LogScale('x',10)
 xlabel('GS Rate (Hz)');ylabel('GS CV')
 
 
-NiceSave('GSCouplingHeterogeneity',figfolder,baseName);
+NiceSave(['GSCouplingHeterogeneity',(states{ss})],figfolder,baseName);
