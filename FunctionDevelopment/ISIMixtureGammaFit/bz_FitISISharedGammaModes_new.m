@@ -17,6 +17,7 @@ function [GammaFit] = bz_FitISISharedGammaModes_new(spikes,varargin)
 %       'ASguess'       A L1/2 norm cost on Activated states that tries to
 %                       push weights to 0 and avoid overlapping AS modes
 %       'showfig'
+%       'display_results'  fitting display parameter: 'iter' or 'final'
 
 %
 %   OUTPUTS
@@ -52,7 +53,7 @@ addParameter(p,'spkthresh',250)
 addParameter(p,'forceRedetect',false,@islogical);
 addParameter(p,'savecellinfo',false,@islogical)
 addParameter(p,'savenumAS','all')
-addParameter(p,'display','iter')
+addParameter(p,'display_results','iter')
 
 parse(p,varargin{:})
 logbase = p.Results.logbase;
@@ -77,7 +78,7 @@ usecells = p.Results.usecells;
 holdweights = p.Results.holdweights;
 forceRedetect = p.Results.forceRedetect;
 SAVECELLINFO = p.Results.savecellinfo;
-display = p.Results.display;
+display_results = p.Results.display_results;
 
 
 
@@ -185,7 +186,7 @@ for aa = 1:(maxAS+1)
     tic
     [sharedfit(aa),costval(aa,:)] = FitSharedGamma(logISIhist,taubins,...
         'MScost',MScost,'MSthresh',MSthresh,'AScost_p',AScost_p,'AScost_lambda',AScost_lambda,...
-        'init_struct',init_struct(aa),'display',display); 
+        'init_struct',init_struct(aa),'display_results',display_results); 
     computetime(aa) = toc
 
     %%
