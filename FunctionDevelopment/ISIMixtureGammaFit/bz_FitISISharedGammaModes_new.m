@@ -52,6 +52,7 @@ addParameter(p,'spkthresh',250)
 addParameter(p,'forceRedetect',false,@islogical);
 addParameter(p,'savecellinfo',false,@islogical)
 addParameter(p,'savenumAS','all')
+addParameter(p,'display','iter')
 
 parse(p,varargin{:})
 logbase = p.Results.logbase;
@@ -76,6 +77,7 @@ usecells = p.Results.usecells;
 holdweights = p.Results.holdweights;
 forceRedetect = p.Results.forceRedetect;
 SAVECELLINFO = p.Results.savecellinfo;
+display = p.Results.display;
 
 
 
@@ -183,8 +185,8 @@ for aa = 1:(maxAS+1)
     tic
     [sharedfit(aa),costval(aa,:)] = FitSharedGamma(logISIhist,taubins,...
         'MScost',MScost,'MSthresh',MSthresh,'AScost_p',AScost_p,'AScost_lambda',AScost_lambda,...
-        'init_struct',init_struct(aa)); 
-    computetime(aa) = toc;
+        'init_struct',init_struct(aa),'display',display); 
+    computetime(aa) = toc
 
     %%
     weightthresh = 0.01;

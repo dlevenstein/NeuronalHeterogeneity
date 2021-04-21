@@ -395,6 +395,7 @@ GammaFit.(statenames{1}).cellstats.NW(NW1)=true;
 GammaFit.(statenames{2}).cellstats.NW(NW2)=true;
 
 
+cellinfofilename = fullfile(basePath,[baseName,'.GammaFit.cellinfo.mat']); %Update in a bit and below
 if SAVECELLINFO
     save(cellinfofilename,'GammaFit')
 end
