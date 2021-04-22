@@ -37,6 +37,7 @@ def main():
 
     # Number of restarts from a randomly initialized transition matrix
     nrestarts = 10
+    models = []
     lls = []
     dirname = 'GammaProcessed1'
 
@@ -90,7 +91,6 @@ def main():
             ends = np.tile(0, len(dists))
 
             # Fit model multiple times - different initializations of the transition matrix
-            models = []
             for ip in range(nrestarts):
 
                 # Random (and dense) transition matrix

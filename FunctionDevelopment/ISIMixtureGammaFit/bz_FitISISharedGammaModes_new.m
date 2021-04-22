@@ -4,10 +4,13 @@ function [GammaFit] = bz_FitISISharedGammaModes_new(spikes,varargin)
 %
 %   INPUTS
 %       spikes          a buzcode spikes structure
-%       logbins         [numtimebins x 1] (or ISIs)
-%       logISIhist      [numtimebins x numcells]  probability density (N/(sum*dbin))
+%                       -or-
+%                       [numtimebins x numcells]  probability density (N/(sum*dbin))
+%                       dbin must be in units of base e (sorry.... o_O) 
 %
 %   Options
+%       'logtimebins'   put in the time bins, if using a probabilty density
+%                       input (log10)
 %       'logbase'       (default: 10)
 %       'numAS'         number of activated states
 %       'figfolder'     a folder to save the figure in
@@ -27,7 +30,7 @@ function [GammaFit] = bz_FitISISharedGammaModes_new(spikes,varargin)
 % parse args
 p = inputParser;
 addParameter(p,'logbase',10)
-addParameter(p,'numAS',3)
+addParameter(p,'numAS',6)
 addParameter(p,'maxAS',6)
 addParameter(p,'showfig',true)
 addParameter(p,'figfolder',false)
@@ -117,23 +120,18 @@ if isempty(logtimebins)
     logISIhist = logISIhist(usecells,:)';
     logISIhist = logISIhist./mode(diff(logtimebins));
     meanFR = ISIstats.summstats.ints.meanrate(usecells);
+    
+    taubins = logtimebins./log10(exp(1));
+    %Put the logISIhist in probabilty density with bins of size e
+    logISIhist = logISIhist.* mode(diff(logtimebins))./mode(diff(taubins)); %convert to dtau
 else
     logISIhist = spikes;
+    
+    %Make the tau (base e) bins
+    taubins = logtimebins./log10(exp(1));
 end
 
 %% DEV
-
-
-KSfit = false;
-if strcmp(logtimebins,'KSfit')
-    KSfit = true;
-    logtimebins = linspace(-3.5,2.5,100);
-    logISIs = log(ISIs);
-    logISIhist = hist(logISIs,logtimebins);
-end
-
-taubins = logtimebins./log10(exp(1));
-logISIhist = logISIhist.* mode(diff(logtimebins))./mode(diff(taubins)); %convert to dtau
 
 sub1msbins = logtimebins<=-2.7;
 
@@ -432,12 +430,18 @@ GammaFit.computetime = computetime;
 
 %%
 %Move this into function (note: might need subfunctions)
-GammaFit.cellstats.meanrate = ...
-    ISIstats.summstats.ints.meanrate(usecells);
+GammaFit.cellstats.meanrate = meanFR;
+
+try
 GammaFit.cellstats.UID = spikes.UID(usecells);
+catch
+end
 if isfield(spikes,'region')
     GammaFit.cellstats.region = spikes.region(usecells);
 end
+
+    
+
 % if length(GammaFit.(statenames{ss}).cellstats.meanrate) ~= ...
 %         length(GammaFit.(statenames{ss}).singlecell)
 %     error('bad number of cells')
