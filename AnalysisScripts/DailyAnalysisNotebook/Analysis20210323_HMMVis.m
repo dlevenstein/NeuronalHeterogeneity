@@ -340,7 +340,7 @@ end
 cellrates.WAKEstate = ISIStats.summstats.WAKEstate.meanrate(ordermatch);
 %% Many-neuron figure
 
-plotnumcells  = 30;
+plotnumcells  = 20;
 plotrates = cellrates.WAKEstate(1:plotnumcells);
 [~,cellorder] = sort(plotrates);
 %[ exwin ] = bz_RandomWindowInIntervals( SleepState.ints.WAKEstate,60,1 )
@@ -376,7 +376,7 @@ NiceSave('MultiCellExample_Zoom',figfolder,baseName)
 %spiketimes
 
 
-plotnumcells  = 40;
+plotnumcells  = 20;
 plotrates = cellrates.WAKEstate(1:plotnumcells);
 [~,cellorder] = sort(plotrates);
 %rates = 

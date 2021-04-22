@@ -72,6 +72,8 @@ load([basePath,'/GammaProcessed1/hmm_out.mat'])
 ModeHMM.WAKEstate = WAKEall;
 ModeHMM.NREMstate = NREMall;
 
+numModes=6;
+
 numcells = length(WAKEall);
 spkthresh = 50;
 MeanReturn.logbins = linspace(-3,2,50);
@@ -93,7 +95,7 @@ ModeHMM.(states{ss})(cc).prev_state = cat(2,ModeHMM.(states{ss})(cc).prev_state{
 ModeHMM.(states{ss})(cc).next_state = cat(2,ModeHMM.(states{ss})(cc).next_state{:});
 ModeHMM.(states{ss})(cc).state_spk = cat(2,ModeHMM.(states{ss})(cc).state_spk{:});
 
-for sm = 1:6
+for sm = 1:numModes
     instate_both = ModeHMM.(states{ss})(cc).prev_state == sm & ModeHMM.(states{ss})(cc).next_state==sm;
     instate_either = ModeHMM.(states{ss})(cc).prev_state == sm | ModeHMM.(states{ss})(cc).next_state==sm;
     
@@ -137,11 +139,11 @@ xlabel('ISI_n');ylabel('ISI_n_+_1')
 LogScale('xy',10,'exp',true)
 
 subplot(3,3,7)
-imagesc(MeanTransition.(states{ss})([2,4,1,5,3,6],[2,4,1,5,3,6],:))
+imagesc(MeanTransition.(states{ss}))
 xlabel('To State');ylabel('From State')
 ColorbarWithAxis([0 0.6],'P(Transition)','inclusive',{'','>'})
 
-for sm = 1:6
+for sm = 1:numModes
     %if ss==6
         instate_both = ModeHMM.WAKEstate(cc).prev_state == sm & ModeHMM.WAKEstate(cc).next_state==sm;
     %else
@@ -155,7 +157,7 @@ subplot(6,6,(sm-1)*6+3)
         'k.','markersize',0.5)
      set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
     xlim([-3 2]);ylim([-3 2])
-    if sm == 6
+    if sm == numModes
         title('GS')
     else
         title(['AS',num2str(sm)])

@@ -1,7 +1,7 @@
 function [] = bz_processHMMOutput(basepath,GammaFolder)
 
 if ~exist('GammaFolder','var')
-    GammaFolder = 'GammaProcessed';
+    GammaFolder = 'GammaProcessed1';
 end
 
     if exist( fullfile( basepath, GammaFolder ) )
@@ -13,7 +13,7 @@ end
         WAKEall = [];
         for kp = 1:length(fils)
             
-            if fils(kp).bytes == 128
+            if fils(kp).bytes == 128 || strcmp(fils(kp).name,'.DS_Store')
                 delete(fils(kp).name)
             else
                 v = load(fils(kp).name);

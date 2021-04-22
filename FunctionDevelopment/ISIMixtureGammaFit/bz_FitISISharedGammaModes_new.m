@@ -422,10 +422,13 @@ GammaFit.ISIdists = logISIhist;
 GammaFit.sharedfit = sharedfit;
 GammaFit.logtimebins = logtimebins;
 GammaFit.numcells = numcells;
-GammaFit.parms = p.Results;
 GammaFit.initialconditions = init_struct;
 GammaFit.costval = costval;
 GammaFit.computetime = computetime;
+
+GammaFit.detectorinfo.detectiondate = datestr(now,'yyyy-mm-dd');
+GammaFit.detectorinfo.detectorname = 'bz_FitISISharedGammaModes';
+GammaFit.detectorinfo.detectionparms = p.Results;
 %Collapse the structure
 
 %%

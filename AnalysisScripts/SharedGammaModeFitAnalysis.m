@@ -385,7 +385,7 @@ end
 %% Keep only the selected iteration. Change this when move to function
 
 for ss = 1:2
-    GammaFit.(statenames{ss}).sharedfit = GammaFit.(statenames{ss}).sharedfit(keepAS);
+    GammaFit.(statenames{ss}).sharedfit = GammaFit.(statenames{ss}).sharedfit(keepAS+1);
 end
 %%
 %joint indexing across different sets of intervals
