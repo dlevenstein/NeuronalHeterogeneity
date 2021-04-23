@@ -35,7 +35,8 @@ GFfilenames = {'Achilles_11012013.AnalysisResults.SharedGammaModeFitAnalysis.mat
 
 if ~iscell(basePaths)
     saveFolder = basePaths;
-    [basePaths{1:length(GFfilenames)}] = deal(basePaths);
+    [temp{1:length(GFfilenames)}] = deal(basePaths);
+    basePaths = temp;
 end
 
 
