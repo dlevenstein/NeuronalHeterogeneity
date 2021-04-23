@@ -59,8 +59,8 @@ statenames = fieldnames(LoadGF.GammaFit);
 %Consider parfor to run in parallel on cluster.
 for ss = 1:length(statenames)
 
-AScost = LoadGF.GammaFit.(statenames{ss}).parms.AScost_lambda(1);
-MScost = LoadGF.GammaFit.(statenames{ss}).parms.MScost(1);
+AScost = LoadGF.GammaFit.(statenames{ss}).detectorinfo.detectionparms.AScost_lambda(1);
+MScost = LoadGF.GammaFit.(statenames{ss}).detectorinfo.detectionparms.MScost(1);
 % MScost = 10;
 % AScost = 0.05;
 keepAS = 2;
