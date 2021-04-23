@@ -43,7 +43,7 @@ end
 clear LoadGF
 for ff = 1:length(GFfilenames)
     LoadGF(ff) = load(GFfilenames{ff});
-    baseName{ff} = bz_BasenameFromBasepath(LoadGF(ff).GammaFit.WAKEstate.parms.basePath);
+    baseName{ff} = bz_BasenameFromBasepath(LoadGF(ff).GammaFit.WAKEstate.detectorinfo.detectionparms.basePath);
     saveName{ff} = [baseName{ff},'.GammaFit_full.cellinfo.mat'];
     %savefilename{ff} here: figure out the filename to re-save this GammaFit
     statenames = fieldnames(LoadGF(ff).GammaFit);
