@@ -2,7 +2,7 @@
 #SBATCH -p cpu_medium
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
-#SBATCH --time=24:00:00
+#SBATCH --time=5-00:00:00
 #SBATCH --mem-per-cpu=48G
 echo $1
 module load matlab/R2018a
