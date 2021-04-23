@@ -586,7 +586,64 @@ if figfolder
     NiceSave(['CellExample',figname],figfolder,baseName);
 end
 
+
+%% Example figures for process
+
+if ~isfield(GammaFit.cellstats,'UID')
+    exUID = randsample(1:length(GammaFit.cellstats.meanrate),1);
+else
+    exUID = randsample(GammaFit.cellstats.UID,1);
+end
+
+% bz_PlotISIDistModes(GammaFit.(statenames{ss}),GammaFit.(statenames{ss}).cellstats.UID,'whichShare',pp)
+ lowthreshcolor = [0.95 0.95 0.95];
+numrepeats = 3;
+%excell = excells;
+histcolors = [repmat([1 1 1],numrepeats,1);makeColorMap(lowthreshcolor,[0 0 0])];   
+
+figure
+for pp = 1:numAS+1
+    fitISI = GSASmodel(GammaFit.sharedfit(pp),...
+        GammaFit.taubins,GammaFit.numcells,pp-1);
+    [~,sortGSrate] = sort(GammaFit.sharedfit(pp).GSlogrates);
+
+    subplot(3,7,pp)
+        imagesc(GammaFit.logtimebins,[1 GammaFit.numcells],fitISI(:,sortGSrate)')
+        hold on
+        %plot(log10(MSthresh).*[1 1],ylim(gca),'r')
+        %plot(logtimebins,-bz_NormToRange(meanISIdist_fit,0.3)+numcells,'k','linewidth',2)
+        %colorbar
+        colormap(gca,histcolors)
+        xlim([-3 2])
+        set(gca,'xtick',[]);set(gca,'ytick',[])
+        title([num2str(pp-1),' AS Modes'])
+
+    subplot(3,7,pp+7)
+        bz_PlotISIDistModes(GammaFit,'all','showSingleFits',true,...
+            'whichShare',pp,'dotscale',10,'dotscaleAS',150)
+        ylim([-1.5 1.6])
+        LogScale('y',10,'nohalf',true)
+        if pp>1
+            set(gca,'yticklabels',[])
+            ylabel('')
+        end
+        box off
+
+    subplot(3,7,pp+14)
+        bz_PlotISIDistModes(GammaFit,exUID,'whichShare',pp)
+        ylim([-1.5 1.6])
+        LogScale('y',10,'nohalf',true)
+        if pp>1
+            set(gca,'yticklabels',[])
+            ylabel('')
+        end
+        box off
+end
+
+if figfolder
+    NiceSave(['CompareNAS_',figname],figfolder,baseName);
 end
 
 
+end
 end

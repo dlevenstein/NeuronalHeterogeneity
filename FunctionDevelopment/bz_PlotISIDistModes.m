@@ -18,6 +18,7 @@ addParameter(p,'sharORsing','sharedfit')
 addParameter(p,'whichShare',1)
 addParameter(p,'dotscale',200)
 addParameter(p,'dotscaleAS',[])
+addParameter(p,'showSingleFits',false)
 parse(p,varargin{:})
 sharORsing = p.Results.sharORsing;
 ws = p.Results.whichShare;
@@ -26,10 +27,20 @@ dotscaleAS = p.Results.dotscaleAS;
 if isempty(dotscaleAS)
     dotscaleAS = dotscale;
 end
+showSingleFits = p.Results.showSingleFits;
 % add: Mode color...
 %%
 % Find the cell that matches the UID
-plotcell = find(GammaFits.cellstats.UID==UID);
+if strcmp(UID,'all')
+    plotcell = 1:length(GammaFits.sharedfit(ws).GSlogrates);
+else
+    if ~isfield(GammaFits.cellstats,'UID')
+        display('no UIDs in your GammaFits structure, assuming UID = index')
+        plotcell = UID;
+    else
+        plotcell = find(GammaFits.cellstats.UID==UID);
+    end
+end
 %Option: random
 %plotcell = randi(GammaFits.numcells,1);
 %UID
@@ -50,6 +61,11 @@ switch sharORsing
             GSstds = prctile(GammaFits.sharedfit(ws).GSweights(plotcell),[20 80],2);
             GSstds_rate = prctile(GammaFits.sharedfit(ws).GSlogrates(plotcell),[20 80],2);
             ASdots = 'o';
+            
+            if showSingleFits
+                singlecell_all = bz_CollapseStruct(GammaFits.singlecell,1);   
+            end
+            
         elseif length(plotcell)< 1
             error('No Cells with that UID')
         end
@@ -115,10 +131,19 @@ end
 box on
 axis tight
 
+if isfield(GammaFits.cellstats,'UID')
     ylabel(['UID: ',num2str(GammaFits.cellstats.UID(plotcell))])
+end
 
 %xlim([-3 2])
 
+if length(plotcell)>1 && showSingleFits
+    for aa = 1:numAS
+        scatter(-singlecell_all.ASlogrates(:,aa),log10(singlecell_all.ASCVs(:,aa)),...
+            dotscale.*singlecell_all.ASweights(:,aa)+0.00001,[0 0 0],...
+            'filled')
+    end
+end
 
 scatter(-GFmodel.ASlogrates,...
     log10(GFmodel.ASCVs),...
@@ -127,6 +152,9 @@ hold on
 scatter(-GFmodel.GSlogrates,...
     log10(GFmodel.GSCVs),...
     dotscale*GFmodel.GSweights+0.00001,GScolor,'filled')
+
+
+
 plot(GammaFits.logtimebins([1 end]),[0 0],'k--')
 ylabel('CV');xlabel('mean ISI (s)')
 xlim([-2.75 1.75])

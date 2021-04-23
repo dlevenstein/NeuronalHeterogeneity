@@ -100,59 +100,6 @@ if TESTHOLD
     end
     NiceSave(['CompareInit_',(statenames{ss})],figfolder,baseName);
 end
-%% Example figures for process
-exUID = 10; %5, 27, 95 problem children
-exUID = 79; %good cicero cell 
-
-exUID = randsample(GammaFit.(statenames{ss}).cellstats.UID,1);
-
-% bz_PlotISIDistModes(GammaFit.(statenames{ss}),GammaFit.(statenames{ss}).cellstats.UID,'whichShare',pp)
- lowthreshcolor = [0.95 0.95 0.95];
-numrepeats = 3;
-%excell = excells;
-histcolors = [repmat([1 1 1],numrepeats,1);makeColorMap(lowthreshcolor,[0 0 0])];   
-
-figure
-for pp = 1:keepAS+1
-    fitISI = GSASmodel(GammaFit.(statenames{ss}).sharedfit(pp),...
-        GammaFit.(statenames{ss}).taubins,GammaFit.(statenames{ss}).numcells,pp-1);
-    [~,sortGSrate] = sort(GammaFit.(statenames{ss}).sharedfit(pp).GSlogrates);
-
-    subplot(3,7,pp)
-        imagesc(GammaFit.(statenames{ss}).logtimebins,[1 GammaFit.(statenames{ss}).numcells],fitISI(:,sortGSrate)')
-        hold on
-        %plot(log10(MSthresh).*[1 1],ylim(gca),'r')
-        %plot(logtimebins,-bz_NormToRange(meanISIdist_fit,0.3)+numcells,'k','linewidth',2)
-        %colorbar
-        colormap(gca,histcolors)
-        xlim([-3 2])
-        set(gca,'xtick',[]);set(gca,'ytick',[])
-        title([num2str(pp-1),' AS Modes'])
-
-    subplot(3,7,pp+7)
-        bz_PlotISIDistModes(GammaFit.(statenames{ss}),GammaFit.(statenames{ss}).cellstats.UID,...
-            'whichShare',pp,'dotscale',10,'dotscaleAS',150)
-        ylim([-1.5 1.6])
-        LogScale('y',10,'nohalf',true)
-        if pp>1
-            set(gca,'yticklabels',[])
-            ylabel('')
-        end
-        box off
-
-    subplot(3,7,pp+14)
-        bz_PlotISIDistModes(GammaFit.(statenames{ss}),exUID,'whichShare',pp)
-        ylim([-1.5 1.6])
-        LogScale('y',10,'nohalf',true)
-        if pp>1
-            set(gca,'yticklabels',[])
-            ylabel('')
-        end
-        box off
-end
-NiceSave(['ModeExamples_',(statenames{ss})],figfolder,baseName);
-
-%%
 
 
 %%

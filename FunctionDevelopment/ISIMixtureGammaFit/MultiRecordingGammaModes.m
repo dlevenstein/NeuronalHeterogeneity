@@ -1,17 +1,50 @@
-function [ ] = MultiRecordingGammaModes(basePaths)
+function [ ] = MultiRecordingGammaModes(basePaths,varargin)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
+%%
+% parse args
+p = inputParser;
+addParameter(p,'saveName',[])
+addParameter(p,'saveFolder',[])
+
+parse(p,varargin{:})
+saveName_full = p.Results.saveName;
+saveFolder = p.Results.saveFolder;
+
 %% DEV
 %Note - should be able to load GammaFit from basepath OR be given filenames
+%Here: Check if basePaths are folders. 
+%If yes. make GFfilenames: basePath/baseName.GammaFit.cellinfo.mat
+%If no: GFfilenames = basePaths, set basepaths to be the folder in which
+%each file is in...
+
+
 GFfilenames = {'20140526_277um.AnalysisResults.SharedGammaModeFitAnalysis.mat', ...
     '20140527_421um.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
 
-%ISSUE: regions!
+GFfilenames = {'Achilles_10252013.AnalysisResults.SharedGammaModeFitAnalysis.mat', ...
+    'Achilles_11012013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
+    'Buddy_06272013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
+    'Cicero_09012014.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
+    'Cicero_09102014.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
+    'Cicero_09172014.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
+    'Gatsby_08022013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
+    'Gatsby_08282013.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
+
+if length(basePaths)==1
+    saveFolder = basePaths;
+    [basePaths{1:5}] = deal(basePaths);
+end
+
+
+%ISSUE: regions! some recordings have cells from different regions...
 
 %Need to keep track of.... basePath/baseName for each cell
 clear LoadGF
 for ff = 1:length(GFfilenames)
     LoadGF(ff) = load(GFfilenames{ff});
+    baseName{ff} = bz_BasenameFromBasepath(LoadGF(ff).GammaFit.WAKEstate.parms.basePath);
+    saveName{ff} = [baseName{ff},'.GammaFit_full.cellinfo.mat'];
     %savefilename{ff} here: figure out the filename to re-save this GammaFit
     statenames = fieldnames(LoadGF(ff).GammaFit);
     for ss = 1:length(statenames)
@@ -30,15 +63,15 @@ AScost = LoadGF.GammaFit.(statenames{ss}).parms.AScost_lambda(1);
 MScost = LoadGF.GammaFit.(statenames{ss}).parms.MScost(1);
 % MScost = 10;
 % AScost = 0.05;
-keepAS = 2;
-GammaFit_all.(statenames{ss}) = bz_FitISISharedGammaModes_new(LoadGF.GammaFit.(statenames{ss}).ISIdists,'logtimebins',LoadGF.GammaFit.(statenames{ss}).logtimebins(1,:),...
-    'maxAS',keepAS,'numAS',keepAS,...
+keepAS = 1;
+GammaFit_all.(statenames{ss}) = bz_FitISISharedGammaModes_new(LoadGF.GammaFit.(statenames{ss}).ISIdists,...
+    'logtimebins',LoadGF.GammaFit.(statenames{ss}).logtimebins(1,:),...
+    'maxAS',keepAS,'numAS',keepAS,'figfolder',saveFolder,...
     'AScost_lambda',AScost,'AScost_p',1,'ASguess',false,'MScost',MScost,'figname',(statenames{ss}),...
     'savecellinfo',false,'forceRedetect',true,'singlefit',true,...
     'display_results','iter','meanFR',LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate);
 end
 %% FIgure here showing results of full fits. 
-%Consider, moving fit figure into bz_FitISISharedGammaModes_new function
 %Compare - shared fits each recording...
 %%
 for ff = 1:length(GFfilenames)
@@ -59,12 +92,22 @@ for ff = 1:length(GFfilenames)
             thisrecfit.sharedfit(sf).GSweights = thisrecfit.sharedfit(sf).GSweights(reccells);
             thisrecfit.sharedfit(sf).ASweights = thisrecfit.sharedfit(sf).ASweights(reccells,:);
         end
-        GammaFit_full(ff).(statenames{ss}) = thisrecfit;
+        GammaFit_eachrec(ff).(statenames{ss}) = thisrecfit;
     end
 end
 
 %%
-%Save each GammaFit_full in a baseName.GammaFit_full.cellinfo.mat file
-%And the GammaFit_all file somewhere...
+%Save the GammaFit_all file somewhere...
+cellinfofilename = fullfile(saveFolder,[saveName_full,'.GammaFit_full.cellinfo.mat']); 
+save(cellinfofilename,'GammaFit_full')
+
+%Each recordings cellinfo file
+for ff = 1:length(GFfilenames)
+    %GammaFit_full = GammaFit_full(ff)
+    cellinfofilename = fullfile(basePaths{ff},saveName{ff}); 
+    GammaFit_full = GammaFit_eachrec(ff);
+    save(cellinfofilename,'GammaFit_full')
+end
+
 end
 
