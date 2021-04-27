@@ -57,22 +57,33 @@ LoadGF = bz_CollapseStruct(LoadGF,'match','justcat',true);
 %%
 statenames = fieldnames(LoadGF.GammaFit);
 %%
-%Consider parfor to run in parallel on cluster.
-for ss = 1:length(statenames)
+pc = parcluster('local');
+% % store temporary files in the 'scratch' drive on the cluster, labeled by job ID
+pc.JobStorageLocation = strcat(getenv('SCRATCH'), '/', getenv('SLURM_JOB_ID'));
+% % enable MATLAB to utilize the multiple cores allocated in the job script
+% % SLURM_NTASKS_PER_NODE is a variable set in the job script by the flag --tasks-per-node
+% % we use SLURM_NTASKS_PER_NODE - 1, because one of these tasks is the original MATLAB script itself
+parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1);
 
-AScost = LoadGF.GammaFit.(statenames{ss}).detectorinfo.detectionparms.AScost_lambda(1);
-MScost = LoadGF.GammaFit.(statenames{ss}).detectorinfo.detectionparms.MScost(1);
-% MScost = 10;
-% AScost = 0.05;
-keepAS = 6;
-GammaFit_all.(statenames{ss}) = bz_FitISISharedGammaModes_new(LoadGF.GammaFit.(statenames{ss}).ISIdists,...
-    'logtimebins',LoadGF.GammaFit.(statenames{ss}).logtimebins(1,:),...
-    'maxAS',keepAS,'numAS',keepAS,'figfolder',saveFolder,...
-    'AScost_lambda',AScost,'AScost_p',1,'ASguess',false,'MScost',MScost,'figname',[saveName_full,(statenames{ss})],...
-    'savecellinfo',false,'forceRedetect',true,'singlefit',true,...
-    'display_results','iter','meanFR',LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate,...
-    'basePath',saveFolder);
+%Consider parfor to run in parallel on cluster.
+parfor ss = 1:length(statenames)
+    AScost = LoadGF.GammaFit.(statenames{ss}).detectorinfo.detectionparms.AScost_lambda(1);
+    MScost = LoadGF.GammaFit.(statenames{ss}).detectorinfo.detectionparms.MScost(1);
+    % MScost = 10;
+    % AScost = 0.05;
+    keepAS = 6;
+    temp(ss) = bz_FitISISharedGammaModes_new(LoadGF.GammaFit.(statenames{ss}).ISIdists,...
+        'logtimebins',LoadGF.GammaFit.(statenames{ss}).logtimebins(1,:),...
+        'maxAS',keepAS,'numAS',keepAS,'figfolder',saveFolder,...
+        'AScost_lambda',AScost,'AScost_p',1,'ASguess',false,'MScost',MScost,'figname',[saveName_full,(statenames{ss})],...
+        'savecellinfo',false,'forceRedetect',true,'singlefit',true,...
+        'display_results','iter','meanFR',LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate,...
+        'basePath',saveFolder);
 end
+
+for ss = 1:length(statenames)
+    GammaFit_all.(statenames{ss}) = temp(ss);
+end 
 %% FIgure here showing results of full fits. 
 %Compare - shared fits each recording...
 %%

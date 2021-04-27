@@ -72,7 +72,7 @@ load([basePath,'/GammaProcessed1/hmm_out.mat'])
 ModeHMM.WAKEstate = WAKEall;
 ModeHMM.NREMstate = NREMall;
 
-numModes=6;
+numModes=7;
 
 numcells = length(WAKEall);
 spkthresh = 50;
@@ -149,7 +149,7 @@ for sm = 1:numModes
     %else
         instate_either = ModeHMM.WAKEstate(cc).prev_state == sm | ModeHMM.WAKEstate(cc).next_state==sm;
     %end
-subplot(6,6,(sm-1)*6+3)
+subplot(numModes,6,(sm-1)*6+3)
     plot(log10(ModeHMM.WAKEstate(cc).prev_isi(instate_either)),log10(ModeHMM.WAKEstate(cc).next_isi(instate_either)),...
         '.','color',[0.5 0.5 0.5],'markersize',0.5)
     hold on
@@ -164,13 +164,13 @@ subplot(6,6,(sm-1)*6+3)
     end
 end
 
-for sm = 1:6
-    subplot(6,6,(sm-1)*6+4)
+for sm = 1:numModes
+    subplot(numModes,6,(sm-1)*6+4)
         imagesc(MeanReturn.(states{ss}).mean.cells.both(:,:,sm))
         axis xy
         set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
         
-    subplot(6,6,(sm-1)*6+5)
+    subplot(numModes,6,(sm-1)*6+5)
         imagesc(MeanReturn.(states{ss}).mean.cells.either(:,:,sm))
         axis xy
         set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
@@ -181,7 +181,7 @@ NiceSave('ModeReturnmaps',figfolder,baseName)
 
 
 %% Mode intervals
-modenames = {'AS1','AS2','AS3','AS4','AS5','GS'};
+modenames = {'AS1','AS2','AS3','AS4','AS5','AS6','GS'};
 for ss = 1:2
 for cc = 1:numcells
         ModeInts.(states{ss}).cells(cc) = bz_IDXtoINT(ModeHMM.(states{ss})(cc).next_state',...
@@ -190,7 +190,7 @@ for cc = 1:numcells
 %             'statenames',modenames);
         
         %Could just use the spike index above....
-        for sm = 1:6
+        for sm = 1:numModes
         ModeInts_time.(states{ss}).cells(cc).(modenames{sm}) = ...
             [ModeHMM.(states{ss})(cc).state_spk(ModeInts.(states{ss}).cells(cc).([modenames{sm},'state'])(:,1))' ...
             ModeHMM.(states{ss})(cc).state_spk(ModeInts.(states{ss}).cells(cc).([modenames{sm},'state'])(:,2)+1)'];

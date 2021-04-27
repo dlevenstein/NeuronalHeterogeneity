@@ -85,6 +85,7 @@ firingMaps = bz_firingMapAvg(positions,spikes);
 ModeHMM.WAKEstate = WAKEall;
 ModeHMM.NREMstate = NREMall;
 
+numModes = 7;
 numcells = length(WAKEall);
 spkthresh = 50;
 MeanReturn.logbins = linspace(-3,2,50);
@@ -106,7 +107,7 @@ ModeHMM.(states{ss})(cc).prev_state = cat(2,ModeHMM.(states{ss})(cc).prev_state{
 ModeHMM.(states{ss})(cc).next_state = cat(2,ModeHMM.(states{ss})(cc).next_state{:});
 ModeHMM.(states{ss})(cc).state_spk = cat(2,ModeHMM.(states{ss})(cc).state_spk{:});
 
-for sm = 1:6
+for sm = 1:numModes
     instate_both = ModeHMM.(states{ss})(cc).prev_state == sm & ModeHMM.(states{ss})(cc).next_state==sm;
     instate_either = ModeHMM.(states{ss})(cc).prev_state == sm | ModeHMM.(states{ss})(cc).next_state==sm;
     
@@ -150,17 +151,17 @@ xlabel('ISI_n');ylabel('ISI_n_+_1')
 LogScale('xy',10,'exp',true)
 
 subplot(3,3,7)
-imagesc(MeanTransition.(states{ss})([2,4,1,5,3,6],[2,4,1,5,3,6],:))
+imagesc(MeanTransition.(states{ss}))
 xlabel('To State');ylabel('From State')
 ColorbarWithAxis([0 0.6],'P(Transition)','inclusive',{'','>'})
 
-for sm = 1:6
+for sm = 1:numModes
     %if ss==6
         instate_both = ModeHMM.WAKEstate(cc).prev_state == sm & ModeHMM.WAKEstate(cc).next_state==sm;
     %else
         instate_either = ModeHMM.WAKEstate(cc).prev_state == sm | ModeHMM.WAKEstate(cc).next_state==sm;
     %end
-subplot(6,6,(sm-1)*6+3)
+subplot(7,6,(sm-1)*6+3)
     plot(log10(ModeHMM.WAKEstate(cc).prev_isi(instate_either)),log10(ModeHMM.WAKEstate(cc).next_isi(instate_either)),...
         '.','color',[0.5 0.5 0.5],'markersize',0.5)
     hold on
@@ -175,13 +176,13 @@ subplot(6,6,(sm-1)*6+3)
     end
 end
 
-for sm = 1:6
-    subplot(6,6,(sm-1)*6+4)
+for sm = 1:numModes
+    subplot(7,6,(sm-1)*6+4)
         imagesc(MeanReturn.(states{ss}).mean.cells.both(:,:,sm))
         axis xy
         set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
         
-    subplot(6,6,(sm-1)*6+5)
+    subplot(7,6,(sm-1)*6+5)
         imagesc(MeanReturn.(states{ss}).mean.cells.either(:,:,sm))
         axis xy
         set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
@@ -192,7 +193,7 @@ NiceSave('ModeReturnmaps',figfolder,baseName)
 
 
 %% Mode intervals
-modenames = {'AS1','AS2','AS3','AS4','AS5','GS'};
+modenames = {'AS1','AS2','AS3','AS4','AS5','AS6','GS'};
 for ss = 1:2
 for cc = 1:numcells
         ModeInts.(states{ss}).cells(cc) = bz_IDXtoINT(ModeHMM.(states{ss})(cc).next_state',...
@@ -201,7 +202,7 @@ for cc = 1:numcells
 %             'statenames',modenames);
         
         %Could just use the spike index above....
-        for sm = 1:6
+        for sm = 1:numModes
         ModeInts_time.(states{ss}).cells(cc).(modenames{sm}) = ...
             [ModeHMM.(states{ss})(cc).state_spk(ModeInts.(states{ss}).cells(cc).([modenames{sm},'state'])(:,1))' ...
             ModeHMM.(states{ss})(cc).state_spk(ModeInts.(states{ss}).cells(cc).([modenames{sm},'state'])(:,2)+1)'];
@@ -250,9 +251,9 @@ for cc = 1:length(placeFieldStats.UID)
 
 %%
 GScolor = [0.6 0.4 0];
-modecolors = crameri('bamako',5);
+modecolors = crameri('bamako',numModes-1);
 %modecolors = [modecolors;GScolor];
-modecolors = {modecolors(1,:),modecolors(2,:),modecolors(3,:),modecolors(4,:),modecolors(5,:),...
+modecolors = {modecolors(1,:),modecolors(2,:),modecolors(3,:),modecolors(4,:),modecolors(5,:),modecolors(6,:),...
     GScolor};
 
 linethick = 1;

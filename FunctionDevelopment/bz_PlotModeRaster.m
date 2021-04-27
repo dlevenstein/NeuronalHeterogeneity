@@ -20,7 +20,7 @@ linethick = p.Results.linethick;
 
 
 %%
-
+numModes = length(fieldnames(modeintervals));
 plotnumcells = length(plotcells);
 
 hold on
@@ -29,7 +29,7 @@ for cc = 1:plotnumcells
     plotints =  structfun(@(modeints) RestrictInts(modeints,win,'inclusive',true),modeintervals(whichcell),'UniformOutput',false);
 StateScorePlot( plotints,modecolors,'y',cc,'LineWidth',linethick)
 
-for sm = 1:6
+for sm = 1:numModes
     %if ss==6
         instate_both = spikemodes(whichcell).prev_state == sm & spikemodes(whichcell).next_state==sm & ...
             InIntervals(spikemodes(whichcell).state_spk',win)';

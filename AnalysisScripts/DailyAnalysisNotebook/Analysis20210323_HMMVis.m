@@ -44,6 +44,7 @@ GammaFit = bz_LoadCellinfo(basePath,'GammaFit');
 ModeHMM.WAKEstate = WAKEall;
 ModeHMM.NREMstate = NREMall;
 
+numModes=7;
 numcells = length(WAKEall);
 spkthresh = 50;
 MeanReturn.logbins = linspace(-3,2,50);
@@ -65,7 +66,7 @@ ModeHMM.(states{ss})(cc).prev_state = cat(2,ModeHMM.(states{ss})(cc).prev_state{
 ModeHMM.(states{ss})(cc).next_state = cat(2,ModeHMM.(states{ss})(cc).next_state{:});
 ModeHMM.(states{ss})(cc).state_spk = cat(2,ModeHMM.(states{ss})(cc).state_spk{:});
 
-for sm = 1:6
+for sm = 1:numModes
     instate_both = ModeHMM.(states{ss})(cc).prev_state == sm & ModeHMM.(states{ss})(cc).next_state==sm;
     instate_either = ModeHMM.(states{ss})(cc).prev_state == sm | ModeHMM.(states{ss})(cc).next_state==sm;
     
@@ -105,7 +106,6 @@ MeanTransition.(states{ss}) = bz_CollapseStruct(ModeHMM.(states{ss}),3,'mean',fa
 MeanTransition.(states{ss}) = MeanTransition.(states{ss}).trans_mat;
 end
 
-%%
 
 %%
 ss =1
@@ -119,17 +119,17 @@ xlabel('ISI_n');ylabel('ISI_n_+_1')
 LogScale('xy',10,'exp',true)
 
 subplot(3,3,7)
-imagesc(MeanTransition.(states{ss})([2,4,1,5,3,6],[2,4,1,5,3,6],:))
+imagesc(MeanTransition.(states{ss}))
 xlabel('To State');ylabel('From State')
 ColorbarWithAxis([0 0.6],'P(Transition)','inclusive',{'','>'})
 
-for sm = 1:6
+for sm = 1:numModes
     %if ss==6
         instate_both = ModeHMM.WAKEstate(cc).prev_state == sm & ModeHMM.WAKEstate(cc).next_state==sm;
     %else
         instate_either = ModeHMM.WAKEstate(cc).prev_state == sm | ModeHMM.WAKEstate(cc).next_state==sm;
     %end
-subplot(6,6,(sm-1)*6+3)
+subplot(numModes,6,(sm-1)*6+3)
     plot(log10(ModeHMM.WAKEstate(cc).prev_isi(instate_either)),log10(ModeHMM.WAKEstate(cc).next_isi(instate_either)),...
         '.','color',[0.5 0.5 0.5],'markersize',0.1)
     hold on
@@ -137,20 +137,20 @@ subplot(6,6,(sm-1)*6+3)
         'k.','markersize',0.1)
      set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
     xlim([-3 2]);ylim([-3 2])
-    if sm == 6
+    if sm == numModes
         title('GS')
     else
         title(['AS',num2str(sm)])
     end
 end
 
-for sm = 1:6
-    subplot(6,6,(sm-1)*6+4)
+for sm = 1:numModes
+    subplot(numModes,6,(sm-1)*6+4)
         imagesc(MeanReturn.(states{ss}).mean.cells.both(:,:,sm))
         axis xy
         set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
         
-    subplot(6,6,(sm-1)*6+5)
+    subplot(numModes,6,(sm-1)*6+5)
         imagesc(MeanReturn.(states{ss}).mean.cells.either(:,:,sm))
         axis xy
         set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
@@ -161,7 +161,7 @@ NiceSave('ModeReturnmaps',figfolder,baseName)
 
 
 %% Chain Length
-modenames = {'AS1','AS2','AS3','AS4','AS5','GS'};
+modenames = {'AS1','AS2','AS3','AS4','AS5','AS6','GS'};
 for ss = 1:2
 for cc = 1:numcells
         ModeInts.(states{ss}).cells(cc) = bz_IDXtoINT(ModeHMM.(states{ss})(cc).next_state',...
@@ -170,7 +170,7 @@ for cc = 1:numcells
 %             'statenames',modenames);
         
         %Could just use the spike index above....
-        for sm = 1:6
+        for sm = 1:numModes
         ModeInts_time.(states{ss}).cells(cc).(modenames{sm}) = ...
             [ModeHMM.(states{ss})(cc).state_spk(ModeInts.(states{ss}).cells(cc).([modenames{sm},'state'])(:,1))' ...
             ModeHMM.(states{ss})(cc).state_spk(ModeInts.(states{ss}).cells(cc).([modenames{sm},'state'])(:,2)+1)'];
@@ -184,7 +184,7 @@ ModeInts_all = bz_CollapseStruct(ModeInts,1,'justcat',true);
 
 %%
 for ss = 1:2
-    for sm = 1:6
+    for sm = 1:numModes
         ModeInts_all.(states{ss}).chainlength.(modenames{sm}) = diff(ModeInts_all.(states{ss}).cells.([modenames{sm},'state']),1,2);
         [ModeInts_all.(states{ss}).chainhist.(modenames{sm}),ModeInts_all.(states{ss}).chainbins.(modenames{sm})] = ...
             hist(ModeInts_all.(states{ss}).chainlength.(modenames{sm}),[0:10]);
@@ -195,8 +195,8 @@ end
 %%
 figure
 for ss = 1:2
-    for sm = 1:6
-        subplot(6,2,(sm-1)*2+ss)
+    for sm = 1:numModes
+        subplot(numModes,2,(sm-1)*2+ss)
             bar(ModeInts_all.(states{ss}).chainbins.(modenames{sm})+1,ModeInts_all.(states{ss}).chainhist.(modenames{sm}))
             box off
             
@@ -206,7 +206,7 @@ for ss = 1:2
             if sm == 1
                 title(states{ss})
             end
-            if sm == 6
+            if sm == numModes
                 xlabel('Chain Length (# ISIs)')
             end
     end
@@ -235,16 +235,16 @@ NiceSave('ModeChainLengths',figfolder,baseName)
         %LogScale('c',10)
         title('Mode CV')
     subplot(2,2,2)
-        scatter(GammaFit.WAKEstate.sharedfit.GSlogrates(ordermatch_ISIGamma),ALLcellWAKEmodes.logrates(:,6),10,...
+        scatter(GammaFit.WAKEstate.sharedfit.GSlogrates(ordermatch_ISIGamma),ALLcellWAKEmodes.logrates(:,numModes),10,...
             ALLcellWAKEmodes.logrates(:,2))
         %plot(GammaFit.WAKEstate.sharedfit.GSlogrates(ordermatch_ISIGamma),ALLcellWAKEmodes.logrates(:,6),'.')
         xlabel('Gamma Fit GS Rate');ylabel('HMM GS Rate')
 
 %% Single cell example
 GScolor = [0.6 0.4 0];
-modecolors = crameri('bamako',5);
+modecolors = crameri('bamako',6);
 %modecolors = [modecolors;GScolor];
-modecolors = {modecolors(1,:),modecolors(2,:),modecolors(3,:),modecolors(4,:),modecolors(5,:),...
+modecolors = {modecolors(1,:),modecolors(2,:),modecolors(3,:),modecolors(4,:),modecolors(5,:),modecolors(6,:),...
     GScolor};
 
 lowthreshcolor = [0.95 0.95 0.95];
@@ -295,7 +295,7 @@ subplot(6,7,5*7+1)
 % box off
 % LogScale('x',10,'nohalf',true)
 
-for sm = 1:6
+for sm = 1:numModes
     moderate = round(10.^ModeHMM.WAKEstate(cc).logrates(sm),0);
     modeCV = round(ModeHMM.WAKEstate(cc).cvs(sm),1);
     %if ss==6
@@ -303,7 +303,7 @@ for sm = 1:6
     %else
         instate_either = ModeHMM.WAKEstate(cc).prev_state == sm | ModeHMM.WAKEstate(cc).next_state==sm;
     %end
-subplot(6,7,3*7+(sm)+1)
+subplot(6,numModes+1,3*(numModes+1)+(sm)+1)
     plot(log10(ModeHMM.WAKEstate(cc).prev_isi(instate_either)),log10(ModeHMM.WAKEstate(cc).next_isi(instate_either)),...
         '.','color',[0.5 0.5 0.5],'markersize',0.1)
     hold on
@@ -311,19 +311,19 @@ subplot(6,7,3*7+(sm)+1)
         'k.','markersize',0.1)
      set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
     xlim([-3 2]);ylim([-3 2])
-    if sm == 6
+    if sm == numModes
         title('GS','Color',modecolors{sm})
     else
         title(['AS',num2str(sm),' (',num2str(moderate),'Hz, CV: ',num2str(modeCV),')'],'Color',modecolors{sm})
     end
 
-    subplot(6,7,4*7+(sm)+1)
+    subplot(6,numModes+1,4*(numModes+1)+(sm)+1)
         imagesc(MeanReturn.WAKEstate.mean.cells.both(:,:,sm))
             colormap(gca,statecolormap{1})
         axis xy
         set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
         
-    subplot(6,7,5*7+(sm)+1)
+    subplot(6,numModes+1,5*(numModes+1)+(sm)+1)
         imagesc(MeanReturn.WAKEstate.mean.cells.either(:,:,sm))
             colormap(gca,statecolormap{1})
         axis xy
@@ -424,13 +424,13 @@ bz_ScaleBar('s')
 % xlabel('To State');ylabel('From State')
 % ColorbarWithAxis([0 0.6],'P(Transition)','inclusive',{'','>'})
 cc = 1;
-for sm = 1:6
+for sm = 1:numModes
     %if ss==6
         instate_both = ModeHMM.WAKEstate(cc).prev_state == sm & ModeHMM.WAKEstate(cc).next_state==sm;
     %else
         instate_either = ModeHMM.WAKEstate(cc).prev_state == sm | ModeHMM.WAKEstate(cc).next_state==sm;
     %end
-subplot(6,6,3*6+(sm))
+subplot(6,numModes,3*numModes+(sm))
     plot(log10(ModeHMM.WAKEstate(cc).prev_isi(instate_either)),log10(ModeHMM.WAKEstate(cc).next_isi(instate_either)),...
         '.','color',[0.5 0.5 0.5],'markersize',0.5)
     hold on
@@ -438,20 +438,20 @@ subplot(6,6,3*6+(sm))
         'k.','markersize',0.5)
      set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
     xlim([-3 2]);ylim([-3 2])
-    if sm == 6
+    if sm == numModes
         title('GS','Color',modecolors{sm})
     else
         title(['AS',num2str(sm)],'Color',modecolors{sm})
     end
 end
 
-for sm = 1:6
-    subplot(6,6,4*6+(sm))
+for sm = 1:numModes
+    subplot(6,numModes,4*numModes+(sm))
         imagesc(MeanReturn.WAKEstate.mean.cells.both(:,:,sm))
         axis xy
         set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
         
-    subplot(6,6,5*6+(sm))
+    subplot(6,numModes,5*numModes+(sm))
         imagesc(MeanReturn.WAKEstate.mean.cells.either(:,:,sm))
         axis xy
         set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
@@ -522,7 +522,7 @@ subplot(4,1,1)
 bz_PlotModeRaster(ModeHMM.WAKEstate,ModeInts_time.WAKEstate.cells,cc,modecolors,exwin,'linethick',linethick)
 
 
-for sm = 1:6
+for sm = 1:numModes
     moderate = round(10.^ModeHMM.WAKEstate(cc).logrates(sm),0);
     modeCV = round(ModeHMM.WAKEstate(cc).cvs(sm),1);
     %if ss==6
@@ -530,7 +530,7 @@ for sm = 1:6
     %else
         instate_either = ModeHMM.WAKEstate(cc).prev_state == sm | ModeHMM.WAKEstate(cc).next_state==sm;
     %end
-subplot(6,6,3*6+(sm))
+subplot(6,numModes,3*numModes+(sm))
     plot(log10(ModeHMM.WAKEstate(cc).prev_isi(instate_either)),log10(ModeHMM.WAKEstate(cc).next_isi(instate_either)),...
         '.','color',[0.5 0.5 0.5],'markersize',0.5)
     hold on
@@ -538,20 +538,20 @@ subplot(6,6,3*6+(sm))
         'k.','markersize',0.5)
      set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
     xlim([-3 2]);ylim([-3 2])
-    if sm == 6
+    if sm == numModes
         title('GS','Color',modecolors{sm})
     else
         title(['AS',num2str(sm),' (',num2str(moderate),'Hz, CV: ',num2str(modeCV),')'],'Color',modecolors{sm})
     end
 end
 
-for sm = 1:6
-    subplot(6,6,4*6+(sm))
+for sm = 1:numModes
+    subplot(6,numModes,4*numModes+(sm))
         imagesc(MeanReturn.WAKEstate.mean.cells.both(:,:,sm))
         axis xy
         set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
         
-    subplot(6,6,5*6+(sm))
+    subplot(6,numModes,5*numModes+(sm))
         imagesc(MeanReturn.WAKEstate.mean.cells.either(:,:,sm))
         axis xy
         set(gca,'yticklabel',[]);set(gca,'xticklabel',[])
