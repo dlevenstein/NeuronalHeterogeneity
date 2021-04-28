@@ -57,6 +57,7 @@ addParameter(p,'forceRedetect',false,@islogical);
 addParameter(p,'savecellinfo',false,@islogical)
 addParameter(p,'savenumAS','all')
 addParameter(p,'display_results','iter')
+addParameter(p,'UseParallel',false)
 
 parse(p,varargin{:})
 logbase = p.Results.logbase;
@@ -82,6 +83,7 @@ holdweights = p.Results.holdweights;
 forceRedetect = p.Results.forceRedetect;
 SAVECELLINFO = p.Results.savecellinfo;
 display_results = p.Results.display_results;
+UseParallel = p.Results.UseParallel;
 
 
 
@@ -184,7 +186,8 @@ for aa = 1:(maxAS+1)
     tic
     [sharedfit(aa),costval(aa,:)] = FitSharedGamma(logISIhist,taubins,...
         'MScost',MScost,'MSthresh',MSthresh,'AScost_p',AScost_p,'AScost_lambda',AScost_lambda,...
-        'init_struct',init_struct(aa),'display_results',display_results); 
+        'init_struct',init_struct(aa),'display_results',display_results,...
+        'UseParallel',true); 
     computetime(aa) = toc
 
     %%

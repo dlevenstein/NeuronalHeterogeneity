@@ -20,6 +20,7 @@ addParameter(p,'AScost_p',2/3)
 addParameter(p,'MScost',0)
 addParameter(p,'MSthresh',0.002)
 addParameter(p,'display_results','iter')
+addParameter(p,'UseParallel',false)
 
 parse(p,varargin{:})
 numAS = p.Results.numAS;
@@ -30,6 +31,7 @@ AScost_p = p.Results.AScost_p;
 MScost = p.Results.MScost;
 MSthresh = p.Results.MSthresh;
 display_results = p.Results.display_results;
+UseParallel = p.Results.UseParallel;
 %%
 numcells = size(logISIhist,2);
 %% If there's no initial guess
@@ -87,7 +89,7 @@ end
 Aeq_ASonly(Aeq_ASonly~=1)=0;
 Aeq(Aeq~=1)=0;
 
-options = optimoptions('fmincon','Algorithm','sqp' ,'UseParallel',false,'Display',display_results);%
+options = optimoptions('fmincon','Algorithm','sqp' ,'UseParallel',UseParallel,'Display',display_results);%
 %try also: 'Algorithm','interior-point''active-set'
 %Decrease tolerance.....
 options.MaxFunctionEvaluations = 1e8;

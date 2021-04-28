@@ -6,10 +6,14 @@ function [ ] = MultiRecordingGammaModes(basePaths,varargin)
 p = inputParser;
 addParameter(p,'saveName',[])
 addParameter(p,'saveFolder',[])
+addParameter(p,'region',[])
+addParameter(p,'clusterpar',false)
 
 parse(p,varargin{:})
 saveName_full = p.Results.saveName;
 saveFolder = p.Results.saveFolder;
+region = p.Results.region;
+clusterpar = p.Results.clusterpar;
 
 %% DEV
 %Note - should be able to load GammaFit from basepath OR be given filenames
@@ -31,6 +35,9 @@ GFfilenames = {'Achilles_11012013.AnalysisResults.SharedGammaModeFitAnalysis.mat
     'Gatsby_08022013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
     'Gatsby_08282013.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
 
+% GFfilenames = {'Achilles_11012013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
+% 	'Achilles_10252013.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
+
 if ~iscell(basePaths)
     saveFolder = basePaths;
     [temp{1:length(GFfilenames)}] = deal(basePaths);
@@ -39,6 +46,7 @@ end
 
 
 %ISSUE: regions! some recordings have cells from different regions...
+%Keep only cells with proper region tag
 
 %Need to keep track of.... basePath/baseName for each cell
 clear LoadGF
@@ -57,16 +65,18 @@ LoadGF = bz_CollapseStruct(LoadGF,'match','justcat',true);
 %%
 statenames = fieldnames(LoadGF.GammaFit);
 %%
-pc = parcluster('local');
-% % store temporary files in the 'scratch' drive on the cluster, labeled by job ID
-pc.JobStorageLocation = strcat(getenv('SCRATCH'), '/', getenv('SLURM_JOB_ID'));
-% % enable MATLAB to utilize the multiple cores allocated in the job script
-% % SLURM_NTASKS_PER_NODE is a variable set in the job script by the flag --tasks-per-node
-% % we use SLURM_NTASKS_PER_NODE - 1, because one of these tasks is the original MATLAB script itself
-parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1);
+if clusterpar
+    pc = parcluster('local');
+    % % store temporary files in the 'scratch' drive on the cluster, labeled by job ID
+    pc.JobStorageLocation = strcat(getenv('SCRATCH'), '/', getenv('SLURM_JOB_ID'));
+    % % enable MATLAB to utilize the multiple cores allocated in the job script
+    % % SLURM_NTASKS_PER_NODE is a variable set in the job script by the flag --tasks-per-node
+    % % we use SLURM_NTASKS_PER_NODE - 1, because one of these tasks is the original MATLAB script itself
+    parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1);
+end
 
 %Consider parfor to run in parallel on cluster.
-parfor ss = 1:length(statenames)
+for ss = 1:length(statenames)
     AScost = LoadGF.GammaFit.(statenames{ss}).detectorinfo.detectionparms.AScost_lambda(1);
     MScost = LoadGF.GammaFit.(statenames{ss}).detectorinfo.detectionparms.MScost(1);
     % MScost = 10;
@@ -78,7 +88,7 @@ parfor ss = 1:length(statenames)
         'AScost_lambda',AScost,'AScost_p',1,'ASguess',false,'MScost',MScost,'figname',[saveName_full,(statenames{ss})],...
         'savecellinfo',false,'forceRedetect',true,'singlefit',true,...
         'display_results','iter','meanFR',LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate,...
-        'basePath',saveFolder);
+        'basePath',saveFolder,'UseParallel',true);
 end
 
 for ss = 1:length(statenames)
