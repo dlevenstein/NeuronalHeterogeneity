@@ -88,7 +88,7 @@ if clusterpar
     % % we use SLURM_NTASKS_PER_NODE - 1, because one of these tasks is the original MATLAB script itself
     parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1,'IdleTimeout', Inf);
 end
-
+%%
 %Consider parfor to run in parallel on cluster.
 for ss = 1:length(statenames)
     
@@ -98,7 +98,7 @@ for ss = 1:length(statenames)
     else
         keepcells = strcmp(GammaFit.(statenames{ss}).cellstats.region,'region');
     end
-    ISIdists4fit = LoadGF.GammaFit.(statenames{ss}).ISIdists(keepcells,:);
+    ISIdists4fit = LoadGF.GammaFit.(statenames{ss}).ISIdists(:,keepcells);
     meanFR = LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate(keepcells);
     recordingIDX.(statenames{ss}) = LoadGF.GammaFit.(statenames{ss}).recordingIDX(keepcells);
     
