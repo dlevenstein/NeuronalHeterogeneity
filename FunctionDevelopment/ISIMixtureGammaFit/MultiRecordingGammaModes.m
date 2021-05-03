@@ -1,6 +1,17 @@
 function [ ] = MultiRecordingGammaModes(basePaths,varargin)
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
+%
+%   INPUTS
+%       basePaths   cell array of basePaths to load from, must have
+%                   GammaFit.cellinfo.mat file
+%
+%       (optional)
+%       'saveName'
+%       'saveFolder'
+%       'region'
+%       'clusterpar'
+%
 %%
 % parse args
 p = inputParser;
@@ -23,17 +34,17 @@ clusterpar = p.Results.clusterpar;
 %each file is in...
 
 
-GFfilenames = {'20140526_277um.AnalysisResults.SharedGammaModeFitAnalysis.mat', ...
-    '20140527_421um.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
-
-GFfilenames = {'Achilles_11012013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
-	'Achilles_10252013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
-    'Buddy_06272013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
-    'Cicero_09012014.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
-    'Cicero_09102014.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
-    'Cicero_09172014.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
-    'Gatsby_08022013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
-    'Gatsby_08282013.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
+% GFfilenames = {'20140526_277um.AnalysisResults.SharedGammaModeFitAnalysis.mat', ...
+%     '20140527_421um.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
+% 
+% GFfilenames = {'Achilles_11012013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
+% 	'Achilles_10252013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
+%     'Buddy_06272013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
+%     'Cicero_09012014.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
+%     'Cicero_09102014.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
+%     'Cicero_09172014.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
+%     'Gatsby_08022013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
+%     'Gatsby_08282013.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
 
 % GFfilenames = {'Achilles_11012013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
 % 	'Achilles_10252013.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
@@ -42,6 +53,9 @@ if ~iscell(basePaths)
     saveFolder = basePaths;
     [temp{1:length(GFfilenames)}] = deal(basePaths);
     basePaths = temp;
+else
+    baseNames = cellfun(@bz_BasenameFromBasepath,basePaths,'UniformOutput',false);
+    GFfilenames = cellfun(@(X,Y) fullfile(X,[Y,'.GammaFit.cellinfo.mat']),basePaths,baseNames,'UniformOutput',false);
 end
 
 
@@ -53,7 +67,7 @@ clear LoadGF
 for ff = 1:length(GFfilenames)
     LoadGF(ff) = load(GFfilenames{ff});
     baseName{ff} = bz_BasenameFromBasepath(LoadGF(ff).GammaFit.WAKEstate.detectorinfo.detectionparms.basePath);
-    saveName{ff} = [baseName{ff},'.GammaFit_full.cellinfo.mat'];
+    saveName{ff} = [baseName{ff},'.GammaFit_full.cellinfo.mat']; %Note: add an option here for a tag (e.g. region...)
     %savefilename{ff} here: figure out the filename to re-save this GammaFit
     statenames = fieldnames(LoadGF(ff).GammaFit);
     for ss = 1:length(statenames)
@@ -77,29 +91,40 @@ end
 
 %Consider parfor to run in parallel on cluster.
 for ss = 1:length(statenames)
+    
+    %Select only the cells in the proper region
+    if isempty(region)
+        keepcells = true(size(LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate));
+    else
+        keepcells = strcmp(GammaFit.(statenames{ss}).cellstats.region,'region');
+    end
+    ISIdists4fit = LoadGF.GammaFit.(statenames{ss}).ISIdists(keepcells,:);
+    meanFR = LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate(keepcells);
+    recordingIDX.(statenames{ss}) = LoadGF.GammaFit.(statenames{ss}).recordingIDX(keepcells);
+    
     AScost = LoadGF.GammaFit.(statenames{ss}).detectorinfo.detectionparms.AScost_lambda(1);
     MScost = LoadGF.GammaFit.(statenames{ss}).detectorinfo.detectionparms.MScost(1);
     % MScost = 10;
     % AScost = 0.05;
-    keepAS = 6;
-    temp(ss) = bz_FitISISharedGammaModes_new(LoadGF.GammaFit.(statenames{ss}).ISIdists,...
+    keepAS = 2;
+    GammaFit_all.(statenames{ss}) = bz_FitISISharedGammaModes_new(ISIdists4fit,...
         'logtimebins',LoadGF.GammaFit.(statenames{ss}).logtimebins(1,:),...
         'maxAS',keepAS,'numAS',keepAS,'figfolder',saveFolder,...
         'AScost_lambda',AScost,'AScost_p',1,'ASguess',false,'MScost',MScost,'figname',[saveName_full,(statenames{ss})],...
         'savecellinfo',false,'forceRedetect',true,'singlefit',true,...
-        'display_results','iter','meanFR',LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate,...
+        'display_results','iter','meanFR',meanFR,...
         'basePath',saveFolder,'UseParallel',true);
 end
 
-for ss = 1:length(statenames)
-    GammaFit_all.(statenames{ss}) = temp(ss);
-end 
+% for ss = 1:length(statenames)
+%     GammaFit_all.(statenames{ss}) = temp(ss);
+% end 
 %% FIgure here showing results of full fits. 
 %Compare - shared fits each recording...
 %%
 for ff = 1:length(GFfilenames)
     for ss = 1:2
-        reccells = LoadGF.GammaFit.(statenames{ss}).recordingIDX==ff;
+        reccells = recordingIDX.(statenames{ss})==ff;
         thisrecfit = GammaFit_all.(statenames{ss});
         
         thisrecfit.singlecell = thisrecfit.singlecell(reccells);

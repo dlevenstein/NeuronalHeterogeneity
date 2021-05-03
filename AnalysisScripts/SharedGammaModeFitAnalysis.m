@@ -42,7 +42,7 @@ for ss = 1:2
 AScost = 0.05; %Formerly 0.05
 MScost = 10;  %Formerly 10
 %Here: fit with all the stuff (final parms)
-keepAS = 3;
+keepAS = 6;
 GammaFit.(statenames{ss}) = bz_FitISISharedGammaModes_new(spikes,...
     'figfolder',figfolder,'basePath',basePath,'ints',SleepState.ints.(statenames{ss}),...
     'usecells',CellClass.pE,'maxAS',keepAS,'numAS',keepAS,...
@@ -174,7 +174,51 @@ if TESTCONSTRAINTS
         end
     end
     
-    
+ %%
+     for rr = 1:6
+        for aa = 1:5
+            GS_CV(rr,aa) = mean(GammaFit_hparms(rr,aa).sharedfit.GSCVs);
+            GS_weight(rr,aa) = mean(GammaFit_hparms(rr,aa).sharedfit.GSweights);
+            loss(rr,aa) = mean(GammaFit_hparms(rr,aa).costval);
+            computetime(rr,aa) = mean(GammaFit_hparms(rr,aa).computetime);
+        end
+     end
+     %%
+     figure
+     subplot(2,2,1)
+     imagesc(log10(c_ref(1:6)),c_AS(1:5),GS_CV')
+     hold on
+     plot(log10(MScost),AScost,'r+')
+     axis xy
+     LogScale('x',10,'nohalf',true)
+     xlabel('Refractory Cost');ylabel('AS Cost')
+     colorbar
+     title('GS CV')
+     
+     subplot(2,2,2)
+     imagesc(log10(c_ref(1:6)),c_AS(1:5),GS_weight')
+     hold on
+     plot(log10(MScost),AScost,'r+')
+     axis xy
+     LogScale('x',10,'nohalf',true)
+     xlabel('Refractory Cost');ylabel('AS Cost')
+     colorbar
+     title('GS Weight')
+     
+     subplot(2,2,3)
+     imagesc(log10(c_ref(1:6)),c_AS(1:5),loss')
+     hold on
+     plot(log10(MScost),AScost,'r+')
+     axis xy
+     LogScale('x',10,'nohalf',true)
+     xlabel('Refractory Cost');ylabel('AS Cost')
+     colorbar
+     title('Total Loss')
+     
+     
+     NiceSave('RefASTradeoff',figfolder,baseName);
+ %%
+ %GammaFit_hparms_all = bz_CollapseStruct(GammaFit_hparms,3,'justcat',true);
     
 %%    
     %GammaFit_ref(1) = GammaFit_nocon;
