@@ -114,6 +114,8 @@ for ss = 1:length(statenames)
         'savecellinfo',false,'forceRedetect',true,'singlefit',true,...
         'display_results','iter','meanFR',meanFR,...
         'basePath',saveFolder,'UseParallel',true);
+    
+    GammaFit_all.(statenames{ss}).cellstats.NW = LoadGF.GammaFit.(statenames{ss}).cellstats.NW;
 end
 
 % for ss = 1:length(statenames)
@@ -132,6 +134,7 @@ for ff = 1:length(GFfilenames)
         thisrecfit.numcells = sum(reccells);
         thisrecfit.costval = thisrecfit.costval(:,reccells);
         thisrecfit.cellstats.meanrate = thisrecfit.cellstats.meanrate(reccells);
+        thisrecfit.cellstats.NW = thisrecfit.cellstats.NW(reccells);
         
         numsharedfits = length(thisrecfit.sharedfit);
         for sf = 1:numsharedfits
@@ -157,5 +160,146 @@ for ff = 1:length(GFfilenames)
     save(cellinfofilename,'GammaFit_full')
 end
 
+%%
+%load('CA1.GammaFit_all.cellinfo.mat')
+%%
+   whichAS.WAKEstate = 6;
+   whichAS.NREMstate = 6;
+   
+weightthresh = 0.01;
+clear modeweightcorr allweights numsigAS
+for pp = 1:keepAS+1
+    allweights{pp} = GammaFit.(statenames{ss}).sharedfit(pp).ASweights;
+    allweights{pp}(log10(allweights{pp})<-4) = 1e-4;
+    numsigAS{pp} = sum(allweights{pp}>weightthresh,2);
+    
+    modeweightcorr{pp} = corr([allweights{pp} GammaFit.(statenames{ss}).sharedfit(pp).GSweights'] ,...
+        'type','spearman');
+end
+%%
+GScolor = [0.6 0.4 0];
+lowthreshcolor = [0.95 0.95 0.95];
+numrepeats = 3;
+%excell = excells;
+histcolors = [repmat([1 1 1],numrepeats,1);makeColorMap(lowthreshcolor,[0 0 0])];
+
+for ss = 1:2
+ 
+   
+    [~,sortGSrate] = sort(GammaFit_all.(statenames{ss}).sharedfit(whichAS.(statenames{ss})+1).GSlogrates);
+    logtimebins = GammaFit_all.(statenames{ss}).logtimebins;
+    numcells = GammaFit_all.(statenames{ss}).numcells;
+    logISIhist = GammaFit_all.(statenames{ss}).ISIdists;
+    meanFR = GammaFit_all.(statenames{ss}).cellstats.meanrate;
+    costval = GammaFit_all.(statenames{ss}).costval;
+    
+    weightthresh = 0.01;
+    for pp = 1:keepAS+1
+        allweights.(statenames{ss}){pp} = GammaFit_all.(statenames{ss}).sharedfit(pp).ASweights;
+        allweights.(statenames{ss}){pp}(log10(allweights.(statenames{ss}){pp})<-4) = 1e-4;
+        numsigAS{pp} = sum(allweights.(statenames{ss}){pp}>weightthresh,2);
+
+        modeweightcorr{pp} = corr([allweights.(statenames{ss}){pp} GammaFit_all.(statenames{ss}).sharedfit(pp).GSweights'] ,...
+            'type','spearman');
+    end
+    
+    
+    figure
+        subplot(3,3,1)
+            imagesc(logtimebins,[1 numcells],logISIhist(:,sortGSrate)')
+            hold on
+            plot(-log10(meanFR(sortGSrate)),[1:numcells],'k.')
+            plot(-GammaFit_all.(statenames{ss}).sharedfit(whichAS.(statenames{ss})+1).GSlogrates(sortGSrate),[1:numcells],'.','color',GScolor)
+            %colorbar
+            colormap(gca,histcolors)
+            title([saveName_full,(statenames{ss})])
+            xlim([-3 2])
+            ylabel(['Cells (',num2str(numcells),')'])
+            set(gca,'yticklabel',[])
+            LogScale('x',10,'exp',true)
+
+        subplot(3,3,2)
+            plot(linspace(0,size(costval,1)-1,size(costval,1)),mean(log10(costval),2),'ko-')
+            hold on
+            plot(linspace(0,size(costval,1)-1,size(costval,1)),log10(costval),'k.')
+            box off
+            axis tight
+            LogScale('y',10,'nohalf',true)
+            xlabel('# Modes');ylabel('Error')
+
+        for pp = 1:keepAS+1
+        subplot(3,7,pp+7)
+            bz_PlotISIDistModes(GammaFit_all.(statenames{ss}),'all','showSingleFits',true,...
+                'whichShare',pp,'dotscale',10,'dotscaleAS',150)
+            ylim([-1.5 1.6])
+            LogScale('y',10,'nohalf',true)
+            if pp>1
+                set(gca,'yticklabels',[])
+                ylabel('')
+            end
+            box off
+
+        subplot(4,7,pp+21)
+            hist(numsigAS{pp},linspace(0,pp-1,pp))
+            hold on
+            box off
+            axis tight
+            xlabel('# Modes');ylabel('# Cells') 
+
+    %         subplot(4,7,pp)
+    %             imagesc(modeweightcorr{pp})
+    %             colorbar
+    %             crameri('vik','pivot',0)
+    %             xlabel('Mode');ylabel('Mode')
+    %             set(gca,'ytick',[0:pp])
+    %             set(gca,'xtick',[0:pp])
+        end
+        
+        pp = whichAS.(statenames{ss})+1;
+        subplot(3,3,3)
+            imagesc(modeweightcorr{pp})
+            colorbar
+            crameri('vik','pivot',0)
+            xlabel('Mode');ylabel('Mode')
+            set(gca,'ytick',[0:pp])
+            set(gca,'xtick',[0:pp])
+
+NiceSave(['CompareNAS_',(statenames{ss})],saveFolder,saveName_full);
+end
+
+%% Relate WAKE and NREM
+        modeweightcorr_NW = corr([allweights.(statenames{1}){whichAS.(statenames{1})+1} GammaFit_all.(statenames{1}).sharedfit(whichAS.(statenames{1})+1).GSweights'] ,...
+            [allweights.(statenames{2}){whichAS.(statenames{2})+1} GammaFit_all.(statenames{2}).sharedfit(whichAS.(statenames{2})+1).GSweights'],...
+            'type','spearman');
+
+figure
+    subplot(2,4,1)
+    for ss = 1:2
+        bz_PlotISIDistModes(GammaFit_all.(statenames{ss}),'all','showSingleFits',false,...
+            'whichShare',whichAS.(statenames{ss})+1,'dotscale',10,'dotscaleAS',150)
+    end
+        ylim([-1.5 1.6])
+        LogScale('y',10,'nohalf',true)
+        
+    subplot(3,3,3)
+        imagesc(modeweightcorr_NW)
+        colorbar
+        crameri('vik','pivot',0)
+        xlabel('Mode WAKE');ylabel('Mode NREM')
+        set(gca,'ytick',[0:whichAS.(statenames{1})+1])
+        set(gca,'xtick',[0:whichAS.(statenames{2})+1])
+        
+    subplot(3,3,2)
+    hold on
+    for ss = 1:2
+        plot(linspace(0,size(GammaFit_all.(statenames{ss}).costval,1)-1,size(GammaFit_all.(statenames{ss}).costval,1)),...
+            mean(log10(GammaFit_all.(statenames{ss}).costval),2),'ko-')
+    end
+        box off
+        axis tight
+        LogScale('y',10,'nohalf',true)
+        xlabel('# Modes');ylabel('Error')
+        
+NiceSave(['CompareStates'],saveFolder,saveName_full);
 end
 
