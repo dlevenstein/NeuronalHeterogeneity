@@ -1,14 +1,14 @@
 #!/bin/bash
-sbatch ./FullSharedFitjob.bash  'CA1'  \
-{'/gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_11012013',\
+sbatch ./FullSharedFitjob.bash  "'CA1'"  \
+"{'/gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_11012013',\
 '/gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_10252013',\
 '/gpfs/data/buzsakilab/DL/Database/AGData/Buddy/Buddy_06272013',\
 '/gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09102014',\
 '/gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09012014',\
 '/gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09172014',\
 '/gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08282013',\
-'/gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08022013'}  \
-[]
+'/gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08022013'}"  \
+"[]"
 
 sbatch ./FullSharedFitjob.bash  'vCTX'  \
 {'/gpfs/data/buzsakilab/DL/Database/YSData/YMV01/YMV01_170818',\
