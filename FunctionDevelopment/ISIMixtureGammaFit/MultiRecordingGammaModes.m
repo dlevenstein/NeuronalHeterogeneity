@@ -76,6 +76,7 @@ for ff = 1:length(GFfilenames)
         LoadGF(ff).GammaFit.(statenames{ss}).recordingIDX = ff.*ones(size(LoadGF(ff).GammaFit.(statenames{ss}).sharedfit.GSlogrates));
     end
 end
+display(['Loaded ',num2str(length(LoadGF)),' recordings'])
 LoadGF = bz_CollapseStruct(LoadGF,'match','justcat',true);
 
 %%
