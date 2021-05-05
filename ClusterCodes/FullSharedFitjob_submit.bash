@@ -49,7 +49,7 @@ sbatch ./FullSharedFitjob.bash  'fCTX'  \
 '/gpfs/data/buzsakilab/DL/Database/BWData/Templeton/Templeton_032415'}  \
 []
 
-sbatch ./FullSharedFitjob.bash  'fCTX'  \
+sbatch ./FullSharedFitjob.bash  'CA1'  \
 {'/gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_11012013',\
 '/gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_10252013',\
 '/gpfs/data/buzsakilab/DL/Database/AGData/Buddy/Buddy_06272013',\
