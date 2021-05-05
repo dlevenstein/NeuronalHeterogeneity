@@ -49,7 +49,7 @@ clusterpar = p.Results.clusterpar;
 % GFfilenames = {'Achilles_11012013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
 % 	'Achilles_10252013.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
 
-display(['Running Gamma Fit: ',saveName])
+display(['Running Gamma Fit: ',saveName_full])
 
 if ~iscell(basePaths)
     saveFolder = basePaths;
