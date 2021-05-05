@@ -13,17 +13,12 @@ sbatch ./FullSharedFitjob.bash  'CA1'  \
 sbatch ./FullSharedFitjob.bash  'vCTX'  \
 {'/gpfs/data/buzsakilab/DL/Database/YSData/YMV01/YMV01_170818',\
 '/gpfs/data/buzsakilab/DL/Database/YSData/YMV02/YMV02_170815',\
-#/gpfs/data/buzsakilab/DL/Database/YSData/YMV03/YMV03_170818
 '/gpfs/data/buzsakilab/DL/Database/YSData/YMV04/YMV04_170907',\
-#/gpfs/data/buzsakilab/DL/Database/YSData/YMV05/YMV05_170912
 '/gpfs/data/buzsakilab/DL/Database/YSData/YMV06/YMV06_170913',\
-#/gpfs/data/buzsakilab/DL/Database/YSData/YMV07/YMV07_170914
-#/gpfs/data/buzsakilab/DL/Database/YSData/YMV08/YMV08_170922
 '/gpfs/data/buzsakilab/DL/Database/YSData/YMV09/YMV09_171204',\
 '/gpfs/data/buzsakilab/DL/Database/YSData/YMV10/YMV10_171213',\
 '/gpfs/data/buzsakilab/DL/Database/YSData/YMV11/YMV11_171208',\
 '/gpfs/data/buzsakilab/DL/Database/YSData/YMV12/YMV12_171211',\
-#/gpfs/data/buzsakilab/DL/Database/YSData/YMV13/YMV13_180127
 '/gpfs/data/buzsakilab/DL/Database/YSData/YMV14/YMV14_180128',\
 '/gpfs/data/buzsakilab/DL/Database/YSData/YMV15/YMV15_180205',\
 '/gpfs/data/buzsakilab/DL/Database/YSData/YMV16/YMV16_180206',\
@@ -116,25 +111,13 @@ sbatch ./FullSharedFitjob.bash  'PIR'  \
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130715/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130716/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130717/',\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130718/,\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130719/',\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130720/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130722/,\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140324/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140325/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140326/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140327/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140328/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140329/',\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140331/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140401/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140402/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140403/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140404/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140405/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140407/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140408/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140409/,\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140619/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140620/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140622/',\
@@ -147,7 +130,6 @@ sbatch ./FullSharedFitjob.bash  'PIR'  \
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140702/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140703/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140704/',\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140705/,\  #double region on a shank...
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140707/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140708/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150321/',\
@@ -157,10 +139,6 @@ sbatch ./FullSharedFitjob.bash  'PIR'  \
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150327/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150328/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150330/'}  \
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150331/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150401/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150402/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150403/,\
 'pir'
 
 sbatch ./FullSharedFitjob.bash  'BLA'  \
@@ -173,25 +151,13 @@ sbatch ./FullSharedFitjob.bash  'BLA'  \
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130715/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130716/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130717/',\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130718/,\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130719/',\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130720/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130722/,\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140324/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140325/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140326/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140327/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140328/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140329/',\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140331/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140401/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140402/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140403/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140404/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140405/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140407/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140408/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat09/Rat09-20140409/,\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140619/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140620/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140622/',\
@@ -204,7 +170,6 @@ sbatch ./FullSharedFitjob.bash  'BLA'  \
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140702/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140703/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140704/',\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140705/,\  #double region on a shank...
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140707/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat10/Rat10-20140708/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150321/',\
@@ -214,8 +179,4 @@ sbatch ./FullSharedFitjob.bash  'BLA'  \
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150327/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150328/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150330/'}  \
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150331/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150401/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150402/,\
-#/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150403/,\
 'bla'
