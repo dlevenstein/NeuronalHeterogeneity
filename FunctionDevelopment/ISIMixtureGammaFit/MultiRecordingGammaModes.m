@@ -48,7 +48,11 @@ clusterpar = p.Results.clusterpar;
 
 % GFfilenames = {'Achilles_11012013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
 % 	'Achilles_10252013.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
-
+% saveName_full = 'CA1_test';
+% basePaths = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs/SharedGammaModeFitAnalysis';
+% clusterpar = false;
+% region = [];
+%%
 display(['Running Gamma Fit: ',saveName_full])
 
 if ~iscell(basePaths)
@@ -81,6 +85,7 @@ LoadGF = bz_CollapseStruct(LoadGF,'match','justcat',true);
 
 %%
 statenames = fieldnames(LoadGF.GammaFit);
+statecolors = {'b','k'};
 %%
 if clusterpar
     pc = parcluster('local');
@@ -99,7 +104,7 @@ for ss = 1:length(statenames)
     if isempty(region)
         keepcells = true(size(LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate));
     else
-        keepcells = strcmp(GammaFit.(statenames{ss}).cellstats.region,'region');
+        keepcells = strcmp(LoadGF.GammaFit.(statenames{ss}).cellstats.region,'region');
     end
     ISIdists4fit = LoadGF.GammaFit.(statenames{ss}).ISIdists(:,keepcells);
     meanFR = LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate(keepcells);
@@ -109,7 +114,7 @@ for ss = 1:length(statenames)
     MScost = LoadGF.GammaFit.(statenames{ss}).detectorinfo.detectionparms.MScost(1);
     % MScost = 10;
     % AScost = 0.05;
-    keepAS = 6;
+    keepAS = 3;
     GammaFit_all.(statenames{ss}) = bz_FitISISharedGammaModes_new(ISIdists4fit,...
         'logtimebins',LoadGF.GammaFit.(statenames{ss}).logtimebins(1,:),...
         'maxAS',keepAS,'numAS',keepAS,'figfolder',saveFolder,...
@@ -169,16 +174,16 @@ end
    whichAS.WAKEstate = 6;
    whichAS.NREMstate = 6;
    
-weightthresh = 0.01;
-clear modeweightcorr allweights numsigAS
-for pp = 1:keepAS+1
-    allweights{pp} = GammaFit.(statenames{ss}).sharedfit(pp).ASweights;
-    allweights{pp}(log10(allweights{pp})<-4) = 1e-4;
-    numsigAS{pp} = sum(allweights{pp}>weightthresh,2);
-    
-    modeweightcorr{pp} = corr([allweights{pp} GammaFit.(statenames{ss}).sharedfit(pp).GSweights'] ,...
-        'type','spearman');
-end
+% weightthresh = 0.01;
+% clear modeweightcorr allweights numsigAS
+% for pp = 1:keepAS+1
+%     allweights{pp} = GammaFit_all.(statenames{ss}).sharedfit(pp).ASweights;
+%     allweights{pp}(log10(allweights{pp})<-4) = 1e-4;
+%     numsigAS{pp} = sum(allweights{pp}>weightthresh,2);
+%     
+%     modeweightcorr{pp} = corr([allweights{pp} GammaFit_all.(statenames{ss}).sharedfit(pp).GSweights'] ,...
+%         'type','spearman');
+% end
 %%
 GScolor = [0.6 0.4 0];
 lowthreshcolor = [0.95 0.95 0.95];
@@ -281,7 +286,8 @@ figure
         bz_PlotISIDistModes(GammaFit_all.(statenames{ss}),'all','showSingleFits',false,...
             'whichShare',whichAS.(statenames{ss})+1,'dotscale',10,'dotscaleAS',150)
     end
-        ylim([-1.5 1.6])
+        ylim([-2 1.9])
+        box off
         LogScale('y',10,'nohalf',true)
         
     subplot(3,3,3)
@@ -296,7 +302,7 @@ figure
     hold on
     for ss = 1:2
         plot(linspace(0,size(GammaFit_all.(statenames{ss}).costval,1)-1,size(GammaFit_all.(statenames{ss}).costval,1)),...
-            mean(log10(GammaFit_all.(statenames{ss}).costval),2),'ko-')
+            mean(log10(GammaFit_all.(statenames{ss}).costval),2),'o-','color',statecolors{ss})
     end
         box off
         axis tight

@@ -205,8 +205,7 @@ for aa = 1:(maxAS+1)
             cinit_struct.ASCVs = sharedfit(aa).ASCVs;
             cinit_struct.ASweights  = sharedfit(aa).ASweights(cc,:);
 
-            thisdist = logISIhist(:,cc);
-            singlecell(aa,cc) = FitSharedGamma(thisdist,taubins,...
+            singlecell(aa,cc) = FitSharedGamma(logISIhist(:,cc),taubins,...
                 'MScost',MScost,'MSthresh',MSthresh,'AScost_p',AScost_p,'AScost_lambda',AScost_lambda,...
                 'init_struct',cinit_struct,'display_results','off',...
                 'UseParallel',UseParallel); 
@@ -577,7 +576,7 @@ for pp = 1:maxAS+1
     subplot(3,7,pp+7)
         bz_PlotISIDistModes(GammaFit,'all','showSingleFits',true,...
             'whichShare',pp,'dotscale',10,'dotscaleAS',150)
-        ylim([-1.5 1.6])
+        ylim([-1.75 1.6])
         LogScale('y',10,'nohalf',true)
         if pp>1
             set(gca,'yticklabels',[])
