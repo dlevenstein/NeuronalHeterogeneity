@@ -77,7 +77,7 @@ for ff = 1:length(GFfilenames)
     %savefilename{ff} here: figure out the filename to re-save this GammaFit
     statenames = fieldnames(LoadGF(ff).GammaFit);
     for ss = 1:length(statenames)
-        LoadGF(ff).GammaFit.(statenames{ss}).recordingIDX = ff.*ones(size(LoadGF(ff).GammaFit.(statenames{ss}).sharedfit.GSlogrates));
+        LoadGF(ff).GammaFit.(statenames{ss}).recordingIDX = ff.*ones(size(LoadGF(ff).GammaFit.(statenames{ss}).sharedfit(1).GSlogrates));
     end
 end
 display(['Loaded ',num2str(length(LoadGF)),' recordings'])
