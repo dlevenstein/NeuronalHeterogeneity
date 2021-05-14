@@ -40,7 +40,7 @@ addParameter(p,'AScost_lambda',0)
 addParameter(p,'AScost_p',1)
 addParameter(p,'MScost',0)
 addParameter(p,'MSthresh',0.002)
-addParameter(p,'ASguess',[])
+addParameter(p,'ASguess',false)
 addParameter(p,'meanFR',[])
 addParameter(p,'usecells',[])
 addParameter(p,'holdweights',false)
@@ -145,6 +145,7 @@ numcells = size(logISIhist,2);
 if ~isempty(init_struct)
     INITGIVEN = true;
     maxAS = 0;
+    numAS = length(init_struct.ASlogrates);
 else
     INITGIVEN = false;
 end
@@ -182,21 +183,42 @@ for aa = 1:(maxAS+1)
             end
         end
     end
-    %% Fit
+    %% Fit: Shared
     tic
     [sharedfit(aa),costval(aa,:)] = FitSharedGamma(logISIhist,taubins,...
         'MScost',MScost,'MSthresh',MSthresh,'AScost_p',AScost_p,'AScost_lambda',AScost_lambda,...
         'init_struct',init_struct(aa),'display_results',display_results,...
         'UseParallel',true); 
     computetime(aa) = toc
+    
+    if SINGLEFIT
+        %% Fit Each cell distribution, starting from the group dists
+        display('Group fit Complete! Now Fitting each cell independently')
+        for cc = 1:numcells
+            bz_Counter(cc,numcells,'Cell')
+            %Initial Conditions
+            cinit_struct.GSlogrates = sharedfit(aa).GSlogrates(cc);
+            cinit_struct.GSCVs = sharedfit(aa).GSCVs(cc);
+            cinit_struct.GSweights = sharedfit(aa).GSweights(cc);
+
+            cinit_struct.ASlogrates = sharedfit(aa).ASlogrates;
+            cinit_struct.ASCVs = sharedfit(aa).ASCVs;
+            cinit_struct.ASweights  = sharedfit(aa).ASweights(cc,:);
+
+            thisdist = logISIhist(:,cc);
+            singlecell(aa,cc) = FitSharedGamma(thisdist,taubins,...
+                'MScost',MScost,'MSthresh',MSthresh,'AScost_p',AScost_p,'AScost_lambda',AScost_lambda,...
+                'init_struct',cinit_struct,'display_results','off',...
+                'UseParallel',true); 
+
+        end   
+    end
 
     %%
     weightthresh = 0.01;
     allweights = sharedfit(aa).ASweights;
     allweights(log10(allweights)<-5) = 0.00001;
     numsigAS = sum(allweights>weightthresh,2);
-
-
 
     %% Shared Fit Figure (PUt into FitSharedGamma?)
     lowthreshcolor = [0.95 0.95 0.95];
@@ -343,80 +365,11 @@ end
 % else
 %     sharedfit = sharedfit(savenumAS);
 % end
-
+% Note: maxAS is being used as the index...
 %% The single cell fit (after picking...)
 if SINGLEFIT
-    %% Fit Each cell distribution, starting from the group dists
-    display('Group fit Complete! Now Fitting each cell independently')
-    for cc = 1:numcells
-        bz_Counter(cc,numcells,'Cell')
-        %Initial Conditions
-        cinit_struct.GSlogrates = sharedfit(numAS+1).GSlogrates(cc);
-        cinit_struct.GSCVs = sharedfit(numAS+1).GSCVs(cc);
-        cinit_struct.GSweights = sharedfit(numAS+1).GSweights(cc);
-
-        cinit_struct.ASlogrates = sharedfit(numAS+1).ASlogrates;
-        cinit_struct.ASCVs = sharedfit(numAS+1).ASCVs;
-        cinit_struct.ASweights  = sharedfit(numAS+1).ASweights(cc,:);
-        cinit = convertGSASparms(cinit_struct);
-
-        %Upper/Lower Bounds
-        clear clb cub
-        clb.GSlogrates = -2.*ones(1,1);
-        clb.GSCVs =      zeros(1,1);
-        clb.GSweights =  zeros(1,1);
-        clb.ASlogrates = 0.*ones(1,numAS); %Was 0.3
-        clb.ASCVs =      zeros(1,numAS);
-        clb.ASweights  = zeros(1,numAS);
-        clb = convertGSASparms(clb);
-
-        cub.GSlogrates = 2.*ones(1,1);
-        cub.GSCVs =      4.*ones(1,1);
-        cub.GSweights =  ones(1,1);
-        cub.ASlogrates = 2.5.*ones(1,numAS);
-        cub.ASCVs =      2.*ones(1,numAS);
-        cub.ASweights  = ones(1,numAS);
-        cub = convertGSASparms(cub);
-
-        %Make the constraint matrix for all weights to add to 1
-        cAeq = zeros(1,length(cub));
-        cAeq_ASonly = zeros(1,length(cub));
-        cBeq = ones(1,1);
-        thiscell.GSlogrates = zeros(1,1);
-        thiscell.GSCVs =      zeros(1,1);
-        thiscell.GSweights =  zeros(1,1);
-        thiscell.ASlogrates = zeros(1,numAS);
-        thiscell.ASCVs =      zeros(1,numAS);
-        thiscell.ASweights  = ones(1,numAS);
-        cAeq_ASonly = convertGSASparms(thiscell)';
-        thiscell.GSweights =  ones(1,1);
-        cAeq = convertGSASparms(thiscell)';
-        cAeq_ASonly(cAeq_ASonly~=1)=0;
-        cAeq(cAeq~=1)=0;
-
-        options = optimoptions('fmincon','Algorithm','sqp','UseParallel',false,'Display','off');%
-        %try also: 'Algorithm','active-set', 'sqp'
-        %Decrease tolerance.....
-        options.MaxFunctionEvaluations = 1e8;
-        options.MaxIterations = 1000; 
-
-        %% Fit the single-cell distribution 
-        thisdist = logISIhist(:,cc);
-
-        cdifffun = @(GSASparm_vect) sum(sum((thisdist-GSASmodel(GSASparm_vect,taubins,1,numAS)).^2)) ...
-        + AScost_lambda.*sum((abs(cAeq_ASonly*GSASparm_vect)).^(AScost_p))... ; %L2/3 norm on AS weights to promote sparseness
-        + MScost.*sum(sum((thisdist(sub1msbins)-GSASmodel(GSASparm_vect,taubins(sub1msbins),1,numAS)).^2)); 
-
-        fitparms_singlecell = fmincon(cdifffun,cinit,[],[],cAeq,cBeq,clb,cub,[],options);
-    %     if(zerospkcells(cc))
-    %         fitparms_singlecell = nan(size(fitparms_singlecell));
-    %     end
-        GammaFit.singlecell(cc) = convertGSASparms(fitparms_singlecell,1,numAS);
-
-
-    end
-    
-    singlecell_all = bz_CollapseStruct(GammaFit.singlecell,1);    
+    GammaFit.singlecell = singlecell; 
+    singlecell_all = bz_CollapseStruct(GammaFit.singlecell(maxAS+1,:),1);    
 end
 %%
 %GammaFit.singlecell(zerospkcells) = [];
@@ -477,16 +430,16 @@ GScolor = [0.6 0.4 0];
 %figure
 %hist(singlecell_all.GSweights)
 %%
-[~,sortGSrate] = sort(sharedfit(numAS+1).GSlogrates);
+[~,sortGSrate] = sort(sharedfit(maxAS+1).GSlogrates);
 for aa = 1:numAS
-    [~,sortASweight{aa}] = sort(sharedfit(numAS+1).ASweights(:,aa));
+    [~,sortASweight{aa}] = sort(sharedfit(maxAS+1).ASweights(:,aa));
 end
 
 %% ISI dist
 meanISIdist = mean(logISIhist,2);
 %%
 %sortrate = sort(ISIStats.summstats.WAKEstate.meanrate);
-fitISI = GSASmodel(sharedfit(numAS+1),taubins,numcells,numAS);
+fitISI = GSASmodel(sharedfit(maxAS+1),taubins,numcells,numAS);
 figure
 subplot(2,2,1)
 imagesc(logtimebins,[1 numcells],logISIhist(:,sortGSrate)')
@@ -506,12 +459,12 @@ xlim([-3 2])
 
 
 subplot(2,2,3)
-plot(-sharedfit(numAS+1).ASlogrates,log10(sharedfit(numAS+1).ASCVs),'o')
+plot(-sharedfit(maxAS+1).ASlogrates,log10(sharedfit(maxAS+1).ASCVs),'o')
 hold on
 % scatter(-sharedfit.GSlogrates,sharedfit.GSCVs,...
 %     5.*singlecell_all.GSweights+0.00001,log10(ISIStats.summstats.WAKEstate.meanrate(ISIStats.sorts.WAKEstate.ratepE)),...
 %     'filled')
-scatter(-sharedfit(numAS+1).GSlogrates,log10(sharedfit(numAS+1).GSCVs),...
+scatter(-sharedfit(maxAS+1).GSlogrates,log10(sharedfit(maxAS+1).GSCVs),...
     10.*singlecell_all.GSweights+0.00001,...
     'filled')
 for aa = 1:numAS
@@ -526,7 +479,7 @@ xlim([-3 2])
 LogScale('x',10)
 
 subplot(2,2,4)
-plot(singlecell_all.GSlogrates,sharedfit(numAS+1).GSlogrates,'.')
+plot(singlecell_all.GSlogrates,sharedfit(maxAS+1).GSlogrates,'.')
 xlabel('Single-cell GS rate');ylabel('Group Fit GS rate')
 
 if figfolder
@@ -555,7 +508,7 @@ subplot(3,3,ee)
     hold on
     plot(logtimebins,fitISI(:,excell),'k--','linewidth',1)
     plot(GammaFit.logtimebins,...
-        GSASmodel(GammaFit.singlecell(excell),...
+        GSASmodel(GammaFit.singlecell(maxAS+1,excell),...
         GammaFit.taubins),...
         'k','linewidth',2)
     hold on
@@ -605,7 +558,7 @@ numrepeats = 3;
 histcolors = [repmat([1 1 1],numrepeats,1);makeColorMap(lowthreshcolor,[0 0 0])];   
 
 figure
-for pp = 1:numAS+1
+for pp = 1:maxAS+1
     fitISI = GSASmodel(GammaFit.sharedfit(pp),...
         GammaFit.taubins,GammaFit.numcells,pp-1);
     [~,sortGSrate] = sort(GammaFit.sharedfit(pp).GSlogrates);

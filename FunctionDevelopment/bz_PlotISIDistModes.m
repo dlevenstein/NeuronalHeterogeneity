@@ -63,14 +63,14 @@ switch sharORsing
             ASdots = 'o';
             
             if showSingleFits
-                singlecell_all = bz_CollapseStruct(GammaFits.singlecell,1);   
+                singlecell_all = bz_CollapseStruct(GammaFits.singlecell(ws,:),1);   
             end
             
         elseif length(plotcell)< 1
             error('No Cells with that UID')
         end
     case 'singlecell'
-        GFmodel = GammaFits.singlecell(plotcell);
+        GFmodel = GammaFits.singlecell(ws,plotcell);
 end
 
 numAS = length(GFmodel.ASlogrates);

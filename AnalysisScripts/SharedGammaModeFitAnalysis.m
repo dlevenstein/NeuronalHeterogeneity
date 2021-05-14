@@ -39,8 +39,8 @@ statenames = {'NREMstate','WAKEstate','REMstate'};
 
 for ss = 1:2
 %ss = 1;
-AScost = 0.05; %Formerly 0.05
-MScost = 10;  %Formerly 10
+AScost = 0.3; %Formerly 0.05
+MScost = 2;  %Formerly 10 (before add sqrt and 1/numcells)
 %Here: fit with all the stuff (final parms)
 keepAS = 6;
 GammaFit.(statenames{ss}) = bz_FitISISharedGammaModes_new(spikes,...
@@ -48,7 +48,7 @@ GammaFit.(statenames{ss}) = bz_FitISISharedGammaModes_new(spikes,...
     'usecells',CellClass.pE,'maxAS',keepAS,'numAS',keepAS,...
     'AScost_lambda',AScost,'AScost_p',1,'ASguess',false,'MScost',MScost,'figname',(statenames{ss}),...
     'savecellinfo',false,'forceRedetect',true,'singlefit',true,...
-    'display_results','final','UseParallel',true);
+    'display_results','iter','UseParallel',true);
 
 %     %Here: 'holdweights', false
 %     GammaFit_noweights = bz_FitISISharedGammaModes_new(spikes,...
@@ -154,39 +154,43 @@ if TESTCONSTRAINTS
         'figfolder',figfolder,'basePath',basePath,'ints',SleepState.ints.(statenames{ss}),...
         'usecells',CellClass.pE,'forceRedetect',true,...
         'AScost_lambda',0,'AScost_p',1,'ASguess',false,'MScost',0,'figname',[(statenames{ss}),'_noconst'],...
-        'init_struct',GammaFit.(statenames{ss}).sharedfit,'UseParallel',true);
+        'init_struct',GammaFit.(statenames{ss}).sharedfit(numAS+1),'UseParallel',true);
+    
  
     %%
-    c_ref = [0.3 1 3 10 30 100 300];
-    c_AS = [0 0.05 0.1 0.15 0.2 0.25];
-    numAS = 3;
+    c_ref = logspace(-0.5,1,7);
+    c_AS = linspace(0,0.7,8);
+    numAS = 4;
     
-    for rr = 1:6
-        for aa = 1:5
+    clear GammaFit_hparms
+    for rr = 1:length(c_ref)
+        for aa = 1:length(c_AS)
             rr
             aa
             GammaFit_hparms(rr,aa) = bz_FitISISharedGammaModes_new(spikes,...
                 'basePath',basePath,'ints',SleepState.ints.(statenames{ss}),...
                 'usecells',CellClass.pE,'showfig',false,...
-                'AScost_lambda',c_AS(aa),'AScost_p',1,'ASguess',false,'MScost',c_ref(rr),...
+                'AScost_lambda',c_AS(aa),'AScost_p',1,'MScost',c_ref(rr),...
                 'init_struct',GammaFit.(statenames{ss}).sharedfit(numAS+1),...
                 'forceRedetect',true,'UseParallel',true,'display_results','final');
         end
     end
     
  %%
-     for rr = 1:6
-        for aa = 1:5
+    clear GS_CV GS_weight loss computetime
+     for rr = 1:length(c_ref)
+        for aa = 1:length(c_AS)
             GS_CV(rr,aa) = mean(GammaFit_hparms(rr,aa).sharedfit.GSCVs);
             GS_weight(rr,aa) = mean(GammaFit_hparms(rr,aa).sharedfit.GSweights);
             loss(rr,aa) = mean(GammaFit_hparms(rr,aa).costval);
-            computetime(rr,aa) = mean(GammaFit_hparms(rr,aa).computetime);
+            %computetime(rr,aa) = mean(GammaFit_hparms(rr,aa).computetime);
         end
      end
      %%
+     
      figure
-     subplot(2,2,1)
-     imagesc(log10(c_ref(1:6)),c_AS(1:5),GS_CV')
+     subplot(3,3,1)
+     imagesc(log10(c_ref),c_AS,GS_CV')
      hold on
      plot(log10(MScost),AScost,'r+')
      axis xy
@@ -195,8 +199,8 @@ if TESTCONSTRAINTS
      colorbar
      title('GS CV')
      
-     subplot(2,2,2)
-     imagesc(log10(c_ref(1:6)),c_AS(1:5),GS_weight')
+     subplot(3,3,2)
+     imagesc(log10(c_ref),c_AS,GS_weight')
      hold on
      plot(log10(MScost),AScost,'r+')
      axis xy
@@ -205,8 +209,8 @@ if TESTCONSTRAINTS
      colorbar
      title('GS Weight')
      
-     subplot(2,2,3)
-     imagesc(log10(c_ref(1:6)),c_AS(1:5),loss')
+     subplot(3,3,3)
+     imagesc(log10(c_ref),c_AS,loss')
      hold on
      plot(log10(MScost),AScost,'r+')
      axis xy
@@ -216,187 +220,25 @@ if TESTCONSTRAINTS
      title('Total Loss')
      
      
-     NiceSave('RefASTradeoff',figfolder,baseName);
- %%
- %GammaFit_hparms_all = bz_CollapseStruct(GammaFit_hparms,3,'justcat',true);
-    
-%%    
-    %GammaFit_ref(1) = GammaFit_nocon;
-    for cc = 1:7
-    GammaFit_ref(cc) = bz_FitISISharedGammaModes_new(spikes,...
-        'figfolder',figfolder,'basePath',basePath,'ints',SleepState.ints.(statenames{ss}),...
-        'usecells',CellClass.pE,...
-        'AScost_lambda',0.1,'AScost_p',1,'ASguess',false,'MScost',c_ref(cc),...
-        'init_struct',GammaFit.(statenames{ss}).sharedfit(numAS+1),...
-        'forceRedetect',true,'UseParallel',true);
+    examples = [[1 1];[1 length(c_AS)];[length(c_ref) 1];[length(c_ref) length(c_AS)];[4 3]];
+    for ee = 1:5
+    subplot(3,3,ee+3)
+        bz_PlotISIDistModes(GammaFit_hparms(examples(ee,1),examples(ee,2)),GammaFit_hparms(examples(ee,1),examples(ee,2)).cellstats.UID,...
+            'dotscale',10,'dotscaleAS',150)
+        xlim([-3 2])
+        title(['cAS: ',num2str(c_AS(examples(ee,2))),'. cref: ',num2str(round(c_ref(examples(ee,1)),1))])
     end
+    NiceSave('RefASTradeoff',figfolder,baseName);
+
     
-    %% Figure - Refractory Constraint
-    
-    GammaFit_ref_all = bz_CollapseStruct(GammaFit_ref,1,'justcat',true);
-    figure
-    subplot(3,3,1)
-        plot(log10(c_ref),log10(GammaFit_ref_all.costval),'k.')
-        hold on
-        plot(log10(c_ref),mean(log10(GammaFit_ref_all.costval),2),'ko-')
-        box off
-        xlabel('Refractory Cost');ylabel('Loss')
-        LogScale('xy',10)
-    subplot(3,3,2) 
-        plot(log10(c_ref),(GammaFit_ref_all.sharedfit.GSCVs),'k.')
-        hold on
-        plot(log10(c_ref),mean((GammaFit_ref_all.sharedfit.GSCVs),2),'ko-')
-        box off
-        xlabel('Refractory Cost');ylabel('GS CV')
-        LogScale('x',10)
-        
-    subplot(3,3,3) 
-        plot(log10(c_ref),(GammaFit_ref_all.sharedfit.GSweights),'k.')
-        hold on
-        plot(log10(c_ref),mean((GammaFit_ref_all.sharedfit.GSweights),2),'ko-')
-        box off
-        xlabel('Refractory Cost');ylabel('GS Weight')
-        LogScale('x',10)
-        
-    subplot(3,3,4) 
-        plot(log10(c_ref),(GammaFit_ref_all.sharedfit.GSlogrates),'k.')
-        hold on
-        plot(log10(c_ref),mean((GammaFit_ref_all.sharedfit.GSlogrates),2),'ko-')
-        box off
-        xlabel('Refractory Cost');ylabel('GS Rate')
-        LogScale('x',10)
-        
-    subplot(3,3,5)    
-        plot(-GammaFit_ref_all.sharedfit.ASlogrates',GammaFit_ref_all.sharedfit.ASCVs','.')
-        
-    subplot(3,3,7)
-        bz_PlotISIDistModes(GammaFit_ref(1),GammaFit_ref(1).cellstats.UID,...
-            'dotscale',10,'dotscaleAS',150)
-        xlim([-3 2])
-        
-    subplot(3,3,8)
-        bz_PlotISIDistModes(GammaFit_ref(5),GammaFit_ref(5).cellstats.UID,...
-            'dotscale',10,'dotscaleAS',150)
-        xlim([-3 2])
-        
-    subplot(3,3,9)
-        bz_PlotISIDistModes(GammaFit_ref(7),GammaFit_ref(7).cellstats.UID,...
-            'dotscale',10,'dotscaleAS',150)
-        xlim([-3 2])
 
-    NiceSave('RefractoryCost',figfolder,baseName);
-    %%
-    c_AS = [0 0.05 0.1 0.15 0.2 0.25];
-    for cc = 1:6
-    GammaFit_AS(cc) = bz_FitISISharedGammaModes_new(spikes,...
-        'figfolder',figfolder,'basePath',basePath,'ints',SleepState.ints.(statenames{ss}),...
-        'usecells',CellClass.pE,...
-        'AScost_lambda',c_AS(cc),'AScost_p',1,'ASguess',false,'MScost',30,...
-        'init_struct',GammaFit.(statenames{ss}).sharedfit(numAS+1),...
-        'forceRedetect',true);
-    end
-    
-    %% Figure - AS Constraint
-    
-    GammaFit_AS_all = bz_CollapseStruct(GammaFit_AS,1,'justcat',true);
-    figure
-    subplot(3,3,1)
-        plot(c_AS,log10(GammaFit_AS_all.costval),'k.')
-        hold on
-        plot(c_AS,mean(log10(GammaFit_AS_all.costval),2),'ko-')
-        box off
-        xlabel('AS Weight Cost');ylabel('Loss')
-       % LogScale('xy',10)
-    subplot(3,3,2) 
-        plot(c_AS,(GammaFit_AS_all.sharedfit.GSCVs),'k.')
-        hold on
-        plot(c_AS,mean((GammaFit_AS_all.sharedfit.GSCVs),2),'ko-')
-        box off
-        xlabel('AS Weight Cost');ylabel('GS CV')
-      %  LogScale('x',10)
-        
-    subplot(3,3,3) 
-        plot(c_AS,(GammaFit_AS_all.sharedfit.GSweights),'k.')
-        hold on
-        plot(c_AS,mean((GammaFit_AS_all.sharedfit.GSweights),2),'ko-')
-        box off
-        xlabel('AS Weight Cost');ylabel('GS Weight')
-       % LogScale('x',10)
-        
-    subplot(3,3,4) 
-        plot(c_AS,(GammaFit_AS_all.sharedfit.GSlogrates),'k.')
-        hold on
-        plot(c_AS,mean((GammaFit_AS_all.sharedfit.GSlogrates),2),'ko-')
-        box off
-        xlabel('AS Weight Cost');ylabel('GS Rate')
-       % LogScale('x',10)
-        
-    subplot(3,3,5)    
-        plot(-GammaFit_AS_all.sharedfit.ASlogrates',GammaFit_AS_all.sharedfit.ASCVs','.')
-        
-    subplot(3,3,7)
-        bz_PlotISIDistModes(GammaFit_AS(1),GammaFit_AS(1).cellstats.UID,...
-            'dotscale',10,'dotscaleAS',150)
-        xlim([-3 2])
-        
-    subplot(3,3,8)
-        bz_PlotISIDistModes(GammaFit_AS(2),GammaFit_AS(2).cellstats.UID,...
-            'dotscale',10,'dotscaleAS',150)
-        xlim([-3 2])
-        
-    subplot(3,3,9)
-        bz_PlotISIDistModes(GammaFit_AS(5),GammaFit_AS(5).cellstats.UID,...
-            'dotscale',10,'dotscaleAS',150)
-        xlim([-3 2])
 
-    NiceSave('ASWeightCost',figfolder,baseName);
-
-%%
-    weightthresh = 0.01;
-    clear modeweightcorr allweights numsigAS
-    for pp = 1:6
-        allweights{pp} = GammaFit_AS(pp).sharedfit.ASweights;
-        allweights{pp}(log10(allweights{pp})<-4) = 1e-4;
-        numsigAS{pp} = sum(allweights{pp}>weightthresh,2);
-
-        modeweightcorr{pp} = corr([allweights{pp} GammaFit_AS(pp).sharedfit.GSweights'] ,...
-            'type','spearman');
-    end
-%%
-    figure
-    for pp = 1:6      
-       
-        subplot(4,6,pp)
-            imagesc(modeweightcorr{pp})
-            colorbar
-            crameri('vik','pivot',0)
-            xlabel('Mode');ylabel('Mode')
-            set(gca,'ytick',[0:pp])
-            set(gca,'xtick',[0:pp])
-            
-        subplot(4,6,pp+6)
-            hist(log10(allweights{pp}(:)))
-            hold on;box off; axis tight
-            plot(log10(weightthresh).*[1 1],ylim(gca),'k--')
-            LogScale('x',10)
-            xlabel('Weight');ylabel('# Modes (All Cells)')
-
-        subplot(4,6,pp+12)
-            hist(numsigAS{pp},linspace(0,numAS,numAS+1))
-            hold on
-            box off
-            axis tight
-            xlabel('# Modes');ylabel('# Cells') 
-    end
-    NiceSave('ModeWeightProperties_AS',figfolder,baseName);
 end
 end
 
 %% Keep only the selected iteration. Change this when move to function
 
-for ss = 1:2
-    GammaFit.(statenames{ss}).sharedfit = GammaFit.(statenames{ss}).sharedfit(keepAS+1);
-end
+
 %%
 %joint indexing across different sets of intervals
 GammaFit.(statenames{1}).cellstats.NW = false(size(GammaFit.(statenames{1}).cellstats.meanrate));
@@ -411,12 +253,14 @@ if SAVECELLINFO
     save(cellinfofilename,'GammaFit')
 end
 
+for ss = 1:2
+    GammaFit.(statenames{ss}).sharedfit = GammaFit.(statenames{ss}).sharedfit(keepAS+1);
+    GammaFit.(statenames{ss}).singlecell = GammaFit.(statenames{ss}).singlecell(keepAS+1,:);
+end
 
 
 
 GScolor = [0.6 0.4 0];
-
-%%
 
 
 %%

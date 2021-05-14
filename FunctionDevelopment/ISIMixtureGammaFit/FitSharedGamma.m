@@ -15,9 +15,9 @@ function [sharedfit,costval,costval_full] = FitSharedGamma(logISIhist,taubins,va
 p = inputParser;
 addParameter(p,'numAS',3)
 addParameter(p,'init_struct',[])
-addParameter(p,'AScost_lambda',0)
-addParameter(p,'AScost_p',2/3)
-addParameter(p,'MScost',0)
+addParameter(p,'AScost_lambda',0.05)
+addParameter(p,'AScost_p',1)
+addParameter(p,'MScost',10)
 addParameter(p,'MSthresh',0.002)
 addParameter(p,'display_results','iter')
 addParameter(p,'UseParallel',false)
@@ -70,6 +70,14 @@ ub.ASCVs =      2.*ones(1,numAS);
 ub.ASweights  = ones(numcells,numAS);
 ub = convertGSASparms(ub);
 
+% typ.GSlogrates = -1.*ones(1,numcells);
+% typ.GSCVs =      1.*ones(1,numcells);
+% typ.GSweights =  0.5.*ones(1,numcells);
+% typ.ASlogrates = 1.*ones(1,numAS);
+% typ.ASCVs =      0.3.*ones(1,numAS);
+% typ.ASweights  = 0.1.*ones(numcells,numAS);
+% typ = convertGSASparms(typ);
+
 %Make the constraint matrix for all weights to add to 1
 Aeq = zeros(numcells,length(ub));
 Aeq_ASonly = zeros(numcells,length(ub));
@@ -93,12 +101,15 @@ options = optimoptions('fmincon','Algorithm','sqp' ,'UseParallel',UseParallel,'D
 %try also: 'Algorithm','interior-point''active-set'
 %Decrease tolerance.....
 options.MaxFunctionEvaluations = 1e8;
-options.MaxIterations = 1000; 
+options.MaxIterations = 1500; 
+options.StepTolerance = 1e-8;
+% options.TypicalX = typ;
+%options.FiniteDifferenceStepSize = 1000.*sqrt(eps);
 
 %% Fit all the distributions together
 
 %The Loss Function for each cell
-cellloss = @(GSASparm_vect) sum((logISIhist-GSASmodel(GSASparm_vect,taubins,numcells,numAS)).^2);
+cellloss = @(GSASparm_vect) sum((logISIhist-GSASmodel(GSASparm_vect,taubins,numcells,numAS)).^2).^0.5;
 
 %Loss function for only refreactory spikes
 %Only for high spike density (positive)
@@ -108,10 +119,10 @@ sub1msbins = taubins<=log(smallISI); %Which bins are small enough for small-time
 %     ((logISIhist(sub1msbins,:)-GSASmodel(GSASparm_vect,taubins(sub1msbins),numcells,numAS))...
 %     .*((logISIhist(sub1msbins,:)-GSASmodel(GSASparm_vect,taubins(sub1msbins),numcells,numAS))>0)).^2);
 cellloss_ref = @(GSASparm_vect) sum(...
-    (logISIhist(sub1msbins,:)-GSASmodel(GSASparm_vect,taubins(sub1msbins),numcells,numAS)).^2);
+    (logISIhist(sub1msbins,:)-GSASmodel(GSASparm_vect,taubins(sub1msbins),numcells,numAS)).^2).^0.5;
 
 %Total loss function with regularization etc
-costfun = @(GSASparm_vect) sum(cellloss(GSASparm_vect) ...
+costfun = @(GSASparm_vect) (1./numcells).*sum(cellloss(GSASparm_vect) ...
     + AScost_lambda.*(abs(Aeq_ASonly*GSASparm_vect)').^(AScost_p)...; %L1/2 norm on AS weights to promote sparseness
     + MScost.*cellloss_ref(GSASparm_vect)); 
 
