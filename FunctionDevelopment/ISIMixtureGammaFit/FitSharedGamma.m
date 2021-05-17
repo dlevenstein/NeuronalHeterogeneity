@@ -63,10 +63,10 @@ lb.ASweights  = zeros(numcells,numAS);
 lb = convertGSASparms(lb);
 
 ub.GSlogrates = 2.*ones(1,numcells);
-ub.GSCVs =      4.*ones(1,numcells);
+ub.GSCVs =      5.*ones(1,numcells);
 ub.GSweights =  ones(1,numcells);
 ub.ASlogrates = 3.*ones(1,numAS);
-ub.ASCVs =      2.*ones(1,numAS);
+ub.ASCVs =      5.*ones(1,numAS);
 ub.ASweights  = ones(numcells,numAS);
 ub = convertGSASparms(ub);
 
