@@ -102,7 +102,7 @@ options = optimoptions('fmincon','Algorithm','sqp' ,'UseParallel',UseParallel,'D
 %Decrease tolerance.....
 options.MaxFunctionEvaluations = 1e8;
 options.MaxIterations = 1500; 
-options.StepTolerance = 1e-8;
+options.StepTolerance = 1e-10;
 % options.TypicalX = typ;
 %options.FiniteDifferenceStepSize = 1000.*sqrt(eps);
 
@@ -122,9 +122,9 @@ cellloss_ref = @(GSASparm_vect) sum(...
     (logISIhist(sub1msbins,:)-GSASmodel(GSASparm_vect,taubins(sub1msbins),numcells,numAS)).^2).^0.5;
 
 %Total loss function with regularization etc
-costfun = @(GSASparm_vect) (1./numcells).*sum(cellloss(GSASparm_vect) ...
+costfun = @(GSASparm_vect) (1./numcells).*sum(log10(cellloss(GSASparm_vect) ...
     + AScost_lambda.*(abs(Aeq_ASonly*GSASparm_vect)').^(AScost_p)...; %L1/2 norm on AS weights to promote sparseness
-    + MScost.*cellloss_ref(GSASparm_vect)); 
+    + MScost.*cellloss_ref(GSASparm_vect))); 
 
 %Fitting
 fitparms = fmincon(costfun,init,[],[],Aeq,Beq,lb,ub,[],options);
