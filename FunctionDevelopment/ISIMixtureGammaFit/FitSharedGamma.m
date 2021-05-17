@@ -122,10 +122,10 @@ cellloss_ref = @(GSASparm_vect) sum(...
     (logISIhist(sub1msbins,:)-GSASmodel(GSASparm_vect,taubins(sub1msbins),numcells,numAS)).^2).^0.5;
 
 %Total loss function with regularization etc
-costfun = @(GSASparm_vect) 10.^(1./numcells).*sum(log10(... %Geometric mean (so small # bad cells don't dominate)
+costfun = @(GSASparm_vect) 10.^((1./numcells).*sum(log10(... %Geometric mean (so small # bad cells don't dominate)
     cellloss(GSASparm_vect) + ...
     AScost_lambda.*(abs(Aeq_ASonly*GSASparm_vect)').^(AScost_p) + ...; %L1/2 norm on AS weights to promote sparseness
-    MScost.*cellloss_ref(GSASparm_vect))); 
+    MScost.*cellloss_ref(GSASparm_vect)))); 
 
 
 %%
