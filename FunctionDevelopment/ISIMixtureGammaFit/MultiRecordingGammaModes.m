@@ -111,7 +111,7 @@ for ss = 1:find(success)
     if isempty(region)
         keepcells = true(size(LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate));
     else
-        keepcells = strcmp(LoadGF.GammaFit.(statenames{ss}).cellstats.region,'region');
+        keepcells = strcmp(LoadGF.GammaFit.(statenames{ss}).cellstats.region,region);
     end
     ISIdists4fit = LoadGF.GammaFit.(statenames{ss}).ISIdists(:,keepcells);
     meanFR = LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate(keepcells);
