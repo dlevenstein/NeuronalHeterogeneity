@@ -70,11 +70,13 @@ end
 
 %Need to keep track of.... basePath/baseName for each cell
 clear LoadGF
+success = true(size(GFfilenames));
 for ff = 1:length(GFfilenames)
     try
         LoadGF(ff) = load(GFfilenames{ff});
     catch
         display(['Failed to load ',GFfilenames{ff}])
+        success(ff) = false;
         continue
     end
     baseName{ff} = bz_BasenameFromBasepath(LoadGF(ff).GammaFit.WAKEstate.detectorinfo.detectionparms.basePath);
@@ -85,8 +87,8 @@ for ff = 1:length(GFfilenames)
         LoadGF(ff).GammaFit.(statenames{ss}).recordingIDX = ff.*ones(size(LoadGF(ff).GammaFit.(statenames{ss}).sharedfit(1).GSlogrates));
     end
 end
-display(['Loaded ',num2str(length(LoadGF)),' recordings'])
-LoadGF = bz_CollapseStruct(LoadGF,'match','justcat',true);
+display(['Loaded ',num2str(sum(success)),' recordings'])
+LoadGF = bz_CollapseStruct(LoadGF(success),'match','justcat',true);
 
 %%
 statenames = fieldnames(LoadGF.GammaFit);
@@ -103,7 +105,7 @@ if clusterpar
 end
 %%
 %Consider parfor to run in parallel on cluster.
-for ss = 1:length(statenames)
+for ss = 1:find(success)
     
     %Select only the cells in the proper region
     if isempty(region)
@@ -137,7 +139,7 @@ end
 %% FIgure here showing results of full fits. 
 %Compare - shared fits each recording...
 %%
-for ff = 1:length(GFfilenames)
+for ff = 1:find(success)
     for ss = 1:2
         reccells = recordingIDX.(statenames{ss})==ff;
         thisrecfit = GammaFit_all.(statenames{ss});
