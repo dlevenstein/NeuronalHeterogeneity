@@ -21,6 +21,7 @@ addParameter(p,'MScost',10)
 addParameter(p,'MSthresh',0.002)
 addParameter(p,'display_results','iter')
 addParameter(p,'UseParallel',false)
+addParameter(p,'costmean','amean')
 
 parse(p,varargin{:})
 numAS = p.Results.numAS;
@@ -32,6 +33,7 @@ MScost = p.Results.MScost;
 MSthresh = p.Results.MSthresh;
 display_results = p.Results.display_results;
 UseParallel = p.Results.UseParallel;
+costmean = p.Results.costmean;
 %%
 numcells = size(logISIhist,2);
 %% If there's no initial guess
@@ -102,7 +104,7 @@ options = optimoptions('fmincon','Algorithm','sqp' ,'UseParallel',UseParallel,'D
 %Decrease tolerance.....
 options.MaxFunctionEvaluations = 1e8;
 options.MaxIterations = 1500; 
-options.StepTolerance = 1e-10;
+options.StepTolerance = 1e-12;
 % options.TypicalX = typ;
 %options.FiniteDifferenceStepSize = 1000.*sqrt(eps);
 
@@ -115,18 +117,24 @@ cellloss = @(GSASparm_vect) sum((logISIhist-GSASmodel(GSASparm_vect,taubins,numc
 %Only for high spike density (positive)
 smallISI = MSthresh; %<2ms ISIs penalize (make parameter)
 sub1msbins = taubins<=log(smallISI); %Which bins are small enough for small-time cost
-% cellloss_ref = @(GSASparm_vect) sum(...
-%     ((logISIhist(sub1msbins,:)-GSASmodel(GSASparm_vect,taubins(sub1msbins),numcells,numAS))...
-%     .*((logISIhist(sub1msbins,:)-GSASmodel(GSASparm_vect,taubins(sub1msbins),numcells,numAS))>0)).^2);
 cellloss_ref = @(GSASparm_vect) sum(...
     (logISIhist(sub1msbins,:)-GSASmodel(GSASparm_vect,taubins(sub1msbins),numcells,numAS)).^2).^0.5;
 
-%Total loss function with regularization etc
-costfun = @(GSASparm_vect) 10.^((1./numcells).*sum(log10(... %Geometric mean (so small # bad cells don't dominate)
-    cellloss(GSASparm_vect) + ...
-    AScost_lambda.*(abs(Aeq_ASonly*GSASparm_vect)').^(AScost_p) + ...; %L1/2 norm on AS weights to promote sparseness
-    MScost.*cellloss_ref(GSASparm_vect)))); 
+switch costmean
+    case 'gmean'
+        %Total loss function with regularization etc
+        costfun = @(GSASparm_vect) 10.^((1./numcells).*sum(log10(... %Geometric mean (so small # bad cells don't dominate)
+            cellloss(GSASparm_vect) + ...
+            AScost_lambda.*(abs(Aeq_ASonly*GSASparm_vect)').^(AScost_p) + ...; %L1/2 norm on AS weights to promote sparseness
+            MScost.*cellloss_ref(GSASparm_vect)))); 
 
+    case 'amean'
+        %Total loss function with regularization etc
+        costfun = @(GSASparm_vect) (1./numcells).*sum(... %Geometric mean (so small # bad cells don't dominate)
+            cellloss(GSASparm_vect) + ...
+            AScost_lambda.*(abs(Aeq_ASonly*GSASparm_vect)').^(AScost_p) + ...; %L1/2 norm on AS weights to promote sparseness
+            MScost.*cellloss_ref(GSASparm_vect)); 
+end
 
 %%
 %Fitting

@@ -149,7 +149,7 @@ bz_PlotISIDistModes(GammaFit.WAKEstate,checkUID)
 title(['Cell UID: ',num2str(checkUID)])
 
 subplot(4,1,3)
-bz_PlotModeRaster(ModeHMM.WAKEstate,ModeInts_time.WAKEstate.cells,cellIDX,modecolors,exwin,linethick);
+%bz_PlotModeRaster(ModeHMM.WAKEstate,ModeInts_time.WAKEstate.cells,cellIDX,modecolors,exwin,linethick);
 
 subplot(4,1,4)
 hold on

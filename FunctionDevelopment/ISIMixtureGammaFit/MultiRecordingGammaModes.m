@@ -114,7 +114,7 @@ for ss = 1:length(statenames)
     MScost = LoadGF.GammaFit.(statenames{ss}).detectorinfo.detectionparms.MScost(1);
     % MScost = 10;
     % AScost = 0.05;
-    keepAS = 6;
+    keepAS = 5;
     GammaFit_all.(statenames{ss}) = bz_FitISISharedGammaModes_new(ISIdists4fit,...
         'logtimebins',LoadGF.GammaFit.(statenames{ss}).logtimebins(1,:),...
         'maxAS',keepAS,'numAS',keepAS,'figfolder',saveFolder,...
@@ -171,8 +171,8 @@ end
 %%
 %load('CA1.GammaFit_all.cellinfo.mat')
 %%
-   whichAS.WAKEstate = 6;
-   whichAS.NREMstate = 6;
+   whichAS.WAKEstate = 5;
+   whichAS.NREMstate = 5;
    
 % weightthresh = 0.01;
 % clear modeweightcorr allweights numsigAS

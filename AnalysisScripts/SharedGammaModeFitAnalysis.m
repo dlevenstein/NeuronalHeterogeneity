@@ -9,14 +9,14 @@ function [GammaFit] = SharedGammaModeFitAnalysis(basePath,figfolder)
 %
 %% Load Header
 %Initiate Paths
-%reporoot = '/home/dlevenstein/ProjectRepos/NeuronalHeterogeneity/';
-%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %basePath = pwd;
-%basePath = '/Users/dl2820/Dropbox/research/Datasets/Cicero_09102014';
+basePath = '/Users/dl2820/Dropbox/research/Datasets/Cicero_09102014';
 %basePath = '/Users/dl2820/Dropbox/research/Datasets/20140526_277um';
-%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 SAVECELLINFO = true;
+REPLACECELLINFO = false;
 
 %Load Stuff
 sessionInfo = bz_getSessionInfo(basePath);
@@ -34,6 +34,13 @@ cellcolor = {'k','r'};
 statecolor = {'b','k','r'};
 
 %%
+
+cellinfofilename = fullfile(basePath,[baseName,'.GammaFit.cellinfo.mat']); %Update in a bit and below
+if REPLACECELLINFO && exist(cellinfofilename)
+    display('Deleting old cellinfo file')
+    delete(cellinfofilename)
+end
+%%
 statenames = {'NREMstate','WAKEstate','REMstate'};
 %%
 
@@ -42,7 +49,7 @@ for ss = 1:2
 AScost = 0.3; %Formerly 0.05
 MScost = 2;  %Formerly 10 (before add sqrt and 1/numcells)
 %Here: fit with all the stuff (final parms)
-keepAS = 6;
+keepAS = 5;
 GammaFit.(statenames{ss}) = bz_FitISISharedGammaModes_new(spikes,...
     'figfolder',figfolder,'basePath',basePath,'ints',SleepState.ints.(statenames{ss}),...
     'usecells',CellClass.pE,'maxAS',keepAS,'numAS',keepAS,...
@@ -160,7 +167,7 @@ if TESTCONSTRAINTS
     %%
     c_ref = logspace(-0.5,1,7);
     c_AS = linspace(0,0.7,8);
-    numAS = 4;
+    numAS = 5;
     
     clear GammaFit_hparms
     for rr = 1:length(c_ref)
@@ -220,7 +227,7 @@ if TESTCONSTRAINTS
      title('Total Loss')
      
      
-    examples = [[1 1];[1 length(c_AS)];[length(c_ref) 1];[length(c_ref) length(c_AS)];[4 3]];
+    examples = [[1 1];[1 length(c_AS)];[length(c_ref) 1];[length(c_ref) length(c_AS)];[4 6]];
     for ee = 1:5
     subplot(3,3,ee+3)
         bz_PlotISIDistModes(GammaFit_hparms(examples(ee,1),examples(ee,2)),GammaFit_hparms(examples(ee,1),examples(ee,2)).cellstats.UID,...
@@ -247,8 +254,6 @@ GammaFit.(statenames{2}).cellstats.NW = false(size(GammaFit.(statenames{2}).cell
 GammaFit.(statenames{1}).cellstats.NW(NW1)=true;
 GammaFit.(statenames{2}).cellstats.NW(NW2)=true;
 
-
-cellinfofilename = fullfile(basePath,[baseName,'.GammaFit.cellinfo.mat']); %Update in a bit and below
 if SAVECELLINFO
     save(cellinfofilename,'GammaFit')
 end
