@@ -71,7 +71,12 @@ end
 %Need to keep track of.... basePath/baseName for each cell
 clear LoadGF
 for ff = 1:length(GFfilenames)
-    LoadGF(ff) = load(GFfilenames{ff});
+    try
+        LoadGF(ff) = load(GFfilenames{ff});
+    catch
+        display(['Failed to load ',GFfilenames{ff}])
+        continue
+    end
     baseName{ff} = bz_BasenameFromBasepath(LoadGF(ff).GammaFit.WAKEstate.detectorinfo.detectionparms.basePath);
     saveName{ff} = [baseName{ff},'.GammaFit_full.cellinfo.mat']; %Note: add an option here for a tag (e.g. region...)
     %savefilename{ff} here: figure out the filename to re-save this GammaFit
