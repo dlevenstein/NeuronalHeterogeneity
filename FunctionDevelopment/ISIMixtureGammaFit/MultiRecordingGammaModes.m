@@ -46,12 +46,15 @@ clusterpar = p.Results.clusterpar;
 %     'Gatsby_08022013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
 %     'Gatsby_08282013.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
 
+GFfilenames = {'Rat09-20140328.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
+    'Rat09-20140329.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
+
 % GFfilenames = {'Achilles_11012013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
 % 	'Achilles_10252013.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
-% saveName_full = 'CA1_test';
-% basePaths = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs/SharedGammaModeFitAnalysis';
-% clusterpar = false;
-% region = [];
+saveName_full = 'BLA_test';
+basePaths = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs/SharedGammaModeFitAnalysis';
+clusterpar = false;
+region = 'bla';
 %%
 display(['Running Gamma Fit: ',saveName_full])
 
@@ -111,8 +114,8 @@ for ss = 1:length(statenames)
     if isempty(region)
         keepcells = true(size(LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate));
     else
-        keepcells = strcmp(LoadGF.GammaFit.(statenames{ss}).cellstats.region,region);
-        display(['Keeping ',num2str(length(keepcells)),' from region: ',region])
+        keepcells = strcmp([LoadGF.GammaFit.(statenames{ss}).cellstats.region{:}],region);
+        display(['Keeping ',num2str(sum(keepcells)),' cells from region: ',region])
     end
     ISIdists4fit = LoadGF.GammaFit.(statenames{ss}).ISIdists(:,keepcells);
     meanFR = LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate(keepcells);
@@ -140,6 +143,11 @@ end
 %% FIgure here showing results of full fits. 
 %Compare - shared fits each recording...
 %%
+%Save the GammaFit_all file ...
+cellinfofilename = fullfile(saveFolder,[saveName_full,'.GammaFit_all.cellinfo.mat']); 
+save(cellinfofilename,'GammaFit_all')
+
+%Save Each recordings cellinfo file
 for ff = find(success)
     for ss = 1:length(statenames)
         reccells = recordingIDX.(statenames{ss})==ff;
@@ -159,20 +167,10 @@ for ff = find(success)
             thisrecfit.sharedfit(sf).GSweights = thisrecfit.sharedfit(sf).GSweights(reccells);
             thisrecfit.sharedfit(sf).ASweights = thisrecfit.sharedfit(sf).ASweights(reccells,:);
         end
-        GammaFit_eachrec(ff).(statenames{ss}) = thisrecfit;
+        GammaFit_full.(statenames{ss}) = thisrecfit;
     end
-end
 
-%%
-%Save the GammaFit_all file somewhere...
-cellinfofilename = fullfile(saveFolder,[saveName_full,'.GammaFit_all.cellinfo.mat']); 
-save(cellinfofilename,'GammaFit_all')
-
-%Each recordings cellinfo file
-for ff = 1:length(GFfilenames)
-    %GammaFit_full = GammaFit_full(ff)
     cellinfofilename = fullfile(basePaths{ff},saveName{ff}); 
-    GammaFit_full = GammaFit_eachrec(ff);
     save(cellinfofilename,'GammaFit_full')
 end
 
