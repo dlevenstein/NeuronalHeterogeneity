@@ -105,13 +105,14 @@ if clusterpar
 end
 %%
 %Consider parfor to run in parallel on cluster.
-for ss = 1:find(success)
+for ss = 1:length(statenames)
     
     %Select only the cells in the proper region
     if isempty(region)
         keepcells = true(size(LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate));
     else
         keepcells = strcmp(LoadGF.GammaFit.(statenames{ss}).cellstats.region,region);
+        display(['Keeping ',num2str(length(keepcells)),' from region: ',region])
     end
     ISIdists4fit = LoadGF.GammaFit.(statenames{ss}).ISIdists(:,keepcells);
     meanFR = LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate(keepcells);
@@ -139,8 +140,8 @@ end
 %% FIgure here showing results of full fits. 
 %Compare - shared fits each recording...
 %%
-for ff = 1:find(success)
-    for ss = 1:2
+for ff = find(success)
+    for ss = 1:length(statenames)
         reccells = recordingIDX.(statenames{ss})==ff;
         thisrecfit = GammaFit_all.(statenames{ss});
         
@@ -175,8 +176,13 @@ for ff = 1:length(GFfilenames)
     save(cellinfofilename,'GammaFit_full')
 end
 
-%%
-%load('CA1.GammaFit_all.cellinfo.mat')
+%% For analysis after loading...
+% load('CA1.GammaFit_all.cellinfo.mat')
+% statenames = fieldnames(GammaFit_all);
+% statecolors = {'b','k'};
+% keepAS = length(GammaFit_all.WAKEstate.sharedfit)-1;
+% saveName_full = 'CA1_test';
+% saveFolder = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs/SharedGammaModeFitAnalysis';
 %%
    whichAS.WAKEstate = 5;
    whichAS.NREMstate = 5;
@@ -197,14 +203,17 @@ lowthreshcolor = [0.95 0.95 0.95];
 numrepeats = 3;
 %excell = excells;
 histcolors = [repmat([1 1 1],numrepeats,1);makeColorMap(lowthreshcolor,[0 0 0])];
+NREMhistcolors = [repmat([1 1 1],numrepeats,1);makeColorMap(lowthreshcolor,[0 0 0.8])];
+REMhistcolors = [repmat([1 1 1],numrepeats,1);makeColorMap(lowthreshcolor,[0.8 0 0])];
+statecolormap = {NREMhistcolors,histcolors,REMhistcolors};
 
 for ss = 1:2
  
    
-    [~,sortGSrate] = sort(GammaFit_all.(statenames{ss}).sharedfit(whichAS.(statenames{ss})+1).GSlogrates);
+    [~,sortGSrate{ss}] = sort(GammaFit_all.(statenames{ss}).sharedfit(whichAS.(statenames{ss})+1).GSlogrates);
     logtimebins = GammaFit_all.(statenames{ss}).logtimebins;
     numcells = GammaFit_all.(statenames{ss}).numcells;
-    logISIhist = GammaFit_all.(statenames{ss}).ISIdists;
+    logISIhist{ss} = GammaFit_all.(statenames{ss}).ISIdists;
     meanFR = GammaFit_all.(statenames{ss}).cellstats.meanrate;
     costval = GammaFit_all.(statenames{ss}).costval;
     
@@ -214,19 +223,19 @@ for ss = 1:2
         allweights.(statenames{ss}){pp}(log10(allweights.(statenames{ss}){pp})<-4) = 1e-4;
         numsigAS{pp} = sum(allweights.(statenames{ss}){pp}>weightthresh,2);
 
-        modeweightcorr{pp} = corr([allweights.(statenames{ss}){pp} GammaFit_all.(statenames{ss}).sharedfit(pp).GSweights'] ,...
+        modeweightcorr.(statenames{ss}){pp} = corr([allweights.(statenames{ss}){pp} GammaFit_all.(statenames{ss}).sharedfit(pp).GSweights'] ,...
             'type','spearman');
     end
     
     
     figure
         subplot(3,3,1)
-            imagesc(logtimebins,[1 numcells],logISIhist(:,sortGSrate)')
+            imagesc(logtimebins,[1 numcells],logISIhist{ss}(:,sortGSrate{ss})')
             hold on
-            plot(-log10(meanFR(sortGSrate)),[1:numcells],'k.')
-            plot(-GammaFit_all.(statenames{ss}).sharedfit(whichAS.(statenames{ss})+1).GSlogrates(sortGSrate),[1:numcells],'.','color',GScolor)
+            plot(-log10(meanFR(sortGSrate{ss})),[1:numcells],'k.')
+            plot(-GammaFit_all.(statenames{ss}).sharedfit(whichAS.(statenames{ss})+1).GSlogrates(sortGSrate{ss}),[1:numcells],'.','color',GScolor)
             %colorbar
-            colormap(gca,histcolors)
+            colormap(gca,statecolormap{ss})
             title([saveName_full,(statenames{ss})])
             xlim([-3 2])
             ylabel(['Cells (',num2str(numcells),')'])
@@ -246,7 +255,7 @@ for ss = 1:2
         subplot(3,7,pp+7)
             bz_PlotISIDistModes(GammaFit_all.(statenames{ss}),'all','showSingleFits',true,...
                 'whichShare',pp,'dotscale',10,'dotscaleAS',150)
-            ylim([-1.5 1.6])
+            ylim([-1.8 1.6])
             LogScale('y',10,'nohalf',true)
             if pp>1
                 set(gca,'yticklabels',[])
@@ -272,7 +281,7 @@ for ss = 1:2
         
         pp = whichAS.(statenames{ss})+1;
         subplot(3,3,3)
-            imagesc(modeweightcorr{pp})
+            imagesc(modeweightcorr.(statenames{ss}){pp})
             colorbar
             crameri('vik','pivot',0)
             xlabel('Mode');ylabel('Mode')
@@ -283,29 +292,61 @@ NiceSave(['CompareNAS_',(statenames{ss})],saveFolder,saveName_full);
 end
 
 %% Relate WAKE and NREM
-        modeweightcorr_NW = corr([allweights.(statenames{1}){whichAS.(statenames{1})+1} GammaFit_all.(statenames{1}).sharedfit(whichAS.(statenames{1})+1).GSweights'] ,...
+        modeweightcorr.NW = corr([allweights.(statenames{1}){whichAS.(statenames{1})+1} GammaFit_all.(statenames{1}).sharedfit(whichAS.(statenames{1})+1).GSweights'] ,...
             [allweights.(statenames{2}){whichAS.(statenames{2})+1} GammaFit_all.(statenames{2}).sharedfit(whichAS.(statenames{2})+1).GSweights'],...
             'type','spearman');
 
 figure
-    subplot(2,4,1)
+for ss = 1:2
+    subplot(3,3,ss)
+        imagesc(logtimebins,[1 numcells],logISIhist{ss}(:,sortGSrate{ss})')
+        hold on
+        %plot(-log10(meanFR(sortGSrate{ss})),[1:numcells],'k.')
+        plot(-GammaFit_all.(statenames{ss}).sharedfit(whichAS.(statenames{ss})+1).GSlogrates(sortGSrate{ss}),[1:numcells],'.','color',GScolor)
+        %colorbar
+        colormap(gca,statecolormap{ss})
+        title([saveName_full,(statenames{ss})])
+        %xlim([-3 2])
+        xlim([-2.75 2])
+        ylabel(['Cells (',num2str(numcells),')'])
+        set(gca,'yticklabel',[])
+        LogScale('x',10,'exp',true,'nohalf',true)
+        caxis([0 0.5])
+        box off
+        
+    subplot(2,3,3+ss)
+        bz_PlotISIDistModes(GammaFit_all.(statenames{ss}),'all','showSingleFits',true,...
+            'whichShare',whichAS.(statenames{ss})+1,'dotscale',10,'dotscaleAS',150,...
+            'AScolor',statecolors{ss})
+        ylim([-2 1.9])
+        xlim([-2.75 2])
+        box off
+        LogScale('y',10,'nohalf',true)        
+        
+end
+
+    subplot(2,3,6)
     for ss = 1:2
         bz_PlotISIDistModes(GammaFit_all.(statenames{ss}),'all','showSingleFits',false,...
-            'whichShare',whichAS.(statenames{ss})+1,'dotscale',10,'dotscaleAS',150)
+            'whichShare',whichAS.(statenames{ss})+1,'dotscale',10,'dotscaleAS',150,...
+            'AScolor',statecolors{ss})
     end
         ylim([-2 1.9])
         box off
         LogScale('y',10,'nohalf',true)
         
     subplot(3,3,3)
-        imagesc(modeweightcorr_NW)
+        imagesc([modeweightcorr.WAKEstate{whichAS.(statenames{2})+1} zeros(whichAS.WAKEstate+1,whichAS.NREMstate+1); ...
+            modeweightcorr.NW,modeweightcorr.NREMstate{whichAS.(statenames{1})+1}])
         colorbar
+        box off
         crameri('vik','pivot',0)
-        xlabel('Mode WAKE');ylabel('Mode NREM')
-        set(gca,'ytick',[0:whichAS.(statenames{1})+1])
-        set(gca,'xtick',[0:whichAS.(statenames{2})+1])
+        xlabel('WAKE  |  NREM');ylabel('NREM  |  WAKE')
+        set(gca,'ytick',[0:whichAS.(statenames{1})+whichAS.(statenames{2})+2])
+        set(gca,'xtick',[0:whichAS.(statenames{1})+whichAS.(statenames{2})+2])
+
         
-    subplot(3,3,2)
+    subplot(6,3,9)
     hold on
     for ss = 1:2
         plot(linspace(0,size(GammaFit_all.(statenames{ss}).costval,1)-1,size(GammaFit_all.(statenames{ss}).costval,1)),...

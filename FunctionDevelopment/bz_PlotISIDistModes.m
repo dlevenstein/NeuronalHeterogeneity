@@ -19,6 +19,7 @@ addParameter(p,'whichShare',1)
 addParameter(p,'dotscale',200)
 addParameter(p,'dotscaleAS',[])
 addParameter(p,'showSingleFits',false)
+addParameter(p,'AScolor','k')
 parse(p,varargin{:})
 sharORsing = p.Results.sharORsing;
 ws = p.Results.whichShare;
@@ -28,6 +29,7 @@ if isempty(dotscaleAS)
     dotscaleAS = dotscale;
 end
 showSingleFits = p.Results.showSingleFits;
+AScolor = p.Results.AScolor;
 % add: Mode color...
 %%
 % Find the cell that matches the UID
@@ -147,7 +149,7 @@ end
 
 scatter(-GFmodel.ASlogrates,...
     log10(GFmodel.ASCVs),...
-    dotscaleAS*mean(GFmodel.ASweights,1)+0.00001,[0 0 0],ASdots)
+    dotscaleAS*mean(GFmodel.ASweights,1)+0.00001,AScolor,ASdots)
 hold on
 scatter(-GFmodel.GSlogrates,...
     log10(GFmodel.GSCVs),...
