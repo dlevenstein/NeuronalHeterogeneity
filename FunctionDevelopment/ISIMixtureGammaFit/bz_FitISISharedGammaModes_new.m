@@ -204,11 +204,15 @@ for aa = 1:(maxAS+1)
             cinit_struct.ASlogrates = sharedfit(aa).ASlogrates;
             cinit_struct.ASCVs = sharedfit(aa).ASCVs;
             cinit_struct.ASweights  = sharedfit(aa).ASweights(cc,:);
-
-            singlecell(aa,cc) = FitSharedGamma(logISIhist(:,cc),taubins,...
-                'MScost',MScost,'MSthresh',MSthresh,'AScost_p',AScost_p,'AScost_lambda',AScost_lambda,...
-                'init_struct',cinit_struct,'display_results','off',...
-                'UseParallel',UseParallel); 
+            try
+                singlecell(aa,cc) = FitSharedGamma(logISIhist(:,cc),taubins,...
+                    'MScost',MScost,'MSthresh',MSthresh,'AScost_p',AScost_p,'AScost_lambda',AScost_lambda,...
+                    'init_struct',cinit_struct,'display_results','off',...
+                    'UseParallel',UseParallel); 
+            catch
+                display('Error. Using Shared Fit')
+                singlecell(aa,cc) = cinit_struct;
+            end
 
         end   
     end
