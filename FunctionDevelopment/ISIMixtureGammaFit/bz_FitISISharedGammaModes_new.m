@@ -58,6 +58,7 @@ addParameter(p,'savecellinfo',false,@islogical)
 addParameter(p,'savenumAS','all')
 addParameter(p,'display_results','iter')
 addParameter(p,'UseParallel',false)
+addParameter(p,'clusterpar',false)
 
 parse(p,varargin{:})
 logbase = p.Results.logbase;
