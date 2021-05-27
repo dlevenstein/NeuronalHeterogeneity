@@ -104,13 +104,13 @@ if clusterpar
     % % enable MATLAB to utilize the multiple cores allocated in the job script
     % % SLURM_NTASKS_PER_NODE is a variable set in the job script by the flag --tasks-per-node
     % % we use SLURM_NTASKS_PER_NODE - 1, because one of these tasks is the original MATLAB script itself
-    %parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1,'IdleTimeout', Inf);
-    parpool(pc, 2,'IdleTimeout', Inf);
+    parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1,'IdleTimeout', Inf);
+    %parpool(pc, 2,'IdleTimeout', Inf);
 end
 %%
 keepAS = 5;
 %Consider parfor to run in parallel on cluster.
-parfor ss = 1:length(statenames)
+for ss = 1:length(statenames)
     
     %Select only the cells in the proper region
     if isempty(region)
@@ -134,7 +134,7 @@ parfor ss = 1:length(statenames)
         'AScost_lambda',AScost,'AScost_p',1,'ASguess',false,'MScost',MScost,'figname',[saveName_full,(statenames{ss})],...
         'savecellinfo',false,'forceRedetect',true,'singlefit',true,...
         'display_results','iter','meanFR',meanFR,...
-        'basePath',saveFolder,'UseParallel',true,'clusterpar',clusterpar);
+        'basePath',saveFolder,'UseParallel',true);
     
     temp(ss).cellstats.NW = LoadGF.GammaFit.(statenames{ss}).cellstats.NW;
 end
