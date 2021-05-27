@@ -105,6 +105,7 @@ if clusterpar
     % % SLURM_NTASKS_PER_NODE is a variable set in the job script by the flag --tasks-per-node
     % % we use SLURM_NTASKS_PER_NODE - 1, because one of these tasks is the original MATLAB script itself
     parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1,'IdleTimeout', Inf);
+    %parpool(pc, 2,'IdleTimeout', Inf);
 end
 %%
 keepAS = 5;

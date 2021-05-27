@@ -84,6 +84,7 @@ forceRedetect = p.Results.forceRedetect;
 SAVECELLINFO = p.Results.savecellinfo;
 display_results = p.Results.display_results;
 UseParallel = p.Results.UseParallel;
+clusterpar = p.Results.clusterpar;
 
 
 
@@ -105,6 +106,17 @@ end
 % if length(ISIs)<minISIs
 %     return
 % end
+%% Cluster stuff
+if clusterpar
+    pc2 = parcluster('local');
+    % % store temporary files in the 'scratch' drive on the cluster, labeled by job ID
+    pc2.JobStorageLocation = strcat(getenv('SCRATCH'), '/', getenv('SLURM_JOB_ID'));
+    % % enable MATLAB to utilize the multiple cores allocated in the job script
+    % % SLURM_NTASKS_PER_NODE is a variable set in the job script by the flag --tasks-per-node
+    % % we use SLURM_NTASKS_PER_NODE - 1, because one of these tasks is the original MATLAB script itself
+    parpool(pc2, (str2num(getenv('SLURM_NTASKS_PER_NODE'))-3)./2,'IdleTimeout', Inf);
+    %parpool(pc, 2,'IdleTimeout', Inf);
+end
 %% Get the ISI stats from the spikes
 if isempty(logtimebins)
     %Note: don't do this if the histogram is given...
