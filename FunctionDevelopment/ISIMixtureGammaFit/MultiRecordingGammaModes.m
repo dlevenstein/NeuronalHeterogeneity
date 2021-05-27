@@ -107,8 +107,9 @@ if clusterpar
     parpool(pc, str2num(getenv('SLURM_NTASKS_PER_NODE'))-1,'IdleTimeout', Inf);
 end
 %%
+keepAS = 5;
 %Consider parfor to run in parallel on cluster.
-for ss = 1:length(statenames)
+parfor ss = 1:length(statenames)
     
     %Select only the cells in the proper region
     if isempty(region)
@@ -119,14 +120,14 @@ for ss = 1:length(statenames)
     end
     ISIdists4fit = LoadGF.GammaFit.(statenames{ss}).ISIdists(:,keepcells);
     meanFR = LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate(keepcells);
-    recordingIDX.(statenames{ss}) = LoadGF.GammaFit.(statenames{ss}).recordingIDX(keepcells);
+    whichrec{ss} = LoadGF.GammaFit.(statenames{ss}).recordingIDX(keepcells);
     
     AScost = LoadGF.GammaFit.(statenames{ss}).detectorinfo.detectionparms.AScost_lambda(1);
     MScost = LoadGF.GammaFit.(statenames{ss}).detectorinfo.detectionparms.MScost(1);
     % MScost = 10;
     % AScost = 0.05;
-    keepAS = 5;
-    GammaFit_all.(statenames{ss}) = bz_FitISISharedGammaModes_new(ISIdists4fit,...
+    
+    temp(ss) = bz_FitISISharedGammaModes_new(ISIdists4fit,...
         'logtimebins',LoadGF.GammaFit.(statenames{ss}).logtimebins(1,:),...
         'maxAS',keepAS,'numAS',keepAS,'figfolder',saveFolder,...
         'AScost_lambda',AScost,'AScost_p',1,'ASguess',false,'MScost',MScost,'figname',[saveName_full,(statenames{ss})],...
@@ -134,12 +135,13 @@ for ss = 1:length(statenames)
         'display_results','iter','meanFR',meanFR,...
         'basePath',saveFolder,'UseParallel',true);
     
-    GammaFit_all.(statenames{ss}).cellstats.NW = LoadGF.GammaFit.(statenames{ss}).cellstats.NW;
+    temp(ss).cellstats.NW = LoadGF.GammaFit.(statenames{ss}).cellstats.NW;
 end
 
-% for ss = 1:length(statenames)
-%     GammaFit_all.(statenames{ss}) = temp(ss);
-% end 
+for ss = 1:length(statenames)
+    GammaFit_all.(statenames{ss}) = temp(ss);
+    recordingIDX.(statenames{ss}) = whichrec{ss};
+end 
 %% FIgure here showing results of full fits. 
 %Compare - shared fits each recording...
 %%
