@@ -65,13 +65,13 @@ def main():
             seq_len = len( spk_stateISI[brainstates1[state]] )
 
             # Parameters for ground state (neuron specific)
-            gscvs = GammaFits[brainstates[state]]['sharedfit'][5,0]['GSCVs'][0,0]
-            gsrates = GammaFits[brainstates[state]]['sharedfit'][5,0]['GSlogrates'][0,0]
+            gscvs = GammaFits[brainstates[state]]['sharedfit'][0,5]['GSCVs'][0,0]
+            gsrates = GammaFits[brainstates[state]]['sharedfit'][0,5]['GSlogrates'][0,0]
             lambda_gs, k_gs = util.toAlphaBeta(gsrates,gscvs)
 
             # Parameters for activated state (common across neurons)
-            ascvs = GammaFits[brainstates[state]]['sharedfit'][5,0]['ASCVs'][0,0]
-            asrates = GammaFits[brainstates[state]]['sharedfit'][5,0]['ASlogrates'][0,0]
+            ascvs = GammaFits[brainstates[state]]['sharedfit'][0,5]['ASCVs'][0,0]
+            asrates = GammaFits[brainstates[state]]['sharedfit'][0,5]['ASlogrates'][0,0]
             lambda_as, k_as = util.toAlphaBeta(asrates, ascvs)
 
             ## Construct model - freeze parameters of the emission distribution
