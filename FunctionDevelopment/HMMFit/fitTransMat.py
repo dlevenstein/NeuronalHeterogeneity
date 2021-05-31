@@ -36,7 +36,7 @@ def main():
     brainstates1 = ['NREM', 'WAKE']
 
     # Number of restarts from a randomly initialized transition matrix
-    nrestarts = 10
+    nrestarts = 5
     dirname = 'GammaProcessed3'
 
     out = {}
