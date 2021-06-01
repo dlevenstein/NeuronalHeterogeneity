@@ -10,7 +10,7 @@ sbatch ./FullSharedFitjob.bash  "'CA1'"  \
 '/gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08022013'}"  \
 "[]"
 
-sbatch ./FullSharedFitjob.bash  "'vCTX'"  \
+sbatch ./FullSharedFitjob_long.bash  "'vCTX'"  \
 "{'/gpfs/data/buzsakilab/DL/Database/YSData/YMV01/YMV01_170818',\
 '/gpfs/data/buzsakilab/DL/Database/YSData/YMV02/YMV02_170815',\
 '/gpfs/data/buzsakilab/DL/Database/YSData/YMV04/YMV04_170907',\
@@ -27,7 +27,7 @@ sbatch ./FullSharedFitjob.bash  "'vCTX'"  \
 '/gpfs/data/buzsakilab/DL/Database/YSData/YMV19/YMV19_180209'}"  \
 "[]"
 
-sbatch ./FullSharedFitjob.bash  "'fCTX'"  \
+sbatch ./FullSharedFitjob_long.bash  "'fCTX'"  \
 "{'/gpfs/data/buzsakilab/DL/Database/BWData/Bogey/Bogey_012615',\
 '/gpfs/data/buzsakilab/DL/Database/BWData/BWRat17/BWRat17_121712',\
 '/gpfs/data/buzsakilab/DL/Database/BWData/BWRat17/BWRat17_121912',\
@@ -56,7 +56,7 @@ sbatch ./FullSharedFitjob.bash  "'fCTX'"  \
 "[]"
 
 
-sbatch ./FullSharedFitjob.bash  "'THAL'"  \
+sbatch ./FullSharedFitjob_long.bash  "'THAL'"  \
 "{'/gpfs/data/buzsakilab/DL/Database/APData/Mouse12/Mouse12-120806',\
 '/gpfs/data/buzsakilab/DL/Database/APData/Mouse12/Mouse12-120807',\
 '/gpfs/data/buzsakilab/DL/Database/APData/Mouse12/Mouse12-120808',\
@@ -141,7 +141,7 @@ sbatch ./FullSharedFitjob.bash  "'PIR'"  \
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150330/'}"  \
 "'pir'"
 
-sbatch ./FullSharedFitjob.bash  "'BLA'"  \
+sbatch ./FullSharedFitjob_long.bash  "'BLA'"  \
 "{'/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130708/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130709/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130710/',\

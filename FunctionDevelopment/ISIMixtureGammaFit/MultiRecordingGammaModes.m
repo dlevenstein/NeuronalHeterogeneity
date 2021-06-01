@@ -48,13 +48,13 @@ clusterpar = p.Results.clusterpar;
 
 % GFfilenames = {'Rat09-20140328.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
 %     'Rat09-20140329.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
-
+% 
 % GFfilenames = {'Achilles_11012013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
 % 	'Achilles_10252013.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
-% saveName_full = 'BLA_test';
+% saveName_full = 'CA1_test';
 % basePaths = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs/SharedGammaModeFitAnalysis';
 % clusterpar = false;
-% region = 'bla';
+% region = [];
 %%
 display(['Running Gamma Fit: ',saveName_full])
 
