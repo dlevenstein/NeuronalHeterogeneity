@@ -67,10 +67,6 @@ else
     GFfilenames = cellfun(@(X,Y) fullfile(X,[Y,'.GammaFit.cellinfo.mat']),basePaths,baseNames,'UniformOutput',false);
 end
 
-
-%ISSUE: regions! some recordings have cells from different regions...
-%Keep only cells with proper region tag
-
 %Need to keep track of.... basePath/baseName for each cell
 clear LoadGF
 success = true(size(GFfilenames));
@@ -83,8 +79,7 @@ for ff = 1:length(GFfilenames)
         continue
     end
     baseName{ff} = bz_BasenameFromBasepath(LoadGF(ff).GammaFit.WAKEstate.detectorinfo.detectionparms.basePath);
-    saveName{ff} = [baseName{ff},'.GammaFit_full.cellinfo.mat']; %Note: add an option here for a tag (e.g. region...)
-    %savefilename{ff} here: figure out the filename to re-save this GammaFit
+    saveName{ff} = [baseName{ff},['.GammaFit_',saveName_full,'.cellinfo.mat']]; %Note: add an option here for a tag (e.g. region...)
     statenames = fieldnames(LoadGF(ff).GammaFit);
     for ss = 1:length(statenames)
         LoadGF(ff).GammaFit.(statenames{ss}).recordingIDX = ff.*ones(size(LoadGF(ff).GammaFit.(statenames{ss}).sharedfit(1).GSlogrates));
@@ -162,6 +157,8 @@ for ff = find(success)
         thisrecfit.costval = thisrecfit.costval(:,reccells);
         thisrecfit.cellstats.meanrate = thisrecfit.cellstats.meanrate(reccells);
         thisrecfit.cellstats.NW = thisrecfit.cellstats.NW(reccells);
+        thisrecfit.cellstats.UID = thisrecfit.cellstats.UID(reccells);
+        thisrecfit.cellstats.region = thisrecfit.cellstats.region(reccells);
         
         numsharedfits = length(thisrecfit.sharedfit);
         for sf = 1:numsharedfits

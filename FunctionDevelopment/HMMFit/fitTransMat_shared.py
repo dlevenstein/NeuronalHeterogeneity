@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
 import sys
-#import code.util as util
-import util
+#import code.util_shared as util
+import util_shared as util
 import numpy as np
 from scipy import io as scio
 from pomegranate import *
@@ -15,11 +15,10 @@ def main():
     UID = int(sys.argv[2])
 
     # Retrieve basepath
-    base_dict = scio.loadmat('/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/FunctionDevelopment/HMMFit/basepaths_test.mat')
-    basepath = base_dict['basepaths'][basepath_ind,0][0]
-    #basepath_original = base_dict['basepaths'][basepath_ind,0][0]
-    #base_split = basepath_original.split(os.path.sep)
-    #basepath = os.path.join('/gpfs/scratch/rh2618/rh_data', base_split[-1-2], base_split[-1-1], base_split[-1])
+    base_dict = scio.loadmat('/gpfs/scratch/rh2618/basepaths_mac.mat')
+    basepath_original = base_dict['basepaths_all'][basepath_ind,0][0]
+    base_split = basepath_original.split(os.path.sep)
+    basepath = os.path.join('/gpfs/scratch/rh2618/rh_data', base_split[-1-2], base_split[-1-1], base_split[-1])
 
     # Load in data
     GammaFits = util.getGammaFits(basepath)
@@ -37,6 +36,8 @@ def main():
 
     # Number of restarts from a randomly initialized transition matrix
     nrestarts = 5
+    # Number of activated states (0 through something)
+    nAS = 5
     dirname = 'GammaProcessed3'
 
     out = {}
@@ -47,12 +48,20 @@ def main():
     # Loop over NREM / WAKE states
     for state in range(len(brainstates)):
 
-        # Pull out UIDs
+        # Check for the existence of state in the struct
         try:
-            UID_state = GammaFits[brainstates[state]][0,0]['cellstats'][0,0]['UID'].flatten()
+            GammaFits[brainstates[state]][0,0]
         except:
             continue
 
+        # Pull out UIDs
+        try
+            UID_state = GammaFits[brainstates[state]][0,0]['cellstats'][0,0]['UID'][0]
+        # If there are no UIDs, make them 1 through # of neurons
+        except:
+            Nneurons = GammaFits[brainstates[state]][0,0]['cellstats'][0,0]['meanrate'][0].size
+            UID_state = np.arange(Nneurons)+1
+            print('UID not found, assuming 1 through N')
         # If this UID has been fit
         gamma_index = util.UIDtoIndex(UID_state, UID)
         if gamma_index is not None:
@@ -65,13 +74,13 @@ def main():
             seq_len = len( spk_stateISI[brainstates1[state]] )
 
             # Parameters for ground state (neuron specific)
-            gscvs = GammaFits[brainstates[state]]['sharedfit'][0,0]['GSCVs'][0,0]
-            gsrates = GammaFits[brainstates[state]]['sharedfit'][0,0]['GSlogrates'][0,0]
+            gscvs = GammaFits[brainstates[state]][0,0]['sharedfit'][0,nAS]['GSCVs'][0]
+            gsrates = GammaFits[brainstates[state]][0,0]['sharedfit'][0,nAS]['GSlogrates'][0]
             lambda_gs, k_gs = util.toAlphaBeta(gsrates,gscvs)
 
             # Parameters for activated state (common across neurons)
-            ascvs = GammaFits[brainstates[state]]['sharedfit'][0,0]['ASCVs'][0,0]
-            asrates = GammaFits[brainstates[state]]['sharedfit'][0,0]['ASlogrates'][0,0]
+            ascvs = GammaFits[brainstates[state]][0,0]['sharedfit'][0,nAS]['ASCVs'][0]
+            asrates = GammaFits[brainstates[state]][0,0]['sharedfit'][0,nAS]['ASlogrates'][0]
             lambda_as, k_as = util.toAlphaBeta(asrates, ascvs)
 
             ## Construct model - freeze parameters of the emission distribution
@@ -128,7 +137,7 @@ def main():
                 state_isi[seq_index] = spk_stateISI[brainstates1[state]][seq_index]
                 state_spk[seq_index] = spk_stateT[brainstates1[state]][seq_index]
 
-            out[brainstates1[state]] = {'UID':UID,'basepath':basepath, 'decoded_mode':decoded_mode, 'prob_mode':prob_mode, 'state_isi':state_isi,\
+            out[brainstates1[state]] = {'UID':UID,'basepath':basepath_original, 'decoded_mode':decoded_mode, 'prob_mode':prob_mode, 'state_isi':state_isi,\
             'state_label':state_names, 'state_spk':state_spk, 'logrates':logrates, 'cvs':cvs, 'trans_mat':model.dense_transition_matrix()[:logrates.size+1,:logrates.size]}
 
     scio.savemat(outfile, out)
