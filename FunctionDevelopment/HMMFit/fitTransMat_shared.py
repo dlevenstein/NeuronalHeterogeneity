@@ -55,7 +55,7 @@ def main():
             continue
 
         # Pull out UIDs
-        try
+        try:
             UID_state = GammaFits[brainstates[state]][0,0]['cellstats'][0,0]['UID'][0]
         # If there are no UIDs, make them 1 through # of neurons
         except:
