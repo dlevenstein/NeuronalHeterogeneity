@@ -15,10 +15,11 @@ def main():
     UID = int(sys.argv[2])
 
     # Retrieve basepath
-    base_dict = scio.loadmat('/gpfs/scratch/rh2618/basepaths_mac.mat')
-    basepath_original = base_dict['basepaths_all'][basepath_ind,0][0]
-    base_split = basepath_original.split(os.path.sep)
-    basepath = os.path.join('/gpfs/scratch/rh2618/rh_data', base_split[-1-2], base_split[-1-1], base_split[-1])
+    base_dict = scio.loadmat('/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/FunctionDevelopment/HMMFit/basepaths_test.mat')
+    basepath = base_dict['basepaths'][basepath_ind,0][0]
+    #basepath_original = base_dict['basepaths'][basepath_ind,0][0]
+    #base_split = basepath_original.split(os.path.sep)
+    #basepath = os.path.join('/gpfs/scratch/rh2618/rh_data', base_split[-1-2], base_split[-1-1], base_split[-1])
 
     # Load in data
     GammaFits = util.getGammaFits(basepath)
@@ -137,7 +138,7 @@ def main():
                 state_isi[seq_index] = spk_stateISI[brainstates1[state]][seq_index]
                 state_spk[seq_index] = spk_stateT[brainstates1[state]][seq_index]
 
-            out[brainstates1[state]] = {'UID':UID,'basepath':basepath_original, 'decoded_mode':decoded_mode, 'prob_mode':prob_mode, 'state_isi':state_isi,\
+            out[brainstates1[state]] = {'UID':UID,'basepath':basepath, 'decoded_mode':decoded_mode, 'prob_mode':prob_mode, 'state_isi':state_isi,\
             'state_label':state_names, 'state_spk':state_spk, 'logrates':logrates, 'cvs':cvs, 'trans_mat':model.dense_transition_matrix()[:logrates.size+1,:logrates.size]}
 
     scio.savemat(outfile, out)
