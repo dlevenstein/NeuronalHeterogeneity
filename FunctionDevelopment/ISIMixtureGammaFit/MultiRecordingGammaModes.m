@@ -132,6 +132,8 @@ for ss = 1:length(statenames)
         'basePath',saveFolder,'UseParallel',true);
     
     temp(ss).cellstats.NW = LoadGF.GammaFit.(statenames{ss}).cellstats.NW;
+    temp(ss).cellstats.UID = LoadGF.GammaFit.(statenames{ss}).cellstats.UID;
+    %temp(ss).cellstats.region = LoadGF.GammaFit.(statenames{ss}).cellstats.region;
 end
 
 for ss = 1:length(statenames)
@@ -158,7 +160,7 @@ for ff = find(success)
         thisrecfit.cellstats.meanrate = thisrecfit.cellstats.meanrate(reccells);
         thisrecfit.cellstats.NW = thisrecfit.cellstats.NW(reccells);
         thisrecfit.cellstats.UID = thisrecfit.cellstats.UID(reccells);
-        thisrecfit.cellstats.region = thisrecfit.cellstats.region(reccells);
+        %thisrecfit.cellstats.region = thisrecfit.cellstats.region(reccells);
         
         numsharedfits = length(thisrecfit.sharedfit);
         for sf = 1:numsharedfits

@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -p fn_long
 #SBATCH --nodes=1
-#SBATCH --tasks-per-node=36
-#SBATCH --time=8-00:00:00
+#SBATCH --tasks-per-node=26
+#SBATCH --time=9-00:00:00
 #SBATCH --mem-per-cpu=6G
 echo $1
 echo $2
