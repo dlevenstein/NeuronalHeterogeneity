@@ -131,8 +131,8 @@ for ss = 1:length(statenames)
         'display_results','iter','meanFR',meanFR,...
         'basePath',saveFolder,'UseParallel',true);
     
-    temp(ss).cellstats.NW = LoadGF.GammaFit.(statenames{ss}).cellstats.NW;
-    temp(ss).cellstats.UID = LoadGF.GammaFit.(statenames{ss}).cellstats.UID;
+    temp(ss).cellstats.NW = LoadGF.GammaFit.(statenames{ss}).cellstats.NW(keepcells);
+    temp(ss).cellstats.UID = LoadGF.GammaFit.(statenames{ss}).cellstats.UID(keepcells);
     %temp(ss).cellstats.region = LoadGF.GammaFit.(statenames{ss}).cellstats.region;
 end
 
