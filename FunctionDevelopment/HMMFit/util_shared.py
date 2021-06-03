@@ -53,7 +53,7 @@ def getSpikes(basepath, loadKilo=False):
 # Return spikes
 def getGammaFits(basepath):
     basename = os.path.basename(basepath)
-    gammapath = os.path.join(basepath, basename+'.GammaFit_full.cellinfo.mat')
+    gammapath = os.path.join(basepath, basename+'.GammaFit_CA1.cellinfo.mat')
     out = scio.loadmat(gammapath)
     return out['GammaFit_full'][0,0]
 
@@ -131,7 +131,7 @@ def toRateCV(lambd, k):
 
 def get2folds( isi_seq ):
 
-    # this can't really be changed.. 
+    # this can't really be changed..
     prop = 0.5
 
     nisis = np.array( [ isi_seq[x].size for x in range(len( isi_seq)) ] )
@@ -173,14 +173,14 @@ def getOptNStates( x_orig, deviance ):
 
 # Describe likelihood curve with a model - exponential
 def getOptNStates_v1( x_orig, ll ):
-    
+
     x = np.linspace( x_orig[0], x_orig[-1], num=100)
 
     # Define exponential function
     def func(t, a, b, alpha):
         return a - b * np.exp(-alpha * t)
 
-    # Initial parameters of exponential 
+    # Initial parameters of exponential
     a0 = ll[-1]
     b0 = ll[0]
     alpha0 = 1/x_orig[-1]
@@ -220,7 +220,7 @@ def getCombos(nums, rang):
 # Split list into desired number of sublists
 def get_sublists(original_list, number_of_sub_list_wanted):
     sublists = list()
-    for sub_list_count in range(number_of_sub_list_wanted): 
+    for sub_list_count in range(number_of_sub_list_wanted):
         sublists.append(np.array( original_list[sub_list_count::number_of_sub_list_wanted] ) )
     return sublists
 
@@ -228,5 +228,5 @@ def UIDtoIndex(all_UID, UID):
     index = np.argwhere( all_UID  == UID )
     if index.size == 0:
         return None
-    else:   
+    else:
         return index[0][0]
