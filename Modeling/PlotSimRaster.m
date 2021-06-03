@@ -86,10 +86,18 @@ subplot(4,1,3)
     if PLOTEI
         try
         subplot(4,1,4)
+            hold on
             plot(SimValues.t,SimValues.EImean,'k')
             errorshade(SimValues.t,SimValues.EImean,...
                 SimValues.EImean+SimValues.EIstd,SimValues.EImean-SimValues.EIstd,...
                 'k','vector')
+            
+            plot(SimValues.t,SimValues.IImean,'r')
+            errorshade(SimValues.t,SimValues.IImean,...
+                SimValues.IImean+SimValues.IIstd,SimValues.IImean-SimValues.IIstd,...
+                'r','vector')
+            
+            ylabel('Inh Weights')
         catch
             display('something wrong with EIweight data. Womp Womp')
         end

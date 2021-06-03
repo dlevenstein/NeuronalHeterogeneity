@@ -56,6 +56,7 @@ addParameter(p,'cellout',false,@islogical)
 addParameter(p,'estrate',20)
 addParameter(p,'J_mat',[])
 addParameter(p,'plotEIweight',false)
+addParameter(p,'plotoverlay',[])
 parse(p,varargin{:})
 SHOWFIG = p.Results.showfig;
 SHOWPROGRESS = p.Results.showprogress;
@@ -65,6 +66,7 @@ cellout = p.Results.cellout;
 estrate = p.Results.estrate; 
 J_mat = p.Results.J_mat; 
 PLOTEI = p.Results.plotEIweight; 
+plotoverlay = p.Results.plotoverlay; 
 
 %% Default Parameters
 DefaultParms.EPopNum = 8000;
@@ -120,6 +122,7 @@ TargetRate   = PopParams.TargetRate; %Target Rate for Excitatory cells (units of
 tauSTDP      = PopParams.tauSTDP;    %Time Constant for the STDP curve (Units of ms)
 
 alpha = 2.*(TargetRate./1000).*tauSTDP; %Alpha parameter from Vogels eqn5
+PlasticPostCells = ~isnan(TargetRate);  %Inhibitory synapses on which postsynaptic cells are plastic?
 
 %--------------------------------------------------------------------------
 %Weight Matrices
@@ -356,12 +359,14 @@ for tt=1:SimTimeLength
         %Presynaptic I Cells -  adjust all synapses postsynaptic to spiking I cells
         %                       strengthen I->E if recently active, weaken if not
         PreIspikes = s & IcellIDX;
-        J_mat(EcellIDX,PreIspikes) = J_mat(EcellIDX,PreIspikes) - LearningRate.*(x(EcellIDX)-alpha(EcellIDX)); 
+        %PlasticPostCells = EcellIDX;
+        %PlasticPostCells = true(size(EcellIDX));
+        J_mat(PlasticPostCells,PreIspikes) = J_mat(PlasticPostCells,PreIspikes) - LearningRate.*(x(PlasticPostCells)-alpha(PlasticPostCells)); 
 
         %Postsynaptic E cells - adjust all (recently active inhibitory) 
         %                       synapses presynaptic to spiking E cells
-        PostEspikes = spikeneurons & EcellIDX;            
-        J_mat(PostEspikes,IcellIDX) = J_mat(PostEspikes,IcellIDX) - LearningRate.*(x(IcellIDX)');
+        PostSpikers = spikeneurons & PlasticPostCells;            
+        J_mat(PostSpikers,IcellIDX) = J_mat(PostSpikers,IcellIDX) - LearningRate.*(x(IcellIDX)');
         %(Negative because inhibitory)
         
         %if sum(PreIspikes)>1
@@ -381,6 +386,11 @@ for tt=1:SimTimeLength
          
          SimValues.EImean(savecounter)   = mean(EIconnections(isconnected(Ecells,Icells))); 
          SimValues.EIstd(savecounter)   = std(EIconnections(isconnected(Ecells,Icells))); 
+         
+         IIconnections = J_mat(Icells,Icells);
+         
+         SimValues.IImean(savecounter)   = mean(IIconnections(isconnected(Icells,Icells))); 
+         SimValues.IIstd(savecounter)   = std(IIconnections(isconnected(Icells,Icells))); 
          %SimValues.Input(:,savecounter)          = I_e(timecounter);
          %SimValues.J_mat(:,:,savecounter)         = J_mat;
          savecounter = savecounter+1;
@@ -430,7 +440,8 @@ end
 if SHOWFIG
     try
         %disp('Plotting')
-        PlotSimRaster(SimValues,[-onsettime SimTime],'plotEIweight',PLOTEI);
+        PlotSimRaster(SimValues,[-onsettime SimTime],'plotEIweight',PLOTEI,...
+            'overlay',plotoverlay);
         %disp('Plot Success!')
     catch
         disp('Failed to plot...')

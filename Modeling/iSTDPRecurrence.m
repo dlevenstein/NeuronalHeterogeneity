@@ -1,7 +1,7 @@
 function iSTDPRecurrence(savepath)
 
 %%
-%savepath = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/Modeling/Simulation_Data/Recurrence';
+%savepath = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/Modeling/Simulation_Data/Recurrence2';
 if ~exist(savepath,'dir')
     mkdir(savepath)
 end
@@ -22,33 +22,34 @@ TimeParams.dt = 0.1;
 
 clear parms
 
-parms.EPopNum = 1200;
+parms.EPopNum = 1200; %reduce for faster... but induces synchrony
 parms.IPopNum = 300;
 parms.u_0 = 0;
 
 %Conectivity: In degree
-gamma = 0.5; %initally 0.25 to match 4x less inhibitory cells
-gammaI = 2; %relative E->I connectivity
+gamma = 0.25; %relateive I->X degree. initally 0.25 to match 4x less inhibitory cells
+gammaI = 1; %relative E->I degree
 parms.Kee = 300;
 parms.Kie = parms.Kee.*gammaI;
 parms.Kei = parms.Kee.*gamma;
 parms.Kii = parms.Kee.*gamma;
 
+parms.g = 5; %strength of Inhibitory synapses (relative to excitation) (I->E plastic)
+
+
 
 parms.V_rest = 0;
-%parms.delay_s = 8.9.*rand(parms.EPopNum+parms.IPopNum,1)+1.1; %grid later
-parms.delay_s = 4.*rand(parms.EPopNum+parms.IPopNum,1)+1; %minimum 0.5 to prevent refractory loops
-parms.g = 2; %Initial strength of Inhibitoon (relative to excitation)
-
-
 parms.V_th =20;
 parms.tau_m = 20; %ms
 parms.V_reset = 10;
-parms.t_ref = 1;
+parms.t_ref = 2;
+
+%parms.delay_s = 8.9.*rand(parms.EPopNum+parms.IPopNum,1)+1.1; %grid later
+parms.delay_s = (5-parms.t_ref).*rand(parms.EPopNum+parms.IPopNum,1)+parms.t_ref; %minimum 0.5 to prevent refractory loops
 
 %Feedforward parameters
 parms.N_FF = 2400;
-parms.K_FF = 600;
+parms.K_FF = parms.Kee;
 %Root K scaling for FF
 %parms.J_FF = 0.1;
 parms.J_FF = (parms.V_th-parms.V_rest)./(parms.K_FF.^0.5); %1/RootK scaling
@@ -83,12 +84,12 @@ inputrates = v_rel.*v_th;
 parfor jj = 1:numJs
     
     TimeParams_Jloop = TimeParams;
-    TimeParams_Jloop.SimTime = 200000;
+    TimeParams_Jloop.SimTime = 250000;
     %TimeParams_Jloop.SimTime = 10000;
 
     parms_Jloop = parms;
     parms_Jloop.J = Js(jj);
-    parms_Jloop.LearningRate = parms_Jloop.J.*1e-2; %Learning rate is O(1/100) of synaptic weight
+    parms_Jloop.LearningRate = parms.g.*parms_Jloop.J.*1e-2; %Learning rate is O(1/100) of synaptic weight
 %%
     %Train with fluctuating rate
     meanrate = v_th.*3;
@@ -113,12 +114,12 @@ parfor jj = 1:numJs
     [SimValues_train{jj}] = Run_LIF_iSTDP(parms_Jloop,TimeParams_Jloop,'showprogress','parloop',...
         'cellout',true,'save_dt',100,'estrate',50,'plotEIweight',true);
     
-   NiceSave('TrainingFigure',savepath,['alpha',num2str(round(alphas(jj),1))])
+   NiceSave('TrainingFigure',fullfile(savepath,'TrainingFigs'),['alpha',num2str(round(alphas(jj),1))])
 
     %disp('J sim done')
     %% Different inputs
     TimeParams_Iloop = TimeParams;
-    TimeParams_Iloop.SimTime = 30000;
+    TimeParams_Iloop.SimTime = 60000; %changed from 30000
     %TimeParams_Iloop.SimTime = 30;
     for rr = 1:numInputs
         
@@ -131,7 +132,7 @@ parfor jj = 1:numJs
             'plotEIweight',true);
         %toc
         %disp('Input sim done')
-        NiceSave('SimFig',savepath,['alpha',num2str(round(alphas(jj),1)),'vinput',num2str(round(v_rel(rr),1))])
+        NiceSave('SimFig',fullfile(savepath,'SimFigs'),['alpha',num2str(round(alphas(jj),1)),'vinput',num2str(round(v_rel(rr),1))])
         %disp('savedfig')
         %disp('tempassigned')
     end
@@ -165,7 +166,7 @@ for jj = 1:numJs
         %timewindows.initialization = [0 20];
         %timewindows.equib = [0 TimeParams.SimTime];
         ISIstats(jj,rr) = bz_ISIStats(spikes(jj,rr),'showfig',false,'cellclass',CellClass,...
-            'figfolder',figfolder,'figname',['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))]);
+            'figfolder',fullfile(figfolder,'ISIStats'),'figname',['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))]);
         %[popCCG(jj,rr)] = PopCCG(spikes(jj,rr),'showfig',true,'cellclass',CellClass);
         
         
@@ -244,52 +245,121 @@ NiceSave('SimFig',figfolder,[])
 
 
 %%
-AScost = 0.0001; %0.13 for data
+AScost = 0.3; %0.13 for data
+%MScost = 0; %default...
 for jj = 1:numJs
     for rr = 1:length(inputrates) 
         simnum = (jj-1).*length(inputrates) + rr
         %bz_Counter(simnum,totalsims,'Simulation')
         
     logISIhist =  ISIstats(jj,rr).ISIhist.ALL.log;
-    usecells = randsample(SimValues_inputs{jj,rr}.EcellIDX([500:end]),100);
+    OKcells = ISIstats(jj,rr).summstats.ALL.meanrate(SimValues_inputs{jj,rr}.EcellIDX)>0.1 & ...
+        ISIstats(jj,rr).summstats.ALL.numspikes(SimValues_inputs{jj,rr}.EcellIDX)>50;
+    if sum(OKcells)<100
+        continue
+    end
+    usecells = randsample(SimValues_inputs{jj,rr}.EcellIDX(OKcells),100);
     logISIhist = logISIhist(usecells,:)';
     logtimebins = ISIstats(jj,rr).ISIhist.logbins;
     logISIhist = logISIhist./mode(diff(logtimebins));
-
-    GammaFit(jj,rr) = bz_FitISISharedGammaModes(logISIhist,logtimebins,...
-        'numAS',2,'AScost_lambda',AScost,'AScost_p',1/2,'ASguess',true,'MScost',3);
+    taubins = logtimebins./log10(exp(1));
+    %Put the logISIhist in probabilty density with bins of size e... stupid
+    logISIhist = logISIhist.* mode(diff(logtimebins))./mode(diff(taubins)); %convert to dtau
+    meanFR = double(ISIstats(jj,rr).summstats.ALL.meanrate(usecells));
+%     GammaFit(jj,rr) = bz_FitISISharedGammaModes(logISIhist,logtimebins,...
+%         'numAS',2,'AScost_lambda',AScost,'AScost_p',1/2,'ASguess',true,'MScost',3);
+    GammaFit(jj,rr) = bz_FitISISharedGammaModes_new(logISIhist,...
+        'logtimebins',logtimebins,'meanFR',meanFR,......
+        'maxAS',2,'numAS',2,'AScost_lambda',AScost,'MScost',0,'singlefit',true,...
+        'display_results','final','figfolder',fullfile(figfolder,'GammaFits'),...
+        'figname',['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))]);
     close all
     end
 end
+%%
+savefilename_gamma = fullfile(savepath,'simresults_gamma.mat');
+save(savefilename_gamma,'GammaFit')
+disp('mat file saved')
 
 %%
 for jj = 1:numJs
     for rr = 1:length(inputrates) 
-        JIStats.GSweight(jj,rr) = mean(GammaFit(jj,rr).sharedfit.GSweights);
-        JIStats.GSCV(jj,rr) = mean(GammaFit(jj,rr).sharedfit.GSCVs);
+        if isempty(GammaFit(jj,rr).sharedfit)
+            JIStats.GSweight(jj,rr) = nan;
+            JIStats.GSCV(jj,rr) = nan;
+            continue
+        end
+        JIStats.GSweight(jj,rr) = mean(GammaFit(jj,rr).sharedfit(3).GSweights);
+        JIStats.GSCV(jj,rr) = mean(GammaFit(jj,rr).sharedfit(3).GSCVs);
+        %JIStats.ASRate(jj,rr) = (GammaFit(jj,rr).sharedfit(3).ASlogrates);
+        JIStats.numAS(jj,rr) = mode(sum(GammaFit(jj,rr).sharedfit(3).ASweights>0.01,2));
         
     end
 end
 %%
 figure
 subplot(2,2,1)
-imagesc(log10(inputrates./v_th),alphas,JIStats.GSweight)
-alpha(single(JIStats.meanrate>0.1))
-
-colorbar
-title('GS Weight')
+    imagesc(log10(inputrates./v_th),alphas,JIStats.GSweight)
+    %alpha(single(JIStats.meanrate>0.1))
+    alpha(single(~isnan(JIStats.GSweight)))
+    hold on
+    plot([0 0],ylim(gca),'r--')
+    plot(xlim(gca).*[0 1],[0.5 0.5],'r--')
+    colorbar
+    title('GS Weight')
+    LogScale('x',10)
+    xlabel('Input (v_t_h^-^1)')
+    ylabel('Recurrence (alpha)')
 
 subplot(2,2,2)
-imagesc(log10(inputrates./v_th),alphas,JIStats.GSCV)
-alpha(single(JIStats.meanrate>0.1))
-colorbar
-%caxis([0.5 1.5])
-LogScale('x',10)
-crameri('berlin','pivot',1)
-title('GS CV')
+    imagesc(log10(inputrates./v_th),alphas,log10(JIStats.GSCV))
+    %alpha(single(JIStats.meanrate>0.1))
+    alpha(single(~isnan(JIStats.GSweight)))
+    hold on
+    plot([0 0],ylim(gca),'r--')
+    plot(xlim(gca).*[0 1],[0.5 0.5],'r--')
+    colorbar
+    %caxis([0.5 1.5])
+    LogScale('x',10)
+    LogScale('c',10)
+    crameri('berlin','pivot',0)
+    title('GS CV')
+    xlabel('Input (v_t_h^-^1)')
+    ylabel('Recurrence (alpha)')
+    
+subplot(2,2,3)
+    imagesc(log10(inputrates./v_th),alphas,(JIStats.ASRate))
+    %alpha(single(JIStats.meanrate>0.1))
+    alpha(single(~isnan(JIStats.GSweight) & JIStats.GSweight<0.98))
+    hold on
+    plot([0 0],ylim(gca),'r--')
+    plot(xlim(gca).*[0 1],[0.5 0.5],'r--')
+    colorbar
+    %caxis([0.5 1.5])
+    LogScale('x',10)
+    LogScale('c',10)
+    %crameri('berlin','pivot',0)
+    title('AS Rate')
+    xlabel('Input (v_t_h^-^1)')
+    ylabel('Recurrence (alpha)')
+    
+subplot(2,2,4)
+    imagesc(log10(inputrates./v_th),alphas,(JIStats.numAS))
+    %alpha(single(JIStats.meanrate>0.1))
+    alpha(single(~isnan(JIStats.GSweight)))
+    hold on
+    plot([0 0],ylim(gca),'r--')
+    plot(xlim(gca).*[0 1],[0.5 0.5],'r--')
+    colorbar
+    %caxis([0.5 1.5])
+    LogScale('x',10)
+    %LogScale('c',10)
+    %crameri('berlin','pivot',0)
+    title('num AS modes')
+    xlabel('Input (v_t_h^-^1)')
+    ylabel('Recurrence (alpha)')
 
-
-
+NiceSave('GSStats',figfolder,[])
 %%
 
 %PlotSimRaster(SimValues_train{1},[],'trainingfigure',true);

@@ -514,6 +514,7 @@ end
 
 
 %% Single cell example(s)
+
 numex = 3;
 excells = randi(numcells,numex);
 figure
