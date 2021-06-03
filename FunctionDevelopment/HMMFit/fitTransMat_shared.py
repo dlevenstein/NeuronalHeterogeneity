@@ -39,7 +39,7 @@ def main():
     nrestarts = 5
     # Number of activated states (0 through something)
     nAS = 5
-    dirname = 'GammaProcessed3'
+    dirname = 'GammaProcessed_Full'
 
     out = {}
     outfile = os.path.join( basepath, dirname, str(UID)+'.mat' )
