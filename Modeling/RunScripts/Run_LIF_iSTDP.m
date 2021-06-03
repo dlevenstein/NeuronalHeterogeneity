@@ -239,7 +239,7 @@ SaveTimeLength  = length([0:save_dt:SimTime]);      %Time Steps (saved)
 %Saved Variables
 SimValues.t = nan(1,SaveTimeLength);
 SimValues.V = nan(PopNum,SaveTimeLength);
-SimValues.Input = nan(PopNum,SaveTimeLength);
+%SimValues.Input = nan(PopNum,SaveTimeLength);
 %SimValues.J_mat = nan(PopNum,PopNum,SaveTimeLength);
 
 estnumspikes = PopNum.*(SimTime+onsettime).*estrate./1000;

@@ -1,7 +1,7 @@
 function iSTDPRecurrence(savepath)
 
 %%
-%savepath = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/Modeling/Simulation_Data/Recurrence2';
+%savepath = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/Modeling/Simulation_Data/Recurrence_test';
 if ~exist(savepath,'dir')
     mkdir(savepath)
 end
@@ -34,7 +34,7 @@ parms.Kie = parms.Kee.*gammaI;
 parms.Kei = parms.Kee.*gamma;
 parms.Kii = parms.Kee.*gamma;
 
-parms.g = 5; %strength of Inhibitory synapses (relative to excitation) (I->E plastic)
+parms.g = 6; %strength of Inhibitory synapses (relative to excitation) (I->E plastic)
 
 
 
@@ -99,21 +99,25 @@ parfor jj = 1:numJs
     numsignals = 1;
 
     theta = 1./5000; %1s (1000ms) timescale
-    sigma = 2.*v_th;
+    sigma = 0.5;%2.*v_th;
     %sigma = 1;
 
     %disp('Making OU noise...')
     [ X,T ] = OUNoise(theta,sigma,duration,OU_simdt,OU_savedt,numsignals);
     
     %%
-    parms_Jloop.ex_rate = @(t) interp1(T,X,t,'nearest')+meanrate;
+    %parms_Jloop.ex_rate = @(t) interp1(T,X,t,'nearest')+meanrate;
+    parms_Jloop.ex_rate = @(t) exp(interp1(T,X,t,'nearest')).*meanrate;
     %disp('DONE!')
     %
     %%
 
     [SimValues_train{jj}] = Run_LIF_iSTDP(parms_Jloop,TimeParams_Jloop,'showprogress','parloop',...
         'cellout',true,'save_dt',100,'estrate',50,'plotEIweight',true);
-    
+    %%
+    PlotSimRaster(SimValues_train{jj},[],'plotEIweight',true,...
+        'overlay',[T,X]);
+        %%
    NiceSave('TrainingFigure',fullfile(savepath,'TrainingFigs'),['alpha',num2str(round(alphas(jj),1))])
 
     %disp('J sim done')

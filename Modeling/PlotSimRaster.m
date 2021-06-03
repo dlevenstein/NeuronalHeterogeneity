@@ -63,7 +63,7 @@ subplot(2,1,1)
             '.', 'Markersize' , 0.1,'color',cellcolors{cc})
     end
     if ~isempty(overlay)
-        plot(overlay(:,1),overlay(:,2))
+        plot(overlay(:,1),bz_NormToRange(overlay(:,2),0.5))
     end
     box off
     plot([0 0],[0 PopNum],'r')
