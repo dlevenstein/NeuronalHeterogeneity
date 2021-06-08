@@ -15,7 +15,7 @@ def main():
     UID = int(sys.argv[2])
 
     # Retrieve basepath
-    base_dict = scio.loadmat('/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/FunctionDevelopment/HMMFit/basepaths_test.mat')
+    base_dict = scio.loadmat('/gpfs/data/buzsakilab/DL/NeuronalHeterogeneity/FunctionDevelopment/HMMFit/basepaths_CA1.mat')
     basepath = base_dict['basepaths'][basepath_ind,0][0]
     #basepath_original = base_dict['basepaths'][basepath_ind,0][0]
     #base_split = basepath_original.split(os.path.sep)
@@ -36,9 +36,9 @@ def main():
     brainstates1 = ['NREM', 'WAKE']
 
     # Number of restarts from a randomly initialized transition matrix
-    nrestarts = 5
-    # Number of activated states (0 through something)
-    nAS = 5
+    nrestarts = 6
+    # Number of activated states (0 through something, [NREM,WAKE])
+    nAS = [4, 5]
     dirname = 'GammaProcessed_Full'
 
     out = {}
@@ -75,13 +75,13 @@ def main():
             seq_len = len( spk_stateISI[brainstates1[state]] )
 
             # Parameters for ground state (neuron specific)
-            gscvs = GammaFits[brainstates[state]][0,0]['sharedfit'][0,nAS]['GSCVs'][0]
-            gsrates = GammaFits[brainstates[state]][0,0]['sharedfit'][0,nAS]['GSlogrates'][0]
+            gscvs = GammaFits[brainstates[state]][0,0]['sharedfit'][0,nAS[state]]['GSCVs'][0]
+            gsrates = GammaFits[brainstates[state]][0,0]['sharedfit'][0,nAS[state]]['GSlogrates'][0]
             lambda_gs, k_gs = util.toAlphaBeta(gsrates,gscvs)
 
             # Parameters for activated state (common across neurons)
-            ascvs = GammaFits[brainstates[state]][0,0]['sharedfit'][0,nAS]['ASCVs'][0]
-            asrates = GammaFits[brainstates[state]][0,0]['sharedfit'][0,nAS]['ASlogrates'][0]
+            ascvs = GammaFits[brainstates[state]][0,0]['sharedfit'][0,nAS[state]]['ASCVs'][0]
+            asrates = GammaFits[brainstates[state]][0,0]['sharedfit'][0,nAS[state]]['ASlogrates'][0]
             lambda_as, k_as = util.toAlphaBeta(asrates, ascvs)
 
             ## Construct model - freeze parameters of the emission distribution
