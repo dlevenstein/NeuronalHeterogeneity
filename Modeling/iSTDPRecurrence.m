@@ -62,8 +62,8 @@ parms.tauSTDP = 20;    %Time Constant for the STDP curve (Units of ms)
 
 
 %%
-numJs = 11;
-alphas = linspace(0.0,1.0,numJs)
+numJs = 9;
+alphas = linspace(0.2,1.0,numJs)
 % numJs = 13;
 % alphas = linspace(0.25,1.0,numJs)
 %alphas = 0.5;
