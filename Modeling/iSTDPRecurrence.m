@@ -84,7 +84,7 @@ inputrates = v_rel.*v_th;
 parfor jj = 1:numJs
     
     TimeParams_Jloop = TimeParams;
-    TimeParams_Jloop.SimTime = 250000;
+    TimeParams_Jloop.SimTime = 300000;
     %TimeParams_Jloop.SimTime = 10000;
 
     parms_Jloop = parms;
@@ -98,7 +98,7 @@ parfor jj = 1:numJs
     OU_savedt = 1;
     numsignals = 1;
 
-    theta = 1./5000; %1s (1000ms) timescale
+    theta = 1./3000; %1s (1000ms) timescale
     sigma = 0.5;%2.*v_th;
     %sigma = 1;
 
