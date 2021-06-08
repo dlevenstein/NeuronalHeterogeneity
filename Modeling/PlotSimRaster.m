@@ -90,12 +90,12 @@ subplot(4,1,3)
             plot(SimValues.t,SimValues.EImean,'k')
             errorshade(SimValues.t,SimValues.EImean,...
                 SimValues.EImean+SimValues.EIstd,SimValues.EImean-SimValues.EIstd,...
-                'k','vector')
+                'k','vector');
             
             plot(SimValues.t,SimValues.IImean,'r')
             errorshade(SimValues.t,SimValues.IImean,...
                 SimValues.IImean+SimValues.IIstd,SimValues.IImean-SimValues.IIstd,...
-                'r','vector')
+                'r','vector');
             
             ylabel('Inh Weights')
         catch

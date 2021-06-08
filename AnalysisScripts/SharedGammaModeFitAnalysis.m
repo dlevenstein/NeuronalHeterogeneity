@@ -48,6 +48,7 @@ for ss = 1:2
 %ss = 1;
 AScost = 0.3; %Formerly 0.05
 MScost = 2;  %Formerly 10 (before add sqrt and 1/numcells)
+%'MSthresh': 0.0015 for Thal/vCTX....
 %Here: fit with all the stuff (final parms)
 keepAS = 5;
 GammaFit.(statenames{ss}) = bz_FitISISharedGammaModes_new(spikes,...
