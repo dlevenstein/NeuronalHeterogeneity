@@ -298,9 +298,10 @@ for tt=1:SimTimeLength
 
     %% Spiking
     RI = 0;  %reset the synaptic input to 0.
-    if any(V > V_th)
+    spikeneurons = ((V > V_th) & (t_r<=0));
+    if any(spikeneurons)
         %Find neurons that crossed threshold and record the spiketimes 
-        spikeneurons = V > V_th;
+        %spikeneurons = (V > V_th) & (t_r<=0);
         %Register the cell ID/timestamp of the spiked neurons in the spikes vector
         numspikers = sum(spikeneurons);
         spikes(spikecounter+1:spikecounter+numspikers,:) = ...

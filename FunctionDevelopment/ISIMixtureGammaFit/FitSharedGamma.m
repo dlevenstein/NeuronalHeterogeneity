@@ -22,6 +22,7 @@ addParameter(p,'MSthresh',0.002)
 addParameter(p,'display_results','iter')
 addParameter(p,'UseParallel',false)
 addParameter(p,'costmean','amean')
+addParameter(p,'holdAS',false)
 
 parse(p,varargin{:})
 numAS = p.Results.numAS;
@@ -34,6 +35,7 @@ MSthresh = p.Results.MSthresh;
 display_results = p.Results.display_results;
 UseParallel = p.Results.UseParallel;
 costmean = p.Results.costmean;
+holdAS = p.Results.holdAS;
 %%
 numcells = size(logISIhist,2);
 %% If there's no initial guess
@@ -62,7 +64,6 @@ lb.GSweights =  zeros(1,numcells);
 lb.ASlogrates = 0.*ones(1,numAS); %formerly 0.3
 lb.ASCVs =      zeros(1,numAS);
 lb.ASweights  = zeros(numcells,numAS);
-lb = convertGSASparms(lb);
 
 ub.GSlogrates = 2.*ones(1,numcells);
 ub.GSCVs =      5.*ones(1,numcells);
@@ -70,6 +71,15 @@ ub.GSweights =  ones(1,numcells);
 ub.ASlogrates = 3.*ones(1,numAS);
 ub.ASCVs =      5.*ones(1,numAS);
 ub.ASweights  = ones(numcells,numAS);
+
+if holdAS
+    ub.ASlogrates = init_struct.ASlogrates;
+    lb.ASlogrates = init_struct.ASlogrates;
+    ub.ASCVs = init_struct.ASCVs;
+    lb.ASCVs = init_struct.ASCVs;
+end
+
+lb = convertGSASparms(lb);
 ub = convertGSASparms(ub);
 
 % typ.GSlogrates = -1.*ones(1,numcells);

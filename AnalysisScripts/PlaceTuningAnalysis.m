@@ -114,13 +114,7 @@ xlabel('# Spks on Track');ylabel('Skaggs Info')
 
 subplot(2,2,3)
 scatter(log10(MutInfo.Skaggs),log10(MutInfo.ISI),5,log10(MutInfo.numspks))
-%%
-% figure
-% subplot(2,2,1)
-% plot(MutInfo.GSrate,log10(MutInfo.ISI),'.')
-% 
-% subplot(2,2,2)
-% plot(MutInfo.GSweight,log10(MutInfo.ISI),'.')
+
 %%
 MIthresh = 0.03;
 MIforbest = ISIbyPOS.MutInf;
@@ -151,7 +145,8 @@ ISIbyPOS_norm_mean = bz_CollapseStruct( ISIbyPOS_norm(squeeze(ISIbyPOS.MutInf)>M
 ISIbyPOS_norm = bz_CollapseStruct( ISIbyPOS_norm,3,'justcat',true);
 
 %% Get gamma mode
-GammaFit = bz_LoadCellinfo(basePath,'GammaFit');
+GammaFit = bz_LoadCellinfo(basePath,'GammaFit_CA1');
+nAS = 5; %how many activated states to use from the Gamma Fitting
 
 MutInfo.GSrate = nan(1,spikes.numcells);
 MutInfo.GSweight = nan(1,spikes.numcells);
@@ -162,10 +157,18 @@ for cc = 1:spikes.numcells
         continue
     end
     %cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
-    MutInfo.GSrate(cc) = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
-    MutInfo.GSweight(cc) = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
+    MutInfo.GSrate(cc) = GammaFit.WAKEstate.sharedfit(nAS+1).GSlogrates(GFIDX);
+    MutInfo.GSweight(cc) = GammaFit.WAKEstate.sharedfit(nAS+1).GSweights(GFIDX);
 end
 
+%%
+%%
+figure
+subplot(2,2,1)
+plot(MutInfo.GSrate,log10(MutInfo.ISI),'.')
+
+subplot(2,2,2)
+plot(MutInfo.GSweight,log10(MutInfo.ISI),'.')
 
 %%
 MutInfo.cellclass = CellClass;
@@ -194,8 +197,8 @@ for cc = 1:spikes.numcells
     end
     MutInfo.hasfield(cc,1) = true;
     
-    fieldrange = firingMaps.xbins{cc}{1}(placeFieldStats.mapStats{cc}{1}.fieldX);
-    infieldtimes = InIntervals(position.data,fieldrange);
+    firingMaps.fieldbounds{cc} = firingMaps.xbins{cc}{1}(placeFieldStats.mapStats{cc}{1}.fieldX);
+    infieldtimes = InIntervals(position.data,firingMaps.fieldbounds{cc});
 
     IDX.timestamps = position.timestamps;
     IDX.states = infieldtimes+2;
@@ -233,13 +236,20 @@ for cc = 1:spikes.numcells
         continue
     end
     
-    cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
+    %Change to shared fit...
+    %cellGamma = GammaFit.WAKEstate.singlecell(GFIDX);
+    cellGamma.GSlogrates = GammaFit.WAKEstate.sharedfit(nAS+1).GSlogrates(GFIDX);
+    cellGamma.GSCVs = GammaFit.WAKEstate.sharedfit(nAS+1).GSCVs(GFIDX);
+    cellGamma.GSweights = GammaFit.WAKEstate.sharedfit(nAS+1).GSweights(GFIDX);
+    cellGamma.ASlogrates = GammaFit.WAKEstate.sharedfit(nAS+1).ASlogrates;
+    cellGamma.ASCVs = GammaFit.WAKEstate.sharedfit(nAS+1).ASCVs;
+    cellGamma.ASweights = GammaFit.WAKEstate.sharedfit(nAS+1).ASweights(GFIDX,:);
     %stateIDX(cc).data = stateIDX(cc).states;
     try
     [StateConditionalISI(cc)] = bz_ConditionalISI(spikes.times(cc),passINT(cc),...
         'ints','input','normtype','none',...
         'GammaFitParms',cellGamma,'GammaFit',true,...
-        'showfig',false);
+        'showfig',false,'holdAS',true);
     catch
         %For undefined cells...
         tempstruct(cc).GSrate_all = nan;
@@ -252,9 +262,9 @@ for cc = 1:spikes.numcells
     %Number of spikes....
     outfieldspikes(cc) = StateConditionalISI(cc).Dist.Xhist(2);
     
-    tempstruct(cc).GSrate_all = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
-    tempstruct(cc).GSrate = GammaFit.WAKEstate.sharedfit.GSlogrates(GFIDX);
-    tempstruct(cc).GSweight  = GammaFit.WAKEstate.sharedfit.GSweights(GFIDX);
+    tempstruct(cc).GSrate_all = GammaFit.WAKEstate.sharedfit(nAS+1).GSlogrates(GFIDX);
+    tempstruct(cc).GSrate = GammaFit.WAKEstate.sharedfit(nAS+1).GSlogrates(GFIDX);
+    tempstruct(cc).GSweight  = GammaFit.WAKEstate.sharedfit(nAS+1).GSweights(GFIDX);
     tempstruct(cc).MIskaggs = MutInfo.Skaggs(cc);
     tempstruct(cc).MIISI = MutInfo.ISI(cc);
 
@@ -296,19 +306,21 @@ cellISIStats.GammaModes.states =  StateConditionalISI.states(1,:,1);
 %%
 %%
 close all
+
 %bluemap = colormap(gcf);
 %bluemap = [1 1 1;bluemap];
-%for excell_IDX = 1:length(firingMaps.UID)
-for excell_IDX = 25
+for excell_IDX = 1:length(firingMaps.UID)
+%for excell_IDX = 26
 %excell_IDX = 25;
 excell_UID = firingMaps.UID(excell_IDX);
 figure
 subplot(2,2,2)
-plot(firingMaps.xbins{excell_IDX}{1},firingMaps.rateMaps{excell_IDX}{1})
-hold on
-plot(ISIbyPOS.Dist.Xbins(1,:,excell_IDX),ISIbyPOS.Dist.SpikeRate(1,:,excell_IDX),'k')
-box off
-title(['UID: ',num2str(excell_UID)])
+    plot(firingMaps.xbins{excell_IDX}{1},firingMaps.rateMaps{excell_IDX}{1})
+    hold on
+    plot(firingMaps.fieldbounds{excell_IDX},[1 1],'r')
+    plot(ISIbyPOS.Dist.Xbins(1,:,excell_IDX),ISIbyPOS.Dist.SpikeRate(1,:,excell_IDX),'k')
+    box off
+    title(['UID: ',num2str(excell_UID)])
     if excell_UID==25
         xlim([0.55 2.6])
     end
@@ -355,16 +367,20 @@ subplot(2,2,4)
 thiscell = find(cellISIStats.UID==excell_UID);
 if ~isempty(thiscell)
 subplot(2,2,1)
-for ss = 2:3
-hold on
-    plot(meanISIhist.logbins,squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log(1,:,thiscell))')
-end
+    for ss = 2:3
+    hold on
+        plot(meanISIhist.logbins,squeeze(cellISIStats.allISIhist.(cellISIStats.statenames{ss}).log(1,:,thiscell))')
+        %bz_PlotISIDistModes(GammaFit,exUID,'whichShare',pp)
+    end
 else
 end
 NiceSave(['PlaceCell_UID',num2str(excell_UID)],figfolder,baseName)
 
 end
 %%
+modecolors = crameri('bamako',5);
+%modecolors = {modecolors(1,:),modecolors(2,:),modecolors(3,:),modecolors(4,:),modecolors(5,:)};
+
 figure
 subplot(2,2,1)
 plot(squeeze(1-cellISIStats.GammaModes.GSweights(1,2,:)),squeeze(1-cellISIStats.GammaModes.GSweights(1,3,:)),'.')
@@ -395,7 +411,20 @@ diffAR = (1-cellISIStats.GammaModes.GSweights(1,3,:))-(1-cellISIStats.GammaModes
 
 % subplot(2,2,4)
 % plot(squeeze(cellISIStats.MIskaggs),squeeze(diffAR),'.')
+ASweightchanges = num2cell(squeeze(diffASweight),2);
+ASnames = num2cell(round(10.^cellISIStats.GammaModes.ASlogrates(:,:,1)));
+ASnames = cellfun(@(X) [num2str(X),' Hz'],ASnames,'UniformOutput',false);
+subplot(2,2,4)
+BoxAndScatterPlot(ASweightchanges,'labels',ASnames);%,'colors',modecolors)
+hold on
+box off
+plot(xlim(gca),[0 0],'k--')
+xlabel('AS Mode');ylabel('Change in Weight')
+
 NiceSave('GSASField',figfolder,baseName)
+
+%%
+
 %%
 
 

@@ -133,7 +133,7 @@ parfor jj = 1:numJs
         disp(['Starting Input Sim: j',num2str(jj),' r',num2str(rr)])
         [SimValues_inputs{jj,rr}] = Run_LIF_iSTDP(parms_Iloop,TimeParams_Iloop,'showprogress','parloop',...
             'cellout',true,'save_dt',10,'J_mat',SimValues_train{jj}.WeightMat,'estrate',20,...
-            'plotEIweight',true);
+            'plotEIweight',true,'onsettime',1000);
         %toc
         %disp('Input sim done')
         NiceSave('SimFig',fullfile(savepath,'SimFigs'),['alpha',num2str(round(alphas(jj),1)),'vinput',num2str(round(v_rel(rr),1))])
@@ -280,7 +280,7 @@ for jj = 1:numJs
     close all
     end
 end
-%%
+%%git 
 savefilename_gamma = fullfile(savepath,'simresults_gamma.mat');
 save(savefilename_gamma,'GammaFit')
 disp('mat file saved')
@@ -296,7 +296,7 @@ for jj = 1:numJs
         JIStats.GSweight(jj,rr) = mean(GammaFit(jj,rr).sharedfit(3).GSweights);
         JIStats.GSCV(jj,rr) = mean(GammaFit(jj,rr).sharedfit(3).GSCVs);
         %JIStats.ASRate(jj,rr) = (GammaFit(jj,rr).sharedfit(3).ASlogrates);
-        JIStats.numAS(jj,rr) = mode(sum(GammaFit(jj,rr).sharedfit(3).ASweights>0.01,2));
+        JIStats.numAS(jj,rr) = round(mean(sum(GammaFit(jj,rr).sharedfit(3).ASweights>0.01,2)));
         
     end
 end
@@ -323,29 +323,29 @@ subplot(2,2,2)
     plot([0 0],ylim(gca),'r--')
     plot(xlim(gca).*[0 1],[0.5 0.5],'r--')
     colorbar
-    %caxis([0.5 1.5])
+    caxis([-0.5 0.5])
     LogScale('x',10)
-    LogScale('c',10)
+    %LogScale('c',10)
     crameri('berlin','pivot',0)
     title('GS CV')
     xlabel('Input (v_t_h^-^1)')
     ylabel('Recurrence (alpha)')
     
-subplot(2,2,3)
-    imagesc(log10(inputrates./v_th),alphas,(JIStats.ASRate))
-    %alpha(single(JIStats.meanrate>0.1))
-    alpha(single(~isnan(JIStats.GSweight) & JIStats.GSweight<0.98))
-    hold on
-    plot([0 0],ylim(gca),'r--')
-    plot(xlim(gca).*[0 1],[0.5 0.5],'r--')
-    colorbar
-    %caxis([0.5 1.5])
-    LogScale('x',10)
-    LogScale('c',10)
-    %crameri('berlin','pivot',0)
-    title('AS Rate')
-    xlabel('Input (v_t_h^-^1)')
-    ylabel('Recurrence (alpha)')
+% subplot(2,2,3)
+%     imagesc(log10(inputrates./v_th),alphas,(JIStats.ASRate))
+%     %alpha(single(JIStats.meanrate>0.1))
+%     alpha(single(~isnan(JIStats.GSweight) & JIStats.GSweight<0.98))
+%     hold on
+%     plot([0 0],ylim(gca),'r--')
+%     plot(xlim(gca).*[0 1],[0.5 0.5],'r--')
+%     colorbar
+%     %caxis([0.5 1.5])
+%     LogScale('x',10)
+%     LogScale('c',10)
+%     %crameri('berlin','pivot',0)
+%     title('AS Rate')
+%     xlabel('Input (v_t_h^-^1)')
+%     ylabel('Recurrence (alpha)')
     
 subplot(2,2,4)
     imagesc(log10(inputrates./v_th),alphas,(JIStats.numAS))

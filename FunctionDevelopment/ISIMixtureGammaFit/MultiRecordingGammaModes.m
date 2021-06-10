@@ -153,7 +153,7 @@ for ff = find(success)
         reccells = recordingIDX.(statenames{ss})==ff;
         thisrecfit = GammaFit_all.(statenames{ss});
         
-        thisrecfit.singlecell = thisrecfit.singlecell(reccells);
+        thisrecfit.singlecell = thisrecfit.singlecell(:,reccells);
         thisrecfit.ISIdists = thisrecfit.ISIdists(:,reccells);
         thisrecfit.numcells = sum(reccells);
         thisrecfit.costval = thisrecfit.costval(:,reccells);
