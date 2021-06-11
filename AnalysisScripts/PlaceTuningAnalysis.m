@@ -317,7 +317,7 @@ figure
 subplot(2,2,2)
     plot(firingMaps.xbins{excell_IDX}{1},firingMaps.rateMaps{excell_IDX}{1})
     hold on
-    plot(firingMaps.fieldbounds{excell_IDX},[1 1],'r')
+    %plot(firingMaps.fieldbounds{excell_IDX},[1 1],'r')
     plot(ISIbyPOS.Dist.Xbins(1,:,excell_IDX),ISIbyPOS.Dist.SpikeRate(1,:,excell_IDX),'k')
     box off
     title(['UID: ',num2str(excell_UID)])
