@@ -20,6 +20,8 @@ addParameter(p,'saveFolder',[])
 addParameter(p,'region',[])
 addParameter(p,'clusterpar',false)
 addParameter(p,'keepAS',5)
+addParameter(p,'WAKEnumAS',[])
+addParameter(p,'NREMnumAS',[])
 
 
 parse(p,varargin{:})
@@ -29,10 +31,14 @@ region = p.Results.region;
 clusterpar = p.Results.clusterpar;
 
 keepAS = p.Results.keepAS;
-addParameter(p,'WAKEnumAS',keepAS)
-addParameter(p,'NREMnumAS',keepAS)
 whichAS.WAKEstate = p.Results.WAKEnumAS;
 whichAS.NREMstate = p.Results.NREMnumAS;
+if isempty(whichAS.WAKEstate)
+    whichAS.WAKEstate = keepAS;
+end
+if isempty(whichAS.NREMstate)
+    whichAS.NREMstate = keepAS;
+end
 
 %% DEV
 %Note - should be able to load GammaFit from basepath OR be given filenames
