@@ -1,32 +1,4 @@
 #!/bin/bash
-sbatch ./FullSharedFitjob.bash  "'CA1'"  \
-"{'/gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_11012013',\
-'/gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_10252013',\
-'/gpfs/data/buzsakilab/DL/Database/AGData/Buddy/Buddy_06272013',\
-'/gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09102014',\
-'/gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09012014',\
-'/gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09172014',\
-'/gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08282013',\
-'/gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08022013'}"  \
-"[]"  5  4
-
-sbatch ./FullSharedFitjob.bash  "'vCTX'"  \
-"{'/gpfs/data/buzsakilab/DL/Database/YSData/YMV01/YMV01_170818',\
-'/gpfs/data/buzsakilab/DL/Database/YSData/YMV02/YMV02_170815',\
-'/gpfs/data/buzsakilab/DL/Database/YSData/YMV04/YMV04_170907',\
-'/gpfs/data/buzsakilab/DL/Database/YSData/YMV06/YMV06_170913',\
-'/gpfs/data/buzsakilab/DL/Database/YSData/YMV09/YMV09_171204',\
-'/gpfs/data/buzsakilab/DL/Database/YSData/YMV10/YMV10_171213',\
-'/gpfs/data/buzsakilab/DL/Database/YSData/YMV11/YMV11_171208',\
-'/gpfs/data/buzsakilab/DL/Database/YSData/YMV12/YMV12_171211',\
-'/gpfs/data/buzsakilab/DL/Database/YSData/YMV14/YMV14_180128',\
-'/gpfs/data/buzsakilab/DL/Database/YSData/YMV15/YMV15_180205',\
-'/gpfs/data/buzsakilab/DL/Database/YSData/YMV16/YMV16_180206',\
-'/gpfs/data/buzsakilab/DL/Database/YSData/YMV17/YMV17_180207',\
-'/gpfs/data/buzsakilab/DL/Database/YSData/YMV18/YMV18_180208',\
-'/gpfs/data/buzsakilab/DL/Database/YSData/YMV19/YMV19_180209'}"  \
-"[]"  3  5
-
 sbatch ./FullSharedFitjob.bash  "'fCTX'"  \
 "{'/gpfs/data/buzsakilab/DL/Database/BWData/Bogey/Bogey_012615',\
 '/gpfs/data/buzsakilab/DL/Database/BWData/BWRat17/BWRat17_121712',\
@@ -180,3 +152,31 @@ sbatch ./FullSharedFitjob.bash  "'BLA'"  \
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150328/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150330/'}"  \
 "'bla'"  5  4
+
+sbatch ./FullSharedFitjob.bash  "'CA1'"  \
+"{'/gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_11012013',\
+'/gpfs/data/buzsakilab/DL/Database/AGData/Achilles/Achilles_10252013',\
+'/gpfs/data/buzsakilab/DL/Database/AGData/Buddy/Buddy_06272013',\
+'/gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09102014',\
+'/gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09012014',\
+'/gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09172014',\
+'/gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08282013',\
+'/gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08022013'}"  \
+"[]"  5  4
+
+sbatch ./FullSharedFitjob.bash  "'vCTX'"  \
+"{'/gpfs/data/buzsakilab/DL/Database/YSData/YMV01/YMV01_170818',\
+'/gpfs/data/buzsakilab/DL/Database/YSData/YMV02/YMV02_170815',\
+'/gpfs/data/buzsakilab/DL/Database/YSData/YMV04/YMV04_170907',\
+'/gpfs/data/buzsakilab/DL/Database/YSData/YMV06/YMV06_170913',\
+'/gpfs/data/buzsakilab/DL/Database/YSData/YMV09/YMV09_171204',\
+'/gpfs/data/buzsakilab/DL/Database/YSData/YMV10/YMV10_171213',\
+'/gpfs/data/buzsakilab/DL/Database/YSData/YMV11/YMV11_171208',\
+'/gpfs/data/buzsakilab/DL/Database/YSData/YMV12/YMV12_171211',\
+'/gpfs/data/buzsakilab/DL/Database/YSData/YMV14/YMV14_180128',\
+'/gpfs/data/buzsakilab/DL/Database/YSData/YMV15/YMV15_180205',\
+'/gpfs/data/buzsakilab/DL/Database/YSData/YMV16/YMV16_180206',\
+'/gpfs/data/buzsakilab/DL/Database/YSData/YMV17/YMV17_180207',\
+'/gpfs/data/buzsakilab/DL/Database/YSData/YMV18/YMV18_180208',\
+'/gpfs/data/buzsakilab/DL/Database/YSData/YMV19/YMV19_180209'}"  \
+"[]"  3  5
