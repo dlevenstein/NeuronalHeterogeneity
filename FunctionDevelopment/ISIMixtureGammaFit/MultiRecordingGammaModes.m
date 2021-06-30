@@ -19,12 +19,20 @@ addParameter(p,'saveName',[])
 addParameter(p,'saveFolder',[])
 addParameter(p,'region',[])
 addParameter(p,'clusterpar',false)
+addParameter(p,'keepAS',5)
+
 
 parse(p,varargin{:})
 saveName_full = p.Results.saveName;
 saveFolder = p.Results.saveFolder;
 region = p.Results.region;
 clusterpar = p.Results.clusterpar;
+
+keepAS = p.Results.keepAS;
+addParameter(p,'WAKEnumAS',keepAS)
+addParameter(p,'NREMnumAS',keepAS)
+whichAS.WAKEstate = p.Results.WAKEnumAS;
+whichAS.NREMstate = p.Results.NREMnumAS;
 
 %% DEV
 %Note - should be able to load GammaFit from basepath OR be given filenames
@@ -56,7 +64,15 @@ clusterpar = p.Results.clusterpar;
 % clusterpar = false;
 % region = [];
 %%
+
 display(['Running Gamma Fit: ',saveName_full])
+
+TEMPSAVING = true;
+tempfilename = fullfile(saveFolder,[saveName_full,'_temp.GammaFit_all.cellinfo.mat']); 
+if TEMPSAVING & exist(tempfilename,'file')
+    display('Temp file found, loading...');
+    load(tempfilename);
+end
 
 if ~iscell(basePaths)
     saveFolder = basePaths;
@@ -103,10 +119,11 @@ if clusterpar
     %parpool(pc, 2,'IdleTimeout', Inf);
 end
 %%
-keepAS = 5;
+
 %Consider parfor to run in parallel on cluster.
 for ss = 1:length(statenames)
     
+    % 
     %Select only the cells in the proper region
     if isempty(region)
         keepcells = true(size(LoadGF.GammaFit.(statenames{ss}).cellstats.meanrate));
@@ -123,6 +140,13 @@ for ss = 1:length(statenames)
     % MScost = 10;
     % AScost = 0.05;
     
+    %Here: check if this state has already been calculated. If so, move on
+    %to the next one
+    if TEMPSAVING && exist('temp','var') && length(temp)>=ss
+        display([(statenames{ss}),' already calculated in temp file. NEXT!.']);
+        continue
+    end
+    
     temp(ss) = bz_FitISISharedGammaModes_new(ISIdists4fit,...
         'logtimebins',LoadGF.GammaFit.(statenames{ss}).logtimebins(1,:),...
         'maxAS',keepAS,'numAS',keepAS,'figfolder',saveFolder,...
@@ -134,6 +158,12 @@ for ss = 1:length(statenames)
     temp(ss).cellstats.NW = LoadGF.GammaFit.(statenames{ss}).cellstats.NW(keepcells);
     temp(ss).cellstats.UID = LoadGF.GammaFit.(statenames{ss}).cellstats.UID(keepcells);
     %temp(ss).cellstats.region = LoadGF.GammaFit.(statenames{ss}).cellstats.region;
+    
+    %Here: save temp
+    if TEMPSAVING
+        save(tempfilename,'temp')
+    end
+    
 end
 
 for ss = 1:length(statenames)
@@ -176,6 +206,11 @@ for ff = find(success)
     save(cellinfofilename,'GammaFit_full')
 end
 
+%Here: Delete temp
+if TEMPSAVING
+    display('Everything calculated and saved... deleting temp file');
+    delete(tempfilename)
+end
 %% For analysis after loading...
 % load('CA1.GammaFit_all.cellinfo.mat')
 % statenames = fieldnames(GammaFit_all);
@@ -184,8 +219,7 @@ end
 % saveName_full = 'CA1_test';
 % saveFolder = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs/SharedGammaModeFitAnalysis';
 %%
-   whichAS.WAKEstate = 5;
-   whichAS.NREMstate = 5;
+
    
 % weightthresh = 0.01;
 % clear modeweightcorr allweights numsigAS

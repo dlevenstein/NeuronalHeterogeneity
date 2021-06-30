@@ -1,7 +1,7 @@
 function iSTDPRecurrence(savepath)
 
 %%
-%savepath = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/Modeling/Simulation_Data/Recurrence_test';
+%savepath = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/Modeling/Simulation_Data/RecurrenceJun03';
 if ~exist(savepath,'dir')
     mkdir(savepath)
 end
@@ -147,7 +147,7 @@ if ~exist(savepath,'dir')
     mkdir(savepath)
 end
 %clear SimValues_train
-clear pc
+clear pc SimValues_train
 savefilename = fullfile(savepath,'simresults.mat');
 
 save(savefilename,'-v7.3')
@@ -176,7 +176,7 @@ for jj = 1:numJs
         
         plotwin = [-500 0] + SimValues_inputs{1,1}.TimeParams.SimTime;  
         PlotSimRaster(SimValues_inputs{jj,rr},plotwin);
-        NiceSave('SimFig',figfolder,['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))])
+        NiceSave('SimFig',fullfile(figfolder,'SimFigs_Window'),['alpha',num2str(round(alphas(jj),1)),'input',num2str(round(inputrates(rr),1))])
 
         close all
     end
@@ -364,6 +364,55 @@ subplot(2,2,4)
     ylabel('Recurrence (alpha)')
 
 NiceSave('GSStats',figfolder,[])
+
+
+%% Example Regimes figure
+exAlphas_IDX = [2 2 2  4 4 4  8 8 8];
+exV_rel_IDX = [2 5 9  2 5 9  2 5 9];
+exnumAS = [2 2 1  1 2 2  0 1 2];
+scaleDist = 1.5.*[1 1 1 1 1 1 1 1 1];
+
+figure
+for ee = 1:length(exAlphas_IDX)
+    if isempty(GammaFit(exAlphas_IDX(ee),exV_rel_IDX(ee)).sharedfit)
+        continue
+    end
+    subplot(3,3,ee)
+        bz_PlotISIDistModes(GammaFit(exAlphas_IDX(ee),exV_rel_IDX(ee)),'all',...
+            'whichShare',exnumAS(ee)+1,'showSingleFits',true,...
+            'dotscale',10,'scaleDist',scaleDist(ee),'distOffset',1)
+        xlim([-3 1]);ylim([-1.8 2]);
+        LogScale('y',10,'nohalf',true)
+        title(['a: ',num2str(round(alphas(exAlphas_IDX(ee)),1)),' v_r_e_l: ',num2str(round(v_rel(exV_rel_IDX(ee)),1))])
+end
+NiceSave('ExModeFits',figfolder,[])
+
+%%
+% plotwin = [-500 0] + SimValues_inputs{1,1}.TimeParams.SimTime; 
+% figure
+% for ee = 1:length(exAlphas_IDX)
+%     if isempty(GammaFit(exAlphas_IDX(ee),exV_rel_IDX(ee)).sharedfit)
+%         continue
+%     end
+%     %subplot(3,3,ee)
+%         PlotSimRaster(SimValues_inputs{exAlphas_IDX(ee),exV_rel_IDX(ee)},plotwin);
+% 
+%         title(['a: ',num2str(round(alphas(exAlphas_IDX(ee)),1)),' v_r_e_l: ',num2str(round(v_rel(exV_rel_IDX(ee)),1))])
+% end
+% NiceSave('ExModeRasters',figfolder,[])
+
+
+%plotwin = [-500 0] + SimValues_inputs{1,1}.TimeParams.SimTime; 
+figure
+for ee = 1:length(exAlphas_IDX)
+    %subplot(3,3,ee)
+        
+
+        title(['a: ',num2str(round(alphas(exAlphas_IDX(ee)),1)),' v_r_e_l: ',num2str(round(v_rel(exV_rel_IDX(ee)),1))])
+end
+NiceSave('ExModeISIdists',figfolder,[])
+         
+        
 %%
 
 %PlotSimRaster(SimValues_train{1},[],'trainingfigure',true);

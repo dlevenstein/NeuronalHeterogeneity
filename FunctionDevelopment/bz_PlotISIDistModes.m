@@ -18,6 +18,8 @@ addParameter(p,'sharORsing','sharedfit')
 addParameter(p,'whichShare',1)
 addParameter(p,'dotscale',200)
 addParameter(p,'dotscaleAS',[])
+addParameter(p,'scaleDist',3.5)
+addParameter(p,'distOffset',0.7)
 addParameter(p,'showSingleFits',false)
 addParameter(p,'AScolor','k')
 parse(p,varargin{:})
@@ -28,6 +30,8 @@ dotscaleAS = p.Results.dotscaleAS;
 if isempty(dotscaleAS)
     dotscaleAS = dotscale;
 end
+scaleDist = p.Results.scaleDist;
+offset = p.Results.distOffset;
 showSingleFits = p.Results.showSingleFits;
 AScolor = p.Results.AScolor;
 % add: Mode color...
@@ -79,8 +83,6 @@ numAS = length(GFmodel.ASlogrates);
 fitcolor = 'k';
 GScolor = [0.6 0.4 0];
 
-scaleDist = 3.5;
-offset = 0.7;
 %ISI Distribution
 plot(GammaFits.logtimebins,...
     mean(GammaFits.ISIdists(:,plotcell),2).*scaleDist+offset,...
@@ -163,7 +165,7 @@ xlim([-2.75 1.75])
 %ylim([-2 0.75])
 LogScale('x',10,'exp',true,'nohalf',true)
 LogScale('y',10)
-%box off
+box off
 
 
 

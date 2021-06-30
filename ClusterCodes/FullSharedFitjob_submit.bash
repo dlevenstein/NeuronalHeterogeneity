@@ -8,7 +8,7 @@ sbatch ./FullSharedFitjob.bash  "'CA1'"  \
 '/gpfs/data/buzsakilab/DL/Database/AGData/Cicero/Cicero_09172014',\
 '/gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08282013',\
 '/gpfs/data/buzsakilab/DL/Database/AGData/Gatsby/Gatsby_08022013'}"  \
-"[]"
+"[]"  5  4
 
 sbatch ./FullSharedFitjob.bash  "'vCTX'"  \
 "{'/gpfs/data/buzsakilab/DL/Database/YSData/YMV01/YMV01_170818',\
@@ -25,7 +25,7 @@ sbatch ./FullSharedFitjob.bash  "'vCTX'"  \
 '/gpfs/data/buzsakilab/DL/Database/YSData/YMV17/YMV17_180207',\
 '/gpfs/data/buzsakilab/DL/Database/YSData/YMV18/YMV18_180208',\
 '/gpfs/data/buzsakilab/DL/Database/YSData/YMV19/YMV19_180209'}"  \
-"[]"
+"[]"  3  5
 
 sbatch ./FullSharedFitjob.bash  "'fCTX'"  \
 "{'/gpfs/data/buzsakilab/DL/Database/BWData/Bogey/Bogey_012615',\
@@ -53,7 +53,7 @@ sbatch ./FullSharedFitjob.bash  "'fCTX'"  \
 '/gpfs/data/buzsakilab/DL/Database/BWData/Splinter/Splinter_020515',\
 '/gpfs/data/buzsakilab/DL/Database/BWData/Splinter/Splinter_020915',\
 '/gpfs/data/buzsakilab/DL/Database/BWData/Templeton/Templeton_032415'}"  \
-"[]"
+"[]"  5  5
 
 
 sbatch ./FullSharedFitjob.bash  "'THAL'"  \
@@ -98,7 +98,7 @@ sbatch ./FullSharedFitjob.bash  "'THAL'"  \
 '/gpfs/data/buzsakilab/DL/Database/APData/Mouse28/Mouse28-140317',\
 '/gpfs/data/buzsakilab/DL/Database/APData/Mouse28/Mouse28-140318',\
 '/gpfs/data/buzsakilab/DL/Database/APData/Mouse32/Mouse32-140822'}"  \
-"[]"
+"[]"  5  5
 
 
 sbatch ./FullSharedFitjob.bash  "'PIR'"  \
@@ -139,7 +139,7 @@ sbatch ./FullSharedFitjob.bash  "'PIR'"  \
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150327/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150328/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150330/'}"  \
-"'pir'"
+"'pir'"  4  3
 
 sbatch ./FullSharedFitjob.bash  "'BLA'"  \
 "{'/gpfs/data/buzsakilab/DL/Database/GGData/Rat08/Rat08-20130708/',\
@@ -179,4 +179,4 @@ sbatch ./FullSharedFitjob.bash  "'BLA'"  \
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150327/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150328/',\
 '/gpfs/data/buzsakilab/DL/Database/GGData/Rat11/Rat11-20150330/'}"  \
-"'bla'"
+"'bla'"  5  4
