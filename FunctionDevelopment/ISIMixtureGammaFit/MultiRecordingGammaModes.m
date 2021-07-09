@@ -63,30 +63,32 @@ end
 % GFfilenames = {'Rat09-20140328.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
 %     'Rat09-20140329.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
 % 
-% GFfilenames = {'Achilles_11012013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
-% 	'Achilles_10252013.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
-% saveName_full = 'CA1_test';
-% basePaths = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs/SharedGammaModeFitAnalysis';
-% clusterpar = false;
-% region = [];
+GFfilenames = {'Achilles_11012013.AnalysisResults.SharedGammaModeFitAnalysis.mat',...
+	'Achilles_10252013.AnalysisResults.SharedGammaModeFitAnalysis.mat'};
+saveName_full = 'CA1_test';
+basePaths = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/AnalysisScripts/AnalysisFigs/SharedGammaModeFitAnalysis';
+clusterpar = false;
+region = [];
+keepAS = 2;
 %%
 
 display(['Running Gamma Fit: ',saveName_full])
+
+if ~iscell(basePaths)
+    saveFolder = basePaths;
+    [temp{1:length(GFfilenames)}] = deal(basePaths);
+    basePaths = temp;
+    clear temp
+else
+    baseNames = cellfun(@bz_BasenameFromBasepath,basePaths,'UniformOutput',false);
+    GFfilenames = cellfun(@(X,Y) fullfile(X,[Y,'.GammaFit.cellinfo.mat']),basePaths,baseNames,'UniformOutput',false);
+end
 
 TEMPSAVING = true;
 tempfilename = fullfile(saveFolder,[saveName_full,'_temp.GammaFit_all.cellinfo.mat']); 
 if TEMPSAVING & exist(tempfilename,'file')
     display('Temp file found, loading...');
     load(tempfilename);
-end
-
-if ~iscell(basePaths)
-    saveFolder = basePaths;
-    [temp{1:length(GFfilenames)}] = deal(basePaths);
-    basePaths = temp;
-else
-    baseNames = cellfun(@bz_BasenameFromBasepath,basePaths,'UniformOutput',false);
-    GFfilenames = cellfun(@(X,Y) fullfile(X,[Y,'.GammaFit.cellinfo.mat']),basePaths,baseNames,'UniformOutput',false);
 end
 
 %Need to keep track of.... basePath/baseName for each cell
@@ -167,6 +169,7 @@ for ss = 1:length(statenames)
     
     %Here: save temp
     if TEMPSAVING
+        display('Saving time file...');
         save(tempfilename,'temp')
     end
     

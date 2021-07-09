@@ -104,6 +104,13 @@ if exist(cellinfofilename,'file') && ~forceRedetect
     GammaFit = bz_LoadCellinfo(basePath,'GammaFit');%Update in a bit
     return
 end
+
+TEMPSAVING = true;
+tempfilename = fullfile(basePath,[baseName,'_temp.GammaFit.cellinfo.mat']); 
+if TEMPSAVING & exist(tempfilename,'file')
+    display('Temp file found, loading...');
+    load(tempfilename);
+end
 % if length(ISIs)<minISIs
 %     return
 % end
@@ -161,9 +168,25 @@ if ~isempty(init_struct)
     numAS = length(init_struct.ASlogrates);
 else
     INITGIVEN = false;
+    clear init_struct
 end
 
 for aa = 1:(maxAS+1)
+    display(['Calculating Fit Number ',num2str(aa)]);
+    %Here: check if this state has already been calculated. If so, move on
+    %to the next one
+    if TEMPSAVING && exist('temp','var') && length(temp)>=aa
+        display([num2str(aa),' already calculated in temp file. NEXT!.']);
+        
+        init_struct(aa) = temp(aa).init_struct;
+        sharedfit(aa) = temp(aa).sharedfit;
+        costval(aa,:) = temp(aa).costval;
+        computetime(aa) = temp(aa).computetime;
+        singlecell(aa,:) = temp(aa).singlecell(:);
+        missingpeak(aa) = temp(aa).missingpeak;
+        continue
+    end
+    
     %aa =5;
     %% Making the initialization structure
     %If init_struct is given, skip all this
@@ -196,6 +219,9 @@ for aa = 1:(maxAS+1)
             end
         end
     end
+
+
+    
     %% Fit: Shared
     tic
     [sharedfit(aa),costval(aa,:)] = FitSharedGamma(logISIhist,taubins,...
@@ -373,6 +399,19 @@ for aa = 1:(maxAS+1)
         NiceSave(['SharedGammaModes',num2str(aa-1),'AS_',figname],figfolder,baseName);
     end
 
+    %Here: save temp
+    if TEMPSAVING
+        display('Saving temp file...');
+        temp(aa).init_struct = init_struct(aa);
+        temp(aa).sharedfit = sharedfit(aa);
+        temp(aa).costval = costval(aa,:);
+        temp(aa).computetime = computetime(aa);
+        temp(aa).singlecell(:) = singlecell(aa,:);
+        temp(aa).missingpeak = missingpeak(aa);
+        
+        save(tempfilename,'temp')
+    end
+    
 end
 
 %% Here: Pick the best number of AS modes (temporary)
@@ -618,5 +657,11 @@ if figfolder
 end
 
 
+end
+
+%Here: Delete temp
+if TEMPSAVING
+    display('Everything calculated and saved... deleting temp file');
+    delete(tempfilename)
 end
 end
