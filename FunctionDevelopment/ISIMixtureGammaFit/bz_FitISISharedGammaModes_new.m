@@ -36,6 +36,7 @@ addParameter(p,'showfig',true)
 addParameter(p,'figfolder',false)
 addParameter(p,'figname',[])
 addParameter(p,'basePath',pwd,@isstr)
+addParameter(p,'baseName',[])
 addParameter(p,'AScost_lambda',0)
 addParameter(p,'AScost_p',1)
 addParameter(p,'MScost',0)
@@ -68,6 +69,7 @@ SHOWFIG = p.Results.showfig;
 figfolder = p.Results.figfolder;
 figname = p.Results.figname;
 basePath = p.Results.basePath;
+baseName = p.Results.baseName;
 AScost_lambda = p.Results.AScost_lambda;
 AScost_p = p.Results.AScost_p;
 ASguess = p.Results.ASguess;
@@ -94,7 +96,9 @@ educatedGuess.CVs =       [0.2 0.05 0.05 0.3 0.6 0.05];
 
 %%
 % File naming
-baseName = bz_BasenameFromBasepath(basePath);
+if isempty(baseName)
+    baseName = bz_BasenameFromBasepath(basePath);
+end
 cellinfofilename = fullfile(basePath,[baseName,'.GammaFit.cellinfo.mat']); %Update in a bit and below
 if strcmp(figfolder,'detectionfigures')
     figfolder = [basePath,filesep,'DetectionFigures'];
