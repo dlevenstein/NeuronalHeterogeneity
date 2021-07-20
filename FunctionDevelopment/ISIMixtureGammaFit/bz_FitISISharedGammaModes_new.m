@@ -112,7 +112,7 @@ end
 TEMPSAVING = true;
 tempfilename = fullfile(basePath,[baseName,'_temp.GammaFit.cellinfo.mat']); 
 if TEMPSAVING & exist(tempfilename,'file')
-    display('Temp file found, loading...');
+    display(['Temp file found, loading... ',tempfilename]);
     load(tempfilename);
 end
 % if length(ISIs)<minISIs
@@ -405,7 +405,7 @@ for aa = 1:(maxAS+1)
 
     %Here: save temp
     if TEMPSAVING
-        display('Saving temp file...');
+        display(['Saving temp file... ',tempfilename]);
         temp(aa).init_struct = init_struct(aa);
         temp(aa).sharedfit = sharedfit(aa);
         temp(aa).costval = costval(aa,:);

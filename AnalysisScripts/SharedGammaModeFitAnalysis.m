@@ -9,11 +9,11 @@ function [GammaFit] = SharedGammaModeFitAnalysis(basePath,figfolder)
 %
 %% Load Header
 %Initiate Paths
-reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
+%reporoot = '/Users/dl2820/Project Repos/NeuronalHeterogeneity/';
 %basePath = pwd;
-basePath = '/Users/dl2820/Dropbox/research/Datasets/Cicero_09102014';
+%basePath = '/Users/dl2820/Dropbox/research/Datasets/Cicero_09102014';
 %basePath = '/Users/dl2820/Dropbox/research/Datasets/20140526_277um';
-figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
+%figfolder = [reporoot,'AnalysisScripts/AnalysisFigs/DailyAnalysis'];
 baseName = bz_BasenameFromBasepath(basePath);
 SAVECELLINFO = true;
 REPLACECELLINFO = false;

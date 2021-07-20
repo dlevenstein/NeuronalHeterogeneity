@@ -92,7 +92,7 @@ end
 TEMPSAVING = true;
 tempfilename = fullfile(saveFolder,[saveName_full,'_temp.GammaFit_all.cellinfo.mat']); 
 if TEMPSAVING & exist(tempfilename,'file')
-    display('Temp file found, loading...');
+    display(['Temp file found, loading... ',tempfilename]);
     load(tempfilename);
 end
 
@@ -187,7 +187,7 @@ for ss = 1:length(statenames)
     
     %Here: save temp
     if TEMPSAVING
-        display('Saving time file...');
+        display(['Saving time file... ',tempfilename]);
         save(tempfilename,'temp')
     end
     
