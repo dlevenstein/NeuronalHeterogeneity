@@ -22,6 +22,7 @@ addParameter(p,'clusterpar',false)
 addParameter(p,'keepAS',5)
 addParameter(p,'WAKEnumAS',[])
 addParameter(p,'NREMnumAS',[])
+addParameter(p,'overwrite',false)
 
 
 parse(p,varargin{:})
@@ -29,6 +30,7 @@ saveName_full = p.Results.saveName;
 saveFolder = p.Results.saveFolder;
 region = p.Results.region;
 clusterpar = p.Results.clusterpar;
+overwrite = p.Results.overwrite;
 
 keepAS = p.Results.keepAS;
 whichAS.WAKEstate = p.Results.WAKEnumAS;
@@ -70,6 +72,8 @@ end
 % clusterpar = false;
 % region = [];
 % keepAS = 2;
+% whichAS.WAKEstate = keepAS;
+% whichAS.NREMstate = keepAS;
 %%
 
 display(['Running Gamma Fit: ',saveName_full])
@@ -84,11 +88,25 @@ else
     GFfilenames = cellfun(@(X,Y) fullfile(X,[Y,'.GammaFit.cellinfo.mat']),basePaths,baseNames,'UniformOutput',false);
 end
 
+%Loading from temp file
 TEMPSAVING = true;
 tempfilename = fullfile(saveFolder,[saveName_full,'_temp.GammaFit_all.cellinfo.mat']); 
 if TEMPSAVING & exist(tempfilename,'file')
     display('Temp file found, loading...');
     load(tempfilename);
+end
+
+%Loading from existing GammaFit_all file
+REDETECT = false;
+cellinfofilename = fullfile(saveFolder,[saveName_full,'.GammaFit_all.cellinfo.mat']); 
+if ~REDETECT & exist(cellinfofilename,'file')
+    display('Previous detection found, loading...');
+    load(cellinfofilename);
+    
+    statenames = fieldnames(GammaFit_all);
+    for ss = 1:length(statenames)
+        temp(ss) = GammaFit_all.(statenames{ss});
+    end 
 end
 
 %Need to keep track of.... basePath/baseName for each cell
@@ -183,7 +201,6 @@ end
 %Compare - shared fits each recording...
 %%
 %Save the GammaFit_all file ...
-cellinfofilename = fullfile(saveFolder,[saveName_full,'.GammaFit_all.cellinfo.mat']); 
 save(cellinfofilename,'GammaFit_all')
 
 %Save Each recordings cellinfo file
@@ -335,9 +352,13 @@ NiceSave(['CompareNAS_',(statenames{ss})],saveFolder,saveName_full);
 end
 
 %% Relate WAKE and NREM
-        modeweightcorr.NW = corr([allweights.(statenames{1}){whichAS.(statenames{1})+1} GammaFit_all.(statenames{1}).sharedfit(whichAS.(statenames{1})+1).GSweights'] ,...
-            [allweights.(statenames{2}){whichAS.(statenames{2})+1} GammaFit_all.(statenames{2}).sharedfit(whichAS.(statenames{2})+1).GSweights'],...
-            'type','spearman');
+%Here: need to use GammaFit_all.(statenames{1}).cellstats.NW. Put in
+%'redetect','false' option and do this again...
+modeweightcorr.NW = corr([allweights.(statenames{1}){whichAS.(statenames{1})+1}(GammaFit_all.(statenames{1}).cellstats.NW',:),...
+    GammaFit_all.(statenames{1}).sharedfit(whichAS.(statenames{1})+1).GSweights(:,GammaFit_all.(statenames{1}).cellstats.NW)'] ,...
+    [allweights.(statenames{2}){whichAS.(statenames{2})+1}(GammaFit_all.(statenames{2}).cellstats.NW',:),...
+    GammaFit_all.(statenames{2}).sharedfit(whichAS.(statenames{2})+1).GSweights(:,GammaFit_all.(statenames{2}).cellstats.NW)'],...
+    'type','spearman');
 
 figure
 for ss = 1:2
